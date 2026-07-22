@@ -198,7 +198,7 @@ const PreviewContent = forwardRef((props, ref) => {
                         <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", paddingRight: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                             props.selectText("invoiceDetails");
                         }}>
-                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice") || props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request") ? "100%" : "74%"}` }}>
                                 {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>
@@ -215,13 +215,13 @@ const PreviewContent = forwardRef((props, ref) => {
                                 {((props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer") || props.model.type === "invoice") && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >
-                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order No. | رقم أمر الشراء:" : "Invoice No. | رقم الفاتورة:"}
+                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order No. | رقم أمر الشراء:" : (props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request") ? "Purchase Request No. | رقم طلب الشراء:" : "Invoice No. | رقم الفاتورة:"}
                                         </div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
                                     </div>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>
-                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order Date | تاريخ أمر الشراء:" : "Invoice Date | تاريخ الفاتورة:"}
+                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order Date | تاريخ أمر الشراء:" : (props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request") ? "Purchase Request Date | تاريخ طلب الشراء:" : "Invoice Date | تاريخ الفاتورة:"}
                                         </b></div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.date ? format(
                                             new Date(props.model.date),
@@ -487,7 +487,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </> : ""}
                             </div>
-                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && <div
+                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && props.modelName !== "purchase_request" && props.modelName !== "whatsapp_purchase_request" && <div
                                 className="col-md-2"
                                 style={{ border: "solid 0px", width: "26%" }}
                                 onClick={(e) => {
@@ -783,7 +783,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text">
                                             <tr style={{ borderBottom: tableBorderThickness }}>
-                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && props.modelName !== "purchase_request" && props.modelName !== "whatsapp_purchase_request" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                     <div
                                                         className="col-md-1 text-center"
                                                         style={{

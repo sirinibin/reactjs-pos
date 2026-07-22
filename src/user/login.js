@@ -60,14 +60,47 @@ function Login() {
                     return;
                 }
 
+                const userId = data.result.id;
+                const lastStoreId = localStorage.getItem("last_store_" + userId);
+
                 if (data.result.role !== "Admin") {
-                    localStorage.setItem("store_name", storeNames[0]);
-                    localStorage.setItem("store_id", storeIDs[0]);
-                    if (storeIDs[0]) {
-                        await getStore(storeIDs[0]);
+                    // Restore last used store if it is still in the user's assigned stores
+                    let storeId = storeIDs[0];
+                    let storeName = storeNames[0];
+                    if (lastStoreId && storeIDs.includes(lastStoreId)) {
+                        const idx = storeIDs.indexOf(lastStoreId);
+                        storeId = lastStoreId;
+                        storeName = storeNames[idx] || storeNames[0];
+                    }
+                    localStorage.setItem("store_name", storeName);
+                    localStorage.setItem("store_id", storeId);
+                    if (storeId) {
+                        await getStore(storeId);
                     }
                 } else {
-                    await getFirstStore();
+                    if (lastStoreId) {
+                        try {
+                            const storeData = await fetchStore(lastStoreId, "id,name,branch_name,settings");
+                            if (storeData) {
+                                localStorage.setItem("store_id", storeData.id);
+                                localStorage.setItem("store_name", storeData.name);
+                                if (storeData.branch_name) {
+                                    localStorage.setItem("branch_name", storeData.branch_name);
+                                } else {
+                                    localStorage.removeItem("branch_name");
+                                }
+                                if (storeData.settings) {
+                                    localStorage.setItem("_store_settings_cache", JSON.stringify(storeData.settings));
+                                }
+                            } else {
+                                await getFirstStore();
+                            }
+                        } catch (_) {
+                            await getFirstStore();
+                        }
+                    } else {
+                        await getFirstStore();
+                    }
                 }
 
                 localStorage.setItem("user_name", data.result.name);
@@ -85,6 +118,21 @@ function Login() {
 
                 if (data.result.photo) {
                     localStorage.setItem("user_photo", data.result.photo);
+                }
+
+                // Fetch and cache effective RBAC permissions for sidebar filtering
+                try {
+                    const permRes = await fetch('/v1/user-role/effective-permissions', {
+                        headers: { Authorization: localStorage.getItem('access_token') },
+                    });
+                    const permData = await permRes.json();
+                    if (permData.result) {
+                        localStorage.setItem("user_permissions", JSON.stringify(permData.result));
+                    } else {
+                        localStorage.removeItem("user_permissions");
+                    }
+                } catch (e) {
+                    localStorage.removeItem("user_permissions");
                 }
 
                 // history.push("/dashboard/analytics");
@@ -130,7 +178,10 @@ function Login() {
 
     async function getStore(id) {
         try {
-            await fetchStore(id);
+            const storeData = await fetchStore(id);
+            if (storeData?.settings) {
+                localStorage.setItem("_store_settings_cache", JSON.stringify(storeData.settings));
+            }
         } catch (error) { }
     }
 

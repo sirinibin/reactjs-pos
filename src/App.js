@@ -78,6 +78,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/purchase-requests">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/purchase-cash-discounts">
             <Dashboard />
           </Route>
@@ -180,6 +184,10 @@ function App() {
           </Route>
 
           <Route path="/dashboard/users">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/user-roles">
             <Dashboard />
           </Route>
 

@@ -13,7 +13,6 @@ import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
-import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
@@ -59,8 +58,6 @@ function PurchaseOrderIndex(props) {
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
     const [isListLoading, setIsListLoading] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
 
     // Stats
     const [totalNetTotal, setTotalNetTotal] = useState(0);
@@ -198,25 +195,6 @@ function PurchaseOrderIndex(props) {
     function openCreateForm() { PurchaseOrderCreateRef.current.open(); }
     function openEditForm(id) { PurchaseOrderCreateRef.current.open(id); }
 
-    async function handleDelete(id) {
-        if (!window.confirm(t('Are you sure you want to delete this Purchase Order?'))) return;
-        const requestOptions = {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
-        };
-        let qp = ObjectToSearchQueryParams({ store_id: localStorage.getItem('store_id') });
-        fetch('/v1/purchase-order/' + id + '?' + qp, requestOptions)
-            .then(async r => {
-                const data = await r.json();
-                if (!r.ok) return;
-                if (data.status) {
-                    setSuccessMessage(t('Purchase Order deleted'));
-                    setShowSuccess(true);
-                    list();
-                }
-            });
-    }
-
     function suggestVendors(searchTerm) {
         const requestOptions = { method: 'GET', headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') } };
         let qp = ObjectToSearchQueryParams({ store_id: localStorage.getItem('store_id'), search: searchTerm, limit: 20 });
@@ -271,7 +249,6 @@ function PurchaseOrderIndex(props) {
 
     return (
         <div style={{ padding: '12px 16px' }}>
-            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
             <PurchaseOrderCreate ref={PurchaseOrderCreateRef} showToastMessage={props.showToastMessage} onCreated={() => list()} />
             {showPreview && <Preview ref={PreviewRef} showToastMessage={props.showToastMessage} />}
 
@@ -442,10 +419,6 @@ function PurchaseOrderIndex(props) {
                                                 <button title={t('Share via WhatsApp')} onClick={() => openWhatsApp(po)}
                                                     style={{ background: '#f0fff4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '3px 8px', fontSize: '13px', cursor: 'pointer' }}>
                                                     <i className="bi bi-whatsapp" />
-                                                </button>
-                                                <button title={t('Delete')} onClick={() => handleDelete(po.id)}
-                                                    style={{ background: '#fff0f0', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '4px', padding: '3px 8px', fontSize: '13px', cursor: 'pointer' }}>
-                                                    <i className="bi bi-trash" />
                                                 </button>
                                             </div>
                                         </td>

@@ -14,6 +14,8 @@ const UserCreate = forwardRef((props, ref) => {
         open(id) {
             formData = {};
             setFormData({});
+            selectedRoles = [];
+            setSelectedRoles([]);
             if (id) {
                 getUser(id);
             }
@@ -101,7 +103,15 @@ const UserCreate = forwardRef((props, ref) => {
                 }
                 setSelectedStores(selectedStores);
 
-
+                let roleIds = data.result.role_ids;
+                let roleNames = data.result.role_names;
+                selectedRoles = [];
+                if (roleIds && roleNames) {
+                    for (var j = 0; j < roleIds.length; j++) {
+                        selectedRoles.push({ id: roleIds[j], name: roleNames[j] });
+                    }
+                }
+                setSelectedRoles(selectedRoles);
 
                 formData = {
                     id: userData.id,
@@ -132,9 +142,13 @@ const UserCreate = forwardRef((props, ref) => {
 
 
         formData.store_ids = [];
-
         for (var i = 0; i < selectedStores.length; i++) {
             formData.store_ids.push(selectedStores[i].id);
+        }
+
+        formData.role_ids = [];
+        for (var ri = 0; ri < selectedRoles.length; ri++) {
+            formData.role_ids.push(selectedRoles[ri].id);
         }
 
 
@@ -208,6 +222,9 @@ const UserCreate = forwardRef((props, ref) => {
     let [selectedStores, setSelectedStores] = useState([]);
     let [storeOptions, setStoreOptions] = useState([]);
 
+    let [selectedRoles, setSelectedRoles] = useState([]);
+    let [roleOptions, setRoleOptions] = useState([]);
+
     async function suggestStores(searchTerm) {
         console.log("Inside handle suggest stores");
 
@@ -232,7 +249,7 @@ const UserCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name,branch_name";
+        let Select = "select=id,name,branch_name,code";
         let result = await fetch(
             "/v1/store?" + Select + queryString,
             requestOptions
@@ -241,7 +258,7 @@ const UserCreate = forwardRef((props, ref) => {
         console.log("data:", data);
         if (data.result) {
             for (var i = 0; i < data.result.length; i++) {
-                data.result[i].name = data.result[i].name + " - " + data.result[i].branch_name;
+                data.result[i].name = data.result[i].name + " - " + data.result[i].branch_name + " (" + data.result[i].code + ")";
             }
         }
 
@@ -264,6 +281,35 @@ const UserCreate = forwardRef((props, ref) => {
         }
         // data.result = data.result.filter(store => store.id !== selectedStores.id);
         setStoreOptions(newStoreOptions);
+    }
+
+    async function suggestRoles(searchTerm) {
+        if (!searchTerm) return;
+        if (selectedStores.length === 0) return;
+
+        const storeIds = selectedStores.map(s => s.id).join(",");
+        var params = { name: searchTerm, store_ids: storeIds };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") queryString = "&" + queryString;
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let result = await fetch("/v1/user-role?" + queryString, requestOptions);
+        let data = await result.json();
+        if (!data.result) return;
+
+        let newRoleOptions = [];
+        for (let i = 0; i < data.result.length; i++) {
+            let alreadySelected = selectedRoles.some(r => r.id === data.result[i].id);
+            if (!alreadySelected) newRoleOptions.push(data.result[i]);
+        }
+        setRoleOptions(newRoleOptions);
     }
 
     // ── Design tokens ──────────────────────────────────────────────────────
@@ -579,6 +625,32 @@ const UserCreate = forwardRef((props, ref) => {
                                                             multiple
                                                         />
                                                         {errors.store_ids && <ErrMsg>{errors.store_ids}</ErrMsg>}
+                                                    </div>
+
+                                                    <div className="col-md-12">
+                                                        <Label>RBAC Roles</Label>
+                                                        <Typeahead
+                                                            id="role_ids"
+                                                            labelKey="name"
+                                                            onChange={(selectedItems) => {
+                                                                if (selectedItems.length === 0) {
+                                                                    setSelectedRoles([]);
+                                                                    return;
+                                                                }
+                                                                setSelectedRoles(selectedItems);
+                                                            }}
+                                                            options={roleOptions}
+                                                            placeholder="Search and assign roles..."
+                                                            selected={selectedRoles}
+                                                            highlightOnlyResult={true}
+                                                            onInputChange={(searchTerm) => {
+                                                                suggestRoles(searchTerm);
+                                                            }}
+                                                            multiple
+                                                        />
+                                                        <div style={{ fontSize: '11px', color: '#737686', marginTop: '3px' }}>
+                                                            Roles define what this user can read, create, update, or delete in the app.
+                                                        </div>
                                                     </div>
 
                                                 </div>

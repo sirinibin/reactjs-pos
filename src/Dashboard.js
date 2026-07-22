@@ -4,7 +4,9 @@ import {
     BrowserRouter as Router,
     Switch,
     Route,
+    useLocation,
 } from "react-router-dom";
+import { DEFAULT_MENU, getLandingPath } from './sidebar_menu_config';
 import PostingIndex from './posting/index.js';
 import QuotationIndex from './quotation/index.js';
 import QuotationSalesReturnIndex from './quotation_sales_return/index.js';
@@ -23,6 +25,7 @@ import PurchaseReturnPaymentIndex from './purchase_return_payment/index.js';
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
 import PurchaseOrderIndex from './purchase_order/index.js';
+import PurchaseRequestIndex from './purchase_request/index.js';
 import PurchaseReturnIndex from './purchase_return/index.js';
 import VendorIndex from './vendor/index.js';
 import StoreIndex from './store/index.js';
@@ -46,6 +49,7 @@ import LedgerIndex from './ledger/index.js';
 import AccountIndex from './account/index.js';
 
 import UserIndex from './user/index.js';
+import UserRoleIndex from './role/index.js';
 // eslint-disable-next-line no-unused-vars
 import CustomerPackageIndex from './customer_package/index.js';
 import SignatureIndex from './signature/index.js';
@@ -62,6 +66,81 @@ import Analytics from './analytics/index.js';
 import StatsIndex from './stats/index.js';
 import BusinessDashboard from './business_dashboard/index.js';
 import SidebarSettings from './sidebar_settings/index.js';
+
+// Checks RBAC READ permission for every route change.
+// Only runs when the store has enable_rbac_module = true.
+// Admins (user_role === "Admin") are always allowed through.
+function RouteGuard() {
+    const { pathname } = useLocation();
+    const [blocked, setBlocked] = useState(false);
+
+    useEffect(() => {
+        const isAdmin = localStorage.getItem("user_role") === "Admin";
+        if (isAdmin) { setBlocked(false); return; }
+
+        const storeSettings = (() => {
+            try { return JSON.parse(localStorage.getItem("_store_settings_cache") || "null"); }
+            catch (_) { return null; }
+        })();
+        if (!storeSettings?.enable_rbac_module) { setBlocked(false); return; }
+
+        const permsRaw = localStorage.getItem("user_permissions");
+        if (!permsRaw) { setBlocked(false); return; }
+
+        const perms = (() => { try { return JSON.parse(permsRaw); } catch (_) { return []; } })();
+        const permMap = {};
+        perms.forEach(p => { permMap[p.resource] = p; });
+
+        const menuItem = DEFAULT_MENU.find(m => pathname === m.path || pathname.startsWith(m.path + "/"));
+        if (!menuItem || !menuItem.resource) { setBlocked(false); return; }
+
+        const rbacGrantsRead = !!permMap[menuItem.resource]?.read;
+
+        if (menuItem.adminOnly && !rbacGrantsRead) { setBlocked(true); return; }
+        if (!rbacGrantsRead) { setBlocked(true); return; }
+
+        setBlocked(false);
+    }, [pathname]);
+
+    if (!blocked) return null;
+
+    return (
+        <div style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "#f4f6f9",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            padding: "24px", textAlign: "center",
+            fontFamily: '"Inter", sans-serif',
+        }}>
+            <div style={{
+                background: "#fff", borderRadius: "12px",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+                padding: "40px 32px", maxWidth: "420px", width: "100%",
+            }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔒</div>
+                <h2 style={{
+                    fontFamily: '"Hanken Grotesk", sans-serif',
+                    fontWeight: 700, fontSize: "20px",
+                    color: "#191c1e", marginBottom: "10px",
+                }}>Access Denied</h2>
+                <p style={{ color: "#5a5f72", fontSize: "14px", marginBottom: "28px", lineHeight: 1.6 }}>
+                    You don't have permission to view this page.<br />
+                    Please contact your administrator to request access.
+                </p>
+                <button
+                    onClick={() => { window.location = getLandingPath(); }}
+                    style={{
+                        background: "#004ac6", color: "#fff", border: "none",
+                        borderRadius: "6px", padding: "10px 24px",
+                        fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                    }}>
+                    Go to Home
+                </button>
+            </div>
+        </div>
+    );
+}
 
 function Dashboard() {
 
@@ -281,6 +360,7 @@ function Dashboard() {
             )}
 
         </ToastContainer>
+        <RouteGuard />
         <Switch>
 
             <Route path="/dashboard/sidebar-settings">
@@ -415,6 +495,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseOrderIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/purchase-requests">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseRequestIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -744,6 +836,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <UserIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/user-roles">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <UserRoleIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

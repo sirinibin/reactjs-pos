@@ -110,7 +110,7 @@ const Preview = forwardRef((props, ref) => {
                     }
                 }
 
-                if (!model.zatca?.qr_code && model.store?.vat_no) {
+                if (!model.zatca?.qr_code && model.store?.vat_no && model.modelName !== "purchase_request" && model.modelName !== "whatsapp_purchase_request") {
                     try {
                         const qrInvoice = new Invoice({
                             sellerName: model.store.name || '',
@@ -275,6 +275,8 @@ const Preview = forwardRef((props, ref) => {
             } else {
                 isSimplified = true;
             }
+        } else if (model.modelName === "purchase_request" || model.modelName === "whatsapp_purchase_request") {
+            isSimplified = true;
         }
 
         if (model.modelName === "sales" || model.modelName === "whatsapp_sales") {
@@ -428,6 +430,8 @@ const Preview = forwardRef((props, ref) => {
             }
         } else if (model.modelName === "purchase_order" || model.modelName === "whatsapp_purchase_order") {
             model.invoiceTitle = model.store?.settings?.invoice?.purchase_order_title || "PURCHASE ORDER | أمر الشراء";
+        } else if (model.modelName === "purchase_request" || model.modelName === "whatsapp_purchase_request") {
+            model.invoiceTitle = "PURCHASE REQUEST | طلب الشراء";
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store.settings?.invoice?.quotation_title;
@@ -586,6 +590,8 @@ const Preview = forwardRef((props, ref) => {
             apiPath = "stock-transfer";
         } else if (modelName && (modelName === "purchase_order" || modelName === "whatsapp_purchase_order")) {
             apiPath = "purchase-order";
+        } else if (modelName && (modelName === "purchase_request" || modelName === "whatsapp_purchase_request")) {
+            apiPath = "purchase-request";
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -989,6 +995,8 @@ const Preview = forwardRef((props, ref) => {
             filename += "Stock_Transfer";
         } else if (modelName === "purchase_order" || modelName === "whatsapp_purchase_order") {
             filename += "Purchase_Order";
+        } else if (modelName === "purchase_request" || modelName === "whatsapp_purchase_request") {
+            filename += "Purchase_Request";
         }
 
         if (model.code) {
@@ -1502,6 +1510,8 @@ const Preview = forwardRef((props, ref) => {
             message = `${t("Hello, here is your Return Invoice")}:\n${pdfUrl}`;
         } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
             message = `${t("Hello, here is your Stock Transfer")}:\n${pdfUrl}`;
+        } else if (modelName === "purchase_request" || modelName === "whatsapp_purchase_request") {
+            message = `${t("Hello, here is your Purchase Request")}:\n${pdfUrl}`;
         } else {
             message = `${t("Hello, here is your Invoice")}:\n${pdfUrl}`;
         }
@@ -1877,6 +1887,8 @@ const Preview = forwardRef((props, ref) => {
             "whatsapp_stock_transfer",
             "purchase_order",
             "whatsapp_purchase_order",
+            "purchase_request",
+            "whatsapp_purchase_request",
         ];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {

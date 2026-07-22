@@ -96,6 +96,49 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
             }
             setShow(true);
         },
+        openFromPR(pr) {
+            errors = {};
+            setErrors({});
+            selectedProducts = [];
+            setSelectedProducts([]);
+            selectedVendors = [];
+            setSelectedVendors([]);
+            discount = 0;
+            setDiscount(0);
+            discountWithVAT = 0;
+            setDiscountWithVAT(0);
+            discountPercent = 0;
+            setDiscountPercent(0);
+            discountPercentWithVAT = 0;
+            setDiscountPercentWithVAT(0);
+            shipping = 0;
+            setShipping(0);
+            roundingAmount = 0;
+            setRoundingAmount(0);
+
+            formData = {
+                vat_percent: pr.vat_percent || 15.0,
+                discount: 0.0,
+                discount_percent: 0.0,
+                shipping_handling_fees: 0.00,
+                rounding_amount: 0.00,
+                auto_rounding_amount: true,
+                date_str: new Date(),
+                status: "draft",
+                purchase_request_id: pr.id,
+                purchase_request_code: pr.code,
+            };
+
+            if (localStorage.getItem('store_id')) {
+                formData.store_id = localStorage.getItem('store_id');
+                formData.store_name = localStorage.getItem('store_name');
+            }
+
+            setFormData({ ...formData });
+            pendingIdRef.current = null;
+            handleImportFromSource(pr, "purchase");
+            setShow(true);
+        },
     }));
 
     const pendingIdRef = useRef(null);

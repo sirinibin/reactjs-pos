@@ -126,6 +126,14 @@ export const WebSocketProvider = ({ userId, children }) => {
                     eventEmitter.emit("delivery_note_reminder", jsonMessage.data);
                 } else if (jsonMessage.event === "delivery_note_order_linked") {
                     eventEmitter.emit("delivery_note_order_linked", jsonMessage.data);
+                } else if (jsonMessage.event === "purchase_request_received") {
+                    eventEmitter.emit("purchase_request_received", jsonMessage.data);
+                } else if (jsonMessage.event === "purchase_request_status_changed") {
+                    eventEmitter.emit("purchase_request_status_changed", jsonMessage.data);
+                } else if (jsonMessage.event === "purchase_request_po_created") {
+                    eventEmitter.emit("purchase_request_po_created", jsonMessage.data);
+                } else if (jsonMessage.event === "purchase_request_updated") {
+                    eventEmitter.emit("purchase_request_updated", jsonMessage.data);
                 }
             },
             onError: (errorEvent) => {

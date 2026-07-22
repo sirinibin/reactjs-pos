@@ -45,6 +45,8 @@ function Topbar(props) {
     const [notifications, setNotifications] = useState([]);
     const [, setTick] = useState(0); // used to re-render "time ago" every minute
     const notificationsRef = useRef([]);
+    const [prNotifications, setPrNotifications] = useState([]);
+    const prNotificationsRef = useRef([]);
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
@@ -72,6 +74,8 @@ function Topbar(props) {
         const token = localStorage.getItem("access_token");
         localStorage.setItem("store_id", store.id);
         localStorage.setItem("store_name", store.name);
+        const userId = localStorage.getItem("user_id");
+        if (userId) localStorage.setItem("last_store_" + userId, store.id);
         try {
             const res = await fetch(`/v1/store/${store.id}?select=id,branch_name`, { headers: { Authorization: "Bearer " + token } });
             const data = res.ok && await res.json();
@@ -194,6 +198,33 @@ function Topbar(props) {
         return () => eventEmitter.off("delivery_note_order_linked", handleLinked);
     }, []);
 
+    // PR notifications: received, status changed, PO created
+    function addPrNotification(notif) {
+        const arr = prNotificationsRef.current.filter(n => n.id !== notif.id);
+        arr.push({ ...notif, arrived_at: new Date().toISOString() });
+        prNotificationsRef.current = arr;
+        setPrNotifications([...arr]);
+    }
+    function dismissPrNotification(id) {
+        const arr = prNotificationsRef.current.filter(n => n.id !== id);
+        prNotificationsRef.current = arr;
+        setPrNotifications([...arr]);
+    }
+    useEffect(() => {
+        const h1 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Received: ${data.code || ''}`, code: data.code });
+        const h2 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Status: ${data.status || 'updated'} (${data.code || ''})`, code: data.code });
+        const h3 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.O Created from P.R: ${data.code || ''}`, code: data.code });
+        eventEmitter.on("purchase_request_received", h1);
+        eventEmitter.on("purchase_request_status_changed", h2);
+        eventEmitter.on("purchase_request_po_created", h3);
+        return () => {
+            eventEmitter.off("purchase_request_received", h1);
+            eventEmitter.off("purchase_request_status_changed", h2);
+            eventEmitter.off("purchase_request_po_created", h3);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Re-render every 60 s so "time ago" text stays current
     useEffect(() => {
         const timer = setInterval(() => setTick(t => t + 1), 60000);
@@ -311,16 +342,16 @@ function Topbar(props) {
                     {/* Desktop nav items — hidden on mobile */}
                     <ul className="navbar-nav navbar-align d-none d-sm-flex">
 
-                        {storeSettings?.enable_notification === true && (
+                        {(storeSettings?.enable_notification === true || storeSettings?.enable_purchase_request_module === true) && (
                             <li className="nav-item dropdown me-2">
                                 <Dropdown>
                                     <Dropdown.Toggle
                                         as="span"
                                         style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 8px" }}
-                                        id="dn-notifications-toggle"
+                                        id="notifications-toggle"
                                     >
                                         <i className="bi bi-bell fs-5"></i>
-                                        {notifications.length > 0 && (
+                                        {(notifications.length + prNotifications.length) > 0 && (
                                             <span style={{
                                                 position: "absolute",
                                                 top: "-4px",
@@ -337,60 +368,68 @@ function Topbar(props) {
                                                 justifyContent: "center",
                                                 padding: "0 3px",
                                             }}>
-                                                {notifications.length}
+                                                {notifications.length + prNotifications.length}
                                             </span>
                                         )}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu align="end" style={{ minWidth: "340px", maxHeight: "450px", overflowY: "auto" }}>
-                                        {notifications.length === 0 ? (
-                                            <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                        {notifications.length === 0 && prNotifications.length === 0 ? (
+                                            <Dropdown.ItemText className="text-muted small">No notifications</Dropdown.ItemText>
                                         ) : (
-                                            notifications.map(notif => (
-                                                <div
-                                                    key={notif.id}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "flex-start",
-                                                        padding: "8px 14px",
-                                                        borderBottom: "1px solid #f0f0f0",
-                                                        gap: "6px",
-                                                    }}
-                                                >
+                                            <>
+                                                {notifications.map(notif => (
                                                     <div
-                                                        style={{ flex: 1, cursor: "pointer", minWidth: 0 }}
-                                                        onClick={() => openSalesFromDN(notif)}
+                                                        key={"dn-" + notif.id}
+                                                        style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}
                                                     >
-                                                        <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                                                            <i className="bi bi-file-earmark-text text-primary me-2"></i>
-                                                            Create Sales For Delivery Note <strong>{notif.code}</strong>
-                                                        </div>
-                                                        {notif.arrived_at && (
-                                                            <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
-                                                                {formatDateTime(notif.arrived_at)}
-                                                                <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>
-                                                                    · {formatTimeAgo(notif.arrived_at)}
-                                                                </span>
+                                                        <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDN(notif)}>
+                                                            <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                                <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                                Create Sales For Delivery Note <strong>{notif.code}</strong>
                                                             </div>
-                                                        )}
+                                                            {notif.arrived_at && (
+                                                                <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                                    {formatDateTime(notif.arrived_at)}
+                                                                    <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {formatTimeAgo(notif.arrived_at)}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); dismissNotification(notif.id, true); }}
+                                                            title="Dismiss"
+                                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}
+                                                        >
+                                                            &times;
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); dismissNotification(notif.id, true); }}
-                                                        title="Dismiss"
-                                                        style={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            cursor: "pointer",
-                                                            color: "#aaa",
-                                                            fontSize: "16px",
-                                                            lineHeight: 1,
-                                                            padding: "0 2px",
-                                                            flexShrink: 0,
-                                                        }}
+                                                ))}
+                                                {prNotifications.map(notif => (
+                                                    <div
+                                                        key={"pr-" + notif.id}
+                                                        style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}
                                                     >
-                                                        &times;
-                                                    </button>
-                                                </div>
-                                            ))
+                                                        <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => { window.location.href = "/dashboard/purchase-requests"; }}>
+                                                            <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                                <i className="bi bi-clipboard2-pulse text-primary me-2"></i>
+                                                                {notif.message}
+                                                            </div>
+                                                            {notif.arrived_at && (
+                                                                <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                                    {formatDateTime(notif.arrived_at)}
+                                                                    <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {formatTimeAgo(notif.arrived_at)}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); dismissPrNotification(notif.id); }}
+                                                            title="Dismiss"
+                                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </>
                                         )}
                                     </Dropdown.Menu>
                                 </Dropdown>
