@@ -491,8 +491,10 @@ const ReportPreview = forwardRef((props, ref) => {
 
     async function getStore(id) {
         try {
-            await fetchStore(id);
-} catch (error) { }
+            const storeData = await fetchStore(id);
+            model.store = storeData;
+            setModel({ ...model });
+        } catch (error) { }
     }
 
 

@@ -218,7 +218,7 @@ function Topbar(props) {
         setPrNotifications([...arr]);
     }
     useEffect(() => {
-        const h1 = (data) => { console.log("[Topbar] purchase_request_received:", data); data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Received: ${data.code || ''}`, code: data.code }); };
+        const h1 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Received: ${data.code || ''}`, code: data.code });
         const h2 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Status: ${data.status || 'updated'} (${data.code || ''})`, code: data.code });
         const h3 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.O Created from P.R: ${data.code || ''}`, code: data.code });
         eventEmitter.on("purchase_request_received", h1);
@@ -232,30 +232,47 @@ function Topbar(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // On login and WebSocket reconnect, fetch pending PRs assigned to this user
+    // On login and WebSocket reconnect, fetch all pending PR notifications for this user
     useEffect(() => {
-        const fetchPendingPRs = async () => {
+        const fetchPRNotifications = async () => {
             const storeId = localStorage.getItem("store_id");
             const token = localStorage.getItem("access_token");
             const userId = localStorage.getItem("user_id");
             if (!storeId || !token || !userId) return;
+            const base = `/v1/purchase-request?search[store_id]=${storeId}&search[limit]=20`;
             try {
-                const res = await fetch(
-                    `/v1/purchase-request?search[store_id]=${storeId}&search[assigned_to]=${userId}&search[status]=pending&search[limit]=20`,
-                    { headers: { Authorization: token } }
-                );
-                const data = await res.json();
-                if (data.status && Array.isArray(data.result)) {
-                    data.result.forEach(pr => {
+                // PRs assigned to me that are still pending (P.R Received)
+                const r1 = await fetch(`${base}&search[assigned_to]=${userId}&search[status]=pending`, { headers: { Authorization: token } });
+                const d1 = await r1.json();
+                if (d1.status && Array.isArray(d1.result)) {
+                    d1.result.forEach(pr => {
                         if (dismissedPrIds.current.has(pr.id)) return;
                         addPrNotification({ id: pr.id, message: `P.R Received: ${pr.code}`, code: pr.code });
                     });
                 }
+                // PRs I created that were accepted (P.R Status: accepted)
+                const r2 = await fetch(`${base}&search[created_by]=${userId}&search[status]=accepted`, { headers: { Authorization: token } });
+                const d2 = await r2.json();
+                if (d2.status && Array.isArray(d2.result)) {
+                    d2.result.forEach(pr => {
+                        if (dismissedPrIds.current.has(pr.id)) return;
+                        addPrNotification({ id: pr.id, message: `P.R Accepted: ${pr.code}`, code: pr.code });
+                    });
+                }
+                // PRs I created that were rejected (P.R Status: rejected)
+                const r3 = await fetch(`${base}&search[created_by]=${userId}&search[status]=rejected`, { headers: { Authorization: token } });
+                const d3 = await r3.json();
+                if (d3.status && Array.isArray(d3.result)) {
+                    d3.result.forEach(pr => {
+                        if (dismissedPrIds.current.has(pr.id)) return;
+                        addPrNotification({ id: pr.id, message: `P.R Rejected: ${pr.code}`, code: pr.code });
+                    });
+                }
             } catch (_) {}
         };
-        fetchPendingPRs();
-        eventEmitter.on("socket_connection_open", fetchPendingPRs);
-        return () => eventEmitter.off("socket_connection_open", fetchPendingPRs);
+        fetchPRNotifications();
+        eventEmitter.on("socket_connection_open", fetchPRNotifications);
+        return () => eventEmitter.off("socket_connection_open", fetchPRNotifications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
