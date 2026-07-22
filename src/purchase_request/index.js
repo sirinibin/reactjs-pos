@@ -86,6 +86,30 @@ function PurchaseRequestIndex(props) {
         };
     }, [fetchList]);
 
+    // Open PR view from notification click
+    useEffect(() => {
+        const pending = localStorage.getItem("pending_pr_view");
+        if (pending) {
+            try {
+                const { id } = JSON.parse(pending);
+                localStorage.removeItem("pending_pr_view");
+                if (id) {
+                    setActiveTab("received");
+                    setTimeout(() => viewRef.current?.open(id, true), 200);
+                }
+            } catch (_) {}
+        }
+        const handleOpenView = ({ id }) => {
+            if (id) {
+                setActiveTab("received");
+                viewRef.current?.open(id, true);
+            }
+        };
+        eventEmitter.on("open_pr_view", handleOpenView);
+        return () => eventEmitter.off("open_pr_view", handleOpenView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     function handleTabChange(tab) {
         setActiveTab(tab);
         setPage(1);

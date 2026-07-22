@@ -47,6 +47,11 @@ function Topbar(props) {
     const notificationsRef = useRef([]);
     const [prNotifications, setPrNotifications] = useState([]);
     const prNotificationsRef = useRef([]);
+    const dismissedPrIds = useRef(null);
+    if (!dismissedPrIds.current) {
+        try { dismissedPrIds.current = new Set(JSON.parse(localStorage.getItem('dismissed_pr_ids') || '[]')); }
+        catch (_) { dismissedPrIds.current = new Set(); }
+    }
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
@@ -206,12 +211,14 @@ function Topbar(props) {
         setPrNotifications([...arr]);
     }
     function dismissPrNotification(id) {
+        dismissedPrIds.current.add(id);
+        try { localStorage.setItem('dismissed_pr_ids', JSON.stringify([...dismissedPrIds.current])); } catch (_) {}
         const arr = prNotificationsRef.current.filter(n => n.id !== id);
         prNotificationsRef.current = arr;
         setPrNotifications([...arr]);
     }
     useEffect(() => {
-        const h1 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Received: ${data.code || ''}`, code: data.code });
+        const h1 = (data) => { console.log("[Topbar] purchase_request_received:", data); data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Received: ${data.code || ''}`, code: data.code }); };
         const h2 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.R Status: ${data.status || 'updated'} (${data.code || ''})`, code: data.code });
         const h3 = (data) => data && addPrNotification({ id: data.id || data.purchase_request_id, message: `P.O Created from P.R: ${data.code || ''}`, code: data.code });
         eventEmitter.on("purchase_request_received", h1);
@@ -225,11 +232,48 @@ function Topbar(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // On login and WebSocket reconnect, fetch pending PRs assigned to this user
+    useEffect(() => {
+        const fetchPendingPRs = async () => {
+            const storeId = localStorage.getItem("store_id");
+            const token = localStorage.getItem("access_token");
+            const userId = localStorage.getItem("user_id");
+            if (!storeId || !token || !userId) return;
+            try {
+                const res = await fetch(
+                    `/v1/purchase-request?search[store_id]=${storeId}&search[assigned_to]=${userId}&search[status]=pending&search[limit]=20`,
+                    { headers: { Authorization: token } }
+                );
+                const data = await res.json();
+                if (data.status && Array.isArray(data.result)) {
+                    data.result.forEach(pr => {
+                        if (dismissedPrIds.current.has(pr.id)) return;
+                        addPrNotification({ id: pr.id, message: `P.R Received: ${pr.code}`, code: pr.code });
+                    });
+                }
+            } catch (_) {}
+        };
+        fetchPendingPRs();
+        eventEmitter.on("socket_connection_open", fetchPendingPRs);
+        return () => eventEmitter.off("socket_connection_open", fetchPendingPRs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Re-render every 60 s so "time ago" text stays current
     useEffect(() => {
         const timer = setInterval(() => setTick(t => t + 1), 60000);
         return () => clearInterval(timer);
     }, []);
+
+    function openPRFromNotif(notif) {
+        dismissPrNotification(notif.id);
+        if (window.location.pathname === "/dashboard/purchase-requests") {
+            eventEmitter.emit("open_pr_view", { id: notif.id, code: notif.code });
+        } else {
+            localStorage.setItem("pending_pr_view", JSON.stringify({ id: notif.id, code: notif.code }));
+            window.location.href = "/dashboard/purchase-requests";
+        }
+    }
 
     // persist=true when user manually closes; false when auto-dismissed via order link
     function dismissNotification(id, persist = false) {
@@ -342,7 +386,7 @@ function Topbar(props) {
                     {/* Desktop nav items — hidden on mobile */}
                     <ul className="navbar-nav navbar-align d-none d-sm-flex">
 
-                        {(storeSettings?.enable_notification === true || storeSettings?.enable_purchase_request_module === true) && (
+                        {(storeSettings?.enable_notification === true || storeSettings?.enable_purchase_request_module === true || prNotifications.length > 0) && (
                             <li className="nav-item dropdown me-2">
                                 <Dropdown>
                                     <Dropdown.Toggle
@@ -408,7 +452,7 @@ function Topbar(props) {
                                                         key={"pr-" + notif.id}
                                                         style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}
                                                     >
-                                                        <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => { window.location.href = "/dashboard/purchase-requests"; }}>
+                                                        <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openPRFromNotif(notif)}>
                                                             <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
                                                                 <i className="bi bi-clipboard2-pulse text-primary me-2"></i>
                                                                 {notif.message}

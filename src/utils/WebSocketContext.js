@@ -116,7 +116,7 @@ export const WebSocketProvider = ({ userId, children }) => {
             },
             onMessage: (messageEvent) => {
                 const jsonMessage = JSON.parse(messageEvent.data);
-                //console.log("Received Message:", jsonMessage);
+                console.log("[WS] Received Message:", jsonMessage);
 
                 if (jsonMessage.event === "role_updated") {
                     //console.log("Role Updated:", jsonMessage.data.role);
@@ -127,6 +127,7 @@ export const WebSocketProvider = ({ userId, children }) => {
                 } else if (jsonMessage.event === "delivery_note_order_linked") {
                     eventEmitter.emit("delivery_note_order_linked", jsonMessage.data);
                 } else if (jsonMessage.event === "purchase_request_received") {
+                    console.log("[WS] purchase_request_received:", jsonMessage.data);
                     eventEmitter.emit("purchase_request_received", jsonMessage.data);
                 } else if (jsonMessage.event === "purchase_request_status_changed") {
                     eventEmitter.emit("purchase_request_status_changed", jsonMessage.data);
