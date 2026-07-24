@@ -620,6 +620,19 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                     )}
+                                    {props.model.store?.settings?.enable_automobile_module && props.model?.vehicle_snapshot && (
+                                        <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }}>
+                                            <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }}><b>Vehicle | المركبة:</b></div>
+                                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }}>
+                                                {[props.model.vehicle_snapshot.brand, props.model.vehicle_snapshot.model, props.model.vehicle_snapshot.variant].filter(Boolean).join(" ")}
+                                                {props.model.vehicle_snapshot.vehicle_number ? ` | Plate: ${props.model.vehicle_snapshot.vehicle_number}` : ""}
+                                                {props.model.vehicle_snapshot.istimara_no ? ` | Istimara: ${props.model.vehicle_snapshot.istimara_no}` : ""}
+                                                {props.model.vehicle_snapshot.chassis_number ? ` | Chassis: ${props.model.vehicle_snapshot.chassis_number}` : ""}
+                                                {props.model.vehicle_snapshot.year ? ` | Year: ${props.model.vehicle_snapshot.year}` : ""}
+                                                {props.model.vehicle_snapshot.current_km ? ` | KM: ${props.model.vehicle_snapshot.current_km}` : ""}
+                                            </div>
+                                        </div>
+                                    )}
                                 </> : ""}
                                 {props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return" ? <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >

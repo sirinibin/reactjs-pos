@@ -121,6 +121,7 @@ const StoreCreate = forwardRef((props, ref) => {
             };
 
             setFormData({ ...formData });
+            setSelectedCountries([]);
             if (id) {
                 getStore(id);
             }
@@ -407,6 +408,16 @@ const StoreCreate = forwardRef((props, ref) => {
             formData = data.result;
             deepFillEmptyStrings(formData, defaults);
             setFormData({ ...formData });
+            // Re-select the Country typeahead's option to match the loaded
+            // store, otherwise it renders empty even though country_code is
+            // set (the Typeahead only shows what's in `selected`, which is
+            // local component state, not derived from formData).
+            if (formData.country_code) {
+                const matched = countryOptions.find(c => c.value === formData.country_code);
+                setSelectedCountries(matched ? [matched] : []);
+            } else {
+                setSelectedCountries([]);
+            }
         } catch (error) { }
     }
 
@@ -766,13 +777,13 @@ const StoreCreate = forwardRef((props, ref) => {
     const countrySearchRef = useRef();
 
     const NAV_TABS = [
-        { id: 'general',        label: 'General Info',     icon: 'bi-building'          },
-        { id: 'address',        label: 'National Address', icon: 'bi-geo-alt'           },
-        { id: 'invoice_titles', label: 'Invoice Titles',   icon: 'bi-file-earmark-text' },
-        { id: 'serial_numbers', label: 'Serial Numbers',   icon: 'bi-hash'              },
-        { id: 'bank_account',   label: 'Bank Account',     icon: 'bi-bank'              },
-        { id: 'settings',       label: 'Settings',         icon: 'bi-gear'              },
-        { id: 'designs',        label: 'Designs',          icon: 'bi-palette'           },
+        { id: 'general', label: 'General Info', icon: 'bi-building' },
+        { id: 'address', label: 'National Address', icon: 'bi-geo-alt' },
+        { id: 'invoice_titles', label: 'Invoice Titles', icon: 'bi-file-earmark-text' },
+        { id: 'serial_numbers', label: 'Serial Numbers', icon: 'bi-hash' },
+        { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
+        { id: 'settings', label: 'Settings', icon: 'bi-gear' },
+        { id: 'designs', label: 'Designs', icon: 'bi-palette' },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
     const ERROR_TAB_MAP = {
@@ -995,338 +1006,338 @@ const StoreCreate = forwardRef((props, ref) => {
                             ))}
                         </aside>
                         <div className="pw-content">
-                        <div className="pw-content-scroll">
-                        <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
-                            <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                    {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
-                                </div>
-                                {NAV_TABS.map((tab) => {
-                                    const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
-                                    if (!tabErrs.length) return null;
-                                    return (
-                                        <div key={tab.id} style={{ marginBottom: '6px' }}>
-                                            <button type="button" onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
-                                                {tab.label}:
-                                            </button>
-                                            {tabErrs.map(([k, v]) => (
-                                                <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
-                                            ))}
+                            <div className="pw-content-scroll">
+                                <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
+                                    <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
+                                        <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
+                                            {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
-                        <div className="row g-3">
-
-                        <div className="col-md-3">
-                            <label className="form-label">Customer Package</label>
-                            <div className="input-group mb-3">
-                                <select
-                                    className="form-control"
-                                    value={formData.customer_package_id || ""}
-                                    onChange={(e) => {
-                                        formData.customer_package_id = e.target.value || null;
-                                        setFormData({ ...formData });
-                                    }}
-                                >
-                                    <option value="">— No Package —</option>
-                                    {customerPackages.map(pkg => (
-                                        <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            {formData.customer_package_id && (
-                                <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'Inter, sans-serif', marginTop: '-8px' }}>
-                                    Non-admin users will only see tabs defined in this package.
+                                        {NAV_TABS.map((tab) => {
+                                            const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
+                                            if (!tabErrs.length) return null;
+                                            return (
+                                                <div key={tab.id} style={{ marginBottom: '6px' }}>
+                                                    <button type="button" onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
+                                                        {tab.label}:
+                                                    </button>
+                                                    {tabErrs.map(([k, v]) => (
+                                                        <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                                {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
+                                    <div className="row g-3">
 
-                        <div className="col-md-2">
-                            <label className="form-label">Zatca phase*</label>
+                                        <div className="col-md-3">
+                                            <label className="form-label">Customer Package</label>
+                                            <div className="input-group mb-3">
+                                                <select
+                                                    className="form-control"
+                                                    value={formData.customer_package_id || ""}
+                                                    onChange={(e) => {
+                                                        formData.customer_package_id = e.target.value || null;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                >
+                                                    <option value="">— No Package —</option>
+                                                    {customerPackages.map(pkg => (
+                                                        <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            {formData.customer_package_id && (
+                                                <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'Inter, sans-serif', marginTop: '-8px' }}>
+                                                    Non-admin users will only see tabs defined in this package.
+                                                </div>
+                                            )}
+                                        </div>
 
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.zatca?.phase}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            formData.zatca.phase = "";
-                                            errors["zatca_phase"] = "Invalid Phase";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
+                                        <div className="col-md-2">
+                                            <label className="form-label">Zatca phase*</label>
 
-                                        errors["zatca_phase"] = "";
-                                        setErrors({ ...errors });
+                                            <div className="input-group mb-3">
+                                                <select
+                                                    value={formData.zatca?.phase}
+                                                    onChange={(e) => {
+                                                        console.log("Inside onchange payment method");
+                                                        if (!e.target.value) {
+                                                            formData.zatca.phase = "";
+                                                            errors["zatca_phase"] = "Invalid Phase";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
 
-                                        formData.zatca.phase = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="1">Phase 1</option>
-                                    <option value="2">Phase 2</option>
+                                                        errors["zatca_phase"] = "";
+                                                        setErrors({ ...errors });
 
-                                </select>
-                            </div>
-                            {errors.zatca_phase && (
-                                <div className="pw-err">
-                                    {errors.zatca_phase}
-                                </div>
-                            )}
-                        </div>
-                        {formData.zatca?.phase === "2" ? <div className="col-md-2">
-                            <label className="form-label">Zatca environment*</label>
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.zatca?.env}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            formData.zatca.env = "";
-                                            errors["zatca_env"] = "Invalid Env.";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
+                                                        formData.zatca.phase = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                >
+                                                    <option value="1">Phase 1</option>
+                                                    <option value="2">Phase 2</option>
 
-                                        errors["zatca_env"] = "";
-                                        setErrors({ ...errors });
+                                                </select>
+                                            </div>
+                                            {errors.zatca_phase && (
+                                                <div className="pw-err">
+                                                    {errors.zatca_phase}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {formData.zatca?.phase === "2" ? <div className="col-md-2">
+                                            <label className="form-label">Zatca environment*</label>
+                                            <div className="input-group mb-3">
+                                                <select
+                                                    value={formData.zatca?.env}
+                                                    onChange={(e) => {
+                                                        console.log("Inside onchange payment method");
+                                                        if (!e.target.value) {
+                                                            formData.zatca.env = "";
+                                                            errors["zatca_env"] = "Invalid Env.";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
 
-                                        formData.zatca.env = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    disabled
-                                >
-                                    <option value="NonProduction">NonProduction</option>
-                                    <option value="Simulation" >Simulation</option>
-                                    <option value="Production" >Production</option>
-                                </select>
-                            </div>
-                            {errors.zatca_env && (
-                                <div className="pw-err">
-                                    {errors.zatca_env}
-                                </div>
-                            )}
-                        </div> : ""}
+                                                        errors["zatca_env"] = "";
+                                                        setErrors({ ...errors });
 
-                        <div className="col-md-2">
-                            <label className="form-label">Business category*</label>
+                                                        formData.zatca.env = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    disabled
+                                                >
+                                                    <option value="NonProduction">NonProduction</option>
+                                                    <option value="Simulation" >Simulation</option>
+                                                    <option value="Production" >Production</option>
+                                                </select>
+                                            </div>
+                                            {errors.zatca_env && (
+                                                <div className="pw-err">
+                                                    {errors.zatca_env}
+                                                </div>
+                                            )}
+                                        </div> : ""}
 
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.business_category}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["business_category"] = "";
-                                        setErrors({ ...errors });
-                                        formData.business_category = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="business_category"
-                                    placeholder="Business category"
-                                />
-                            </div>
-                            {errors.business_category && (
-                                <div className="pw-err">
-                                    {errors.business_category}
-                                </div>
-                            )}
-                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Business category*</label>
 
-
-                        <div className="col-md-4">
-                            <label className="form-label">Name*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.name ? formData.name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["name"] = "";
-                                        setErrors({ ...errors });
-                                        formData.name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="name"
-                                    placeholder="Name"
-                                />
-                            </div>
-                            {errors.name && (
-                                <div className="pw-err">
-                                    {errors.name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Name In Arabic*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.name_in_arabic ? formData.name_in_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["v"] = "";
-                                        setErrors({ ...errors });
-                                        formData.name_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="name_in_arabic"
-                                    placeholder="Name In Arabic"
-                                />
-                            </div>
-                            {errors.name_in_arabic && (
-                                <div className="pw-err">
-                                    {errors.name_in_arabic}
-                                </div>
-                            )}
-                        </div>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.business_category}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["business_category"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.business_category = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="business_category"
+                                                    placeholder="Business category"
+                                                />
+                                            </div>
+                                            {errors.business_category && (
+                                                <div className="pw-err">
+                                                    {errors.business_category}
+                                                </div>
+                                            )}
+                                        </div>
 
 
-                        <div className="col-md-2">
-                            <label className="form-label">Branch Code*</label>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Name*</label>
 
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.code ? formData.code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["code"] = "";
-                                        setErrors({ ...errors });
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.name ? formData.name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["name"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="name"
+                                                    placeholder="Name"
+                                                />
+                                            </div>
+                                            {errors.name && (
+                                                <div className="pw-err">
+                                                    {errors.name}
+                                                </div>
+                                            )}
+                                        </div>
 
+                                        <div className="col-md-4">
+                                            <label className="form-label">Name In Arabic*</label>
 
-                                        if (!formData.id) {
-                                            if (formData.code) {
-                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-
-                                            }
-
-                                            if (e.target.value) {
-
-                                            }
-                                        }
-
-
-
-
-                                        formData.code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="code"
-                                    placeholder="Code"
-                                />
-
-
-                            </div>
-                            {errors.code && (
-                                <div className="pw-err">
-                                    {errors.code}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Branch Name*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.branch_name}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["branch_name"] = "";
-                                        setErrors({ ...errors });
-                                        formData.branch_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="branch_name"
-                                    placeholder="Branch Name"
-                                />
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.name_in_arabic ? formData.name_in_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["v"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.name_in_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="name_in_arabic"
+                                                    placeholder="Name In Arabic"
+                                                />
+                                            </div>
+                                            {errors.name_in_arabic && (
+                                                <div className="pw-err">
+                                                    {errors.name_in_arabic}
+                                                </div>
+                                            )}
+                                        </div>
 
 
-                            </div>
-                            {errors.branch_name && (
-                                <div className="pw-err">
-                                    {errors.branch_name}
-                                </div>
-                            )}
-                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Branch Code*</label>
 
-                        <div className="col-md-2">
-                            <label className="form-label">Title(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.title ? formData.title : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["title"] = "";
-                                        setErrors({ ...errors });
-                                        formData.title = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="title"
-                                    placeholder="Title"
-                                />
-
-                            </div>
-                            {errors.title && (
-                                <div className="pw-err">
-
-                                    {errors.title}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Title In Arabic(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.title_in_arabic ? formData.title_in_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["title_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.title_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="title_in_arabic"
-                                    placeholder="Title In Arabic"
-                                />
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.code ? formData.code : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["code"] = "";
+                                                        setErrors({ ...errors });
 
 
-                            </div>
-                            {errors.title_in_arabic && (
-                                <div className="pw-err">
+                                                        if (!formData.id) {
+                                                            if (formData.code) {
+                                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
 
-                                    {errors.title_in_arabic}
-                                </div>
-                            )}
-                        </div>
+                                                            }
 
-                        {/*<div className="col-md-4">
+                                                            if (e.target.value) {
+
+                                                            }
+                                                        }
+
+
+
+
+                                                        formData.code = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="code"
+                                                    placeholder="Code"
+                                                />
+
+
+                                            </div>
+                                            {errors.code && (
+                                                <div className="pw-err">
+                                                    {errors.code}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Branch Name*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.branch_name}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["branch_name"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.branch_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="branch_name"
+                                                    placeholder="Branch Name"
+                                                />
+
+
+                                            </div>
+                                            {errors.branch_name && (
+                                                <div className="pw-err">
+                                                    {errors.branch_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Title(Optional)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.title ? formData.title : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["title"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="title"
+                                                    placeholder="Title"
+                                                />
+
+                                            </div>
+                                            {errors.title && (
+                                                <div className="pw-err">
+
+                                                    {errors.title}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Title In Arabic(Optional)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.title_in_arabic ? formData.title_in_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["title_in_arabic"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.title_in_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="title_in_arabic"
+                                                    placeholder="Title In Arabic"
+                                                />
+
+
+                                            </div>
+                                            {errors.title_in_arabic && (
+                                                <div className="pw-err">
+
+                                                    {errors.title_in_arabic}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/*<div className="col-md-4">
                             <label className="form-label">Use products from other stores(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -1368,4640 +1379,4649 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>*/}
 
-                        <div className="col-md-2">
-                            <label className="form-label">Registration Number(CRN)*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.registration_number ? formData.registration_number : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["registration_number"] = "";
-                                        setErrors({ ...errors });
-                                        formData.registration_number = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="registration_number"
-                                    placeholder="CRN"
-                                />
-
-
-                            </div>
-                            {errors.registration_number && (
-                                <div className="pw-err">
-
-                                    {errors.registration_number}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <label className="form-label">Zipcode*(5 digits)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.zipcode ? formData.zipcode : ""}
-                                    type='number'
-                                    onChange={(e) => {
-                                        errors["zipcode"] = "";
-                                        setErrors({ ...errors });
-                                        formData.zipcode = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="zipcode"
-                                    placeholder="Zipcode"
-                                />
-
-
-                            </div>
-                            {errors.zipcode && (
-                                <div className="pw-err">
-                                    {errors.zipcode}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Phone* ( 05.. / +966..)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.phone ? formData.phone : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["phone"] = "";
-                                        setErrors({ ...errors });
-                                        formData.phone = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="phone"
-                                    placeholder="Phone"
-                                />
-
-
-                            </div>
-                            {errors.phone && (
-                                <div className="pw-err">
-
-                                    {errors.phone}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <label className="form-label">VAT NO.* (15 digits)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vat_no ? formData.vat_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["vat_no"] = "";
-                                        setErrors({ ...errors });
-                                        formData.vat_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="vat_no"
-                                    placeholder="VAT NO."
-                                />
-
-
-                            </div>
-                            {errors.vat_no && (
-                                <div className="pw-err">
-
-                                    {errors.vat_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-1">
-                            <label className="form-label">VAT %*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vat_percent ? formData.vat_percent : ""}
-                                    type='number'
-                                    onChange={(e) => {
-                                        errors["vat_percent"] = "";
-                                        setErrors({ ...errors });
-
-                                        if (isNaN(e.target.value)) {
-                                            errors["vat_percent"] = "Invalid Discount";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        formData.vat_percent = e.target.value;
-
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="vat_percent"
-                                    placeholder="%"
-                                />
-
-
-                            </div>
-                            {errors.vat_percent && (
-                                <div className="pw-err">
-
-                                    {errors.vat_percent}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Email*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.email ? formData.email : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["email"] = "";
-
-                                        formData.email = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="email"
-                                    placeholder="Email"
-                                />
-
-
-
-                            </div>
-                            {errors.email && (
-                                <div className="pw-err">
-
-                                    {errors.email}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Address*</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder="Address"
-                                />
-
-                            </div>
-                            {errors.address && (
-                                <div className="pw-err">
-
-                                    {errors.address}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Address In Arabic*</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address_in_arabic"
-                                    placeholder="Address In Arabic"
-                                />
-
-                            </div>
-                            {errors.address_in_arabic && (
-                                <div className="pw-err">
-
-                                    {errors.address_in_arabic}
-                                </div>
-                            )}
-
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Country*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="country_code"
-                                    labelKey="label"
-                                    onChange={(selectedItems) => {
-                                        errors.country_code = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.country_code = "Invalid country selected";
-                                            setErrors(errors);
-                                            formData.country_code = "";
-                                            formData.country_name = "";
-                                            setFormData({ ...formData });
-                                            setSelectedCountries([]);
-                                            return;
-                                        }
-                                        formData.country_code = selectedItems[0].value;
-                                        formData.country_name = selectedItems[0].label;
-                                        setFormData({ ...formData });
-                                        setSelectedCountries(selectedItems);
-                                    }}
-                                    options={countryOptions}
-                                    placeholder="Country name"
-                                    selected={selectedCountries}
-                                    highlightOnlyResult={true}
-                                    ref={countrySearchRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Escape") {
-                                            countrySearchRef.current?.clear();
-                                        }
-                                    }}
-                                    onInputChange={(searchTerm, e) => {
-                                        //suggestBrands(searchTerm);
-                                    }}
-                                />
-                            </div>
-                            {errors.country_code && (
-                                <div className="pw-err">
-                                    {errors.country_code}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Logo*</label>
-
-                            {formData.logo && !formData.logo_content && (
-                                <div className="mb-2">
-                                    <img src={formData.logo} alt="Current logo" style={{ maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} />
-                                </div>
-                            )}
-
-                            <div className="input-group mb-3">
-                                <input
-                                    type='file'
-                                    onChange={(e) => {
-                                        errors["logo_content"] = "";
-                                        setErrors({ ...errors });
-
-                                        if (!e.target.value) {
-                                            errors["logo_content"] = "Invalid Logo File";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        formData.logo = e.target.value;
-
-                                        let file = document.querySelector('#logo').files[0];
-
-                                        let targetHeight = 100;
-                                        let targetWidth = 100;
-
-
-                                        let url = URL.createObjectURL(file);
-                                        let img = new Image();
-
-                                        img.onload = function () {
-                                            let originaleWidth = img.width;
-                                            let originalHeight = img.height;
-
-                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
-                                            targetWidth = targetDimensions.targetWidth;
-                                            targetHeight = targetDimensions.targetHeight;
-
-                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
-                                                formData.logo_content = result;
-                                                setFormData({ ...formData });
-
-                                                console.log("formData.logo_content:", formData.logo_content);
-                                            });
-                                        };
-                                        img.src = url;
-
-                                        /*
-                                        resizeFIle(file, (result) => {
-                                            formData.logo_content = result;
-
-                                            console.log("formData.logo_content:", formData.logo_content);
-
-                                            setFormData({ ...formData });
-                                        });
-                                        */
-                                    }}
-                                    className="form-control"
-                                    id="logo"
-                                    placeholder="Logo"
-                                />
-
-
-                            </div>
-                            {errors.logo_content && (
-                                <div className="pw-err">
-
-                                    {errors.logo_content}
-                                </div>
-                            )}
-                        </div>
-
-                        </div></div></div>)}
-                        {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
-                        <div className="row g-3">
-                        <div className="col-md-2">
-                            <label className="form-label">Short code</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.short_code ? formData.national_address.short_code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_short_code"] = "";
-                                        formData.national_address.short_code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.short_code "
-                                    placeholder="Short code "
-                                />
-                            </div>
-                            {errors.national_address_short_code && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_short_code}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Building Number(4 digits)*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.building_no ? formData.national_address.building_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_building_no"] = "";
-                                        formData.national_address.building_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.building_no"
-                                    placeholder="Building Number"
-                                />
-                            </div>
-                            {errors.national_address_building_no && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_building_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Street Name*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.street_name ? formData.national_address.street_name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_street_name"] = "";
-                                        formData.national_address.street_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.street_name"
-                                    placeholder="Street Name"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_street_name && (
-                                <div className="pw-err">
-                                    {errors.national_address_street_name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Street Name(Arabic)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.street_name_arabic ? formData.national_address.street_name_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_street_name_arabic"] = "";
-                                        formData.national_address.street_name_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.street_name_arabic"
-                                    placeholder="Street Name(Arabic)"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_street_name_arabic && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_street_name_arabic}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <label className="form-label">District Name*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.district_name ? formData.national_address.district_name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_district_name"] = "";
-                                        formData.national_address.district_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.district_name"
-                                    placeholder="District Name"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_district_name && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_district_name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">District Name(Arabic)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.district_name_arabic ? formData.national_address.district_name_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_district_name_arabic"] = "";
-                                        formData.national_address.district_name_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.district_name_arabic"
-                                    placeholder="District Name(Arabic)"
-                                />
-
-
-                            </div>
-                            {errors.national_address_district_name_arabic && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_district_name_arabic}
-                                </div>
-                            )}
-
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <label className="form-label">City Name*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.city_name ? formData.national_address.city_name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_city_name"] = "";
-                                        formData.national_address.city_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.city_name"
-                                    placeholder="City Name"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_city_name && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_city_name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">City Name(Arabic)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_city_name_arabic"] = "";
-                                        formData.national_address.city_name_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.city_name_arabic"
-                                    placeholder="City Name(Arabic)"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_city_name_arabic && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_city_name_arabic}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Zipcode(5 digits)*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.zipcode ? formData.national_address.zipcode : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_zipcode"] = "";
-                                        formData.national_address.zipcode = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.zipcode"
-                                    placeholder="Zipcode"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_zipcode && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_zipcode}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Additional Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.additional_no ? formData.national_address.additional_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_additional_no"] = "";
-                                        formData.national_address.additional_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.additional_no"
-                                    placeholder="Additional Number"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_additional_no && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_additional_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Unit Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.unit_no ? formData.national_address.unit_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_unit_no"] = "";
-                                        formData.national_address.unit_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.unit_no"
-                                    placeholder="Unit Number"
-                                />
-
-
-
-                            </div>
-                            {errors.national_address_unit_no && (
-                                <div className="pw-err">
-
-                                    {errors.national_address_unit_no}
-                                </div>
-                            )}
-                        </div>
-
-
-
-
-
-                        </div></div></div>)}
-                        {activeTab === 'invoice_titles' && (<div className="pw-tab-wrap"><div className="pw-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Titles</h3></div>
-                        <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
-                        <h6><b>Sales</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase1_sales_titles_paid"] = "";
-                                            formData.settings.invoice.phase1.sales_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_titles.paid}
+                                        <div className="col-md-2">
+                                            <label className="form-label">Registration Number(CRN)*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.registration_number ? formData.registration_number : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["registration_number"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.registration_number = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="registration_number"
+                                                    placeholder="CRN"
+                                                />
+
+
+                                            </div>
+                                            {errors.registration_number && (
+                                                <div className="pw-err">
+
+                                                    {errors.registration_number}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Zipcode*(5 digits)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.zipcode ? formData.zipcode : ""}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["zipcode"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.zipcode = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="zipcode"
+                                                    placeholder="Zipcode"
+                                                />
+
+
+                                            </div>
+                                            {errors.zipcode && (
+                                                <div className="pw-err">
+                                                    {errors.zipcode}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Phone* ( 05.. / +966..)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.phone ? formData.phone : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["phone"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.phone = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="phone"
+                                                    placeholder="Phone"
+                                                />
+
+
+                                            </div>
+                                            {errors.phone && (
+                                                <div className="pw-err">
+
+                                                    {errors.phone}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">VAT NO.* (15 digits)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.vat_no ? formData.vat_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["vat_no"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.vat_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="vat_no"
+                                                    placeholder="VAT NO."
+                                                />
+
+
+                                            </div>
+                                            {errors.vat_no && (
+                                                <div className="pw-err">
+
+                                                    {errors.vat_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-1">
+                                            <label className="form-label">VAT %*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.vat_percent ? formData.vat_percent : ""}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["vat_percent"] = "";
+                                                        setErrors({ ...errors });
+
+                                                        if (isNaN(e.target.value)) {
+                                                            errors["vat_percent"] = "Invalid Discount";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        formData.vat_percent = e.target.value;
+
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="vat_percent"
+                                                    placeholder="%"
+                                                />
+
+
+                                            </div>
+                                            {errors.vat_percent && (
+                                                <div className="pw-err">
+
+                                                    {errors.vat_percent}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Email*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.email ? formData.email : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["email"] = "";
+
+                                                        formData.email = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="email"
+                                                    placeholder="Email"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.email && (
+                                                <div className="pw-err">
+
+                                                    {errors.email}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Address*</label>
+
+                                            <div className="input-group mb-3">
+                                                <textarea
+                                                    value={formData.address}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["address"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.address = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="address"
+                                                    placeholder="Address"
+                                                />
+
+                                            </div>
+                                            {errors.address && (
+                                                <div className="pw-err">
+
+                                                    {errors.address}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Address In Arabic*</label>
+
+                                            <div className="input-group mb-3">
+                                                <textarea
+                                                    value={formData.address_in_arabic}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["address_in_arabic"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.address_in_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="address_in_arabic"
+                                                    placeholder="Address In Arabic"
+                                                />
+
+                                            </div>
+                                            {errors.address_in_arabic && (
+                                                <div className="pw-err">
+
+                                                    {errors.address_in_arabic}
+                                                </div>
+                                            )}
+
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Country*</label>
+
+                                            <div className="input-group mb-3">
+                                                <Typeahead
+                                                    id="country_code"
+                                                    labelKey="label"
+                                                    onChange={(selectedItems) => {
+                                                        errors.country_code = "";
+                                                        setErrors(errors);
+                                                        if (selectedItems.length === 0) {
+                                                            errors.country_code = "Invalid country selected";
+                                                            setErrors(errors);
+                                                            formData.country_code = "";
+                                                            formData.country_name = "";
+                                                            setFormData({ ...formData });
+                                                            setSelectedCountries([]);
+                                                            return;
+                                                        }
+                                                        formData.country_code = selectedItems[0].value;
+                                                        formData.country_name = selectedItems[0].label;
+                                                        setFormData({ ...formData });
+                                                        setSelectedCountries(selectedItems);
+                                                    }}
+                                                    options={countryOptions}
+                                                    placeholder="Country name"
+                                                    selected={selectedCountries}
+                                                    highlightOnlyResult={true}
+                                                    ref={countrySearchRef}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Escape") {
+                                                            countrySearchRef.current?.clear();
+                                                        }
+                                                    }}
+                                                    onInputChange={(searchTerm, e) => {
+                                                        //suggestBrands(searchTerm);
+                                                    }}
+                                                />
+                                            </div>
+                                            {errors.country_code && (
+                                                <div className="pw-err">
+                                                    {errors.country_code}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Logo*</label>
+
+                                            {formData.logo && !formData.logo_content && (
+                                                <div className="mb-2">
+                                                    <img src={formData.logo} alt="Current logo" style={{ maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} />
+                                                </div>
+                                            )}
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    type='file'
+                                                    onChange={(e) => {
+                                                        errors["logo_content"] = "";
+                                                        setErrors({ ...errors });
+
+                                                        if (!e.target.value) {
+                                                            errors["logo_content"] = "Invalid Logo File";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        formData.logo = e.target.value;
+
+                                                        let file = document.querySelector('#logo').files[0];
+
+                                                        let targetHeight = 100;
+                                                        let targetWidth = 100;
+
+
+                                                        let url = URL.createObjectURL(file);
+                                                        let img = new Image();
+
+                                                        img.onload = function () {
+                                                            let originaleWidth = img.width;
+                                                            let originalHeight = img.height;
+
+                                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
+                                                            targetWidth = targetDimensions.targetWidth;
+                                                            targetHeight = targetDimensions.targetHeight;
+
+                                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                                formData.logo_content = result;
+                                                                setFormData({ ...formData });
+
+                                                                console.log("formData.logo_content:", formData.logo_content);
+                                                            });
+                                                        };
+                                                        img.src = url;
+
+                                                        /*
+                                                        resizeFIle(file, (result) => {
+                                                            formData.logo_content = result;
+                
+                                                            console.log("formData.logo_content:", formData.logo_content);
+                
+                                                            setFormData({ ...formData });
+                                                        });
+                                                        */
+                                                    }}
+                                                    className="form-control"
+                                                    id="logo"
+                                                    placeholder="Logo"
+                                                />
+
+
+                                            </div>
+                                            {errors.logo_content && (
+                                                <div className="pw-err">
+
+                                                    {errors.logo_content}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                    </div></div></div>)}
+                                {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
+                                    <div className="row g-3">
+                                        <div className="col-md-2">
+                                            <label className="form-label">Short code</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.short_code ? formData.national_address.short_code : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_short_code"] = "";
+                                                        formData.national_address.short_code = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.short_code "
+                                                    placeholder="Short code "
+                                                />
+                                            </div>
+                                            {errors.national_address_short_code && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_short_code}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Building Number(4 digits)*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.building_no ? formData.national_address.building_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_building_no"] = "";
+                                                        formData.national_address.building_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.building_no"
+                                                    placeholder="Building Number"
+                                                />
+                                            </div>
+                                            {errors.national_address_building_no && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_building_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Street Name*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.street_name ? formData.national_address.street_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_street_name"] = "";
+                                                        formData.national_address.street_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.street_name"
+                                                    placeholder="Street Name"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_street_name && (
+                                                <div className="pw-err">
+                                                    {errors.national_address_street_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Street Name(Arabic)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.street_name_arabic ? formData.national_address.street_name_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_street_name_arabic"] = "";
+                                                        formData.national_address.street_name_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.street_name_arabic"
+                                                    placeholder="Street Name(Arabic)"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_street_name_arabic && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_street_name_arabic}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">District Name*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.district_name ? formData.national_address.district_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_district_name"] = "";
+                                                        formData.national_address.district_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.district_name"
+                                                    placeholder="District Name"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_district_name && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_district_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">District Name(Arabic)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.district_name_arabic ? formData.national_address.district_name_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_district_name_arabic"] = "";
+                                                        formData.national_address.district_name_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.district_name_arabic"
+                                                    placeholder="District Name(Arabic)"
+                                                />
+
+
+                                            </div>
+                                            {errors.national_address_district_name_arabic && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_district_name_arabic}
+                                                </div>
+                                            )}
+
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">City Name*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.city_name ? formData.national_address.city_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_city_name"] = "";
+                                                        formData.national_address.city_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.city_name"
+                                                    placeholder="City Name"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_city_name && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_city_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">City Name(Arabic)</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_city_name_arabic"] = "";
+                                                        formData.national_address.city_name_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.city_name_arabic"
+                                                    placeholder="City Name(Arabic)"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_city_name_arabic && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_city_name_arabic}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Zipcode(5 digits)*</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.zipcode ? formData.national_address.zipcode : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_zipcode"] = "";
+                                                        formData.national_address.zipcode = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.zipcode"
+                                                    placeholder="Zipcode"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_zipcode && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_zipcode}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Additional Number</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.additional_no ? formData.national_address.additional_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_additional_no"] = "";
+                                                        formData.national_address.additional_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.additional_no"
+                                                    placeholder="Additional Number"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_additional_no && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_additional_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Unit Number</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.national_address.unit_no ? formData.national_address.unit_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["national_address_unit_no"] = "";
+                                                        formData.national_address.unit_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="national_address.unit_no"
+                                                    placeholder="Unit Number"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.national_address_unit_no && (
+                                                <div className="pw-err">
+
+                                                    {errors.national_address_unit_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+
+
+
+                                    </div></div></div>)}
+                                {activeTab === 'invoice_titles' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Titles</h3></div>
+                                    <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
+                                    <h6><b>Sales</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_titles_paid"] = "";
+                                                        formData.settings.invoice.phase1.sales_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_titles_credit"] = "";
+                                                        formData.settings.invoice.phase1.sales_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_titles_cash"] = "";
+                                                        formData.settings.invoice.phase1.sales_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_titles_credit"] = "";
-                                            formData.settings.invoice.phase1.sales_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_titles.credit}
+                                    <h6><b>Sales Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_return_titles_paid"] = "";
+                                                        formData.settings.invoice.phase1.sales_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
+                                                        formData.settings.invoice.phase1.sales_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.sales_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_return_titles_cash"] = "";
+                                                        formData.settings.invoice.phase1.sales_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.sales_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.sales_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.sales_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_titles_cash"] = "";
-                                            formData.settings.invoice.phase1.sales_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_titles.cash}
+
+                                    <h6><b>Purchase</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_titles_paid"] = "";
+                                                        formData.settings.invoice.phase1.purchase_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_titles_credit"] = "";
+                                                        formData.settings.invoice.phase1.purchase_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_titles_cash"] = "";
+                                                        formData.settings.invoice.phase1.purchase_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <h6><b>Sales Return</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
+                                    <h6><b>Purchase Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_return_titles_paid"] = "";
-                                            formData.settings.invoice.phase1.sales_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_return_titles.paid}
+                                                        errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
+                                                        formData.settings.invoice.phase1.purchase_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
+                                                        formData.settings.invoice.phase1.purchase_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase1?.purchase_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_return_titles_cash"] = "";
+                                                        formData.settings.invoice.phase1.purchase_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase1.purchase_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase1?.purchase_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase1.purchase_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
-                                            formData.settings.invoice.phase1.sales_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_return_titles.credit}
+
+                                    <h6><b>Zatca Phase 2 Invoice Titles</b></h6>
+                                    <h6><b>Sales</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_sales_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2.sales_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_sales_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2.sales_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_sales_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2.sales_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_sales_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_sales_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_sales_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_return_titles_cash"] = "";
-                                            formData.settings.invoice.phase1.sales_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.sales_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.sales_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.sales_return_titles.cash}
+                                    <h6><b>Sales Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_sales_return_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2.sales_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2.sales_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.sales_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_sales_return_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2.sales_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.sales_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.sales_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.sales_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_sales_return_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_b2b_sales_return_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_sales_return_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2_b2b.sales_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.sales_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.sales_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
+
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
 
-                        <h6><b>Purchase</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
+                                    <h6><b>Purchase</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_titles_paid"] = "";
-                                            formData.settings.invoice.phase1.purchase_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_titles.paid}
+                                                        errors["settings_invoice_phase2_purchase_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2.purchase_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_purchase_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2.purchase_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2C*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_purchase_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2.purchase_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_purchase_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2_b2b.purchase_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.purchase_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.purchase_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_purchase_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2_b2b.purchase_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.purchase_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.purchase_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash B2B*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_b2b_purchase_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2_b2b.purchase_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2_b2b.purchase_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2_b2b.purchase_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_titles_credit"] = "";
-                                            formData.settings.invoice.phase1.purchase_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_titles.credit}
+                                    <h6><b>Purchase Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
+                                                        formData.settings.invoice.phase2.purchase_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
+                                                        formData.settings.invoice.phase2.purchase_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.phase2?.purchase_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_phase2_purchase_return_titles_cash"] = "";
+                                                        formData.settings.invoice.phase2.purchase_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.phase2.purchase_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.phase2?.purchase_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.phase2.purchase_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_titles_cash"] = "";
-                                            formData.settings.invoice.phase1.purchase_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_titles.cash}
+                                    <h6><b>Other Invoice Titles</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Quotation*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_title"] = "";
+                                                        formData.settings.invoice.quotation_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_titled"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_title}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Delivery Note*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.delivery_note_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_delivery_note"] = "";
+                                                        formData.settings.invoice.delivery_note_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.delivery_note_title"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.delivery_note_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.delivery_note_title}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Stock Transfer*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.stock_transfer_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_stock_transfer"] = "";
+                                                        formData.settings.invoice.stock_transfer_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.stock_transfer_title"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.stock_transfer_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.stock_transfer_title}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Purchase Order*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.purchase_order_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["settings_invoice_purchase_order_title"] = "";
+                                                        formData.settings.invoice.purchase_order_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.purchase_order_title"
+                                                    placeholder="Purchase Order title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.purchase_order_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.purchase_order_title}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Payable*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.payable_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_payable_title"] = "";
+                                                        formData.settings.invoice.payable_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.payable_title"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.payable_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.payable_title}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Receivable*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.receivable_title}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["settings_invoice_receivable_title"] = "";
+                                                        formData.settings.invoice.receivable_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.receivable_title"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.receivable_title && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.receivable_title}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <h6><b>Purchase Return</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
-                                            formData.settings.invoice.phase1.purchase_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_return_titles.paid}
+                                    <h6><b>Qtn. Sales</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_sales_titles"] = "";
+                                                        formData.settings.invoice.quotation_sales_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_sales_titles"] = "";
+                                                        formData.settings.invoice.quotation_sales_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_sales_titles_cash"] = "";
+                                                        formData.settings.invoice.quotation_sales_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
-                                            formData.settings.invoice.phase1.purchase_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_return_titles.credit}
+                                    <h6><b>Qtn. Sales Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_sales_return_titles"] = "";
+                                                        formData.settings.invoice.quotation_sales_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_return_titles?.paid && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_return_titles.paid}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["settings_invoice_quotation_sales_return_titles"] = "";
+                                                        formData.settings.invoice.quotation_sales_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_return_titles?.credit && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_return_titles.credit}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.quotation_sales_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["settings_invoice_quotation_sales_return_titles_cash"] = "";
+                                                        formData.settings.invoice.quotation_sales_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.quotation_sales_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                            {errors.settings?.invoice?.quotation_sales_return_titles?.cash && (
+                                                <div className="pw-err">
+                                                    {errors.settings.invoice.quotation_sales_return_titles.cash}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_purchase_return_titles_cash"] = "";
-                                            formData.settings.invoice.phase1.purchase_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase1.purchase_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase1.purchase_return_titles.cash}
+
+                                </div></div>)}
+                                {activeTab === 'serial_numbers' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-hash" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Serial Numbers</h3></div>
+                                    <div className="row g-3">
+                                        <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.stock_transfer_serial_number?.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.stock_transfer_serial_number.prefix"] = "";
+                                                        formData.stock_transfer_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.stock_transfer_serial_number.prefix"
+                                                    placeholder="S-INV-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.stock_transfer_serial_number_prefix && (
+                                                <div className="pw-err">
+
+                                                    {errors.stock_transfer_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.stock_transfer_serial_number?.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.stock_transfer_serial_number.padding_count"] = "";
+                                                        formData.stock_transfer_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.stock_transfer_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+
+
+                                            </div>
+                                            {errors.formData?.stock_transfer_serial_number?.padding_count && (
+                                                <div className="pw-err">
+
+                                                    {errors.stock_transfer_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.stock_transfer_serial_number?.start_from_count ? formData.stock_transfer_serial_number.start_from_count : ""}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["formData.stock_transfer_serial_number.start_from_count"] = "";
+                                                        formData.stock_transfer_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.stock_transfer_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.stock_transfer_serial_number_start_from_count && (
+                                                <div className="pw-err">
+
+                                                    {errors.stock_transfer_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.sales_serial_number.prefix"] = "";
+                                                        formData.sales_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_serial_number.prefix"
+                                                    placeholder="S-INV-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.sales_serial_number_prefix && (
+                                                <div className="pw-err">
+
+                                                    {errors.sales_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.sales_serial_number.padding_count"] = "";
+                                                        formData.sales_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+
+
+                                            </div>
+                                            {errors.formData?.sales_serial_number.padding_count && (
+                                                <div className="pw-err">
+
+                                                    {errors.sales_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_serial_number?.start_from_count ? formData.sales_serial_number.start_from_count : ""}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.sales_serial_number.start_from_count"] = "";
+                                                        formData.sales_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+
+
+                                            </div>
+                                            {errors.sales_serial_number_start_from_count && (
+                                                <div className="pw-err">
+
+                                                    {errors.sales_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Sales Return ID's:</b> {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_return_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.sales_serial_number.prefix"] = "";
+                                                        formData.sales_return_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_return_serial_number.prefix"
+                                                    placeholder="S-INV-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.sales_return_serial_number_prefix && (
+                                                <div className="pw-err">
+
+                                                    {errors.sales_return_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_return_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.sales_serial_number.padding_count"] = "";
+                                                        formData.sales_return_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_return_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+
+
+                                            </div>
+                                            {errors.sales_return_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    {errors.sales_return_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.sales_return_serial_number.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.sales_return_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.sales_serial_number.start_from_count"] = "";
+                                                        formData.sales_return_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.sales_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.sales_return_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    {errors.sales_return_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <h5><b>Purchase ID's:</b> {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.purchase_serial_number.prefix"] = "";
+                                                        formData.purchase_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_serial_number.prefix"
+                                                    placeholder="S-INV-UMLJ"
+                                                />
+
+                                            </div>
+
+                                            {errors.purchase_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    {errors.purchase_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.purchase_serial_number.padding_count"] = "";
+                                                        formData.purchase_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.purchase_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    {errors.purchase_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_serial_number.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.purchase_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.purchase_serial_number.start_from_count"] = "";
+                                                        formData.purchase_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+
+                                            </div>
+                                            {errors.purchase_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <h5><b>Purchase Return ID's:</b> {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_return_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.purchase_return_serial_number.prefix"] = "";
+                                                        formData.purchase_return_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_return_serial_number.prefix"
+                                                    placeholder="PR-INV-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.purchase_return_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_return_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_return_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.purchase_return_serial_number.padding_count"] = "";
+                                                        formData.purchase_return_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_return_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+
+
+                                            </div>
+                                            {errors.purchase_return_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_return_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_return_serial_number.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.purchase_return_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.purchase_return_serial_number.start_from_count"] = "";
+                                                        formData.purchase_return_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_return_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+
+                                            </div>
+
+                                            {errors.purchase_return_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_return_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <h5><b>Purchase Order ID's:</b> {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String(formData.purchase_order_serial_number?.start_from_count).padStart(formData.purchase_order_serial_number?.padding_count, '0')}, {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String((formData.purchase_order_serial_number?.start_from_count + 1)).padStart(formData.purchase_order_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_order_serial_number?.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["purchase_order_serial_number.prefix"] = "";
+                                                        formData.purchase_order_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_order_serial_number.prefix"
+                                                    placeholder="PO"
+                                                />
+                                            </div>
+                                            {errors.purchase_order_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_order_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_order_serial_number?.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["purchase_order_serial_number.padding_count"] = "";
+                                                        formData.purchase_order_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_order_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.purchase_order_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_order_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_order_serial_number?.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.purchase_order_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        errors["purchase_order_serial_number.start_from_count"] = "";
+                                                        formData.purchase_order_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_order_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.purchase_order_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.purchase_order_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <h5><b>Quotation ID's:</b> {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.quotation_serial_number.prefix"] = "";
+                                                        formData.quotation_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_serial_number.prefix"
+                                                    placeholder="QTN"
+                                                />
+
+
+                                            </div>
+                                            {errors.quotation_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.quotation_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.quotation_serial_number.padding_count"] = "";
+                                                        formData.quotation_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.quotation_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.quotation_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.quotation_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.quotation_serial_number.start_from_count"] = "";
+                                                        formData.quotation_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.quotation_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.quotation_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Quotation Sales Return ID's:</b> {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String(formData.quotation_sales_return_serial_number.start_from_count).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}, {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String((formData.quotation_sales_return_serial_number.start_from_count + 1)).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_sales_return_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.quotation_sales_serial_number.prefix"] = "";
+                                                        formData.quotation_sales_return_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_sales_return_serial_number.prefix"
+                                                    placeholder="QTN-SR"
+                                                />
+
+
+                                            </div>
+                                            {errors.quotation_sales_return_serial_number_prefix && (
+                                                <div className="pw-err">
+
+                                                    {errors.quotation_sales_return_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_sales_return_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.quotation_sales_serial_number.padding_count"] = "";
+                                                        formData.quotation_sales_return_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_sales_return_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+
+
+                                            </div>
+                                            {errors.quotation_sales_return_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    {errors.quotation_sales_return_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.quotation_sales_return_serial_number.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.quotation_sales_return_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.quotation_sales_serial_number.start_from_count"] = "";
+                                                        formData.quotation_sales_return_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.quotation_sales_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.quotation_sales_return_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    {errors.quotation_sales_return_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.customer_serial_number.prefix"] = "";
+                                                        formData.customer_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.customer_serial_number.prefix"
+                                                    placeholder="CUST-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.customer_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.customer_serial_number.padding_count"] = "";
+                                                        formData.customer_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.customer_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.customer_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.customer_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["formData.customer_serial_number.start_from_count"] = "";
+                                                        formData.customer_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.customer_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.customer_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.vendor_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["formData.vendor_serial_number.prefix"] = "";
+                                                        formData.vendor_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.vendor_serial_number.prefix"
+                                                    placeholder="VND-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.vendor_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.vendor_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.vendor_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["formData.vendor_serial_number.padding_count"] = "";
+                                                        formData.vendor_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.vendor_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.vendor_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.vendor_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.vendor_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.vendor_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["vendor_serial_number_start_from_count"] = "";
+                                                        formData.vendor_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.vendor_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.vendor_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.vendor_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Expense ID's:</b> {formData.expense_serial_number?.prefix.toUpperCase()}-{String(formData.expense_serial_number?.start_from_count).padStart(formData.expense_serial_number.padding_count, '0')}, {formData.expense_serial_number?.prefix.toUpperCase()}-{String((formData.expense_serial_number?.start_from_count + 1)).padStart(formData.expense_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.expense_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["expense_serial_number_prefix"] = "";
+                                                        formData.expense_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.expense_serial_number.prefix"
+                                                    placeholder="EXP-UMLJ"
+                                                />
+
+
+                                            </div>
+                                            {errors.expense_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.expense_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.expense_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["expense_serial_number.padding_count"] = "";
+                                                        formData.expense_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.expense_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.expense_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.expense_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.expense_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.expense_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["expense_serial_number.start_from_count"] = "";
+                                                        formData.expense_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.expense_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.expense_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.expense_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Delivery Note ID's:</b> {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String(formData.delivery_note_serial_number?.start_from_count).padStart(formData.delivery_note_serial_number.padding_count, '0')}, {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String((formData.delivery_note_serial_number?.start_from_count + 1)).padStart(formData.delivery_note_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.delivery_note_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["delivery_note_serial_number.prefix"] = "";
+                                                        formData.delivery_note_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.delivery_note_serial_number.prefix"
+                                                    placeholder="DEL-NOTE"
+                                                />
+
+
+                                            </div>
+                                            {errors.delivery_note_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.delivery_note_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.delivery_note_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["delivery_note_serial_number.padding_count"] = "";
+                                                        formData.delivery_note_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.delivery_note_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.delivery_note_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.delivery_note_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.delivery_note_serial_number.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.delivery_note_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["delivery_note_serial_number.start_from_count"] = "";
+                                                        formData.delivery_note_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.delivery_note_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.delivery_note_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.delivery_note_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <h5><b>Purchase Request ID's:</b> {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String(formData.purchase_request_serial_number?.start_from_count).padStart(formData.purchase_request_serial_number?.padding_count, '0')}, {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String((formData.purchase_request_serial_number?.start_from_count + 1)).padStart(formData.purchase_request_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_request_serial_number?.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.purchase_request_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_request_serial_number.prefix"
+                                                    placeholder="PR"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_request_serial_number?.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        formData.purchase_request_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_request_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.purchase_request_serial_number?.start_from_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.purchase_request_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        formData.purchase_request_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.purchase_request_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <h5><b>Customer Receivable ID's:</b> {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.customer_deposit_serial_number?.start_from_count).padStart(formData.customer_deposit_serial_number.padding_count, '0')}, {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.ustomer_deposit_serial_number?.start_from_count + 1)).padStart(formData.ustomer_deposit_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_deposit_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["customer_deposit_serial_number.prefix"] = "";
+                                                        formData.customer_deposit_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.customer_deposit_serial_number.prefix"
+                                                    placeholder="CUST-RCVBLE"
+                                                />
+
+
+                                            </div>
+                                            {errors.customer_deposit_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_deposit_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_deposit_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["customer_deposit_serial_number.padding_count"] = "";
+                                                        formData.customer_deposit_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="customer_deposit_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.customer_deposit_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_deposit_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_deposit_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.customer_deposit_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["customer_deposit_serial_number.start_from_count"] = "";
+                                                        formData.customer_deposit_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="customer_deposit_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.customer_deposit_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_deposit_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Customer Payable ID's:</b> {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String(formData.customer_withdrawal_serial_number?.start_from_count).padStart(formData.customer_withdrawal_serial_number.padding_count, '0')}, {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String((formData.customer_withdrawal_serial_number?.start_from_count + 1)).padStart(formData.customer_withdrawal_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_withdrawal_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["customer_withdrawal_serial_number.prefix"] = "";
+                                                        formData.customer_withdrawal_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.customer_withdrawal_serial_number.prefix"
+                                                    placeholder="CUST-PYBLE"
+                                                />
+
+
+                                            </div>
+                                            {errors.customer_withdrawal_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_withdrawal_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_withdrawal_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["customer_withdrawal_serial_number.padding_count"] = "";
+                                                        formData.customer_withdrawal_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="customer_withdrawal_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.customer_withdrawal_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_withdrawal_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.customer_withdrawal_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.customer_withdrawal_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["customer_deposit_serial_number.start_from_count"] = "";
+                                                        formData.customer_withdrawal_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="customer_withdrawal_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.customer_withdrawal_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.customer_withdrawal_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Capital ID's:</b> {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.capital_deposit_serial_number?.start_from_count).padStart(formData.capital_deposit_serial_number.padding_count, '0')}, {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.capital_deposit_serial_number?.start_from_count + 1)).padStart(formData.capital_deposit_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.capital_deposit_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["capital_deposit_serial_number.prefix"] = "";
+                                                        formData.capital_deposit_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.capital_deposit_serial_number.prefix"
+                                                    placeholder="CAP-DEPO"
+                                                />
+
+
+                                            </div>
+                                            {errors.capital_deposit_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.capital_deposit_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.capital_deposit_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["capital_deposit_serial_number_padding_count"] = "";
+                                                        formData.capital_deposit_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="capital_deposit_serial_number_padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.capital_deposit_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.capital_deposit_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.capital_deposit_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.capital_deposit_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["capital_deposit_serial_number.start_from_count"] = "";
+                                                        formData.capital_deposit_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="capital_deposit_serial_number_start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.capital_deposit_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.capital_deposit_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h5><b>Drawing ID's:</b> {formData.divident_serial_number?.prefix.toUpperCase()}-{String(formData.divident_serial_number?.start_from_count).padStart(formData.divident_serial_number.padding_count, '0')}, {formData.divident_serial_number?.prefix.toUpperCase()}-{String((formData.divident_serial_number?.start_from_count + 1)).padStart(formData.divident_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.divident_serial_number.prefix}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["divident_serial_number.prefix"] = "";
+                                                        formData.divident_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="divident_serial_number.prefix"
+                                                    placeholder="CAP-DRWNG"
+                                                />
+
+
+                                            </div>
+                                            {errors.divident_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.divident_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.divident_serial_number.padding_count}
+                                                    type='number'
+                                                    onChange={(e) => {
+
+                                                        errors["divident_serial_number_padding_count"] = "";
+                                                        formData.divident_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="divident_serial_number_padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                            {errors.divident_serial_number_padding_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.divident_serial_number_padding_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.divident_serial_number.start_from_count}
+
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.divident_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return
+                                                        }
+                                                        errors["divident_serial_number.start_from_count"] = "";
+                                                        formData.divident_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="divident_serial_number_start_from_count"
+                                                    placeholder="eg: Start counting from 1000"
+                                                />
+                                            </div>
+                                            {errors.divident_serial_number_start_from_count && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.divident_serial_number_start_from_count}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                    </div></div></div>)}
+                                {activeTab === 'bank_account' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Bank Account</h3></div>
+                                    <div className="row g-3">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Bank Name</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.bank_account.bank_name ? formData.bank_account.bank_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["bank_account_bank_name"] = "";
+                                                        formData.bank_account.bank_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="bank_account_bank_name"
+                                                    placeholder="Bank Name"
+                                                />
+
+
+
+                                            </div>
+                                            {errors.bank_account_bank_name && (
+                                                <div className="pw-err">
+                                                    {errors.bank_account_bank_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Customer No.</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.bank_account.customer_no ? formData.bank_account.customer_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["bank_account_customer_no"] = "";
+                                                        formData.bank_account.customer_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="bank_account_customer_no"
+                                                    placeholder="Customer No"
+                                                />
+                                            </div>
+                                            {errors.bank_account_customer_no && (
+                                                <div className="pw-err">
+                                                    {errors.bank_account_customer_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">IBAN</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.bank_account.iban ? formData.bank_account.iban : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["bank_account_iban"] = "";
+                                                        formData.bank_account.iban = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="bank_account_iban"
+                                                    placeholder="IBAN"
+                                                />
+                                            </div>
+                                            {errors.bank_account_iban && (
+                                                <div className="pw-err">
+                                                    {errors.bank_account_iban}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Account Name</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.bank_account.account_name ? formData.bank_account.account_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["bank_account_account_name"] = "";
+                                                        formData.bank_account.account_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="bank_account_account_name"
+                                                    placeholder="Account Name"
+                                                />
+                                            </div>
+                                            {errors.bank_account_account_name && (
+                                                <div className="pw-err">
+                                                    {errors.bank_account_account_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Account No.</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.bank_account.account_no ? formData.bank_account.account_no : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+
+                                                        errors["bank_account_account_no"] = "";
+                                                        formData.bank_account.account_no = e.target.value;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className="form-control"
+                                                    id="bank_account_account_no"
+                                                    placeholder="Account No."
+                                                />
+                                            </div>
+                                            {errors.bank_account_account_no && (
+                                                <div className="pw-err">
+                                                    {errors.bank_account_account_no}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                    </div></div></div>)}
+                                {activeTab === 'settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-gear" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Settings</h3></div>
+
+                                    {/* ── Invoice & Display ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-receipt" style={{ color: '#004ac6' }}></i> Invoice &amp; Display</div>
+                                        <div className="pw-check-grid">
+                                            <label className="pw-check" htmlFor="show_currency_symbol">
+                                                <input type="checkbox" id="show_currency_symbol" checked={!!formData.settings.show_currency_symbol} value={formData.settings.show_currency_symbol} onChange={() => { errors["show_currency_symbol"] = ""; formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol; setFormData({ ...formData }); }} />
+                                                <span>Show Currency Symbol</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="show_seller_info_in_invoice">
+                                                <input type="checkbox" id="show_seller_info_in_invoice" checked={!!formData.settings.show_seller_info_in_invoice} value={formData.settings.show_seller_info_in_invoice} onChange={() => { errors["show_seller_info_in_invoice"] = ""; formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice; setFormData({ ...formData }); }} />
+                                                <span>Show Seller Info in Invoice</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="show_address_in_invoice_footer">
+                                                <input type="checkbox" id="show_address_in_invoice_footer" checked={!!formData.settings.show_address_in_invoice_footer} value={formData.settings.show_address_in_invoice_footer} onChange={() => { errors["formData.show_address_in_invoice_footer"] = ""; formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer; setFormData({ ...formData }); }} />
+                                                <span>Show Address in Invoice Footer</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="show_received_by_footer_in_invoice">
+                                                <input type="checkbox" id="show_received_by_footer_in_invoice" name="show_received_by_footer_in_invoice" checked={!!formData.settings.show_received_by_footer_in_invoice} value={formData.settings.show_received_by_footer_in_invoice} onChange={() => { errors["show_received_by_footer_in_invoice"] = ""; formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice; setFormData({ ...formData }); }} />
+                                                <span>Show Received By Footer in Invoices</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="zatca_qr_on_left_bottom">
+                                                <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
+                                                <span>ZATCA QR on Left Bottom</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_zatca_reporting_for_receivables">
+                                                <input type="checkbox" id="enable_zatca_reporting_for_receivables" checked={!!formData.settings.enable_zatca_reporting_for_receivables} value={formData.settings.enable_zatca_reporting_for_receivables} onChange={() => { formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables; setFormData({ ...formData }); }} />
+                                                <span>Enable ZATCA Reporting for Receivables (Debit Note)</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_zatca_reporting_for_payables">
+                                                <input type="checkbox" id="enable_zatca_reporting_for_payables" checked={!!formData.settings.enable_zatca_reporting_for_payables} value={formData.settings.enable_zatca_reporting_for_payables} onChange={() => { formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables; setFormData({ ...formData }); }} />
+                                                <span>Enable ZATCA Reporting for Payables (Credit Note)</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
+                                                <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
+                                                <span>Auto Prompt Advance Payment Linking in Sales Payments</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="display_vat_in_receivables_and_payables">
+                                                <input type="checkbox" id="display_vat_in_receivables_and_payables" checked={!!formData.settings.display_vat_in_receivables_and_payables} value={formData.settings.display_vat_in_receivables_and_payables} onChange={() => { formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables; setFormData({ ...formData }); }} />
+                                                <span>Display VAT in Receivables &amp; Payables</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_invoice_print_type_selection">
+                                                <input type="checkbox" id="enable_invoice_print_type_selection" checked={!!formData.settings.enable_invoice_print_type_selection} value={formData.settings.enable_invoice_print_type_selection} onChange={() => { errors["enable_invoice_print_type_selection"] = ""; formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection; setFormData({ ...formData }); }} />
+                                                <span>Enable Invoice Print Type Selection</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="one_line_product_name_in_invoice">
+                                                <input type="checkbox" id="one_line_product_name_in_invoice" checked={!!formData.settings.one_line_product_name_in_invoice} value={formData.settings.one_line_product_name_in_invoice} onChange={() => { errors["one_line_product_name_in_invoice"] = ""; formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice; setFormData({ ...formData }); }} />
+                                                <span>One Line Product Name in Invoice</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="one_line_product_name_in_print_invoice">
+                                                <input type="checkbox" id="one_line_product_name_in_print_invoice" checked={!!formData.settings.one_line_product_name_in_print_invoice} value={formData.settings.one_line_product_name_in_print_invoice} onChange={() => { errors["one_line_product_name_in_print_invoice"] = ""; formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice; setFormData({ ...formData }); }} />
+                                                <span>One Line Product Name in Print Invoice</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="add_price_details_in_delivery_note">
+                                                <input type="checkbox" id="add_price_details_in_delivery_note" checked={!!formData.settings.add_price_details_in_delivery_note} value={formData.settings.add_price_details_in_delivery_note} onChange={() => { errors["add_price_details_in_delivery_note"] = ""; formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note; setFormData({ ...formData }); }} />
+                                                <span>Add Price Details in Delivery Note</span>
+                                            </label>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
-
-                        <h6><b>Zatca Phase 2 Invoice Titles</b></h6>
-                        <h6><b>Sales</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_sales_titles_paid"] = "";
-                                            formData.settings.invoice.phase2.sales_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_titles.paid}
+                                    {/* ── Sales & Purchasing ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-cart3" style={{ color: '#004ac6' }}></i> Sales &amp; Purchasing</div>
+                                        <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
+                                            <label className="pw-check" htmlFor="skip_product_selection_while_delivery_note_import">
+                                                <input type="checkbox" id="skip_product_selection_while_delivery_note_import" checked={!!formData.settings.skip_product_selection_while_delivery_note_import} value={formData.settings.skip_product_selection_while_delivery_note_import} onChange={() => { errors["skip_product_selection_while_delivery_note_import"] = ""; formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import; setFormData({ ...formData }); }} />
+                                                <span>Skip Product Selection on Delivery Note Import</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="disable_purchases_on_accounts">
+                                                <input type="checkbox" id="disable_purchases_on_accounts" checked={!!formData.settings.disable_purchases_on_accounts} value={formData.settings.disable_purchases_on_accounts} onChange={() => { errors["disable_purchases_on_accounts"] = ""; formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts; setFormData({ ...formData }); }} />
+                                                <span>Disable Purchases on Accounts</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="block_sale_when_purchase_price_is_higher">
+                                                <input type="checkbox" id="block_sale_when_purchase_price_is_higher" checked={!!formData.settings.block_sale_when_purchase_price_is_higher} value={formData.settings.block_sale_when_purchase_price_is_higher} onChange={() => { errors["block_sale_when_purchase_price_is_higher"] = ""; formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher; setFormData({ ...formData }); }} />
+                                                <span>Block Sale When Purchase Price is Lower</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_auto_sales_payment_close_on_purchase">
+                                                <input type="checkbox" id="enable_auto_sales_payment_close_on_purchase" checked={!!formData.settings.enable_auto_sales_payment_close_on_purchase} value={formData.settings.enable_auto_sales_payment_close_on_purchase} onChange={() => { errors["enable_auto_sales_payment_close_on_purchase"] = ""; formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase; setFormData({ ...formData }); }} />
+                                                <span>Auto-close Sales Payment on Purchase</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_auto_purchase_payment_close_on_sales">
+                                                <input type="checkbox" id="enable_auto_purchase_payment_close_on_sales" checked={!!formData.settings.enable_auto_purchase_payment_close_on_sales} value={formData.settings.enable_auto_purchase_payment_close_on_sales} onChange={() => { errors["enable_auto_purchase_payment_close_on_sales"] = ""; formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales; setFormData({ ...formData }); }} />
+                                                <span>Auto-close Purchase Payment on Sales</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_auto_payment_close_on_return">
+                                                <input type="checkbox" id="enable_auto_payment_close_on_return" checked={!!formData.settings.enable_auto_payment_close_on_return} value={formData.settings.enable_auto_payment_close_on_return} onChange={() => { errors["enable_auto_payment_close_on_return"] = ""; formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return; setFormData({ ...formData }); }} />
+                                                <span>Auto-close Payment on Return</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="allow_adjust_same_date_payments">
+                                                <input type="checkbox" id="allow_adjust_same_date_payments" checked={!!formData.settings.allow_adjust_same_date_payments} value={formData.settings.allow_adjust_same_date_payments} onChange={() => { errors["allow_adjust_same_date_payments"] = ""; formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments; setFormData({ ...formData }); }} />
+                                                <span>Allow Adjusting Same-Date Payments</span>
+                                            </label>
+                                        </div>
+                                        <div style={{ maxWidth: '280px' }}>
+                                            <div className="pw-field">
+                                                <label htmlFor="block_sales_after_pending_count">Block Sales After N Pending <span style={{ color: '#6b7280', fontWeight: 400 }}>(0 = disabled)</span></label>
+                                                <input type="number" min="0" id="block_sales_after_pending_count" placeholder="0" value={formData.settings.block_sales_after_pending_count || ""}
+                                                    onChange={(e) => { const raw = e.target.value; formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0); setFormData({ ...formData }); }} />
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase2_sales_titles_credit"] = "";
-                                            formData.settings.invoice.phase2.sales_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_titles.credit}
+                                    {/* ── Modules & Features ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-grid-3x3-gap" style={{ color: '#004ac6' }}></i> Modules &amp; Features</div>
+                                        <div className="pw-check-grid">
+                                            <label className="pw-check" htmlFor="enable_warehouse_module">
+                                                <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
+                                                <span>Enable Warehouse Module</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_purchase_order_module">
+                                                <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
+                                                <span>Enable Purchase Order Module</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_purchase_request_module">
+                                                <input type="checkbox" id="enable_purchase_request_module" checked={!!formData.settings.enable_purchase_request_module} value={formData.settings.enable_purchase_request_module} onChange={() => { formData.settings.enable_purchase_request_module = !formData.settings.enable_purchase_request_module; setFormData({ ...formData }); }} />
+                                                <span>Enable Purchase Requests Module (P.R)</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_rbac_module">
+                                                <input type="checkbox" id="enable_rbac_module" checked={!!formData.settings.enable_rbac_module} value={formData.settings.enable_rbac_module} onChange={() => { formData.settings.enable_rbac_module = !formData.settings.enable_rbac_module; setFormData({ ...formData }); }} />
+                                                <span>Enable RBAC Module (Role Based Access Control)</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_sales_page_selection">
+                                                <input type="checkbox" id="enable_sales_page_selection" checked={!!formData.settings.enable_sales_page_selection} value={formData.settings.enable_sales_page_selection} onChange={() => { formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection; setFormData({ ...formData }); }} />
+                                                <span>Enable Sales Page Selection</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_notification">
+                                                <input type="checkbox" id="enable_notification" checked={!!formData.settings.enable_notification} value={formData.settings.enable_notification} onChange={() => { formData.settings.enable_notification = !formData.settings.enable_notification; setFormData({ ...formData }); }} />
+                                                <span>Enable Notifications</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_auto_translation_to_arabic">
+                                                <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
+                                                <span>Enable Auto Translation to Arabic</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_arabic_names_list">
+                                                <input type="checkbox" id="enable_arabic_names_list" checked={!!formData.settings.enable_arabic_names_list} value={formData.settings.enable_arabic_names_list} onChange={() => { formData.settings.enable_arabic_names_list = !formData.settings.enable_arabic_names_list; setFormData({ ...formData }); }} />
+                                                <span>Enable Arabic Names List (Product Form)</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="allow_products_duplicates_by_default">
+                                                <input type="checkbox" id="allow_products_duplicates_by_default" checked={!!formData.settings.allow_products_duplicates_by_default} value={formData.settings.allow_products_duplicates_by_default} onChange={() => { formData.settings.allow_products_duplicates_by_default = !formData.settings.allow_products_duplicates_by_default; setFormData({ ...formData }); }} />
+                                                <span>Mark Allow Products Duplicates by Default</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_products">
+                                                <input type="checkbox" id="enable_products" checked={!!formData.settings.enable_products} value={formData.settings.enable_products} onChange={() => { formData.settings.enable_products = !formData.settings.enable_products; setFormData({ ...formData }); }} />
+                                                <span>Enable Products</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_services">
+                                                <input type="checkbox" id="enable_services" checked={!!formData.settings.enable_services} value={formData.settings.enable_services} onChange={() => { formData.settings.enable_services = !formData.settings.enable_services; setFormData({ ...formData }); }} />
+                                                <span>Enable Services</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_customer_po_no">
+                                                <input type="checkbox" id="enable_customer_po_no" checked={!!formData.settings.enable_customer_po_no} value={formData.settings.enable_customer_po_no} onChange={() => { formData.settings.enable_customer_po_no = !formData.settings.enable_customer_po_no; setFormData({ ...formData }); }} />
+                                                <span>Enable Customer P.O No. Field</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_automobile_module">
+                                                <input type="checkbox" id="enable_automobile_module" checked={!!formData.settings.enable_automobile_module} value={formData.settings.enable_automobile_module} onChange={() => { const nextEnabled = !formData.settings.enable_automobile_module; formData.settings.enable_automobile_module = nextEnabled; const currentDesign = formData.settings.sales_create_form_design || "type1"; if (nextEnabled) { if (!formData.settings.sales_create_form_design || currentDesign === "type1") { formData.settings.sales_create_form_design = "type5"; } } else if (currentDesign === "type5") { formData.settings.sales_create_form_design = "type1"; } setFormData({ ...formData }); }} />
+                                                <span>Enable AutoMobile Workshop Module</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_employee_module">
+                                                <input type="checkbox" id="enable_employee_module" checked={!!formData.settings.enable_employee_module} value={formData.settings.enable_employee_module} onChange={() => { formData.settings.enable_employee_module = !formData.settings.enable_employee_module; setFormData({ ...formData }); }} />
+                                                <span>Enable Employee Module</span>
+                                            </label>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase2_sales_titles_cash"] = "";
-                                            formData.settings.invoice.phase2.sales_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_titles.cash}
+                                    {/* ── Accounting & Financials ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-calculator" style={{ color: '#004ac6' }}></i> Accounting &amp; Financials</div>
+                                        <div className="pw-check-grid">
+                                            <label className="pw-check" htmlFor="show_minus_on_liability_balance_in_balance_sheet">
+                                                <input type="checkbox" id="show_minus_on_liability_balance_in_balance_sheet" checked={!!formData.settings.show_minus_on_liability_balance_in_balance_sheet} value={formData.settings.show_minus_on_liability_balance_in_balance_sheet} onChange={() => { errors["show_minus_on_liability_balance_in_balance_sheet"] = ""; formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet; setFormData({ ...formData }); }} />
+                                                <span>Show Minus on Liability Balance in Balance Sheet</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="hide_total_amount_row_in_balance_sheet">
+                                                <input type="checkbox" id="hide_total_amount_row_in_balance_sheet" checked={!!formData.settings.hide_total_amount_row_in_balance_sheet} value={formData.settings.hide_total_amount_row_in_balance_sheet} onChange={() => { errors["hide_total_amount_row_in_balance_sheet"] = ""; formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet; setFormData({ ...formData }); }} />
+                                                <span>Hide Total Amount Row in Balance Sheet</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="quotation_invoice_accounting">
+                                                <input type="checkbox" id="quotation_invoice_accounting" checked={!!formData.settings.quotation_invoice_accounting} value={formData.settings.quotation_invoice_accounting} onChange={() => { errors["formData.quotation_invoice_accounting"] = ""; formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting; setFormData({ ...formData }); }} />
+                                                <span>Enable Quotation Invoice Accounting</span>
+                                            </label>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_sales_titles_paid"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_titles.paid}
+                                    {/* ── Stats Dashboard ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-bar-chart-line" style={{ color: '#004ac6' }}></i> Stats Dashboard</div>
+                                        <div className="pw-check-grid">
+                                            <label className="pw-check" htmlFor="stats_show_overall_summary">
+                                                <input type="checkbox" id="stats_show_overall_summary" checked={!!formData.settings.stats_show_overall_summary} value={formData.settings.stats_show_overall_summary} onChange={() => { formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary; setFormData({ ...formData }); }} />
+                                                <span>Show Overall Summary</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="stats_show_profit_loss_statement">
+                                                <input type="checkbox" id="stats_show_profit_loss_statement" checked={!!formData.settings.stats_show_profit_loss_statement} value={formData.settings.stats_show_profit_loss_statement} onChange={() => { formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement; setFormData({ ...formData }); }} />
+                                                <span>Show Profit / Loss Statement</span>
+                                            </label>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase2_b2b_sales_titles_credit"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_titles.credit}
+                                    {/* ── Quotation Settings ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Quotation Settings</div>
+                                        <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
+                                            <label className="pw-check" htmlFor="update_product_stock_on_quotation_sales">
+                                                <input type="checkbox" id="update_product_stock_on_quotation_sales" checked={!!formData.settings.update_product_stock_on_quotation_sales} value={formData.settings.update_product_stock_on_quotation_sales} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales; setFormData({ ...formData }); }} />
+                                                <span>Update Product Stock on Quotation Sales</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="hide_quotation_invoice_vat">
+                                                <input type="checkbox" id="hide_quotation_invoice_vat" checked={!!formData.settings.hide_quotation_invoice_vat} value={formData.settings.hide_quotation_invoice_vat} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat; setFormData({ ...formData }); }} />
+                                                <span>Hide Quotation Invoice VAT</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_monthly_serial_number">
+                                                <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
+                                                <span>Enable Monthly Serial Number Reset</span>
+                                            </label>
+                                        </div>
+                                        <div className="row g-3" style={{ maxWidth: '560px' }}>
+                                            <div className="col-md-6">
+                                                <div className="pw-field">
+                                                    <label htmlFor="default_quotation_validity_days">Default Quotation Validity (days)</label>
+                                                    <input type="number" id="default_quotation_validity_days" placeholder="e.g. 30"
+                                                        value={formData.settings.default_quotation_validity_days || ""}
+                                                        onChange={(e) => {
+                                                            if (!e.target.value) { formData.settings.default_quotation_validity_days = null; errors["default_quotation_validity_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                                            if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_validity_days"] = "Default quotation validity days should be > 0"; setErrors({ ...errors }); return; }
+                                                            errors["default_quotation_validity_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData });
+                                                        }} />
+                                                    {errors.default_quotation_validity_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_validity_days}</span>}
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="pw-field">
+                                                    <label htmlFor="default_quotation_delivery_days">Default Quotation Delivery (days)</label>
+                                                    <input type="number" id="default_quotation_delivery_days" placeholder="e.g. 7"
+                                                        value={formData.settings.default_quotation_delivery_days || ""}
+                                                        onChange={(e) => {
+                                                            if (!e.target.value) { formData.settings.default_quotation_delivery_days = null; errors["default_quotation_delivery_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                                            if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_delivery_days"] = "Default quotation delivery days should be > 0"; setErrors({ ...errors }); return; }
+                                                            errors["default_quotation_delivery_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); console.log(formData);
+                                                        }} />
+                                                    {errors.default_quotation_delivery_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_delivery_days}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase2_b2b_sales_titles_cash"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_titles.cash}
+                                    {/* ── WhatsApp Integration ── */}
+                                    <div className="pw-card" style={{ marginBottom: '0', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
+                                        <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
+                                            <i className="bi bi-whatsapp" style={{ color: '#25d366', fontSize: '14px' }}></i>
+                                            <span style={{ color: '#1a4d2e' }}>WhatsApp Integration (Evolution API)</span>
+                                        </div>
+                                        <div style={{ marginBottom: '14px' }}>
+                                            <label className="pw-check" htmlFor="use_whatsapp_api" style={{ maxWidth: '420px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
+                                                <input type="checkbox" id="use_whatsapp_api" checked={!!formData.settings.use_whatsapp_api} value={formData.settings.use_whatsapp_api} onChange={() => { formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api; setFormData({ ...formData }); }} />
+                                                <span style={{ color: '#1a4d2e', fontWeight: 600 }}>Use WhatsApp API — send invoices as PDF attachments</span>
+                                            </label>
+                                            <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c', fontFamily: '"Inter", sans-serif' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</p>
+                                        </div>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <div className="pw-field">
+                                                    <label htmlFor="evolution_api_url">Evolution API URL</label>
+                                                    <input type="text" id="evolution_api_url" placeholder="http://localhost:8081" value={formData.settings.evolution_api_url || ""} onChange={(e) => { formData.settings.evolution_api_url = e.target.value; setFormData({ ...formData }); }} />
+                                                    <small>Leave blank to use default (http://localhost:8081)</small>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="pw-field">
+                                                    <label htmlFor="evolution_api_key">Evolution API Key</label>
+                                                    <input type="text" id="evolution_api_key" placeholder="startpos-evo-local-key" value={formData.settings.evolution_api_key || ""} onChange={(e) => { formData.settings.evolution_api_key = e.target.value; setFormData({ ...formData }); }} />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="pw-field">
+                                                    <label htmlFor="evolution_instance_name">Evolution Instance Name</label>
+                                                    <input type="text" id="evolution_instance_name" placeholder="startpos" value={formData.settings.evolution_instance_name || ""} onChange={(e) => { formData.settings.evolution_instance_name = e.target.value; setFormData({ ...formData }); }} />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <h6><b>Sales Return</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
+                                    <div className="row g-3" style={{ display: 'none' }}>{/* legacy fields removed from display */}
 
-                                            errors["settings_invoice_phase2_sales_return_titles_paid"] = "";
-                                            formData.settings.invoice.phase2.sales_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_return_titles.paid}
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_currency_symbol}
+                                                    checked={formData.settings.show_currency_symbol}
+                                                    onChange={(e) => {
+                                                        errors["show_currency_symbol"] = "";
+                                                        formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="show_currency_symbol"
+
+                                                /> &nbsp;Show Currency Symbol
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.show_currency_symbol && (
+                                                <div className="pw-err">
+                                                    {errors.show_currency_symbol}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_auto_translation_to_arabic}
+                                                    checked={formData.settings.enable_auto_translation_to_arabic}
+                                                    onChange={(e) => {
+                                                        errors["enable_auto_translation_to_arabic"] = "";
+                                                        formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_auto_translation_to_arabic"
+
+                                                /> &nbsp;Enable Auto Translation to Arabic
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_auto_translation_to_arabic && (
+                                                <div className="pw-err">
+                                                    {errors.enable_auto_translation_to_arabic}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_warehouse_module}
+                                                    checked={formData.settings.enable_warehouse_module}
+                                                    onChange={(e) => {
+                                                        errors["enable_warehouse_module"] = "";
+                                                        formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_warehouse_module"
+
+                                                /> &nbsp;Enable Warehouse Module
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_warehouse_module && (
+                                                <div className="pw-err">
+                                                    {errors.enable_warehouse_module}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.add_price_details_in_delivery_note}
+                                                    checked={formData.settings.add_price_details_in_delivery_note}
+                                                    onChange={(e) => {
+                                                        errors["add_price_details_in_delivery_note"] = "";
+                                                        formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="add_price_details_in_delivery_note"
+                                                /> &nbsp;Add price details in Delivery note
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.add_price_details_in_delivery_note && (
+                                                <div className="pw-err">
+                                                    {errors.add_price_details_in_delivery_note}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.skip_product_selection_while_delivery_note_import}
+                                                    checked={formData.settings.skip_product_selection_while_delivery_note_import}
+                                                    onChange={(e) => {
+                                                        errors["skip_product_selection_while_delivery_note_import"] = "";
+                                                        formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="skip_product_selection_while_delivery_note_import"
+                                                /> &nbsp;Skip Product Selection While Delivery Note Import
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.skip_product_selection_while_delivery_note_import && (
+                                                <div className="pw-err">
+                                                    {errors.skip_product_selection_while_delivery_note_import}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Block Sales After N Pending (0 = disabled)</label>
+                                            <div className="input-group mb-3">
+                                                <input type="number"
+                                                    min="0"
+                                                    value={formData.settings.block_sales_after_pending_count || ""}
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value;
+                                                        formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="block_sales_after_pending_count"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.disable_purchases_on_accounts}
+                                                    checked={formData.settings.disable_purchases_on_accounts}
+                                                    onChange={(e) => {
+                                                        errors["disable_purchases_on_accounts"] = "";
+                                                        formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="disable_purchases_on_accounts"
+
+                                                /> &nbsp;Disable Purchases On Accounts
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.disable_purchases_on_accounts && (
+                                                <div className="pw-err">
+                                                    {errors.disable_purchases_on_accounts}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_notification}
+                                                    checked={!!formData.settings.enable_notification}
+                                                    onChange={(e) => {
+                                                        formData.settings.enable_notification = !formData.settings.enable_notification;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="enable_notification"
+                                                /> &nbsp;Enable Notification
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_sales_page_selection}
+                                                    checked={!!formData.settings.enable_sales_page_selection}
+                                                    onChange={(e) => {
+                                                        formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="enable_sales_page_selection"
+                                                /> &nbsp;Enable Sales Page Selection
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-12 mt-3">
+                                            <h6 className="text-success"><i className="bi bi-whatsapp me-1"></i>WhatsApp Integration (Evolution API)</h6>
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.use_whatsapp_api}
+                                                    checked={!!formData.settings.use_whatsapp_api}
+                                                    onChange={(e) => {
+                                                        formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="use_whatsapp_api"
+                                                /> &nbsp;Use WhatsApp API (send PDF as attachment)
+                                            </div>
+                                            <label className="form-label text-muted" style={{ fontSize: '0.8em' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</label>
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label fw-bold">Evolution API URL</label>
+                                                <input type="text"
+                                                    className="form-control"
+                                                    placeholder="http://localhost:8081"
+                                                    value={formData.settings.evolution_api_url || ""}
+                                                    onChange={(e) => {
+                                                        formData.settings.evolution_api_url = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                <small className="text-muted">Leave blank to use default (http://localhost:8081)</small>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label fw-bold">Evolution API Key</label>
+                                                <input type="text"
+                                                    className="form-control"
+                                                    placeholder="startpos-evo-local-key"
+                                                    value={formData.settings.evolution_api_key || ""}
+                                                    onChange={(e) => {
+                                                        formData.settings.evolution_api_key = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label fw-bold">Evolution Instance Name</label>
+                                                <input type="text"
+                                                    className="form-control"
+                                                    placeholder="startpos"
+                                                    value={formData.settings.evolution_instance_name || ""}
+                                                    onChange={(e) => {
+                                                        formData.settings.evolution_instance_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_auto_sales_payment_close_on_purchase}
+                                                    checked={formData.settings.enable_auto_sales_payment_close_on_purchase}
+                                                    onChange={(e) => {
+                                                        errors["enable_auto_sales_payment_close_on_purchase"] = "";
+                                                        formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_auto_sales_payment_close_on_purchase"
+
+                                                /> &nbsp;Enable Auto Sales Payment Close On Purchase
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_auto_sales_payment_close_on_purchase && (
+                                                <div className="pw-err">
+                                                    {errors.enable_auto_sales_payment_close_on_purchase}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_auto_purchase_payment_close_on_sales}
+                                                    checked={formData.settings.enable_auto_purchase_payment_close_on_sales}
+                                                    onChange={(e) => {
+                                                        errors["enable_auto_purchase_payment_close_on_sales"] = "";
+                                                        formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_auto_purchase_payment_close_on_sales"
+
+                                                /> &nbsp;Enable Auto Purchase Payment Close On Sales
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_auto_purchase_payment_close_on_sales && (
+                                                <div className="pw-err">
+                                                    {errors.enable_auto_purchase_payment_close_on_sales}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_auto_payment_close_on_return}
+                                                    checked={formData.settings.enable_auto_payment_close_on_return}
+                                                    onChange={(e) => {
+                                                        errors["enable_auto_payment_close_on_return"] = "";
+                                                        formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_auto_payment_close_on_return"
+
+                                                /> &nbsp;Enable Auto Payment Close On Return
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_auto_payment_close_on_return && (
+                                                <div className="pw-err">
+                                                    {errors.enable_auto_payment_close_on_return}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.stats_show_overall_summary}
+                                                    checked={formData.settings.stats_show_overall_summary}
+                                                    onChange={(e) => {
+                                                        formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="stats_show_overall_summary"
+                                                /> &nbsp;Stats: Show Overall Summary
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.stats_show_profit_loss_statement}
+                                                    checked={formData.settings.stats_show_profit_loss_statement}
+                                                    onChange={(e) => {
+                                                        formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="stats_show_profit_loss_statement"
+                                                /> &nbsp;Stats: Show Profit / Loss Statement
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.update_product_stock_on_quotation_sales}
+                                                    checked={formData.settings.update_product_stock_on_quotation_sales}
+                                                    onChange={(e) => {
+                                                        errors["hide_quotation_invoice_vat"] = "";
+                                                        formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="hide_quotation_invoice_vat"
+
+                                                /> &nbsp;Update product stock on quotation sales
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.update_product_stock_on_quotation_sales && (
+                                                <div className="pw-err">
+                                                    {errors.update_product_stock_on_quotation_sales}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.hide_quotation_invoice_vat}
+                                                    checked={formData.settings.hide_quotation_invoice_vat}
+                                                    onChange={(e) => {
+                                                        errors["hide_quotation_invoice_vat"] = "";
+                                                        formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="hide_quotation_invoice_vat"
+
+                                                /> &nbsp;Hide quotation invoice vat
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.hide_quotation_invoice_vat && (
+                                                <div className="pw-err">
+                                                    {errors.hide_quotation_invoice_vat}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.allow_adjust_same_date_payments}
+                                                    checked={formData.settings.allow_adjust_same_date_payments}
+                                                    onChange={(e) => {
+                                                        errors["allow_adjust_same_date_payments"] = "";
+                                                        formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id=" allow_adjust_same_date_payments"
+
+                                                /> &nbsp;Allow adjust same date payments
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.allow_adjust_same_date_payments && (
+                                                <div className="pw-err">
+                                                    {errors.allow_adjust_same_date_payments}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_invoice_print_type_selection}
+                                                    checked={formData.settings.enable_invoice_print_type_selection}
+                                                    onChange={(e) => {
+
+                                                        errors["enable_invoice_print_type_selection"] = "";
+                                                        formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="enable_invoice_print_type_selection"
+
+                                                /> &nbsp;Enable invoice print type selection
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_invoice_print_type_selection && (
+                                                <div className="pw-err">
+                                                    {errors.enable_invoice_print_type_selection}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_seller_info_in_invoice}
+                                                    checked={formData.settings.show_seller_info_in_invoice}
+                                                    onChange={(e) => {
+
+                                                        errors["show_seller_info_in_invoice"] = "";
+                                                        formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="show_seller_info_in_invoice"
+
+                                                /> &nbsp;Show seller info in invoice
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
+                                                <div className="pw-err">
+                                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
+                                                    checked={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
+                                                    onChange={(e) => {
+
+                                                        errors["show_minus_on_liability_balance_in_balance_sheet"] = "";
+                                                        formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="show_minus_on_liability_balance_in_balance_sheet"
+
+                                                /> &nbsp;Show Minus On Liability Balance In Balance Sheet
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
+                                                <div className="pw-err">
+                                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.hide_total_amount_row_in_balance_sheet}
+                                                    checked={formData.settings.hide_total_amount_row_in_balance_sheet}
+                                                    onChange={(e) => {
+
+                                                        errors["hide_total_amount_row_in_balance_sheet"] = "";
+                                                        formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="hide_total_amount_row_in_balance_sheet"
+
+                                                /> &nbsp;Hide total amount row in balance_sheet
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.hide_total_amount_row_in_balance_sheet && (
+                                                <div className="pw-err">
+                                                    {errors.hide_total_amount_row_in_balance_sheet}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_address_in_invoice_footer}
+                                                    checked={formData.settings.show_address_in_invoice_footer}
+                                                    onChange={(e) => {
+
+                                                        errors["formData.show_address_in_invoice_footer"] = "";
+                                                        formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="formData.show_address_in_invoice_footer"
+
+                                                /> &nbsp;Show addres in invoice footer
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.show_address_in_invoice_footer && (
+                                                <div className="pw-err">
+                                                    {errors.show_address_in_invoice_footer}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_received_by_footer_in_invoice}
+                                                    checked={formData.settings.show_received_by_footer_in_invoice}
+                                                    onChange={(e) => {
+
+                                                        errors["show_received_by_footer_in_invoice"] = "";
+                                                        formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="show_received_by_footer_in_invoice"
+                                                    name="show_received_by_footer_in_invoice"
+
+                                                /> &nbsp;Show received by footer in invoices
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.show_received_by_footer_in_invoice && (
+                                                <div className="pw-err">
+                                                    {errors.show_received_by_footer_in_invoice}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.zatca_qr_on_left_bottom}
+                                                    checked={formData.settings.zatca_qr_on_left_bottom}
+                                                    onChange={(e) => {
+
+                                                        errors["formData.zatca_qr_on_left_bottom"] = "";
+                                                        formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="formData.zatca_qr_on_left_bottom"
+                                                /> &nbsp;Zatca QR on left bottom
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.zatca_qr_on_left_bottom && (
+                                                <div className="pw-err">
+                                                    {errors.zatca_qr_on_left_bottom}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_zatca_reporting_for_receivables}
+                                                    checked={!!formData.settings.enable_zatca_reporting_for_receivables}
+                                                    onChange={() => {
+                                                        formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="formData.enable_zatca_reporting_for_receivables"
+                                                /> &nbsp;Enable Zatca Reporting for Receivables (Debit Note)
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_zatca_reporting_for_payables}
+                                                    checked={!!formData.settings.enable_zatca_reporting_for_payables}
+                                                    onChange={() => {
+                                                        formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="formData.enable_zatca_reporting_for_payables"
+                                                /> &nbsp;Enable Zatca Reporting for Payables (Credit Note)
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.auto_suggest_advance_payment_linking_in_sales}
+                                                    checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales}
+                                                    onChange={() => {
+                                                        formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    id="formData.auto_suggest_advance_payment_linking_in_sales"
+                                                /> &nbsp;Auto Prompt Advance Payment Linking in Sales Payments
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.display_vat_in_receivables_and_payables}
+                                                    checked={!!formData.settings.display_vat_in_receivables_and_payables}
+                                                    onChange={() => {
+                                                        formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    id="formData.display_vat_in_receivables_and_payables"
+                                                /> &nbsp;Display VAT in Receivables &amp; Payables
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.quotation_invoice_accounting}
+                                                    checked={formData.settings.quotation_invoice_accounting}
+                                                    onChange={(e) => {
+
+                                                        errors["formData.quotation_invoice_accounting"] = "";
+                                                        formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="formData.quotation_invoice_accounting"
+                                                /> &nbsp;Enable Quotation Invoice Accounting
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.quotation_invoice_accounting && (
+                                                <div className="pw-err">
+                                                    {errors.quotation_invoice_accounting}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.block_sale_when_purchase_price_is_higher}
+                                                    checked={formData.settings.block_sale_when_purchase_price_is_higher}
+                                                    onChange={(e) => {
+                                                        errors["block_sale_when_purchase_price_is_higher"] = "";
+                                                        formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="block_sale_when_purchase_price_is_higher"
+                                                /> &nbsp;Block Sales When purchase price is lower
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.block_sale_when_purchase_price_is_higher && (
+                                                <div className="pw-err">
+                                                    {errors.block_sale_when_purchase_price_is_higher}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.one_line_product_name_in_invoice}
+                                                    checked={formData.settings.one_line_product_name_in_invoice}
+                                                    onChange={(e) => {
+                                                        errors["one_line_product_name_in_invoice"] = "";
+                                                        formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="one_line_product_name_in_invoice"
+                                                /> &nbsp;One line product name in invoice
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.one_line_product_name_in_invoice && (
+                                                <div className="pw-err">
+                                                    {errors.one_line_product_name_in_invoice}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.one_line_product_name_in_print_invoice}
+                                                    checked={formData.settings.one_line_product_name_in_print_invoice}
+                                                    onChange={(e) => {
+                                                        errors["one_line_product_name_in_print_invoice"] = "";
+                                                        formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="one_line_product_name_in_invoice"
+                                                /> &nbsp;One line product name in print invoice
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.one_line_product_name_in_print_invoice && (
+                                                <div className="pw-err">
+                                                    {errors.one_line_product_name_in_print_invoice}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.enable_monthly_serial_number}
+                                                    checked={formData.settings.enable_monthly_serial_number}
+                                                    onChange={(e) => {
+                                                        errors["enable_monthly_serial_number"] = "";
+                                                        formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number;
+                                                        setFormData({ ...formData });
+                                                        console.log(formData);
+                                                    }}
+                                                    className=""
+                                                    id="block_sale_when_purchase_price_is_higher"
+                                                /> &nbsp;Enable monthly serial number
+                                            </div>
+                                            <label className="form-label"></label>
+                                            {errors.enable_monthly_serial_number && (
+                                                <div className="pw-err">
+                                                    {errors.enable_monthly_serial_number}
+                                                </div>
+                                            )}
+                                        </div>
+
+
+
+                                        <div className="col-md-3">
+                                            <label className="form-label">Default quotation validity (# of Days)*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    type="number"
+                                                    className="text-center"
+                                                    style={{ width: "50px" }}
+                                                    value={formData.settings.default_quotation_validity_days}
+                                                    onChange={(e) => {
+                                                        console.log("Inside onchange validity days");
+                                                        if (!e.target.value) {
+                                                            formData.settings.default_quotation_validity_days = null;
+                                                            errors["default_quotation_validity_days"] = "";
+                                                            setFormData({ ...formData });
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        if (parseInt(e.target.value) <= 0) {
+                                                            formData.settings.default_quotation_validity_days = parseInt(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            errors["default_quotation_validity_days"] =
+                                                                "Deafult quotation validity days should be > 0";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        errors["default_quotation_validity_days"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.settings.default_quotation_validity_days = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+
+                                                {errors.default_quotation_validity_days && (
+                                                    <div className="pw-err">
+                                                        {errors.default_quotation_validity_days}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                    </div></div>)}
+
+                                {activeTab === 'designs' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Designs</h3></div>
+
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> Form Designs</div>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.sales_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.sales_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
+                                                    <option value="type4">VAN Store (Type 4)</option>
+                                                    {formData.settings.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales order creation and update form</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Return Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.sales_return_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.purchase_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.purchase_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase creation and update form</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Return Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.purchase_return_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.purchase_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase return creation and update form</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.quotation_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.quotation_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation creation and update form</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Sales Return Create/Update Form</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.quotation_sales_return_create_form_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.quotation_sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation sales return creation and update form</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
 
-                                            errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
-                                            formData.settings.invoice.phase2.sales_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_return_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_sales_return_titles_cash"] = "";
-                                            formData.settings.invoice.phase2.sales_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.sales_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.sales_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.sales_return_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_sales_return_titles_paid"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase1_b2b_sales_return_titles_credit"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_sales_return_titles_cash"] = "";
-                                            formData.settings.invoice.phase2_b2b.sales_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.sales_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-
-                        </div>
-
-
-                        <h6><b>Purchase</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_purchase_titles_paid"] = "";
-                                            formData.settings.invoice.phase2.purchase_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_purchase_titles_credit"] = "";
-                                            formData.settings.invoice.phase2.purchase_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2C*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_purchase_titles_cash"] = "";
-                                            formData.settings.invoice.phase2.purchase_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-4">
-                                <label className="form-label">Paid B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_purchase_titles_paid"] = "";
-                                            formData.settings.invoice.phase2_b2b.purchase_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.purchase_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.purchase_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_purchase_titles_credit"] = "";
-                                            formData.settings.invoice.phase2_b2b.purchase_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.purchase_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.purchase_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash B2B*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_b2b_purchase_titles_cash"] = "";
-                                            formData.settings.invoice.phase2_b2b.purchase_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2_b2b.purchase_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2_b2b.purchase_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <h6><b>Purchase Return</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
-                                            formData.settings.invoice.phase2.purchase_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_return_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
-                                            formData.settings.invoice.phase2.purchase_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_return_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_phase2_purchase_return_titles_cash"] = "";
-                                            formData.settings.invoice.phase2.purchase_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.phase2.purchase_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.phase2.purchase_return_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <h6><b>Other Invoice Titles</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Quotation*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_title}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_title"] = "";
-                                            formData.settings.invoice.quotation_title = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_titled"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_title}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Delivery Note*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.delivery_note_title}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_delivery_note"] = "";
-                                            formData.settings.invoice.delivery_note_title = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.delivery_note_title"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.delivery_note_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.delivery_note_title}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Stock Transfer*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.stock_transfer_title}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_stock_transfer"] = "";
-                                            formData.settings.invoice.stock_transfer_title = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.stock_transfer_title"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.stock_transfer_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.stock_transfer_title}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Purchase Order*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.purchase_order_title}
-                                        type='string'
-                                        onChange={(e) => {
-                                            errors["settings_invoice_purchase_order_title"] = "";
-                                            formData.settings.invoice.purchase_order_title = e.target.value;
-                                            setFormData({ ...formData });
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.purchase_order_title"
-                                        placeholder="Purchase Order title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.purchase_order_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.purchase_order_title}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Payable*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.payable_title}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_payable_title"] = "";
-                                            formData.settings.invoice.payable_title = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.payable_title"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.payable_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.payable_title}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Receivable*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.receivable_title}
-                                        type='string'
-                                        onChange={(e) => {
-                                            errors["settings_invoice_receivable_title"] = "";
-                                            formData.settings.invoice.receivable_title = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.receivable_title"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.receivable_title && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.receivable_title}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
-                        <h6><b>Qtn. Sales</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_sales_titles"] = "";
-                                            formData.settings.invoice.quotation_sales_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_sales_titles"] = "";
-                                            formData.settings.invoice.quotation_sales_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_sales_titles_cash"] = "";
-                                            formData.settings.invoice.quotation_sales_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <h6><b>Qtn. Sales Return</b></h6>
-                        <div className="row">
-                            <div className="col-md-4">
-                                <label className="form-label">Paid*</label>
-                                <div className="input-group mb-">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.paid}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_sales_return_titles"] = "";
-                                            formData.settings.invoice.quotation_sales_return_titles.paid = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_return_titles.paid"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_return_titles?.paid && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_return_titles.paid}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Credit*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.credit}
-                                        type='string'
-                                        onChange={(e) => {
-
-                                            errors["settings_invoice_quotation_sales_return_titles"] = "";
-                                            formData.settings.invoice.quotation_sales_return_titles.credit = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_return_titles.credit"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_return_titles?.credit && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_return_titles.credit}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label">Cash*</label>
-                                <div className="input-group mb-3">
-                                    <input
-                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.cash}
-                                        type='string'
-                                        onChange={(e) => {
-                                            errors["settings_invoice_quotation_sales_return_titles_cash"] = "";
-                                            formData.settings.invoice.quotation_sales_return_titles.cash = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="settings.invoice.quotation_sales_return_titles.cash"
-                                        placeholder="Invoice title"
-                                    />
-                                </div>
-                                {errors.settings?.invoice?.quotation_sales_return_titles?.cash && (
-                                    <div className="pw-err">
-                                        {errors.settings.invoice.quotation_sales_return_titles.cash}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
-                        </div></div>)}
-                        {activeTab === 'serial_numbers' && (<div className="pw-tab-wrap"><div className="pw-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-hash" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Serial Numbers</h3></div>
-                        <div className="row g-3">
-                        <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.stock_transfer_serial_number?.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.stock_transfer_serial_number.prefix"] = "";
-                                        formData.stock_transfer_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.stock_transfer_serial_number.prefix"
-                                    placeholder="S-INV-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.stock_transfer_serial_number_prefix && (
-                                <div className="pw-err">
-
-                                    {errors.stock_transfer_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.stock_transfer_serial_number?.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.stock_transfer_serial_number.padding_count"] = "";
-                                        formData.stock_transfer_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.stock_transfer_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-
-
-                            </div>
-                            {errors.formData?.stock_transfer_serial_number?.padding_count && (
-                                <div className="pw-err">
-
-                                    {errors.stock_transfer_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.stock_transfer_serial_number?.start_from_count ? formData.stock_transfer_serial_number.start_from_count : ""}
-                                    type='number'
-                                    onChange={(e) => {
-                                        errors["formData.stock_transfer_serial_number.start_from_count"] = "";
-                                        formData.stock_transfer_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.stock_transfer_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.stock_transfer_serial_number_start_from_count && (
-                                <div className="pw-err">
-
-                                    {errors.stock_transfer_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.sales_serial_number.prefix"] = "";
-                                        formData.sales_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_serial_number.prefix"
-                                    placeholder="S-INV-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.sales_serial_number_prefix && (
-                                <div className="pw-err">
-
-                                    {errors.sales_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.sales_serial_number.padding_count"] = "";
-                                        formData.sales_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-
-
-                            </div>
-                            {errors.formData?.sales_serial_number.padding_count && (
-                                <div className="pw-err">
-
-                                    {errors.sales_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_serial_number?.start_from_count ? formData.sales_serial_number.start_from_count : ""}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.sales_serial_number.start_from_count"] = "";
-                                        formData.sales_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-
-
-                            </div>
-                            {errors.sales_serial_number_start_from_count && (
-                                <div className="pw-err">
-
-                                    {errors.sales_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Sales Return ID's:</b> {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_return_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.sales_serial_number.prefix"] = "";
-                                        formData.sales_return_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_return_serial_number.prefix"
-                                    placeholder="S-INV-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.sales_return_serial_number_prefix && (
-                                <div className="pw-err">
-
-                                    {errors.sales_return_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_return_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.sales_serial_number.padding_count"] = "";
-                                        formData.sales_return_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_return_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-
-
-                            </div>
-                            {errors.sales_return_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    {errors.sales_return_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.sales_return_serial_number.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.sales_return_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.sales_serial_number.start_from_count"] = "";
-                                        formData.sales_return_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.sales_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.sales_return_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    {errors.sales_return_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h5><b>Purchase ID's:</b> {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.purchase_serial_number.prefix"] = "";
-                                        formData.purchase_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_serial_number.prefix"
-                                    placeholder="S-INV-UMLJ"
-                                />
-
-                            </div>
-
-                            {errors.purchase_serial_number_prefix && (
-                                <div className="pw-err">
-                                    {errors.purchase_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.purchase_serial_number.padding_count"] = "";
-                                        formData.purchase_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.purchase_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    {errors.purchase_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_serial_number.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.purchase_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.purchase_serial_number.start_from_count"] = "";
-                                        formData.purchase_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-
-                            </div>
-                            {errors.purchase_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h5><b>Purchase Return ID's:</b> {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_return_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.purchase_return_serial_number.prefix"] = "";
-                                        formData.purchase_return_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_return_serial_number.prefix"
-                                    placeholder="PR-INV-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.purchase_return_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_return_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_return_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.purchase_return_serial_number.padding_count"] = "";
-                                        formData.purchase_return_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_return_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-
-
-                            </div>
-                            {errors.purchase_return_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_return_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_return_serial_number.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.purchase_return_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.purchase_return_serial_number.start_from_count"] = "";
-                                        formData.purchase_return_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_return_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-
-                            </div>
-
-                            {errors.purchase_return_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_return_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h5><b>Purchase Order ID's:</b> {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String(formData.purchase_order_serial_number?.start_from_count).padStart(formData.purchase_order_serial_number?.padding_count, '0')}, {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String((formData.purchase_order_serial_number?.start_from_count + 1)).padStart(formData.purchase_order_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_order_serial_number?.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["purchase_order_serial_number.prefix"] = "";
-                                        formData.purchase_order_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_order_serial_number.prefix"
-                                    placeholder="PO"
-                                />
-                            </div>
-                            {errors.purchase_order_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_order_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_order_serial_number?.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        errors["purchase_order_serial_number.padding_count"] = "";
-                                        formData.purchase_order_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_order_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.purchase_order_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_order_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_order_serial_number?.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.purchase_order_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return;
-                                        }
-                                        errors["purchase_order_serial_number.start_from_count"] = "";
-                                        formData.purchase_order_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_order_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.purchase_order_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_order_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h5><b>Quotation ID's:</b> {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.quotation_serial_number.prefix"] = "";
-                                        formData.quotation_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_serial_number.prefix"
-                                    placeholder="QTN"
-                                />
-
-
-                            </div>
-                            {errors.quotation_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.quotation_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.quotation_serial_number.padding_count"] = "";
-                                        formData.quotation_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.quotation_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.quotation_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.quotation_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.quotation_serial_number.start_from_count"] = "";
-                                        formData.quotation_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.quotation_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.quotation_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Quotation Sales Return ID's:</b> {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String(formData.quotation_sales_return_serial_number.start_from_count).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}, {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String((formData.quotation_sales_return_serial_number.start_from_count + 1)).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_sales_return_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.quotation_sales_serial_number.prefix"] = "";
-                                        formData.quotation_sales_return_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_sales_return_serial_number.prefix"
-                                    placeholder="QTN-SR"
-                                />
-
-
-                            </div>
-                            {errors.quotation_sales_return_serial_number_prefix && (
-                                <div className="pw-err">
-
-                                    {errors.quotation_sales_return_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_sales_return_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.quotation_sales_serial_number.padding_count"] = "";
-                                        formData.quotation_sales_return_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_sales_return_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-
-
-                            </div>
-                            {errors.quotation_sales_return_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    {errors.quotation_sales_return_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.quotation_sales_return_serial_number.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.quotation_sales_return_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.quotation_sales_serial_number.start_from_count"] = "";
-                                        formData.quotation_sales_return_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.quotation_sales_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.quotation_sales_return_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    {errors.quotation_sales_return_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["formData.customer_serial_number.prefix"] = "";
-                                        formData.customer_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.customer_serial_number.prefix"
-                                    placeholder="CUST-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.customer_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.customer_serial_number.padding_count"] = "";
-                                        formData.customer_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.customer_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.customer_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.customer_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["formData.customer_serial_number.start_from_count"] = "";
-                                        formData.customer_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.customer_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.customer_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vendor_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["formData.vendor_serial_number.prefix"] = "";
-                                        formData.vendor_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.vendor_serial_number.prefix"
-                                    placeholder="VND-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.vendor_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.vendor_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vendor_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["formData.vendor_serial_number.padding_count"] = "";
-                                        formData.vendor_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.vendor_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.vendor_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.vendor_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vendor_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.vendor_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["vendor_serial_number_start_from_count"] = "";
-                                        formData.vendor_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.vendor_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.vendor_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.vendor_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Expense ID's:</b> {formData.expense_serial_number?.prefix.toUpperCase()}-{String(formData.expense_serial_number?.start_from_count).padStart(formData.expense_serial_number.padding_count, '0')}, {formData.expense_serial_number?.prefix.toUpperCase()}-{String((formData.expense_serial_number?.start_from_count + 1)).padStart(formData.expense_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.expense_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["expense_serial_number_prefix"] = "";
-                                        formData.expense_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.expense_serial_number.prefix"
-                                    placeholder="EXP-UMLJ"
-                                />
-
-
-                            </div>
-                            {errors.expense_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.expense_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.expense_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["expense_serial_number.padding_count"] = "";
-                                        formData.expense_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.expense_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.expense_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.expense_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.expense_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.expense_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["expense_serial_number.start_from_count"] = "";
-                                        formData.expense_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.expense_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.expense_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.expense_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Delivery Note ID's:</b> {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String(formData.delivery_note_serial_number?.start_from_count).padStart(formData.delivery_note_serial_number.padding_count, '0')}, {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String((formData.delivery_note_serial_number?.start_from_count + 1)).padStart(formData.delivery_note_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.delivery_note_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["delivery_note_serial_number.prefix"] = "";
-                                        formData.delivery_note_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.delivery_note_serial_number.prefix"
-                                    placeholder="DEL-NOTE"
-                                />
-
-
-                            </div>
-                            {errors.delivery_note_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.delivery_note_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.delivery_note_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["delivery_note_serial_number.padding_count"] = "";
-                                        formData.delivery_note_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.delivery_note_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.delivery_note_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.delivery_note_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.delivery_note_serial_number.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.delivery_note_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["delivery_note_serial_number.start_from_count"] = "";
-                                        formData.delivery_note_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.delivery_note_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.delivery_note_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.delivery_note_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-                        <h5><b>Purchase Request ID's:</b> {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String(formData.purchase_request_serial_number?.start_from_count).padStart(formData.purchase_request_serial_number?.padding_count, '0')}, {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String((formData.purchase_request_serial_number?.start_from_count + 1)).padStart(formData.purchase_request_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_request_serial_number?.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        formData.purchase_request_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_request_serial_number.prefix"
-                                    placeholder="PR"
-                                />
-                            </div>
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_request_serial_number?.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        formData.purchase_request_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_request_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.purchase_request_serial_number?.start_from_count}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.purchase_request_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return;
-                                        }
-                                        formData.purchase_request_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="formData.purchase_request_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                        </div>
-
-                        <h5><b>Customer Receivable ID's:</b> {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.customer_deposit_serial_number?.start_from_count).padStart(formData.customer_deposit_serial_number.padding_count, '0')}, {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.ustomer_deposit_serial_number?.start_from_count + 1)).padStart(formData.ustomer_deposit_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_deposit_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["customer_deposit_serial_number.prefix"] = "";
-                                        formData.customer_deposit_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.customer_deposit_serial_number.prefix"
-                                    placeholder="CUST-RCVBLE"
-                                />
-
-
-                            </div>
-                            {errors.customer_deposit_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_deposit_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_deposit_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["customer_deposit_serial_number.padding_count"] = "";
-                                        formData.customer_deposit_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="customer_deposit_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.customer_deposit_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_deposit_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_deposit_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.customer_deposit_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["customer_deposit_serial_number.start_from_count"] = "";
-                                        formData.customer_deposit_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="customer_deposit_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.customer_deposit_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_deposit_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Customer Payable ID's:</b> {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String(formData.customer_withdrawal_serial_number?.start_from_count).padStart(formData.customer_withdrawal_serial_number.padding_count, '0')}, {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String((formData.customer_withdrawal_serial_number?.start_from_count + 1)).padStart(formData.customer_withdrawal_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_withdrawal_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["customer_withdrawal_serial_number.prefix"] = "";
-                                        formData.customer_withdrawal_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.customer_withdrawal_serial_number.prefix"
-                                    placeholder="CUST-PYBLE"
-                                />
-
-
-                            </div>
-                            {errors.customer_withdrawal_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_withdrawal_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_withdrawal_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["customer_withdrawal_serial_number.padding_count"] = "";
-                                        formData.customer_withdrawal_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="customer_withdrawal_serial_number.padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.customer_withdrawal_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_withdrawal_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.customer_withdrawal_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.customer_withdrawal_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["customer_deposit_serial_number.start_from_count"] = "";
-                                        formData.customer_withdrawal_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="customer_withdrawal_serial_number.start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.customer_withdrawal_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.customer_withdrawal_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Capital ID's:</b> {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.capital_deposit_serial_number?.start_from_count).padStart(formData.capital_deposit_serial_number.padding_count, '0')}, {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.capital_deposit_serial_number?.start_from_count + 1)).padStart(formData.capital_deposit_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.capital_deposit_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["capital_deposit_serial_number.prefix"] = "";
-                                        formData.capital_deposit_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="formData.capital_deposit_serial_number.prefix"
-                                    placeholder="CAP-DEPO"
-                                />
-
-
-                            </div>
-                            {errors.capital_deposit_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.capital_deposit_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.capital_deposit_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["capital_deposit_serial_number_padding_count"] = "";
-                                        formData.capital_deposit_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="capital_deposit_serial_number_padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.capital_deposit_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.capital_deposit_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.capital_deposit_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.capital_deposit_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["capital_deposit_serial_number.start_from_count"] = "";
-                                        formData.capital_deposit_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="capital_deposit_serial_number_start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.capital_deposit_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.capital_deposit_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <h5><b>Drawing ID's:</b> {formData.divident_serial_number?.prefix.toUpperCase()}-{String(formData.divident_serial_number?.start_from_count).padStart(formData.divident_serial_number.padding_count, '0')}, {formData.divident_serial_number?.prefix.toUpperCase()}-{String((formData.divident_serial_number?.start_from_count + 1)).padStart(formData.divident_serial_number?.padding_count, '0')}...</h5>
-                        <div className="col-md-2">
-                            <label className="form-label">Prefix</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.divident_serial_number.prefix}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["divident_serial_number.prefix"] = "";
-                                        formData.divident_serial_number.prefix = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="divident_serial_number.prefix"
-                                    placeholder="CAP-DRWNG"
-                                />
-
-
-                            </div>
-                            {errors.divident_serial_number_prefix && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.divident_serial_number_prefix}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Padding count</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.divident_serial_number.padding_count}
-                                    type='number'
-                                    onChange={(e) => {
-
-                                        errors["divident_serial_number_padding_count"] = "";
-                                        formData.divident_serial_number.padding_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="divident_serial_number_padding_count"
-                                    placeholder="4 will make counter value: 0001"
-                                />
-                            </div>
-                            {errors.divident_serial_number_padding_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.divident_serial_number_padding_count}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Counting start from</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.divident_serial_number.start_from_count}
-
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (!e.target.value) {
-                                            formData.divident_serial_number.start_from_count = e.target.value;
-                                            setFormData({ ...formData });
-                                            return
-                                        }
-                                        errors["divident_serial_number.start_from_count"] = "";
-                                        formData.divident_serial_number.start_from_count = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="divident_serial_number_start_from_count"
-                                    placeholder="eg: Start counting from 1000"
-                                />
-                            </div>
-                            {errors.divident_serial_number_start_from_count && (
-                                <div className="pw-err">
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.divident_serial_number_start_from_count}
-                                </div>
-                            )}
-                        </div>
-
-                        </div></div></div>)}
-                        {activeTab === 'bank_account' && (<div className="pw-tab-wrap"><div className="pw-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Bank Account</h3></div>
-                        <div className="row g-3">
-                        <div className="col-md-4">
-                            <label className="form-label">Bank Name</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bank_account.bank_name ? formData.bank_account.bank_name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["bank_account_bank_name"] = "";
-                                        formData.bank_account.bank_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="bank_account_bank_name"
-                                    placeholder="Bank Name"
-                                />
-
-
-
-                            </div>
-                            {errors.bank_account_bank_name && (
-                                <div className="pw-err">
-                                    {errors.bank_account_bank_name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Customer No.</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bank_account.customer_no ? formData.bank_account.customer_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["bank_account_customer_no"] = "";
-                                        formData.bank_account.customer_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="bank_account_customer_no"
-                                    placeholder="Customer No"
-                                />
-                            </div>
-                            {errors.bank_account_customer_no && (
-                                <div className="pw-err">
-                                    {errors.bank_account_customer_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">IBAN</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bank_account.iban ? formData.bank_account.iban : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["bank_account_iban"] = "";
-                                        formData.bank_account.iban = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="bank_account_iban"
-                                    placeholder="IBAN"
-                                />
-                            </div>
-                            {errors.bank_account_iban && (
-                                <div className="pw-err">
-                                    {errors.bank_account_iban}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Account Name</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bank_account.account_name ? formData.bank_account.account_name : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["bank_account_account_name"] = "";
-                                        formData.bank_account.account_name = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="bank_account_account_name"
-                                    placeholder="Account Name"
-                                />
-                            </div>
-                            {errors.bank_account_account_name && (
-                                <div className="pw-err">
-                                    {errors.bank_account_account_name}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Account No.</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bank_account.account_no ? formData.bank_account.account_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["bank_account_account_no"] = "";
-                                        formData.bank_account.account_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="bank_account_account_no"
-                                    placeholder="Account No."
-                                />
-                            </div>
-                            {errors.bank_account_account_no && (
-                                <div className="pw-err">
-                                    {errors.bank_account_account_no}
-                                </div>
-                            )}
-                        </div>
-
-                        </div></div></div>)}
-                        {activeTab === 'settings' && (<div className="pw-tab-wrap">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-gear" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Settings</h3></div>
-
-                        {/* ── Invoice & Display ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-receipt" style={{ color: '#004ac6' }}></i> Invoice &amp; Display</div>
-                            <div className="pw-check-grid">
-                                <label className="pw-check" htmlFor="show_currency_symbol">
-                                    <input type="checkbox" id="show_currency_symbol" checked={!!formData.settings.show_currency_symbol} value={formData.settings.show_currency_symbol} onChange={() => { errors["show_currency_symbol"] = ""; formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol; setFormData({ ...formData }); }} />
-                                    <span>Show Currency Symbol</span>
-                                </label>
-                                <label className="pw-check" htmlFor="show_seller_info_in_invoice">
-                                    <input type="checkbox" id="show_seller_info_in_invoice" checked={!!formData.settings.show_seller_info_in_invoice} value={formData.settings.show_seller_info_in_invoice} onChange={() => { errors["show_seller_info_in_invoice"] = ""; formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice; setFormData({ ...formData }); }} />
-                                    <span>Show Seller Info in Invoice</span>
-                                </label>
-                                <label className="pw-check" htmlFor="show_address_in_invoice_footer">
-                                    <input type="checkbox" id="show_address_in_invoice_footer" checked={!!formData.settings.show_address_in_invoice_footer} value={formData.settings.show_address_in_invoice_footer} onChange={() => { errors["formData.show_address_in_invoice_footer"] = ""; formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer; setFormData({ ...formData }); }} />
-                                    <span>Show Address in Invoice Footer</span>
-                                </label>
-                                <label className="pw-check" htmlFor="show_received_by_footer_in_invoice">
-                                    <input type="checkbox" id="show_received_by_footer_in_invoice" name="show_received_by_footer_in_invoice" checked={!!formData.settings.show_received_by_footer_in_invoice} value={formData.settings.show_received_by_footer_in_invoice} onChange={() => { errors["show_received_by_footer_in_invoice"] = ""; formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice; setFormData({ ...formData }); }} />
-                                    <span>Show Received By Footer in Invoices</span>
-                                </label>
-                                <label className="pw-check" htmlFor="zatca_qr_on_left_bottom">
-                                    <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
-                                    <span>ZATCA QR on Left Bottom</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_zatca_reporting_for_receivables">
-                                    <input type="checkbox" id="enable_zatca_reporting_for_receivables" checked={!!formData.settings.enable_zatca_reporting_for_receivables} value={formData.settings.enable_zatca_reporting_for_receivables} onChange={() => { formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables; setFormData({ ...formData }); }} />
-                                    <span>Enable ZATCA Reporting for Receivables (Debit Note)</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_zatca_reporting_for_payables">
-                                    <input type="checkbox" id="enable_zatca_reporting_for_payables" checked={!!formData.settings.enable_zatca_reporting_for_payables} value={formData.settings.enable_zatca_reporting_for_payables} onChange={() => { formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables; setFormData({ ...formData }); }} />
-                                    <span>Enable ZATCA Reporting for Payables (Credit Note)</span>
-                                </label>
-                                <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
-                                    <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
-                                    <span>Auto Prompt Advance Payment Linking in Sales Payments</span>
-                                </label>
-                                <label className="pw-check" htmlFor="display_vat_in_receivables_and_payables">
-                                    <input type="checkbox" id="display_vat_in_receivables_and_payables" checked={!!formData.settings.display_vat_in_receivables_and_payables} value={formData.settings.display_vat_in_receivables_and_payables} onChange={() => { formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables; setFormData({ ...formData }); }} />
-                                    <span>Display VAT in Receivables &amp; Payables</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_invoice_print_type_selection">
-                                    <input type="checkbox" id="enable_invoice_print_type_selection" checked={!!formData.settings.enable_invoice_print_type_selection} value={formData.settings.enable_invoice_print_type_selection} onChange={() => { errors["enable_invoice_print_type_selection"] = ""; formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection; setFormData({ ...formData }); }} />
-                                    <span>Enable Invoice Print Type Selection</span>
-                                </label>
-                                <label className="pw-check" htmlFor="one_line_product_name_in_invoice">
-                                    <input type="checkbox" id="one_line_product_name_in_invoice" checked={!!formData.settings.one_line_product_name_in_invoice} value={formData.settings.one_line_product_name_in_invoice} onChange={() => { errors["one_line_product_name_in_invoice"] = ""; formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice; setFormData({ ...formData }); }} />
-                                    <span>One Line Product Name in Invoice</span>
-                                </label>
-                                <label className="pw-check" htmlFor="one_line_product_name_in_print_invoice">
-                                    <input type="checkbox" id="one_line_product_name_in_print_invoice" checked={!!formData.settings.one_line_product_name_in_print_invoice} value={formData.settings.one_line_product_name_in_print_invoice} onChange={() => { errors["one_line_product_name_in_print_invoice"] = ""; formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice; setFormData({ ...formData }); }} />
-                                    <span>One Line Product Name in Print Invoice</span>
-                                </label>
-                                <label className="pw-check" htmlFor="add_price_details_in_delivery_note">
-                                    <input type="checkbox" id="add_price_details_in_delivery_note" checked={!!formData.settings.add_price_details_in_delivery_note} value={formData.settings.add_price_details_in_delivery_note} onChange={() => { errors["add_price_details_in_delivery_note"] = ""; formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note; setFormData({ ...formData }); }} />
-                                    <span>Add Price Details in Delivery Note</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* ── Sales & Purchasing ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-cart3" style={{ color: '#004ac6' }}></i> Sales &amp; Purchasing</div>
-                            <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
-                                <label className="pw-check" htmlFor="skip_product_selection_while_delivery_note_import">
-                                    <input type="checkbox" id="skip_product_selection_while_delivery_note_import" checked={!!formData.settings.skip_product_selection_while_delivery_note_import} value={formData.settings.skip_product_selection_while_delivery_note_import} onChange={() => { errors["skip_product_selection_while_delivery_note_import"] = ""; formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import; setFormData({ ...formData }); }} />
-                                    <span>Skip Product Selection on Delivery Note Import</span>
-                                </label>
-                                <label className="pw-check" htmlFor="disable_purchases_on_accounts">
-                                    <input type="checkbox" id="disable_purchases_on_accounts" checked={!!formData.settings.disable_purchases_on_accounts} value={formData.settings.disable_purchases_on_accounts} onChange={() => { errors["disable_purchases_on_accounts"] = ""; formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts; setFormData({ ...formData }); }} />
-                                    <span>Disable Purchases on Accounts</span>
-                                </label>
-                                <label className="pw-check" htmlFor="block_sale_when_purchase_price_is_higher">
-                                    <input type="checkbox" id="block_sale_when_purchase_price_is_higher" checked={!!formData.settings.block_sale_when_purchase_price_is_higher} value={formData.settings.block_sale_when_purchase_price_is_higher} onChange={() => { errors["block_sale_when_purchase_price_is_higher"] = ""; formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher; setFormData({ ...formData }); }} />
-                                    <span>Block Sale When Purchase Price is Lower</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_auto_sales_payment_close_on_purchase">
-                                    <input type="checkbox" id="enable_auto_sales_payment_close_on_purchase" checked={!!formData.settings.enable_auto_sales_payment_close_on_purchase} value={formData.settings.enable_auto_sales_payment_close_on_purchase} onChange={() => { errors["enable_auto_sales_payment_close_on_purchase"] = ""; formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase; setFormData({ ...formData }); }} />
-                                    <span>Auto-close Sales Payment on Purchase</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_auto_purchase_payment_close_on_sales">
-                                    <input type="checkbox" id="enable_auto_purchase_payment_close_on_sales" checked={!!formData.settings.enable_auto_purchase_payment_close_on_sales} value={formData.settings.enable_auto_purchase_payment_close_on_sales} onChange={() => { errors["enable_auto_purchase_payment_close_on_sales"] = ""; formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales; setFormData({ ...formData }); }} />
-                                    <span>Auto-close Purchase Payment on Sales</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_auto_payment_close_on_return">
-                                    <input type="checkbox" id="enable_auto_payment_close_on_return" checked={!!formData.settings.enable_auto_payment_close_on_return} value={formData.settings.enable_auto_payment_close_on_return} onChange={() => { errors["enable_auto_payment_close_on_return"] = ""; formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return; setFormData({ ...formData }); }} />
-                                    <span>Auto-close Payment on Return</span>
-                                </label>
-                                <label className="pw-check" htmlFor="allow_adjust_same_date_payments">
-                                    <input type="checkbox" id="allow_adjust_same_date_payments" checked={!!formData.settings.allow_adjust_same_date_payments} value={formData.settings.allow_adjust_same_date_payments} onChange={() => { errors["allow_adjust_same_date_payments"] = ""; formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments; setFormData({ ...formData }); }} />
-                                    <span>Allow Adjusting Same-Date Payments</span>
-                                </label>
-                            </div>
-                            <div style={{ maxWidth: '280px' }}>
-                                <div className="pw-field">
-                                    <label htmlFor="block_sales_after_pending_count">Block Sales After N Pending <span style={{ color: '#6b7280', fontWeight: 400 }}>(0 = disabled)</span></label>
-                                    <input type="number" min="0" id="block_sales_after_pending_count" placeholder="0" value={formData.settings.block_sales_after_pending_count || ""}
-                                        onChange={(e) => { const raw = e.target.value; formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0); setFormData({ ...formData }); }} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ── Modules & Features ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-grid-3x3-gap" style={{ color: '#004ac6' }}></i> Modules &amp; Features</div>
-                            <div className="pw-check-grid">
-                                <label className="pw-check" htmlFor="enable_warehouse_module">
-                                    <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
-                                    <span>Enable Warehouse Module</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_purchase_order_module">
-                                    <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
-                                    <span>Enable Purchase Order Module</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_purchase_request_module">
-                                    <input type="checkbox" id="enable_purchase_request_module" checked={!!formData.settings.enable_purchase_request_module} value={formData.settings.enable_purchase_request_module} onChange={() => { formData.settings.enable_purchase_request_module = !formData.settings.enable_purchase_request_module; setFormData({ ...formData }); }} />
-                                    <span>Enable Purchase Requests Module (P.R)</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_rbac_module">
-                                    <input type="checkbox" id="enable_rbac_module" checked={!!formData.settings.enable_rbac_module} value={formData.settings.enable_rbac_module} onChange={() => { formData.settings.enable_rbac_module = !formData.settings.enable_rbac_module; setFormData({ ...formData }); }} />
-                                    <span>Enable RBAC Module (Role Based Access Control)</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_sales_page_selection">
-                                    <input type="checkbox" id="enable_sales_page_selection" checked={!!formData.settings.enable_sales_page_selection} value={formData.settings.enable_sales_page_selection} onChange={() => { formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection; setFormData({ ...formData }); }} />
-                                    <span>Enable Sales Page Selection</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_notification">
-                                    <input type="checkbox" id="enable_notification" checked={!!formData.settings.enable_notification} value={formData.settings.enable_notification} onChange={() => { formData.settings.enable_notification = !formData.settings.enable_notification; setFormData({ ...formData }); }} />
-                                    <span>Enable Notifications</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_auto_translation_to_arabic">
-                                    <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
-                                    <span>Enable Auto Translation to Arabic</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_arabic_names_list">
-                                    <input type="checkbox" id="enable_arabic_names_list" checked={!!formData.settings.enable_arabic_names_list} value={formData.settings.enable_arabic_names_list} onChange={() => { formData.settings.enable_arabic_names_list = !formData.settings.enable_arabic_names_list; setFormData({ ...formData }); }} />
-                                    <span>Enable Arabic Names List (Product Form)</span>
-                                </label>
-                                <label className="pw-check" htmlFor="allow_products_duplicates_by_default">
-                                    <input type="checkbox" id="allow_products_duplicates_by_default" checked={!!formData.settings.allow_products_duplicates_by_default} value={formData.settings.allow_products_duplicates_by_default} onChange={() => { formData.settings.allow_products_duplicates_by_default = !formData.settings.allow_products_duplicates_by_default; setFormData({ ...formData }); }} />
-                                    <span>Mark Allow Products Duplicates by Default</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_products">
-                                    <input type="checkbox" id="enable_products" checked={!!formData.settings.enable_products} value={formData.settings.enable_products} onChange={() => { formData.settings.enable_products = !formData.settings.enable_products; setFormData({ ...formData }); }} />
-                                    <span>Enable Products</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_services">
-                                    <input type="checkbox" id="enable_services" checked={!!formData.settings.enable_services} value={formData.settings.enable_services} onChange={() => { formData.settings.enable_services = !formData.settings.enable_services; setFormData({ ...formData }); }} />
-                                    <span>Enable Services</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_customer_po_no">
-                                    <input type="checkbox" id="enable_customer_po_no" checked={!!formData.settings.enable_customer_po_no} value={formData.settings.enable_customer_po_no} onChange={() => { formData.settings.enable_customer_po_no = !formData.settings.enable_customer_po_no; setFormData({ ...formData }); }} />
-                                    <span>Enable Customer P.O No. Field</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* ── Accounting & Financials ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-calculator" style={{ color: '#004ac6' }}></i> Accounting &amp; Financials</div>
-                            <div className="pw-check-grid">
-                                <label className="pw-check" htmlFor="show_minus_on_liability_balance_in_balance_sheet">
-                                    <input type="checkbox" id="show_minus_on_liability_balance_in_balance_sheet" checked={!!formData.settings.show_minus_on_liability_balance_in_balance_sheet} value={formData.settings.show_minus_on_liability_balance_in_balance_sheet} onChange={() => { errors["show_minus_on_liability_balance_in_balance_sheet"] = ""; formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet; setFormData({ ...formData }); }} />
-                                    <span>Show Minus on Liability Balance in Balance Sheet</span>
-                                </label>
-                                <label className="pw-check" htmlFor="hide_total_amount_row_in_balance_sheet">
-                                    <input type="checkbox" id="hide_total_amount_row_in_balance_sheet" checked={!!formData.settings.hide_total_amount_row_in_balance_sheet} value={formData.settings.hide_total_amount_row_in_balance_sheet} onChange={() => { errors["hide_total_amount_row_in_balance_sheet"] = ""; formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet; setFormData({ ...formData }); }} />
-                                    <span>Hide Total Amount Row in Balance Sheet</span>
-                                </label>
-                                <label className="pw-check" htmlFor="quotation_invoice_accounting">
-                                    <input type="checkbox" id="quotation_invoice_accounting" checked={!!formData.settings.quotation_invoice_accounting} value={formData.settings.quotation_invoice_accounting} onChange={() => { errors["formData.quotation_invoice_accounting"] = ""; formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting; setFormData({ ...formData }); }} />
-                                    <span>Enable Quotation Invoice Accounting</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* ── Stats Dashboard ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-bar-chart-line" style={{ color: '#004ac6' }}></i> Stats Dashboard</div>
-                            <div className="pw-check-grid">
-                                <label className="pw-check" htmlFor="stats_show_overall_summary">
-                                    <input type="checkbox" id="stats_show_overall_summary" checked={!!formData.settings.stats_show_overall_summary} value={formData.settings.stats_show_overall_summary} onChange={() => { formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary; setFormData({ ...formData }); }} />
-                                    <span>Show Overall Summary</span>
-                                </label>
-                                <label className="pw-check" htmlFor="stats_show_profit_loss_statement">
-                                    <input type="checkbox" id="stats_show_profit_loss_statement" checked={!!formData.settings.stats_show_profit_loss_statement} value={formData.settings.stats_show_profit_loss_statement} onChange={() => { formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement; setFormData({ ...formData }); }} />
-                                    <span>Show Profit / Loss Statement</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* ── Quotation Settings ── */}
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Quotation Settings</div>
-                            <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
-                                <label className="pw-check" htmlFor="update_product_stock_on_quotation_sales">
-                                    <input type="checkbox" id="update_product_stock_on_quotation_sales" checked={!!formData.settings.update_product_stock_on_quotation_sales} value={formData.settings.update_product_stock_on_quotation_sales} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales; setFormData({ ...formData }); }} />
-                                    <span>Update Product Stock on Quotation Sales</span>
-                                </label>
-                                <label className="pw-check" htmlFor="hide_quotation_invoice_vat">
-                                    <input type="checkbox" id="hide_quotation_invoice_vat" checked={!!formData.settings.hide_quotation_invoice_vat} value={formData.settings.hide_quotation_invoice_vat} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat; setFormData({ ...formData }); }} />
-                                    <span>Hide Quotation Invoice VAT</span>
-                                </label>
-                                <label className="pw-check" htmlFor="enable_monthly_serial_number">
-                                    <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
-                                    <span>Enable Monthly Serial Number Reset</span>
-                                </label>
-                            </div>
-                            <div className="row g-3" style={{ maxWidth: '560px' }}>
-                                <div className="col-md-6">
-                                    <div className="pw-field">
-                                        <label htmlFor="default_quotation_validity_days">Default Quotation Validity (days)</label>
-                                        <input type="number" id="default_quotation_validity_days" placeholder="e.g. 30"
-                                            value={formData.settings.default_quotation_validity_days || ""}
-                                            onChange={(e) => {
-                                                if (!e.target.value) { formData.settings.default_quotation_validity_days = null; errors["default_quotation_validity_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
-                                                if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_validity_days"] = "Default quotation validity days should be > 0"; setErrors({ ...errors }); return; }
-                                                errors["default_quotation_validity_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData });
-                                            }} />
-                                        {errors.default_quotation_validity_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_validity_days}</span>}
-                                    </div>
-                                </div>
-                                <div className="col-md-6">
-                                    <div className="pw-field">
-                                        <label htmlFor="default_quotation_delivery_days">Default Quotation Delivery (days)</label>
-                                        <input type="number" id="default_quotation_delivery_days" placeholder="e.g. 7"
-                                            value={formData.settings.default_quotation_delivery_days || ""}
-                                            onChange={(e) => {
-                                                if (!e.target.value) { formData.settings.default_quotation_delivery_days = null; errors["default_quotation_delivery_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
-                                                if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_delivery_days"] = "Default quotation delivery days should be > 0"; setErrors({ ...errors }); return; }
-                                                errors["default_quotation_delivery_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); console.log(formData);
-                                            }} />
-                                        {errors.default_quotation_delivery_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_delivery_days}</span>}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ── WhatsApp Integration ── */}
-                        <div className="pw-card" style={{ marginBottom: '0', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
-                            <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
-                                <i className="bi bi-whatsapp" style={{ color: '#25d366', fontSize: '14px' }}></i>
-                                <span style={{ color: '#1a4d2e' }}>WhatsApp Integration (Evolution API)</span>
-                            </div>
-                            <div style={{ marginBottom: '14px' }}>
-                                <label className="pw-check" htmlFor="use_whatsapp_api" style={{ maxWidth: '420px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
-                                    <input type="checkbox" id="use_whatsapp_api" checked={!!formData.settings.use_whatsapp_api} value={formData.settings.use_whatsapp_api} onChange={() => { formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api; setFormData({ ...formData }); }} />
-                                    <span style={{ color: '#1a4d2e', fontWeight: 600 }}>Use WhatsApp API — send invoices as PDF attachments</span>
-                                </label>
-                                <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c', fontFamily: '"Inter", sans-serif' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</p>
-                            </div>
-                            <div className="row g-3">
-                                <div className="col-md-4">
-                                    <div className="pw-field">
-                                        <label htmlFor="evolution_api_url">Evolution API URL</label>
-                                        <input type="text" id="evolution_api_url" placeholder="http://localhost:8081" value={formData.settings.evolution_api_url || ""} onChange={(e) => { formData.settings.evolution_api_url = e.target.value; setFormData({ ...formData }); }} />
-                                        <small>Leave blank to use default (http://localhost:8081)</small>
-                                    </div>
-                                </div>
-                                <div className="col-md-4">
-                                    <div className="pw-field">
-                                        <label htmlFor="evolution_api_key">Evolution API Key</label>
-                                        <input type="text" id="evolution_api_key" placeholder="startpos-evo-local-key" value={formData.settings.evolution_api_key || ""} onChange={(e) => { formData.settings.evolution_api_key = e.target.value; setFormData({ ...formData }); }} />
-                                    </div>
-                                </div>
-                                <div className="col-md-4">
-                                    <div className="pw-field">
-                                        <label htmlFor="evolution_instance_name">Evolution Instance Name</label>
-                                        <input type="text" id="evolution_instance_name" placeholder="startpos" value={formData.settings.evolution_instance_name || ""} onChange={(e) => { formData.settings.evolution_instance_name = e.target.value; setFormData({ ...formData }); }} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="row g-3" style={{ display: 'none' }}>{/* legacy fields removed from display */}
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.show_currency_symbol}
-                                    checked={formData.settings.show_currency_symbol}
-                                    onChange={(e) => {
-                                        errors["show_currency_symbol"] = "";
-                                        formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="show_currency_symbol"
-
-                                /> &nbsp;Show Currency Symbol
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.show_currency_symbol && (
-                                <div className="pw-err">
-                                    {errors.show_currency_symbol}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_auto_translation_to_arabic}
-                                    checked={formData.settings.enable_auto_translation_to_arabic}
-                                    onChange={(e) => {
-                                        errors["enable_auto_translation_to_arabic"] = "";
-                                        formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_auto_translation_to_arabic"
-
-                                /> &nbsp;Enable Auto Translation to Arabic
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_auto_translation_to_arabic && (
-                                <div className="pw-err">
-                                    {errors.enable_auto_translation_to_arabic}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_warehouse_module}
-                                    checked={formData.settings.enable_warehouse_module}
-                                    onChange={(e) => {
-                                        errors["enable_warehouse_module"] = "";
-                                        formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_warehouse_module"
-
-                                /> &nbsp;Enable Warehouse Module
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_warehouse_module && (
-                                <div className="pw-err">
-                                    {errors.enable_warehouse_module}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.add_price_details_in_delivery_note}
-                                    checked={formData.settings.add_price_details_in_delivery_note}
-                                    onChange={(e) => {
-                                        errors["add_price_details_in_delivery_note"] = "";
-                                        formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="add_price_details_in_delivery_note"
-                                /> &nbsp;Add price details in Delivery note
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.add_price_details_in_delivery_note && (
-                                <div className="pw-err">
-                                    {errors.add_price_details_in_delivery_note}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.skip_product_selection_while_delivery_note_import}
-                                    checked={formData.settings.skip_product_selection_while_delivery_note_import}
-                                    onChange={(e) => {
-                                        errors["skip_product_selection_while_delivery_note_import"] = "";
-                                        formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="skip_product_selection_while_delivery_note_import"
-                                /> &nbsp;Skip Product Selection While Delivery Note Import
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.skip_product_selection_while_delivery_note_import && (
-                                <div className="pw-err">
-                                    {errors.skip_product_selection_while_delivery_note_import}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Block Sales After N Pending (0 = disabled)</label>
-                            <div className="input-group mb-3">
-                                <input type="number"
-                                    min="0"
-                                    value={formData.settings.block_sales_after_pending_count || ""}
-                                    onChange={(e) => {
-                                        const raw = e.target.value;
-                                        formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0);
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="block_sales_after_pending_count"
-                                    placeholder="0"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.disable_purchases_on_accounts}
-                                    checked={formData.settings.disable_purchases_on_accounts}
-                                    onChange={(e) => {
-                                        errors["disable_purchases_on_accounts"] = "";
-                                        formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="disable_purchases_on_accounts"
-
-                                /> &nbsp;Disable Purchases On Accounts
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.disable_purchases_on_accounts && (
-                                <div className="pw-err">
-                                    {errors.disable_purchases_on_accounts}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_notification}
-                                    checked={!!formData.settings.enable_notification}
-                                    onChange={(e) => {
-                                        formData.settings.enable_notification = !formData.settings.enable_notification;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="enable_notification"
-                                /> &nbsp;Enable Notification
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_sales_page_selection}
-                                    checked={!!formData.settings.enable_sales_page_selection}
-                                    onChange={(e) => {
-                                        formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="enable_sales_page_selection"
-                                /> &nbsp;Enable Sales Page Selection
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-12 mt-3">
-                            <h6 className="text-success"><i className="bi bi-whatsapp me-1"></i>WhatsApp Integration (Evolution API)</h6>
-                        </div>
-
-                        <div className="col-md-3">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.use_whatsapp_api}
-                                    checked={!!formData.settings.use_whatsapp_api}
-                                    onChange={(e) => {
-                                        formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="use_whatsapp_api"
-                                /> &nbsp;Use WhatsApp API (send PDF as attachment)
-                            </div>
-                            <label className="form-label text-muted" style={{fontSize:'0.8em'}}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</label>
-                        </div>
-
-                        <div className="col-md-4">
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">Evolution API URL</label>
-                                <input type="text"
-                                    className="form-control"
-                                    placeholder="http://localhost:8081"
-                                    value={formData.settings.evolution_api_url || ""}
-                                    onChange={(e) => {
-                                        formData.settings.evolution_api_url = e.target.value;
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                                <small className="text-muted">Leave blank to use default (http://localhost:8081)</small>
-                            </div>
-                        </div>
-
-                        <div className="col-md-4">
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">Evolution API Key</label>
-                                <input type="text"
-                                    className="form-control"
-                                    placeholder="startpos-evo-local-key"
-                                    value={formData.settings.evolution_api_key || ""}
-                                    onChange={(e) => {
-                                        formData.settings.evolution_api_key = e.target.value;
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="col-md-4">
-                            <div className="mb-3">
-                                <label className="form-label fw-bold">Evolution Instance Name</label>
-                                <input type="text"
-                                    className="form-control"
-                                    placeholder="startpos"
-                                    value={formData.settings.evolution_instance_name || ""}
-                                    onChange={(e) => {
-                                        formData.settings.evolution_instance_name = e.target.value;
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_auto_sales_payment_close_on_purchase}
-                                    checked={formData.settings.enable_auto_sales_payment_close_on_purchase}
-                                    onChange={(e) => {
-                                        errors["enable_auto_sales_payment_close_on_purchase"] = "";
-                                        formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_auto_sales_payment_close_on_purchase"
-
-                                /> &nbsp;Enable Auto Sales Payment Close On Purchase
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_auto_sales_payment_close_on_purchase && (
-                                <div className="pw-err">
-                                    {errors.enable_auto_sales_payment_close_on_purchase}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_auto_purchase_payment_close_on_sales}
-                                    checked={formData.settings.enable_auto_purchase_payment_close_on_sales}
-                                    onChange={(e) => {
-                                        errors["enable_auto_purchase_payment_close_on_sales"] = "";
-                                        formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_auto_purchase_payment_close_on_sales"
-
-                                /> &nbsp;Enable Auto Purchase Payment Close On Sales
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_auto_purchase_payment_close_on_sales && (
-                                <div className="pw-err">
-                                    {errors.enable_auto_purchase_payment_close_on_sales}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_auto_payment_close_on_return}
-                                    checked={formData.settings.enable_auto_payment_close_on_return}
-                                    onChange={(e) => {
-                                        errors["enable_auto_payment_close_on_return"] = "";
-                                        formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_auto_payment_close_on_return"
-
-                                /> &nbsp;Enable Auto Payment Close On Return
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_auto_payment_close_on_return && (
-                                <div className="pw-err">
-                                    {errors.enable_auto_payment_close_on_return}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.stats_show_overall_summary}
-                                    checked={formData.settings.stats_show_overall_summary}
-                                    onChange={(e) => {
-                                        formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="stats_show_overall_summary"
-                                /> &nbsp;Stats: Show Overall Summary
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.stats_show_profit_loss_statement}
-                                    checked={formData.settings.stats_show_profit_loss_statement}
-                                    onChange={(e) => {
-                                        formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="stats_show_profit_loss_statement"
-                                /> &nbsp;Stats: Show Profit / Loss Statement
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.update_product_stock_on_quotation_sales}
-                                    checked={formData.settings.update_product_stock_on_quotation_sales}
-                                    onChange={(e) => {
-                                        errors["hide_quotation_invoice_vat"] = "";
-                                        formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="hide_quotation_invoice_vat"
-
-                                /> &nbsp;Update product stock on quotation sales
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.update_product_stock_on_quotation_sales && (
-                                <div className="pw-err">
-                                    {errors.update_product_stock_on_quotation_sales}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.hide_quotation_invoice_vat}
-                                    checked={formData.settings.hide_quotation_invoice_vat}
-                                    onChange={(e) => {
-                                        errors["hide_quotation_invoice_vat"] = "";
-                                        formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="hide_quotation_invoice_vat"
-
-                                /> &nbsp;Hide quotation invoice vat
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.hide_quotation_invoice_vat && (
-                                <div className="pw-err">
-                                    {errors.hide_quotation_invoice_vat}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.allow_adjust_same_date_payments}
-                                    checked={formData.settings.allow_adjust_same_date_payments}
-                                    onChange={(e) => {
-                                        errors["allow_adjust_same_date_payments"] = "";
-                                        formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id=" allow_adjust_same_date_payments"
-
-                                /> &nbsp;Allow adjust same date payments
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.allow_adjust_same_date_payments && (
-                                <div className="pw-err">
-                                    {errors.allow_adjust_same_date_payments}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_invoice_print_type_selection}
-                                    checked={formData.settings.enable_invoice_print_type_selection}
-                                    onChange={(e) => {
-
-                                        errors["enable_invoice_print_type_selection"] = "";
-                                        formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="enable_invoice_print_type_selection"
-
-                                /> &nbsp;Enable invoice print type selection
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_invoice_print_type_selection && (
-                                <div className="pw-err">
-                                    {errors.enable_invoice_print_type_selection}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.show_seller_info_in_invoice}
-                                    checked={formData.settings.show_seller_info_in_invoice}
-                                    onChange={(e) => {
-
-                                        errors["show_seller_info_in_invoice"] = "";
-                                        formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="show_seller_info_in_invoice"
-
-                                /> &nbsp;Show seller info in invoice
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
-                                <div className="pw-err">
-                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
-                                    checked={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
-                                    onChange={(e) => {
-
-                                        errors["show_minus_on_liability_balance_in_balance_sheet"] = "";
-                                        formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="show_minus_on_liability_balance_in_balance_sheet"
-
-                                /> &nbsp;Show Minus On Liability Balance In Balance Sheet
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
-                                <div className="pw-err">
-                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.hide_total_amount_row_in_balance_sheet}
-                                    checked={formData.settings.hide_total_amount_row_in_balance_sheet}
-                                    onChange={(e) => {
-
-                                        errors["hide_total_amount_row_in_balance_sheet"] = "";
-                                        formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="hide_total_amount_row_in_balance_sheet"
-
-                                /> &nbsp;Hide total amount row in balance_sheet
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.hide_total_amount_row_in_balance_sheet && (
-                                <div className="pw-err">
-                                    {errors.hide_total_amount_row_in_balance_sheet}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.show_address_in_invoice_footer}
-                                    checked={formData.settings.show_address_in_invoice_footer}
-                                    onChange={(e) => {
-
-                                        errors["formData.show_address_in_invoice_footer"] = "";
-                                        formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="formData.show_address_in_invoice_footer"
-
-                                /> &nbsp;Show addres in invoice footer
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.show_address_in_invoice_footer && (
-                                <div className="pw-err">
-                                    {errors.show_address_in_invoice_footer}
-                                </div>
-                            )}
-                        </div>
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.show_received_by_footer_in_invoice}
-                                    checked={formData.settings.show_received_by_footer_in_invoice}
-                                    onChange={(e) => {
-
-                                        errors["show_received_by_footer_in_invoice"] = "";
-                                        formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="show_received_by_footer_in_invoice"
-                                    name="show_received_by_footer_in_invoice"
-
-                                /> &nbsp;Show received by footer in invoices
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.show_received_by_footer_in_invoice && (
-                                <div className="pw-err">
-                                    {errors.show_received_by_footer_in_invoice}
-                                </div>
-                            )}
-                        </div>
-
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.zatca_qr_on_left_bottom}
-                                    checked={formData.settings.zatca_qr_on_left_bottom}
-                                    onChange={(e) => {
-
-                                        errors["formData.zatca_qr_on_left_bottom"] = "";
-                                        formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="formData.zatca_qr_on_left_bottom"
-                                /> &nbsp;Zatca QR on left bottom
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.zatca_qr_on_left_bottom && (
-                                <div className="pw-err">
-                                    {errors.zatca_qr_on_left_bottom}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_zatca_reporting_for_receivables}
-                                    checked={!!formData.settings.enable_zatca_reporting_for_receivables}
-                                    onChange={() => {
-                                        formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="formData.enable_zatca_reporting_for_receivables"
-                                /> &nbsp;Enable Zatca Reporting for Receivables (Debit Note)
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_zatca_reporting_for_payables}
-                                    checked={!!formData.settings.enable_zatca_reporting_for_payables}
-                                    onChange={() => {
-                                        formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables;
-                                        setFormData({ ...formData });
-                                    }}
-                                    className=""
-                                    id="formData.enable_zatca_reporting_for_payables"
-                                /> &nbsp;Enable Zatca Reporting for Payables (Credit Note)
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.auto_suggest_advance_payment_linking_in_sales}
-                                    checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales}
-                                    onChange={() => {
-                                        formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales;
-                                        setFormData({ ...formData });
-                                    }}
-                                    id="formData.auto_suggest_advance_payment_linking_in_sales"
-                                /> &nbsp;Auto Prompt Advance Payment Linking in Sales Payments
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.display_vat_in_receivables_and_payables}
-                                    checked={!!formData.settings.display_vat_in_receivables_and_payables}
-                                    onChange={() => {
-                                        formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables;
-                                        setFormData({ ...formData });
-                                    }}
-                                    id="formData.display_vat_in_receivables_and_payables"
-                                /> &nbsp;Display VAT in Receivables &amp; Payables
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.quotation_invoice_accounting}
-                                    checked={formData.settings.quotation_invoice_accounting}
-                                    onChange={(e) => {
-
-                                        errors["formData.quotation_invoice_accounting"] = "";
-                                        formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="formData.quotation_invoice_accounting"
-                                /> &nbsp;Enable Quotation Invoice Accounting
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.quotation_invoice_accounting && (
-                                <div className="pw-err">
-                                    {errors.quotation_invoice_accounting}
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.block_sale_when_purchase_price_is_higher}
-                                    checked={formData.settings.block_sale_when_purchase_price_is_higher}
-                                    onChange={(e) => {
-                                        errors["block_sale_when_purchase_price_is_higher"] = "";
-                                        formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="block_sale_when_purchase_price_is_higher"
-                                /> &nbsp;Block Sales When purchase price is lower
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.block_sale_when_purchase_price_is_higher && (
-                                <div className="pw-err">
-                                    {errors.block_sale_when_purchase_price_is_higher}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.one_line_product_name_in_invoice}
-                                    checked={formData.settings.one_line_product_name_in_invoice}
-                                    onChange={(e) => {
-                                        errors["one_line_product_name_in_invoice"] = "";
-                                        formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="one_line_product_name_in_invoice"
-                                /> &nbsp;One line product name in invoice
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.one_line_product_name_in_invoice && (
-                                <div className="pw-err">
-                                    {errors.one_line_product_name_in_invoice}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.one_line_product_name_in_print_invoice}
-                                    checked={formData.settings.one_line_product_name_in_print_invoice}
-                                    onChange={(e) => {
-                                        errors["one_line_product_name_in_print_invoice"] = "";
-                                        formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="one_line_product_name_in_invoice"
-                                /> &nbsp;One line product name in print invoice
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.one_line_product_name_in_print_invoice && (
-                                <div className="pw-err">
-                                    {errors.one_line_product_name_in_print_invoice}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.enable_monthly_serial_number}
-                                    checked={formData.settings.enable_monthly_serial_number}
-                                    onChange={(e) => {
-                                        errors["enable_monthly_serial_number"] = "";
-                                        formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="block_sale_when_purchase_price_is_higher"
-                                /> &nbsp;Enable monthly serial number
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.enable_monthly_serial_number && (
-                                <div className="pw-err">
-                                    {errors.enable_monthly_serial_number}
-                                </div>
-                            )}
-                        </div>
-
-
-
-                        <div className="col-md-3">
-                            <label className="form-label">Default quotation validity (# of Days)*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    type="number"
-                                    className="text-center"
-                                    style={{ width: "50px" }}
-                                    value={formData.settings.default_quotation_validity_days}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange validity days");
-                                        if (!e.target.value) {
-                                            formData.settings.default_quotation_validity_days = null;
-                                            errors["default_quotation_validity_days"] = "";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (parseInt(e.target.value) <= 0) {
-                                            formData.settings.default_quotation_validity_days = parseInt(e.target.value);
-                                            setFormData({ ...formData });
-                                            errors["default_quotation_validity_days"] =
-                                                "Deafult quotation validity days should be > 0";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["default_quotation_validity_days"] = "";
-                                        setErrors({ ...errors });
-                                        formData.settings.default_quotation_validity_days = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.default_quotation_validity_days && (
-                                    <div className="pw-err">
-                                        {errors.default_quotation_validity_days}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        </div></div>)}
-
-                        {activeTab === 'designs' && (<div className="pw-tab-wrap">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Designs</h3></div>
-
-                        <div className="pw-card" style={{ marginBottom: '16px' }}>
-                            <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> Form Designs</div>
-                            <div className="row g-3">
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.sales_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.sales_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                        <option value="type3">Type 3</option>
-                                        <option value="type4">VAN Store (Type 4)</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales order creation and update form</div>
-                                </div>
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Return Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.sales_return_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
-                                </div>
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.purchase_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.purchase_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase creation and update form</div>
-                                </div>
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Return Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.purchase_return_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.purchase_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase return creation and update form</div>
-                                </div>
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.quotation_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.quotation_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation creation and update form</div>
-                                </div>
-                                <div className="col-md-4">
-                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Sales Return Create/Update Form</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.settings?.quotation_sales_return_create_form_design || 'type1'}
-                                        onChange={(e) => { formData.settings.quotation_sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
-                                    >
-                                        <option value="type1">Type 1 (Default)</option>
-                                        <option value="type2">Type 2</option>
-                                    </select>
-                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation sales return creation and update form</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        </div>)}
-
-                        {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
-                            <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>ZATCA Credentials</h6>
-                            {[
-                                { label: 'Environment',                    value: formData.zatca?.env },
-                                { label: 'Connected',                      value: formData.zatca?.connected ? 'Yes' : 'No' },
-                                { label: 'OTP',                            value: formData.zatca?.otp },
-                                { label: 'CSR',                            value: formData.zatca?.csr },
-                                { label: 'Private Key',                    value: formData.zatca?.private_key },
-                                { label: 'Binary Security Token',          value: formData.zatca?.binary_security_token },
-                                { label: 'Secret',                         value: formData.zatca?.secret },
-                                { label: 'Production Binary Security Token', value: formData.zatca?.production_binary_security_token },
-                                { label: 'Production Secret',              value: formData.zatca?.production_secret },
-                                { label: 'Compliance Request ID',          value: formData.zatca?.compliance_request_id },
-                                { label: 'Production Request ID',          value: formData.zatca?.production_request_id },
-                                { label: 'Last Connected At',              value: formData.zatca?.last_connected_at },
-                                { label: 'Last Disconnected At',           value: formData.zatca?.last_disconnected_at },
-                                { label: 'Connection Failed Count',        value: formData.zatca?.connection_failed_count },
-                                { label: 'Last Failed At',                 value: formData.zatca?.connection_last_failed_at },
-                            ].map(({ label, value }) => (
-                                <div className="row mb-2" key={label}>
-                                    <div className="col-md-4">
-                                        <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>{label}</label>
-                                    </div>
-                                    <div className="col-md-8">
-                                        {value == null || value === '' || value === 0 ? (
-                                            <span className="text-muted" style={{ fontSize: '13px' }}>—</span>
-                                        ) : (
-                                            <span className="font-monospace d-block" style={{ fontSize: '12px', color: '#212529', wordBreak: 'break-all' }}>{String(value)}</span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                            {formData.zatca?.connection_errors?.length > 0 && (
-                                <div className="row mb-2">
-                                    <div className="col-md-4">
-                                        <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>Connection Errors</label>
-                                    </div>
-                                    <div className="col-md-8">
-                                        {formData.zatca.connection_errors.map((err, i) => (
-                                            <div key={i} className="text-danger" style={{ fontSize: '12px' }}>{err}</div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div></div>)}
-
-                        </div>{/* pw-content-scroll */}
+                                </div>)}
+
+                                {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>ZATCA Credentials</h6>
+                                    {[
+                                        { label: 'Environment', value: formData.zatca?.env },
+                                        { label: 'Connected', value: formData.zatca?.connected ? 'Yes' : 'No' },
+                                        { label: 'OTP', value: formData.zatca?.otp },
+                                        { label: 'CSR', value: formData.zatca?.csr },
+                                        { label: 'Private Key', value: formData.zatca?.private_key },
+                                        { label: 'Binary Security Token', value: formData.zatca?.binary_security_token },
+                                        { label: 'Secret', value: formData.zatca?.secret },
+                                        { label: 'Production Binary Security Token', value: formData.zatca?.production_binary_security_token },
+                                        { label: 'Production Secret', value: formData.zatca?.production_secret },
+                                        { label: 'Compliance Request ID', value: formData.zatca?.compliance_request_id },
+                                        { label: 'Production Request ID', value: formData.zatca?.production_request_id },
+                                        { label: 'Last Connected At', value: formData.zatca?.last_connected_at },
+                                        { label: 'Last Disconnected At', value: formData.zatca?.last_disconnected_at },
+                                        { label: 'Connection Failed Count', value: formData.zatca?.connection_failed_count },
+                                        { label: 'Last Failed At', value: formData.zatca?.connection_last_failed_at },
+                                    ].map(({ label, value }) => (
+                                        <div className="row mb-2" key={label}>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>{label}</label>
+                                            </div>
+                                            <div className="col-md-8">
+                                                {value == null || value === '' || value === 0 ? (
+                                                    <span className="text-muted" style={{ fontSize: '13px' }}>—</span>
+                                                ) : (
+                                                    <span className="font-monospace d-block" style={{ fontSize: '12px', color: '#212529', wordBreak: 'break-all' }}>{String(value)}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {formData.zatca?.connection_errors?.length > 0 && (
+                                        <div className="row mb-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>Connection Errors</label>
+                                            </div>
+                                            <div className="col-md-8">
+                                                {formData.zatca.connection_errors.map((err, i) => (
+                                                    <div key={i} className="text-danger" style={{ fontSize: '12px' }}>{err}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div></div>)}
+
+                            </div>{/* pw-content-scroll */}
                         </div>{/* pw-content */}
                     </form>
                 </Modal.Body>

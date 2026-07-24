@@ -163,6 +163,8 @@ const ServiceCreate = forwardRef((props, ref) => {
                 wholesale_unit_price_with_vat: _ps.wholesale_unit_price_with_vat != null ? String(_ps.wholesale_unit_price_with_vat) : '',
                 retail_unit_price: _ps.retail_unit_price != null ? String(_ps.retail_unit_price) : '',
                 retail_unit_price_with_vat: _ps.retail_unit_price_with_vat != null ? String(_ps.retail_unit_price_with_vat) : '',
+                purchase_unit_price: _ps.purchase_unit_price != null ? String(_ps.purchase_unit_price) : '',
+                purchase_unit_price_with_vat: _ps.purchase_unit_price_with_vat != null ? String(_ps.purchase_unit_price_with_vat) : '',
             });
             if (formData.images) setProductImages(formData.images);
             if (formData.service_category_id) {
@@ -296,6 +298,34 @@ const ServiceCreate = forwardRef((props, ref) => {
             const cross = parseFloat(trimTo8Decimals(n / (1 + vatRate)));
             productStores[storeId].retail_unit_price = cross;
             setPriceInputs(prev => ({ ...prev, retail_unit_price: String(cross) }));
+            setProductStores({ ...productStores });
+        }, 150);
+        setProductStores({ ...productStores });
+    }
+    function updatePurchaseExcl(val) {
+        setPriceInputs(prev => ({ ...prev, purchase_unit_price: val }));
+        if (!productStores[storeId]) productStores[storeId] = {};
+        const n = parseFloat(val) || 0;
+        productStores[storeId].purchase_unit_price = n;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            const cross = parseFloat(trimTo8Decimals(n * (1 + vatRate)));
+            productStores[storeId].purchase_unit_price_with_vat = cross;
+            setPriceInputs(prev => ({ ...prev, purchase_unit_price_with_vat: String(cross) }));
+            setProductStores({ ...productStores });
+        }, 150);
+        setProductStores({ ...productStores });
+    }
+    function updatePurchaseIncl(val) {
+        setPriceInputs(prev => ({ ...prev, purchase_unit_price_with_vat: val }));
+        if (!productStores[storeId]) productStores[storeId] = {};
+        const n = parseFloat(val) || 0;
+        productStores[storeId].purchase_unit_price_with_vat = n;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            const cross = parseFloat(trimTo8Decimals(n / (1 + vatRate)));
+            productStores[storeId].purchase_unit_price = cross;
+            setPriceInputs(prev => ({ ...prev, purchase_unit_price: String(cross) }));
             setProductStores({ ...productStores });
         }, 150);
         setProductStores({ ...productStores });
@@ -526,8 +556,30 @@ const ServiceCreate = forwardRef((props, ref) => {
                         <div style={CARD}>
                             <SectionTitle icon="bi-currency-dollar">Pricing</SectionTitle>
                             <div className="row g-4">
+                                {/* Purchase */}
+                                <div className="col-md-4">
+                                    <div style={PRICE_CARD}>
+                                        <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
+                                            Purchase Unit Price
+                                        </div>
+                                        <div style={{ marginBottom: '14px' }}>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Excl. VAT</div>
+                                            <input type="text" inputMode="decimal"
+                                                value={priceInputs.purchase_unit_price ?? ''}
+                                                style={PRICE_INPUT} placeholder="0.00"
+                                                onChange={(e) => updatePurchaseExcl(e.target.value)} />
+                                        </div>
+                                        <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '12px' }}>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Incl. VAT</div>
+                                            <input type="text" inputMode="decimal"
+                                                value={priceInputs.purchase_unit_price_with_vat ?? ''}
+                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder="Calculated automatically"
+                                                onChange={(e) => updatePurchaseIncl(e.target.value)} />
+                                        </div>
+                                    </div>
+                                </div>
                                 {/* Wholesale */}
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <div style={PRICE_CARD}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
                                             Wholesale Unit Price
@@ -549,7 +601,7 @@ const ServiceCreate = forwardRef((props, ref) => {
                                     </div>
                                 </div>
                                 {/* Retail */}
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <div style={PRICE_CARD}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
                                             Retail Unit Price

@@ -45,6 +45,22 @@ const OrderPrintContent = forwardRef((props, ref) => {
                         {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
                     </h4>
 
+                    {props.model.store?.settings?.enable_automobile_module && props.model?.vehicle_snapshot && (
+                        <>
+                            <h4 style={{ fontSize: "2.7mm", position: "absolute", left: "100px", top: (74 + page.top) + "px", border: "solid " + border + "px", maxWidth: "470px" }}>
+                                {[props.model.vehicle_snapshot.brand, props.model.vehicle_snapshot.model, props.model.vehicle_snapshot.variant].filter(Boolean).join(" ")}
+                                {props.model.vehicle_snapshot.vehicle_number ? ` | Plate: ${props.model.vehicle_snapshot.vehicle_number}` : ""}
+                                {props.model.vehicle_snapshot.istimara_no ? ` | Istimara: ${props.model.vehicle_snapshot.istimara_no}` : ""}
+                            </h4>
+                            {(props.model.vehicle_snapshot.year || props.model.vehicle_snapshot.current_km) && (
+                                <h4 style={{ fontSize: "2.5mm", position: "absolute", left: "100px", top: (86 + page.top) + "px", border: "solid " + border + "px", maxWidth: "470px" }}>
+                                    {props.model.vehicle_snapshot.year ? `Year: ${props.model.vehicle_snapshot.year}` : ""}
+                                    {props.model.vehicle_snapshot.year && props.model.vehicle_snapshot.current_km ? " | " : ""}
+                                    {props.model.vehicle_snapshot.current_km ? `KM: ${props.model.vehicle_snapshot.current_km}` : ""}
+                                </h4>
+                            )}
+                        </>
+                    )}
 
                     <h4 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(

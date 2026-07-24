@@ -59,6 +59,7 @@ import { useTranslation } from 'react-i18next';
 import eventEmitter from '../utils/eventEmitter';
 import { SalesType1Header, SalesType1Body } from './SalesType1Form';
 import { SalesVanStoreHeader, SalesVanStoreBody } from './SalesVanStoreForm';
+import { SalesType5Header, SalesType5Body } from './SalesType5Form';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
@@ -87,6 +88,14 @@ function _dnFormatDateTime(isoString) {
         hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
     });
 }
+function sanitizeSalesFormType(type, settings) {
+    const safeType = ["type1", "type2", "type3", "type4", "type5"].includes(type) ? type : "type1";
+    if (safeType === "type5" && settings && settings.enable_automobile_module !== true) {
+        return "type1";
+    }
+    return safeType;
+}
+
 function _getDnDismissedMap() {
     try { return JSON.parse(localStorage.getItem('dn_dismissed') || '{}'); } catch (_) { return {}; }
 }
@@ -149,6 +158,8 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.customer_id = "";
             formData.customer_name = "";
             formData.customerName = "";
+            formData.vehicle_id = "";
+            formData.vehicle_snapshot = undefined;
             customerSearchRef?.current?.clear();
 
             if (localStorage.getItem("user_id")) {
@@ -274,6 +285,8 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.customer_id = "";
         formData.customer_name = "";
         formData.customerName = "";
+        formData.vehicle_id = "";
+        formData.vehicle_snapshot = undefined;
         customerSearchRef?.current?.clear();
 
         if (localStorage.getItem("user_id")) {
@@ -1767,6 +1780,7 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.discount_percent_with_vat = 0;
         }
 
+        formData.shipping_handling_fees = shipping || 0;
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
@@ -1824,7 +1838,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             }
 
-            if (formType !== "type4" && store?.settings?.block_sale_when_purchase_price_is_higher) {
+            if (formType !== "type4" && !selectedProducts[i].is_service && store?.settings?.block_sale_when_purchase_price_is_higher) {
                 if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                     errors["purchase_unit_price_" + i] = t("Purchase unit price is greater than Unit Price(without VAT)");
                     errors["unit_price_" + i] = t("Unit price is less  than Purchase Unit Price(without VAT)");
@@ -1844,7 +1858,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 name: selectedProducts[i].name,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: unitPrice ? unitPrice : 0.00,
-                unit_price_with_vat: selectedProducts[i].unit_price_with_vat ? selectedProducts[i].unit_price_with_vat : 0.00,
+                unit_price_with_vat: selectedProducts[i].unit_price_with_vat ? parseFloat(selectedProducts[i].unit_price_with_vat) : 0.00,
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
                 purchase_unit_price_with_vat: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price_with_vat) : 0,
                 unit_discount: unitDiscount,
@@ -2153,7 +2167,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
-        if (store?.settings?.block_sale_when_purchase_price_is_higher) {
+        if (store?.settings?.block_sale_when_purchase_price_is_higher && !selectedProducts[i].is_service) {
             if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
                 errors["purchase_unit_price_" + i] = t("Purchase Unit Price should be > 0");
             } else if (!selectedProducts[i].purchase_unit_price) {
@@ -2165,7 +2179,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-        if (formType !== "type4" && selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
+        if (formType !== "type4" && !selectedProducts[i].is_service && selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
 
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                 errors["purchase_unit_price_" + i] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)")
@@ -2541,7 +2555,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (alreadyAdded && !product.allow_duplicates) {
             selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity || 0) + qty;
         } else if (!alreadyAdded || product.allow_duplicates) {
-            selectedProducts.push({
+            selectedProducts.unshift({
                 product_id: product.id,
                 code: product.item_code,
                 prefix_part_number: product.prefix_part_number,
@@ -2576,7 +2590,7 @@ const OrderCreate = forwardRef((props, ref) => {
         timerRef2.current[index] = setTimeout(() => {
 
             if (alreadyAdded && product.allow_duplicates) {
-                index = selectedProducts?.length - 1;
+                index = 0;
             }
 
             CalCulateLineTotals(index);
@@ -3207,6 +3221,8 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("selectedCustomer:", selectedCustomer);
         setSelectedCustomers([selectedCustomer])
         formData.customer_id = selectedCustomer.id;
+        formData.vehicle_id = "";
+        formData.vehicle_snapshot = undefined;
         setFormData({ ...formData });
     };
 
@@ -5028,7 +5044,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
-    const [formType, setFormType] = useState(() => localStorage.getItem('order_form_type') || 'type3');
+    const [formType, setFormType] = useState(() => sanitizeSalesFormType(localStorage.getItem('order_form_type') || 'type3'));
     useEffect(() => {
         localStorage.setItem('order_form_type', formType);
     }, [formType]);
@@ -5036,9 +5052,12 @@ const OrderCreate = forwardRef((props, ref) => {
     // Always apply store's design setting; selection flag only controls the in-header switcher
     useEffect(() => {
         if (!store.settings) return;
-        if (store.settings.sales_create_form_design) {
-            setFormType(store.settings.sales_create_form_design);
-        }
+        setFormType((prevFormType) => {
+            if (store.settings.sales_create_form_design) {
+                return sanitizeSalesFormType(store.settings.sales_create_form_design, store.settings);
+            }
+            return sanitizeSalesFormType(prevFormType, store.settings);
+        });
     }, [store.settings]);
 
     useEffect(() => {
@@ -5589,6 +5608,25 @@ const OrderCreate = forwardRef((props, ref) => {
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
                 />}
+                {formType === "type5" && <SalesType5Header
+                    formData={formData} setFormData={setFormData}
+                    isUpdateForm={isUpdateForm}
+                    store={store}
+                    formType={formType} setFormType={setFormType}
+                    disablePreviousButton={disablePreviousButton}
+                    isSubmitting={isSubmitting}
+                    dnNotifications={dnNotifications}
+                    openPreviousForm={openPreviousForm}
+                    openLastForm={openLastForm}
+                    openNextForm={openNextForm}
+                    openCreateForm={openCreateForm}
+                    openPrint={openPrint}
+                    openPreview={openPreview}
+                    handleCreate={handleCreate}
+                    handleClose={handleClose}
+                    openSalesFromDnInForm={openSalesFromDnInForm}
+                    dismissDnNotification={dismissDnNotification}
+                />}
                 {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                         {/* Left: title + ZATCA */}
@@ -5625,6 +5663,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </button>
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
+                                    {store?.settings?.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
                                     <option value="type4">VAN Store (Type 4)</option>
                                     <option value="type3">{t("Type 3")} (Compact)</option>
                                     <option value="type2">{t("Type 2")} (New)</option>
@@ -5784,6 +5823,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     style={{ fontSize: "12px", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--md-sys-color-outline-variant, #ccc)", background: "var(--md-sys-color-surface-container, #f5f5f5)", color: "var(--md-sys-color-on-surface, #1c1b1f)", cursor: "pointer" }}
                                     title={t("Form Type")}
                                 >
+                                    {store?.settings?.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
                                     <option value="type3">{t("Type 3")} (Compact)</option>
                                     <option value="type2">{t("Type 2")} (New)</option>
                                     <option value="type1">{t("Type 1")} (Classic)</option>
@@ -8318,6 +8358,114 @@ const OrderCreate = forwardRef((props, ref) => {
                         </form >
                     )}
                     {formType === "type1" && <SalesType1Body
+                        formData={formData} setFormData={setFormData}
+                        errors={errors} setErrors={setErrors}
+                        warnings={warnings}
+                        selectedProducts={selectedProducts} setSelectedProducts={setSelectedProducts}
+                        selectedCustomers={selectedCustomers} setSelectedCustomers={setSelectedCustomers}
+                        isZatcaReported={isZatcaReported}
+                        store={store}
+                        warehouseList={warehouseList}
+                        openCustomerSearchResult={openCustomerSearchResult} setOpenCustomerSearchResult={setOpenCustomerSearchResult}
+                        openProductSearchResult={openProductSearchResult} setOpenProductSearchResult={setOpenProductSearchResult}
+                        customerOptions={customerOptions} setCustomerOptions={setCustomerOptions}
+                        productOptions={productOptions} setProductOptions={setProductOptions}
+                        showSelectedProductsSettings={showSelectedProductsSettings} setShowSelectedProductsSettings={setShowSelectedProductsSettings}
+                        showProductSearchSettings={showProductSearchSettings} setShowProductSearchSettings={setShowProductSearchSettings}
+                        showBillSummarySettings={showBillSummarySettings} setShowBillSummarySettings={setShowBillSummarySettings}
+                        billSummaryOrder={billSummaryOrder} setBillSummaryOrder={setBillSummaryOrder}
+                        billSummaryVisible={billSummaryVisible} setBillSummaryVisible={setBillSummaryVisible}
+                        billSummaryDragRef={billSummaryDragRef}
+                        _billSummaryFieldLabels={_billSummaryFieldLabels}
+                        _defaultBillSummaryOrder={_defaultBillSummaryOrder}
+                        reorderBillSummaryT1={reorderBillSummaryT1}
+                        updateBillSummaryVisible={updateBillSummaryVisible}
+                        timerRef={timerRef}
+                        customerSearchRef={customerSearchRef}
+                        productSearchRef={productSearchRef}
+                        inputRefs={inputRefs}
+                        latestRequestRef={latestRequestRef}
+                        onChangeTriggeredRef={onChangeTriggeredRef}
+                        discountRef={discountRef}
+                        discountWithVATRef={discountWithVATRef}
+                        cashDiscountRef={cashDiscountRef}
+                        commissionRef={commissionRef}
+                        handleCreate={handleCreate}
+                        suggestCustomers={suggestCustomers}
+                        suggestProducts={suggestProducts}
+                        getProductByBarCode={getProductByBarCode}
+                        addProduct={addProduct}
+                        removeProduct={removeProduct}
+                        openCustomerCreateForm={openCustomerCreateForm}
+                        openCustomerUpdateForm={openCustomerUpdateForm}
+                        openCustomerPending={openCustomerPending}
+                        openCustomers={openCustomers}
+                        openProducts={openProducts}
+                        openServices={openServices}
+                        openProductCreateForm={openProductCreateForm}
+                        openServiceCreateForm={openServiceCreateForm}
+                        openUpdateProductForm={openUpdateProductForm}
+                        openProductDetails={openProductDetails}
+                        openProductImages={openProductImages}
+                        openLinkedProducts={openLinkedProducts}
+                        openSalesHistory={openSalesHistory}
+                        openPurchaseHistory={openPurchaseHistory}
+                        openSalesReturnHistory={openSalesReturnHistory}
+                        openPurchaseReturnHistory={openPurchaseReturnHistory}
+                        openQuotationHistory={openQuotationHistory}
+                        openDeliveryNoteHistory={openDeliveryNoteHistory}
+                        openProductHistory={openProductHistory}
+                        openQuotationSalesHistory={openQuotationSalesHistory}
+                        openQuotationSalesReturnHistory={openQuotationSalesReturnHistory}
+                        openQuotations={openQuotations}
+                        openDeliveryNotes={openDeliveryNotes}
+                        openReferenceUpdateForm={openReferenceUpdateForm}
+                        addNewPayment={addNewPayment}
+                        removePayment={removePayment}
+                        validatePaymentAmounts={validatePaymentAmounts}
+                        getColumnWidth={getColumnWidth}
+                        getShortcut={getShortcut}
+                        RunKeyActions={RunKeyActions}
+                        CalCulateLineTotals={CalCulateLineTotals}
+                        reCalculate={reCalculate}
+                        reCalculateRef={reCalculateRef}
+                        checkErrors={checkErrors}
+                        checkWarnings={checkWarnings}
+                        checkWarning={checkWarning}
+                        isProductAdded={isProductAdded}
+                        sendWhatsAppMessage={sendWhatsAppMessage}
+                        dateLocale={dateLocale}
+                        columnStyle={columnStyle}
+                        searchProductsColumns={searchProductsColumns}
+                        selectedProductsColumns={selectedProductsColumns}
+                        shipping={shipping} setShipping={setShipping}
+                        discount={discount} setDiscount={setDiscount}
+                        discountWithVAT={discountWithVAT} setDiscountWithVAT={setDiscountWithVAT}
+                        discountPercent={discountPercent} setDiscountPercent={setDiscountPercent}
+                        discountPercentWithVAT={discountPercentWithVAT} setDiscountPercentWithVAT={setDiscountPercentWithVAT}
+                        roundingAmount={roundingAmount} setRoundingAmount={setRoundingAmount}
+                        cashDiscount={cashDiscount} setCashDiscount={setCashDiscount}
+                        commission={commission} setCommission={setCommission}
+                        totalPaymentAmount={totalPaymentAmount}
+                        balanceAmount={balanceAmount}
+                        paymentStatus={paymentStatus}
+                        isSubmitting={isSubmitting}
+                        isUpdateForm={isUpdateForm}
+                        handleClose={handleClose}
+                        renderTotalWithoutVATTooltip={renderTotalWithoutVATTooltip}
+                        renderTotalWithVATTooltip={renderTotalWithVATTooltip}
+                        renderShippingTooltip={renderShippingTooltip}
+                        renderDiscountWithoutVATTooltip={renderDiscountWithoutVATTooltip}
+                        renderDiscountWithVATTooltip={renderDiscountWithVATTooltip}
+                        renderTooltip={renderTooltip}
+                        renderVATTooltip={renderVATTooltip}
+                        renderNetTotalBeforeRoundingTooltip={renderNetTotalBeforeRoundingTooltip}
+                        renderNetTotalTooltip={renderNetTotalTooltip}
+                        fetchAndSetCustomer={fetchAndSetCustomer}
+                        startPsColResize={startPsColResize}
+                    />}
+
+                    {formType === "type5" && <SalesType5Body
                         formData={formData} setFormData={setFormData}
                         errors={errors} setErrors={setErrors}
                         warnings={warnings}

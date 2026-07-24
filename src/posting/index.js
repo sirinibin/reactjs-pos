@@ -19,6 +19,7 @@ import ExpenseCreate from "../expense/create.js";
 import CapitalCreate from "../capital/create.js";
 import DividentCreate from "../divident/create.js";
 import QuotationCreate from "../quotation/create.js";
+import EmployeeSalaryPaymentCreate from "../employee/salaryPayment.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -780,6 +781,7 @@ const PostingIndex = forwardRef((props, ref) => {
     const CapitalUpdateFormRef = useRef();
     const DividentUpdateFormRef = useRef();
     const QuotationUpdateFormRef = useRef();
+    const EmployeeSalaryPaymentUpdateFormRef = useRef();
 
     let [showUpdateForm, setShowUpdateForm] = useState(false);
     const timerRef = useRef(null);
@@ -815,9 +817,33 @@ const PostingIndex = forwardRef((props, ref) => {
                 QuotationUpdateFormRef.current.open(id);
             } else if (referenceModel === "quotation_sales_return") {
                 QuotationSalesReturnUpdateFormRef.current.open(id);
+            } else if (referenceModel === "employee_salary_payment") {
+                openEmployeeSalaryPaymentForm(id);
             }
         }, 50);
 
+    }
+
+    // Salary payment forms need the employee_id to open, but the balance sheet
+    // only carries the payment's own id (reference_id) — look the payment up
+    // first, then open the form with both ids.
+    function openEmployeeSalaryPaymentForm(paymentId) {
+        const requestOptions = {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        };
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) { searchParams.store_id = localStorage.getItem("store_id"); }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/employee-salary-payment/' + paymentId + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+                if (!response.ok) { return Promise.reject(data && data.errors); }
+                EmployeeSalaryPaymentUpdateFormRef.current.open(data.result?.employee_id, paymentId);
+            })
+            .catch(error => console.log(error));
     }
     const handleUpdated = () => {
         list();
@@ -832,6 +858,7 @@ const PostingIndex = forwardRef((props, ref) => {
                 <OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
                 <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />
                 <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />
+                <EmployeeSalaryPaymentCreate ref={EmployeeSalaryPaymentUpdateFormRef} onSaved={handleUpdated} />
                 <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <CustomerDepositCreate ref={CustomerReceivableUpdateFormRef} onUpdated={handleUpdated} />
                 <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
@@ -1512,20 +1539,28 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     {/* Reference code - show only in first row of group (optional) */}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {posting.reference_code && (
-                                                                            <span
-                                                                                style={{ cursor: "pointer", color: "blue" }}
-                                                                                onClick={() => openUpdateForm(posting.reference_id, posting.reference_model)}
-                                                                            >
-                                                                                {posting.reference_code}
-                                                                            </span>
+                                                                            posting.reference_model === "salary_due" ? (
+                                                                                <span>{posting.reference_code}</span>
+                                                                            ) : (
+                                                                                <span
+                                                                                    style={{ cursor: "pointer", color: "blue" }}
+                                                                                    onClick={() => openUpdateForm(posting.reference_id, posting.reference_model)}
+                                                                                >
+                                                                                    {posting.reference_code}
+                                                                                </span>
+                                                                            )
                                                                         )}
                                                                         {post.reference_code && (
-                                                                            <> / <span
-                                                                                style={{ cursor: "pointer", color: "blue" }}
-                                                                                onClick={() => openUpdateForm(post.reference_id, post.reference_model)}
-                                                                            >
-                                                                                {post.reference_code}
-                                                                            </span>
+                                                                            <> / {post.reference_model === "salary_due" ? (
+                                                                                <span>{post.reference_code}</span>
+                                                                            ) : (
+                                                                                <span
+                                                                                    style={{ cursor: "pointer", color: "blue" }}
+                                                                                    onClick={() => openUpdateForm(post.reference_id, post.reference_model)}
+                                                                                >
+                                                                                    {post.reference_code}
+                                                                                </span>
+                                                                            )}
                                                                             </>
                                                                         )}
                                                                     </td>

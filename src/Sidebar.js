@@ -9,8 +9,8 @@ function Sidebar(props) {
     const [menuItems, setMenuItems] = useState([]);
     const [store, setStore] = useState({});
 
-    const isAdmin        = localStorage.getItem("user_role") === "Admin";
-    const storeId        = localStorage.getItem("store_id");
+    const isAdmin = localStorage.getItem("user_role") === "Admin";
+    const storeId = localStorage.getItem("store_id");
 
     const [rbacPermissions, setRbacPermissions] = useState(null);
     const [rbacVersion, setRbacVersion] = useState(0);
@@ -35,7 +35,7 @@ function Sidebar(props) {
                 setRbacPermissions(map);
             })
             .catch(() => setRbacPermissions(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [store, isAdmin]);
 
     useEffect(() => { fetchRbacPermissions(); }, [fetchRbacPermissions, rbacVersion]);
@@ -95,6 +95,8 @@ function Sidebar(props) {
         if (item.warehouseOnly && !store?.settings?.enable_warehouse_module) return false;
         if (item.requiresPurchaseOrderModule && store?.id && !store?.settings?.enable_purchase_order_module) return false;
         if (item.purchaseRequestOnly && !store?.settings?.enable_purchase_request_module) return false;
+        if (item.requiresAutomobileModule && !store?.settings?.enable_automobile_module) return false;
+        if (item.requiresEmployeeModule && !store?.settings?.enable_employee_module) return false;
         // productsOnly: hide only when services mode is active but products are not enabled.
         // Backward compat: if neither flag is set (old stores), show everything.
         if (item.productsOnly && store?.settings?.enable_services && !store?.settings?.enable_products) return false;

@@ -53,6 +53,22 @@ const OrderPrintContent3 = forwardRef((props, ref) => {
                         {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : ""}
                     </h4>
 
+                    {props.model.store?.settings?.enable_automobile_module && props.model?.vehicle_snapshot && (
+                        <>
+                            <h4 className="print-value" style={{ fontSize: "2.8mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "300px", top: (182 + page.top) + "px", border: "solid " + border + "px", }}>
+                                {[props.model.vehicle_snapshot.brand, props.model.vehicle_snapshot.model, props.model.vehicle_snapshot.variant].filter(Boolean).join(" ")}
+                                {props.model.vehicle_snapshot.vehicle_number ? ` | Plate: ${props.model.vehicle_snapshot.vehicle_number}` : ""}
+                                {props.model.vehicle_snapshot.istimara_no ? ` | Istimara: ${props.model.vehicle_snapshot.istimara_no}` : ""}
+                            </h4>
+                            {(props.model.vehicle_snapshot.year || props.model.vehicle_snapshot.current_km) && (
+                                <h4 className="print-value" style={{ fontSize: "2.6mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "300px", top: (197 + page.top) + "px", border: "solid " + border + "px", }}>
+                                    {props.model.vehicle_snapshot.year ? `Year: ${props.model.vehicle_snapshot.year}` : ""}
+                                    {props.model.vehicle_snapshot.year && props.model.vehicle_snapshot.current_km ? " | " : ""}
+                                    {props.model.vehicle_snapshot.current_km ? `KM: ${props.model.vehicle_snapshot.current_km}` : ""}
+                                </h4>
+                            )}
+                        </>
+                    )}
 
                     <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "560px", top: (125 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(

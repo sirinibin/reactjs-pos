@@ -66,6 +66,10 @@ import Analytics from './analytics/index.js';
 import StatsIndex from './stats/index.js';
 import BusinessDashboard from './business_dashboard/index.js';
 import SidebarSettings from './sidebar_settings/index.js';
+import AutoMobileDashboard from './automobile_dashboard/index.js';
+import EmployeeIndex from './employee/index.js';
+import VehicleIndex from './vehicle/index.js';
+import RepairJobIndex from './repair_job/index.js';
 
 // Checks RBAC READ permission for every route change.
 // Only runs when the store has enable_rbac_module = true.
@@ -901,6 +905,59 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
+
+            <Route path="/dashboard/automobile-dashboard">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <AutoMobileDashboard showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/employees">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <EmployeeIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/vehicles">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <VehicleIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/repair-jobs">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RepairJobIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
             <Route path="/">
                 {at && <Redirect to="/dashboard/analytics" />}
                 <Login />

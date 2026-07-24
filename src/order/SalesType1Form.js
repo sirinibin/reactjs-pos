@@ -107,6 +107,7 @@ export function SalesType1Header({
                             &nbsp;&nbsp;
                             {store.settings?.enable_sales_page_selection === true && (
                                 <><select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto", fontSize: "11px", padding: "2px 24px 2px 6px", height: "26px", lineHeight: "1.2" }}>
+                                    {store?.settings?.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
                                     <option value="type4">VAN Store (Type 4)</option>
                                     <option value="type3">{t("Type 3")} (Compact)</option>
                                     <option value="type2">{t("Type 2")} (New)</option>

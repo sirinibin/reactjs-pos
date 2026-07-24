@@ -59,6 +59,23 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                         {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : ""}
                     </h4>
 
+                    {props.model.store?.settings?.enable_automobile_module && props.model?.vehicle_snapshot && (
+                        <>
+                            <h4 className="print-value-umluj" style={{ fontSize: "2.8mm", maxWidth: "650px", minWidth: "650px", position: "absolute", left: "115px", top: (239 + page.top) + "px", border: "solid " + border + "px", }}>
+                                {[props.model.vehicle_snapshot.brand, props.model.vehicle_snapshot.model, props.model.vehicle_snapshot.variant].filter(Boolean).join(" ")}
+                                {props.model.vehicle_snapshot.vehicle_number ? ` | Plate: ${props.model.vehicle_snapshot.vehicle_number}` : ""}
+                                {props.model.vehicle_snapshot.istimara_no ? ` | Istimara: ${props.model.vehicle_snapshot.istimara_no}` : ""}
+                            </h4>
+                            {(props.model.vehicle_snapshot.year || props.model.vehicle_snapshot.current_km) && (
+                                <h4 className="print-value-umluj" style={{ fontSize: "2.6mm", maxWidth: "650px", minWidth: "650px", position: "absolute", left: "115px", top: (254 + page.top) + "px", border: "solid " + border + "px", }}>
+                                    {props.model.vehicle_snapshot.year ? `Year: ${props.model.vehicle_snapshot.year}` : ""}
+                                    {props.model.vehicle_snapshot.year && props.model.vehicle_snapshot.current_km ? " | " : ""}
+                                    {props.model.vehicle_snapshot.current_km ? `KM: ${props.model.vehicle_snapshot.current_km}` : ""}
+                                </h4>
+                            )}
+                        </>
+                    )}
+
                     <h4 className="print-value-umluj" style={{ fontSize: "3.5mm", position: "absolute", left: "580px", top: (168.5 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(
                             new Date(props.model.date),

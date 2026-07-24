@@ -148,6 +148,7 @@ export function SalesVanStoreHeader({
                 {store.settings?.enable_sales_page_selection && (
                     <select value={formType} onChange={e => setFormType(e.target.value)}
                         style={{ fontSize: 11, padding: "4px 6px", height: 30, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 4, maxWidth: 100 }}>
+                        {store?.settings?.enable_automobile_module && <option value="type5" style={{ color: "#000" }}>Workshop (Type 5)</option>}
                         <option value="type4" style={{ color: "#000" }}>VAN (Type 4)</option>
                         <option value="type3" style={{ color: "#000" }}>Type 3</option>
                         <option value="type2" style={{ color: "#000" }}>Type 2</option>

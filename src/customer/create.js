@@ -6,6 +6,7 @@ import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import Quotations from "./../utils/quotations.js";
 import ImageGallery from '../utils/ImageGallery.js';
+import VehicleCreate from "../vehicle/create.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
@@ -14,6 +15,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef();
+    const VehicleCreateRef = useRef();
 
     useImperativeHandle(ref, () => ({
         async open(id) {
@@ -36,6 +38,8 @@ const CustomerCreate = forwardRef((props, ref) => {
     }));
 
     let [store, setStore] = useState({});
+    const [customerVehicles, setCustomerVehicles] = useState([]);
+    const [isVehicleListLoading, setIsVehicleListLoading] = useState(false);
 
     async function getStore(id) {
         try {
@@ -83,6 +87,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     function handleClose() {
         SetShow(false);
+        setCustomerVehicles([]);
+        setIsVehicleListLoading(false);
     }
 
     useEffect(() => {
@@ -91,6 +97,52 @@ const CustomerCreate = forwardRef((props, ref) => {
             window.location = "/";
         }
     });
+
+    const loadCustomerVehicles = useCallback((customerId = formData.id) => {
+        if (!customerId) {
+            setCustomerVehicles([]);
+            setIsVehicleListLoading(false);
+            return;
+        }
+
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        const searchParams = { customer_id: customerId };
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const queryParams = ObjectToSearchQueryParams(searchParams);
+
+        setIsVehicleListLoading(true);
+        fetch('/v1/vehicle?select=id,brand,model,variant,year,vehicle_number,istimara_no&' + queryParams + '&sort=-created_at&limit=1000', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+                setCustomerVehicles(data.result || []);
+                setIsVehicleListLoading(false);
+            })
+            .catch(error => {
+                console.log(error);
+                setCustomerVehicles([]);
+                setIsVehicleListLoading(false);
+            });
+    }, [formData.id]);
+
+    useEffect(() => {
+        if (!show || store.settings?.enable_automobile_module !== true) {
+            return;
+        }
+        loadCustomerVehicles(formData.id);
+    }, [show, formData.id, store.settings?.enable_automobile_module, loadCustomerVehicles]);
 
     async function getCustomer(id) {
         console.log("inside get Order");
@@ -423,6 +475,61 @@ const CustomerCreate = forwardRef((props, ref) => {
         QuotationsRef.current.open(false, selectedCustomers, "invoice", selectedPaymentStatusList);
     }
 
+    function openVehicleCreate() {
+        VehicleCreateRef.current?.open(undefined, formData.id, {
+            id: formData.id,
+            name: formData.name,
+            name_in_arabic: formData.name_in_arabic,
+        });
+    }
+
+    function openVehicleUpdate(id) {
+        VehicleCreateRef.current?.open(id, formData.id, {
+            id: formData.id,
+            name: formData.name,
+            name_in_arabic: formData.name_in_arabic,
+        });
+    }
+
+    function deleteVehicle(id) {
+        if (!window.confirm("Are you sure you want to delete this vehicle?")) {
+            return;
+        }
+
+        const requestOptions = {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vehicle/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+                if (props.showToastMessage) {
+                    props.showToastMessage("Vehicle deleted successfully!", "success");
+                }
+                loadCustomerVehicles(formData.id);
+            })
+            .catch(error => {
+                console.log(error);
+                if (props.showToastMessage) {
+                    props.showToastMessage("Failed to delete vehicle!", "danger");
+                }
+            });
+    }
+
     const countrySearchRef = useRef();
 
     // ── Design tokens ──────────────────────────────────────────────────────
@@ -450,6 +557,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     return (
         <>
             <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
+            <VehicleCreate ref={VehicleCreateRef} refreshList={() => loadCustomerVehicles()} showToastMessage={props.showToastMessage} />
             {/*  <CustomerView ref={DetailsViewRef} />*/}
             <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1082,6 +1190,72 @@ const CustomerCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                 </>
+
+                                {store.settings?.enable_automobile_module === true && !!formData.id && (
+                                    <div style={CARD} className="pw-card">
+                                        <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                            <SectionTitle icon="bi-car-front">Vehicles</SectionTitle>
+                                            {formData.id && (
+                                                <Button type="button" className="btn btn-primary btn-sm" onClick={openVehicleCreate}>
+                                                    <i className="bi bi-plus-lg"></i> Add Vehicle
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {!formData.id && (
+                                            <p className="text-muted mb-0">Save the customer first to add vehicles.</p>
+                                        )}
+
+                                        {formData.id && isVehicleListLoading && (
+                                            <div className="text-center py-3">
+                                                <Spinner animation="border" size="sm" />
+                                            </div>
+                                        )}
+
+                                        {formData.id && !isVehicleListLoading && customerVehicles.length === 0 && (
+                                            <p className="text-muted mb-0">No vehicles added for this customer yet.</p>
+                                        )}
+
+                                        {formData.id && !isVehicleListLoading && customerVehicles.length > 0 && (
+                                            <div className="table-responsive">
+                                                <table className="table table-sm table-bordered table-striped mb-0">
+                                                    <thead>
+                                                        <tr className="text-center">
+                                                            <th>Brand / Model</th>
+                                                            <th>Variant</th>
+                                                            <th>Year</th>
+                                                            <th>Vehicle # / Istimara No.</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="text-center">
+                                                        {customerVehicles.map((vehicle) => (
+                                                            <tr key={vehicle.id}>
+                                                                <td className="text-start" style={{ whiteSpace: 'nowrap' }}>
+                                                                    {vehicle.brand || '-'} {vehicle.model || ''}
+                                                                </td>
+                                                                <td style={{ whiteSpace: 'nowrap' }}>{vehicle.variant || '-'}</td>
+                                                                <td>{vehicle.year || '-'}</td>
+                                                                <td className="text-start" style={{ whiteSpace: 'nowrap' }}>
+                                                                    <div>{vehicle.vehicle_number || '-'}</div>
+                                                                    <small className="text-muted">{vehicle.istimara_no || '-'}</small>
+                                                                </td>
+                                                                <td style={{ whiteSpace: 'nowrap' }}>
+                                                                    <Button type="button" className="btn btn-light btn-sm me-1" onClick={() => openVehicleUpdate(vehicle.id)}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </Button>
+                                                                    <Button type="button" className="btn btn-outline-danger btn-sm" onClick={() => deleteVehicle(vehicle.id)}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </Button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* ── Photos ── */}
                                 <>

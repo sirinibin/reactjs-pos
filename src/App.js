@@ -207,6 +207,22 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/automobile-dashboard">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/employees">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/vehicles">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/repair-jobs">
+            <Dashboard />
+          </Route>
+
           <Route path="/">
             <Login />
           </Route>
