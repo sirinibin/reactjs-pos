@@ -1971,6 +1971,8 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
+        if (!formData.vehicle_id) formData.vehicle_id = null;
+
         let endPoint = "/v1/order";
         let method = "POST";
         if (isUpdateForm) {
