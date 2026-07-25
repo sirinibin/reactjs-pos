@@ -514,67 +514,7 @@ function AutoMobileDashboard() {
         return [header, ...rows];
     }, [monthly, vatPercent, store, chartFilters, t]);
 
-    const monthlyProfitData = useMemo(() => {
-        const header = [
-            'Month',
-            { label: t('Labour'), type:'number' },     { role:'tooltip', type:'string', p:{ html:true } },
-            { label: t('Spare'), type:'number' },       { role:'tooltip', type:'string', p:{ html:true } },
-            { label: t('Additional'), type:'number' },  { role:'tooltip', type:'string', p:{ html:true } },
-        ];
-        const rows = monthly.map(m => [
-            fmtMonth(m.month),
-            m.labour_profit,
-            tooltipHtml(`${fmtMonth(m.month)} — ${t('Profit')}`, '#4fc3f7', [
-                { label: t('Labour'),       value: `SAR ${fmt(m.labour_profit)}`,     color:'#4fc3f7' },
-                { label: t('Spare'),        value: `SAR ${fmt(m.spare_profit)}`,      color:'#81c784' },
-                { label: t('Additional'),   value: `SAR ${fmt(m.additional_profit)}`, color:'#ffb74d' },
-                { label: t('Total Profit'), value: `SAR ${fmt(m.total_profit)}`,      color:'#fff', bold:true, divider:true },
-                { label: `VAT ${vatPercent}%`, value: `− ${fmt(m.total_profit * vatPercent / (100 + vatPercent))}` },
-                { label: t('Total Profit (w/o VAT)'), value: `SAR ${fmt(m.total_profit * 100 / (100 + vatPercent))}`, bold:true, divider:true },
-            ], store, chartFilters),
-            m.spare_profit,
-            tooltipHtml(`${fmtMonth(m.month)} — ${t('Spare Profit')}`, '#81c784', [
-                { label: t('Spare (with VAT)'),    value: `SAR ${fmt(m.spare_profit)}`, bold:true, color:'#81c784' },
-                { label: `VAT ${vatPercent}%`,      value: `− ${fmt(m.spare_profit * vatPercent / (100 + vatPercent))}` },
-                { label: t('Spare (without VAT)'), value: `SAR ${fmt(m.spare_profit * 100 / (100 + vatPercent))}`, bold:true, divider:true },
-            ], store, chartFilters),
-            m.additional_profit,
-            tooltipHtml(`${fmtMonth(m.month)} — ${t('Additional Profit')}`, '#ffb74d', [
-                { label: t('Additional (with VAT)'),    value: `SAR ${fmt(m.additional_profit)}`, bold:true, color:'#ffb74d' },
-                { label: `VAT ${vatPercent}%`,           value: `− ${fmt(m.additional_profit * vatPercent / (100 + vatPercent))}` },
-                { label: t('Additional (without VAT)'), value: `SAR ${fmt(m.additional_profit * 100 / (100 + vatPercent))}`, bold:true, divider:true },
-            ], store, chartFilters),
-        ]);
-        return [header, ...rows];
-    }, [monthly, vatPercent, store, chartFilters, t]);
 
-    const monthlyRevenueData = useMemo(() => {
-        const header = [
-            'Month',
-            { label: t('Revenue'), type:'number' },       { role:'tooltip', type:'string', p:{ html:true } },
-            { label: t('Total Profit'), type:'number' },  { role:'tooltip', type:'string', p:{ html:true } },
-        ];
-        const rows = monthly.map(m => {
-            const rev = calcVat(m.revenue, vatPercent);
-            const pl  = calcVat(m.total_profit, vatPercent);
-            return [
-                fmtMonth(m.month),
-                m.revenue,
-                tooltipHtml(`${fmtMonth(m.month)} — ${t('Revenue')}`, '#90caf9', [
-                    { label: t('Revenue (with VAT)'),    value: `SAR ${fmt(rev.withVAT)}`,    color:'#90caf9', bold:true },
-                    { label: `VAT ${vatPercent}%`,        value: `− ${fmt(rev.vat)}` },
-                    { label: t('Revenue (without VAT)'), value: `SAR ${fmt(rev.withoutVAT)}`, color:'#90caf9', bold:true, divider:true },
-                ], store, chartFilters),
-                m.total_profit,
-                tooltipHtml(`${fmtMonth(m.month)} — ${t('Total Profit')}`, '#a5d6a7', [
-                    { label: t('Profit (with VAT)'),    value: `SAR ${fmt(pl.withVAT)}`,    color:'#a5d6a7', bold:true },
-                    { label: `VAT ${vatPercent}%`,       value: `− ${fmt(pl.vat)}` },
-                    { label: t('Profit (without VAT)'), value: `SAR ${fmt(pl.withoutVAT)}`, color:'#a5d6a7', bold:true, divider:true },
-                ], store, chartFilters),
-            ];
-        });
-        return [header, ...rows];
-    }, [monthly, vatPercent, store, chartFilters, t]);
 
     const profitPieData = useMemo(() => {
         const lbd = dashboard.labour_breakdown     || {};
