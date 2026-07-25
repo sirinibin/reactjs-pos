@@ -737,7 +737,8 @@ export function SalesType1Body({
                                         setOpenProductSearchResult(false);
 
                                         timerRef.current = setTimeout(() => {
-                                            inputRefs.current[(selectedProducts.length - 1)][`sales_product_quantity_${selectedProducts.length - 1}`]?.select();
+                                            const newIdx = selectedProducts.length - 1;
+                                            inputRefs.current[newIdx]?.[`sales_product_quantity_${newIdx}`]?.select();
                                         }, 100);
                                     }}
                                     options={productOptions}

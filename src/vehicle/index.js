@@ -149,6 +149,7 @@ function VehicleIndex(props) {
 
     function openUpdateForm(id) { CreateFormRef.current.open(id); }
     function openDetailsView(id) { DetailsViewRef.current.open(id); }
+    function openDetailsViewOnTab(id, tab) { DetailsViewRef.current.open(id, tab); }
     function openCreateForm() { CreateFormRef.current.open(); }
 
     return (
@@ -259,11 +260,20 @@ function VehicleIndex(props) {
                                                     <td style={{ whiteSpace: "nowrap" }}>{vehicle.chassis_number || '-'}</td>
                                                     <td>{vehicle.current_km ? parseFloat(vehicle.current_km).toLocaleString() : '-'}</td>
                                                     <td style={{ whiteSpace: "nowrap" }}>
-                                                        <Button className="btn btn-light btn-sm me-1" onClick={() => openUpdateForm(vehicle.id)}>
+                                                        <Button className="btn btn-light btn-sm me-1" title={t('Edit')} onClick={() => openUpdateForm(vehicle.id)}>
                                                             <i className="bi bi-pencil"></i>
                                                         </Button>
-                                                        <Button className="btn btn-primary btn-sm" onClick={() => openDetailsView(vehicle.id)}>
+                                                        <Button className="btn btn-primary btn-sm me-1" title={t('Details')} onClick={() => openDetailsView(vehicle.id)}>
                                                             <i className="bi bi-eye"></i>
+                                                        </Button>
+                                                        <Button className="btn btn-outline-success btn-sm me-1" title={t('Sales History')} onClick={() => openDetailsViewOnTab(vehicle.id, 'sales')}>
+                                                            <i className="bi bi-receipt"></i>
+                                                        </Button>
+                                                        <Button className="btn btn-outline-info btn-sm me-1" title={t('Quotation History')} onClick={() => openDetailsViewOnTab(vehicle.id, 'quotations')}>
+                                                            <i className="bi bi-file-earmark-text"></i>
+                                                        </Button>
+                                                        <Button className="btn btn-outline-warning btn-sm" title={t('Repair Jobs')} onClick={() => openDetailsViewOnTab(vehicle.id, 'repairs')}>
+                                                            <i className="bi bi-tools"></i>
                                                         </Button>
                                                     </td>
                                                 </tr>

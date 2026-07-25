@@ -945,6 +945,18 @@ function Dashboard() {
                 </div>
             </Route>
 
+            <Route path="/dashboard/repair-jobs-board">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RepairJobIndex showToastMessage={showToastMessage} defaultMode="board" />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
             <Route path="/dashboard/repair-jobs">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />

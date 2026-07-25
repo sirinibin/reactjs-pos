@@ -587,7 +587,8 @@ export function SalesVanStoreBody({
                     )}
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {selectedProducts && selectedProducts.map((product, index) => {
+                        {selectedProducts && [...selectedProducts].reverse().map((product, reversedIdx) => {
+                            const index = selectedProducts.length - 1 - reversedIdx;
                             if (product.deleted) return null;
                             const total = lineTotal(product);
                             const hasErr = !!errors[`quantity_${index}`] || !!errors[`name_${index}`];

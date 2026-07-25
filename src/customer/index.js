@@ -17,6 +17,7 @@ import { highlightWords } from "../utils/search.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import Sales from "../utils/sales.js";
 import SalesReturns from "../utils/salesReturn.js";
+import Quotations from "../utils/quotations.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
@@ -905,6 +906,11 @@ function CustomerIndex(props) {
         SalesReturnsRef.current.open(false, [customer], null);
     }
 
+    const QuotationsRef = useRef();
+    function openCustomerQuotations(customer) {
+        QuotationsRef.current.open(false, [customer], null);
+    }
+
     async function openHistoryModal(customerId, customerName) {
         setHistoryCustomer(customerName);
         setHistoryData({ churn_history: [], clv_history: [] });
@@ -1071,6 +1077,7 @@ function CustomerIndex(props) {
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <Sales ref={SalesRef} showToastMessage={props.showToastMessage} />
             <SalesReturns ref={SalesReturnsRef} showToastMessage={props.showToastMessage} />
+            <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
@@ -2938,6 +2945,18 @@ function CustomerIndex(props) {
                                                                         openCustomerSalesReturns(customer);
                                                                     }}>
                                                                         <i className="bi bi-arrow-return-left"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-info btn-sm" title="Quotation History" onClick={() => {
+                                                                        openCustomerQuotations(customer);
+                                                                    }}>
+                                                                        <i className="bi bi-file-earmark-text"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-secondary btn-sm" title="Repair Jobs" onClick={() => {
+                                                                        DetailsViewRef.current?.open(customer.id, 'repairs');
+                                                                    }}>
+                                                                        <i className="bi bi-tools"></i>
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >

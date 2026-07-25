@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import QuotationCreate from "./create.js";
+import QuotationType3Form from "./QuotationType3Form.js";
 import QuotationView from "./view.js";
 
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -907,7 +908,10 @@ function QuotationIndex(props) {
       </Modal>
       {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
       {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
-      {showQuotationCreate && <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
+      {showQuotationCreate && (store.settings?.enable_automobile_module
+        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+      )}
       {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">

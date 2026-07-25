@@ -357,7 +357,7 @@ export function SalesType5Body({
                                             isLoading={false}
                                             emptyLabel=""
                                             clearButton={false}
-                                            open={openCustomerSearchResult}
+                                            open={customerOptions.length === 0 ? false : undefined}
                                             onChange={(selectedItems) => {
                                                 delete errors.customer_id;
                                                 delete errors.blocked;
@@ -525,7 +525,26 @@ export function SalesType5Body({
                                 </div>
                             </div>
 
-                            {/* 3. Date */}
+                            {/* 3. Km Driven */}
+                            <div style={{ flex: "0 0 110px" }}>
+                                <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Km Driven")}</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.1"
+                                    className="form-control form-control-sm"
+                                    style={{ border: `1px solid ${borderColor}` }}
+                                    value={formData.km_driven ?? ""}
+                                    placeholder="0"
+                                    onWheel={(e) => e.target.blur()}
+                                    onChange={(e) => {
+                                        formData.km_driven = e.target.value === "" ? null : parseFloat(e.target.value);
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+                            </div>
+
+                            {/* 4. Date */}
                             <div style={{ flex: "0 0 180px" }}>
                                 <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Date")}</label>
                                 <DatePicker
@@ -583,7 +602,7 @@ export function SalesType5Body({
                                     isLoading={false}
                                     emptyLabel=""
                                     clearButton={false}
-                                    open={openProductSearchResult}
+                                    open={productOptions.length === 0 ? false : undefined}
                                     ref={productSearchRef}
                                     onChange={(selectedItems) => {
                                         if (!selectedItems.length) return;
@@ -660,6 +679,7 @@ export function SalesType5Body({
                             <table className="table table-sm align-middle mb-0">
                                 <thead>
                                     <tr>
+                                        <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
                                         <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
                                         <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
@@ -672,17 +692,18 @@ export function SalesType5Body({
                                 <tbody>
                                     {activeProducts.length === 0 && (
                                         <tr>
-                                            <td colSpan={7} className="text-center text-muted py-5">
+                                            <td colSpan={8} className="text-center text-muted py-5">
                                                 <i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>
                                                 {t("Search and add products or services to continue")}
                                             </td>
                                         </tr>
                                     )}
-                                    {activeProducts.map((product, index) => {
+                                    {[...activeProducts].reverse().map((product, index) => {
                                         const liveIndex = selectedProducts.indexOf(product);
                                         const lineTotal = trimTo2Decimals((parseFloat(product.quantity) || 0) * ((parseFloat(product.unit_price_with_vat) || 0) - (parseFloat(product.unit_discount_with_vat) || 0)));
                                         return (
                                             <tr key={`${product.product_id || product.id || product.code}-${index}`}>
+                                                <td style={{ padding: "3px 6px", color: "#6b7280", fontWeight: 600, fontSize: "13px", textAlign: "center" }}>{index + 1}</td>
                                                 <td style={{ padding: "3px 6px" }}>
                                                     <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -917,7 +938,7 @@ export function SalesType5Body({
                 </div>
 
                 {/* ── ASIDE (320px) ── */}
-                <aside style={{ width: "100%", maxWidth: "320px", flexShrink: 0, overflowY: "auto" }}>
+                <aside style={{ width: "100%", maxWidth: "320px", flexShrink: 0, overflowY: "auto", paddingTop: "10px" }}>
 
                     {/* Customer & Vehicle info card */}
                     {activeCustomer && (

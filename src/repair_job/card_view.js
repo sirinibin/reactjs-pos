@@ -25,13 +25,6 @@ export function statusToDefaultListId(status) {
     return 'todo';
 }
 
-const STATUS_OPTIONS = [
-    { value: 'open', label: 'Open', color: '#1565c0', bg: '#e3f2fd' },
-    { value: 'in_progress', label: 'In Progress', color: '#e65100', bg: '#fff3e0' },
-    { value: 'completed', label: 'Completed', color: '#2e7d32', bg: '#e8f5e9' },
-    { value: 'delivered', label: 'Delivered', color: '#6a1b9a', bg: '#f3e5f5' },
-    { value: 'cancelled', label: 'Cancelled', color: '#c62828', bg: '#ffebee' },
-];
 
 const CUST_COLS = [
     { key: 'name', label: 'Name', w: '36%' },
@@ -78,7 +71,7 @@ function SearchDropdown({ value, onChange, onSelect, placeholder, options, loadi
     );
 }
 
-const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpdated, showToastMessage }, ref) => {
+const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpdated, showToastMessage, onCreateSalesInvoice, onCreateQuotation }, ref) => {
     const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -404,7 +397,6 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
 
     const currentListId = cardMap[job.id] || statusToDefaultListId(job.status);
     const currentList = kanbanLists.find(l => l.id === currentListId);
-    const statusOpt = STATUS_OPTIONS.find(s => s.value === job.status) || STATUS_OPTIONS[0];
     const summary = computeSummary();
 
     const SL = { fontSize: 11, fontWeight: 700, color: '#5e6c84', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 };
@@ -848,16 +840,16 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                 {/* === RIGHT SIDEBAR === */}
                                 <div className="rj-sidebar">
 
-                                    {/* Status */}
+                                    {/* Status (= kanban list) */}
                                     <div style={sectionBox}>
-                                        <div style={SL}><i className="bi bi-circle-fill" style={{ fontSize: 8, color: statusOpt.color }}></i>{t('Status')}</div>
+                                        <div style={SL}><i className="bi bi-circle-fill" style={{ fontSize: 8, color: currentList?.color || '#0052cc' }}></i>{t('Status')}</div>
                                         <select
-                                            value={job.status || 'open'}
-                                            onChange={e => saveJobFields({ status: e.target.value })}
-                                            style={{ width: '100%', fontSize: 12, fontWeight: 700, color: statusOpt.color, background: statusOpt.bg, border: 'none', borderRadius: 4, padding: '6px 8px', cursor: 'pointer', outline: 'none' }}
+                                            value={currentListId}
+                                            onChange={e => handleListChange(e.target.value)}
+                                            style={{ width: '100%', fontSize: 12, fontWeight: 700, color: currentList?.color || '#0052cc', background: '#f0f4ff', border: 'none', borderRadius: 4, padding: '6px 8px', cursor: 'pointer', outline: 'none' }}
                                         >
-                                            {STATUS_OPTIONS.map(s => (
-                                                <option key={s.value} value={s.value} style={{ background: '#fff', color: '#172b4d', fontWeight: 600 }}>{s.label}</option>
+                                            {kanbanLists.map(l => (
+                                                <option key={l.id} value={l.id} style={{ background: '#fff', color: '#172b4d', fontWeight: 600 }}>{l.name}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -912,6 +904,29 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Create Sales / Quotation */}
+                                    {(onCreateSalesInvoice || onCreateQuotation) && (
+                                        <div style={sectionBox}>
+                                            <div style={SL}><i className="bi bi-file-earmark-plus"></i>{t('Create Document')}</div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                {onCreateSalesInvoice && (
+                                                    <button type="button"
+                                                        onClick={() => onCreateSalesInvoice(job)}
+                                                        style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <i className="bi bi-receipt"></i>{t('Create Sales Invoice')}
+                                                    </button>
+                                                )}
+                                                {onCreateQuotation && (
+                                                    <button type="button"
+                                                        onClick={() => onCreateQuotation(job)}
+                                                        style={{ background: '#fff', color: '#004ac6', border: '2px solid #004ac6', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <i className="bi bi-file-earmark-text"></i>{t('Create Quotation')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Technician */}
                                     <div style={sectionBox}>

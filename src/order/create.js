@@ -1725,6 +1725,26 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
+    async function updateVehicleKmFromLatest(vehicleId) {
+        if (!vehicleId) return;
+        const storeId = localStorage.getItem('store_id');
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        const qs = `search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=1&sort=-date_str&select=id,km_driven,date_str`;
+        const [orderData, quotData] = await Promise.all([
+            fetch(`/v1/order?${qs}`, { headers }).then(r => r.json()).catch(() => ({})),
+            fetch(`/v1/quotation?${qs}`, { headers }).then(r => r.json()).catch(() => ({})),
+        ]);
+        const latest = [orderData?.result?.[0], quotData?.result?.[0]]
+            .filter(r => r?.km_driven != null && r.km_driven !== '')
+            .sort((a, b) => new Date(b.date_str) - new Date(a.date_str))[0];
+        if (latest) {
+            await fetch(`/v1/vehicle/${vehicleId}?search[store_id]=${storeId}`, {
+                method: 'PUT', headers,
+                body: JSON.stringify({ current_km: parseFloat(latest.km_driven) }),
+            }).catch(() => {});
+        }
+    }
+
     function handleCreate(event) {
         event.preventDefault();
 
@@ -2048,6 +2068,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 if (props.refreshList) {
                     props.refreshList();
+                }
+
+                if (formType === 'type5' && formData.vehicle_id) {
+                    updateVehicleKmFromLatest(formData.vehicle_id);
                 }
 
                 // handleClose();
@@ -2557,7 +2581,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (alreadyAdded && !product.allow_duplicates) {
             selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity || 0) + qty;
         } else if (!alreadyAdded || product.allow_duplicates) {
-            selectedProducts.unshift({
+            selectedProducts.push({
                 product_id: product.id,
                 code: product.item_code,
                 prefix_part_number: product.prefix_part_number,

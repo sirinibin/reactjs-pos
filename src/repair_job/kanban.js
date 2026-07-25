@@ -34,9 +34,10 @@ const STATUS_COLORS = {
     completed: { bg: '#e8f5e9', color: '#2e7d32' },
     delivered: { bg: '#f3e5f5', color: '#6a1b9a' },
     cancelled: { bg: '#ffebee', color: '#c62828' },
+    closed: { bg: '#f0f4f8', color: '#455a64' },
 };
 
-const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChange }, ref) => {
+const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChange, onCreateSalesInvoice, onCreateQuotation }, ref) => {
     const { t } = useTranslation('common');
     const [lists, setLists] = useState(loadLists);
     const [cardMap, setCardMap] = useState(loadCardMap);
@@ -51,6 +52,8 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
     const [draggingListId, setDraggingListId] = useState(null);
 
     const [hoveredJobId, setHoveredJobId] = useState(null);
+    const [showArchived, setShowArchived] = useState(false);
+    const showArchivedRef = useRef(false);
 
 
     // List editing
@@ -93,7 +96,8 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
     function fetchJobs() {
         const opts = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
         const qp = ObjectToSearchQueryParams({ store_id: localStorage.getItem("store_id") || '', ...activeFiltersRef.current });
-        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,total,status,customer_id&limit=500&${qp}`;
+        const archivedParam = showArchivedRef.current ? '&search[archived]=1' : '';
+        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,total,status,customer_id,archived&limit=500&${qp}${archivedParam}`;
         console.log('[Kanban] fetchJobs:', url, 'filters:', activeFiltersRef.current);
         setIsLoading(true);
         fetch(url, opts)
@@ -275,7 +279,17 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
     function onColumnDrop(e, listId) {
         e.preventDefault();
         if (dragJobId.current) {
-            moveJob(dragJobId.current, listId);
+            const jobId = dragJobId.current;
+            moveJob(jobId, listId);
+            // Auto-close when moved to the final list
+            if (lists.length > 0 && listId === lists[lists.length - 1].id) {
+                const job = jobs.find(j => j.id === jobId);
+                if (job && job.status !== 'closed') {
+                    patchJob(jobId, { status: 'closed' }).then(updated => {
+                        if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
+                    });
+                }
+            }
         } else if (dragListId.current && dragListId.current !== listId) {
             reorderLists(dragListId.current, listId);
         }
@@ -325,11 +339,19 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
         const token = localStorage.getItem('access_token');
         const storeId = localStorage.getItem('store_id');
         const now = new Date().toISOString();
+        const body = { title: title.trim(), store_id: storeId, date: now, status: 'open' };
+        if (selectedCustomer?.id)           body.customer_id    = selectedCustomer.id;
+        if (selectedVehicleFilter[0]?.id) {
+            body.vehicle_id     = selectedVehicleFilter[0].id;
+            body.vehicle_number = selectedVehicleFilter[0].vehicle_number || '';
+            body.brand          = selectedVehicleFilter[0].brand || '';
+            body.model          = selectedVehicleFilter[0].model || '';
+        }
         try {
             const res = await fetch(`/v1/repair-job?search[store_id]=${storeId || ''}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ title: title.trim(), store_id: storeId, date: now, status: 'open' }),
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (res.ok && data.result && data.result.id) {
@@ -343,6 +365,37 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
         } catch (e) { }
         setIsCreatingCard(false);
         return false;
+    }
+
+    async function patchJob(jobId, patch) {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch(`/v1/repair-job/${jobId}?search[store_id]=${storeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify(patch),
+            });
+            const data = await res.json();
+            return data?.result || null;
+        } catch (e) { return null; }
+    }
+
+    async function archiveJob(jobId) {
+        const updated = await patchJob(jobId, { archived: true });
+        if (updated !== null) setJobs(prev => prev.filter(j => j.id !== jobId));
+    }
+
+    async function unarchiveJob(jobId) {
+        const updated = await patchJob(jobId, { archived: false });
+        if (updated !== null) setJobs(prev => prev.filter(j => j.id !== jobId));
+    }
+
+    function toggleShowArchived() {
+        const next = !showArchivedRef.current;
+        showArchivedRef.current = next;
+        setShowArchived(next);
+        fetchJobs();
     }
 
     async function createCardInline(listId) {
@@ -376,9 +429,9 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
         <div style={{ position: 'fixed', inset: 0, zIndex: 900, display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden' }}>
 
             {/* Board header — title row */}
-            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px 6px', background: 'rgba(0,0,0,0.3)' }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px 6px', background: 'rgba(0,0,0,0.3)', flexWrap: 'wrap' }}>
                 <i className="bi bi-kanban" style={{ fontSize: 20, color: '#fff' }}></i>
-                <span style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontWeight: 700, fontSize: 17, color: '#fff', flex: 1 }}>{t('Repair Jobs Board')}</span>
+                <span style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontWeight: 700, fontSize: 17, color: '#fff', flex: 1, minWidth: 0 }}>{t('Repair Jobs Board')}</span>
                 <button type="button" onClick={() => fetchJobs()} disabled={isLoading}
                     style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
                     {isLoading ? <Spinner as="span" animation="border" size="sm" /> : <i className="fa fa-refresh"></i>}
@@ -388,10 +441,31 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
                     style={{ background: '#0052cc', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                     <i className="bi bi-plus-lg me-1"></i>{t('New Job')}
                 </button>
+                <button type="button" onClick={toggleShowArchived}
+                    style={{ background: showArchived ? '#455a64' : 'rgba(255,255,255,0.15)', border: showArchived ? '1.5px solid #90a4ae' : 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className={showArchived ? 'bi bi-archive-fill' : 'bi bi-archive'}></i>
+                    <span>{showArchived ? t('Hide Archived') : t('Show Archived')}</span>
+                </button>
+                {selectedCustomer && onCreateSalesInvoice && (
+                    <button type="button" onClick={() => onCreateSalesInvoice(jobs, selectedCustomer)}
+                        style={{ background: '#1a7fe8', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="bi bi-receipt"></i><span>{t('Create Sales Invoice')}</span>
+                    </button>
+                )}
+                {selectedCustomer && onCreateQuotation && (
+                    <button type="button" onClick={() => onCreateQuotation(jobs, selectedCustomer)}
+                        style={{ background: '#fff', border: '1.5px solid #1a7fe8', color: '#1a7fe8', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="bi bi-file-earmark-text"></i><span>{t('Create Quotation')}</span>
+                    </button>
+                )}
                 <button type="button" onClick={onClose}
-                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="bi bi-table"></i>
-                    <span style={{ fontSize: 12 }}>{t('Table View')}</span>
+                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="bi bi-arrow-left"></i>
+                    <span>{t('Back')}</span>
+                </button>
+                <button type="button" onClick={onClose}
+                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                    ×
                 </button>
             </div>
 
@@ -473,7 +547,10 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
                             inputProps={{ style: { ...filterInputStyle, background: 'transparent', padding: 0, height: 'auto' } }}
                         />
                         {selectedVehicleFilter.length > 0 && (
-                            <i className="bi bi-check-circle-fill" style={{ color: '#57d9a3', fontSize: 12, flexShrink: 0 }}></i>
+                            <button type="button" onClick={() => { setSelectedVehicleFilter([]); setVehicleFilterOptions([]); vehicleFilterRef.current?.clear(); const f = { ...activeFiltersRef.current }; delete f.vehicle_id; activeFiltersRef.current = f; fetchJobs(); }}
+                                style={{ background: 'none', border: 'none', color: '#b3bac5', cursor: 'pointer', padding: 0, fontSize: 16, lineHeight: 1, flexShrink: 0 }}>
+                                <i className="bi bi-x"></i>
+                            </button>
                         )}
                     </div>
                 )}
@@ -566,18 +643,39 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
                                                 transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
                                             }}
                                         >
-                                            {/* Pencil icon on hover */}
+                                            {/* Action buttons on hover */}
                                             {isHovered && !isDragging && (
-                                                <div
-                                                    onMouseDown={e => e.stopPropagation()}
-                                                    onClick={e => { e.stopPropagation(); if (onOpenCard) onOpenCard(job.id); }}
-                                                    style={{ position: 'absolute', top: 7, right: 7, background: '#dfe1e6', border: 'none', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 1 }}
-                                                    title={t('Open Card')}
-                                                >
-                                                    <i className="bi bi-pencil" style={{ fontSize: 11, color: '#42526e' }}></i>
+                                                <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3, zIndex: 1 }}>
+                                                    {showArchived ? (
+                                                        <div
+                                                            onMouseDown={e => e.stopPropagation()}
+                                                            onClick={e => { e.stopPropagation(); unarchiveJob(job.id); }}
+                                                            style={{ background: '#fff3cd', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                            title={t('Unarchive')}
+                                                        >
+                                                            <i className="bi bi-arrow-counterclockwise" style={{ fontSize: 11, color: '#856404' }}></i>
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            onMouseDown={e => e.stopPropagation()}
+                                                            onClick={e => { e.stopPropagation(); archiveJob(job.id); }}
+                                                            style={{ background: '#dfe1e6', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                            title={t('Archive')}
+                                                        >
+                                                            <i className="bi bi-archive" style={{ fontSize: 11, color: '#42526e' }}></i>
+                                                        </div>
+                                                    )}
+                                                    <div
+                                                        onMouseDown={e => e.stopPropagation()}
+                                                        onClick={e => { e.stopPropagation(); if (onOpenCard) onOpenCard(job.id); }}
+                                                        style={{ background: '#dfe1e6', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        title={t('Open Card')}
+                                                    >
+                                                        <i className="bi bi-pencil" style={{ fontSize: 11, color: '#42526e' }}></i>
+                                                    </div>
                                                 </div>
                                             )}
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4, gap: 4, paddingRight: isHovered ? 22 : 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4, gap: 4, paddingRight: isHovered ? 54 : 0 }}>
                                                 <span style={{ fontSize: 10, color: '#97a0af', fontWeight: 600, fontFamily: 'monospace', flexShrink: 0 }}>{job.job_number}</span>
                                                 <StatusBadge status={job.status} />
                                             </div>

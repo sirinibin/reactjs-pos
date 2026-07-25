@@ -40,6 +40,7 @@ export const DEFAULT_MENU = [
     { id: "employees", resource: "employees", label: "Employees", path: "/dashboard/employees", icon: "bi-person-badge", requiresEmployeeModule: true },
     { id: "vehicles", resource: "vehicles", label: "Vehicles", path: "/dashboard/vehicles", icon: "bi-car-front", requiresAutomobileModule: true },
     { id: "repair_jobs", resource: "repair_jobs", label: "Repair Jobs", path: "/dashboard/repair-jobs", icon: "bi-tools", requiresAutomobileModule: true },
+    { id: "repair_jobs_board", resource: "repair_jobs", label: "Repair Jobs Board", path: "/dashboard/repair-jobs-board", icon: "bi-kanban", requiresAutomobileModule: true },
 ];
 
 const STORAGE_KEY = "sidebar_config";

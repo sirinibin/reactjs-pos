@@ -4,6 +4,7 @@ import RepairJobCreate from "./create.js";
 import RepairJobView from "./view.js";
 import RepairJobKanban from "./kanban.js";
 import RepairJobCardView, { loadKanbanLists, loadCardMap, statusToDefaultListId } from "./card_view.js";
+import QuotationType3Form from "../quotation/QuotationType3Form.js";
 
 import { format } from "date-fns";
 import { Button, Spinner } from "react-bootstrap";
@@ -154,9 +155,10 @@ function RepairJobIndex(props) {
     const CreateFormRef = useRef();
     const kanbanRef = useRef();
     const cardViewRef = useRef();
+    const qt3FormRef = useRef();
     const pendingListId = useRef(null);
 
-    const [viewMode, setViewMode] = useState(() => window.location.hash === '#kanban' ? 'board' : 'table');
+    const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' || window.location.hash === '#kanban' ? 'board' : 'table');
 
     function switchView(mode) {
         window.location.hash = mode === 'board' ? 'kanban' : '';
@@ -166,6 +168,112 @@ function RepairJobIndex(props) {
     function openUpdateForm(id) { CreateFormRef.current.open(id); }
     function openDetailsView(id) { DetailsViewRef.current.open(id); }
     function openCreateForm() { CreateFormRef.current.open(); }
+
+    async function buildJobPrefill(job, type) {
+        const storeId = localStorage.getItem('store_id');
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+
+        // Convert parts to quotation/order products format
+        const products = (job.parts || []).map(p => ({
+            product_id: p.product_id || null,
+            name: p.name || '',
+            quantity: parseFloat(p.qty) || 1,
+            unit_price: parseFloat(p.unit_price) || 0,
+            unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0,
+            purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+            purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+            unit_discount: 0, unit_discount_with_vat: 0,
+            unit: p.unit || '', is_service: false,
+        }));
+
+        // Add labour charge as a service product
+        const labour = parseFloat(job.labour_charge) || 0;
+        if (labour > 0) {
+            let labourProductId = null;
+            try {
+                const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
+                if (r?.result?.[0]) {
+                    labourProductId = r.result[0].id;
+                } else {
+                    // Create it
+                    const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json());
+                    labourProductId = c?.result?.id || null;
+                }
+            } catch (e) { /* ignore */ }
+            const vatFactor = 1.15;
+            products.push({
+                product_id: labourProductId,
+                name: 'Labour Charge',
+                quantity: 1,
+                unit_price: parseFloat((labour / vatFactor).toFixed(4)),
+                unit_price_with_vat: labour,
+                purchase_unit_price: 0,
+                purchase_unit_price_with_vat: 0,
+                unit_discount: 0, unit_discount_with_vat: 0,
+                unit: '', is_service: true,
+            });
+        }
+
+        return {
+            type,
+            customer_id: job.customer_id || null,
+            customer_name: job.customer_name || '',
+            customer: job.customer_id ? { id: job.customer_id, name: job.customer_name } : null,
+            vehicle_id: job.vehicle_id || null,
+            vehicle_snapshot: job.vehicle_id ? { vehicle_number: job.vehicle_number || '', brand: job.brand || '', model: job.model || '' } : undefined,
+            vehicle: job.vehicle_id ? { id: job.vehicle_id, vehicle_number: job.vehicle_number, brand: job.brand, model: job.model } : null,
+            km_driven: parseFloat(job.km) || null,
+            products,
+        };
+    }
+
+    async function handleCreateSalesInvoice(job) {
+        const prefill = await buildJobPrefill(job, 'invoice');
+        qt3FormRef.current?.open(null, prefill);
+    }
+
+    async function handleCreateQuotation(job) {
+        const prefill = await buildJobPrefill(job, 'quotation');
+        qt3FormRef.current?.open(null, prefill);
+    }
+
+    async function handleCreateFromJobs(jobsArr, customer, type) {
+        if (!jobsArr || jobsArr.length === 0) return;
+        // Aggregate products from all jobs
+        const storeId = localStorage.getItem('store_id');
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        const products = [];
+        let totalLabour = 0;
+        let firstJobWithVehicle = null;
+        for (const job of jobsArr) {
+            if (job.vehicle_id && !firstJobWithVehicle) firstJobWithVehicle = job;
+            for (const p of (job.parts || [])) {
+                products.push({ product_id: p.product_id || null, name: p.name || '', quantity: parseFloat(p.qty) || 1, unit_price: parseFloat(p.unit_price) || 0, unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, purchase_unit_price: parseFloat(p.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false });
+            }
+            totalLabour += parseFloat(job.labour_charge) || 0;
+        }
+        if (totalLabour > 0) {
+            let labourProductId = null;
+            try {
+                const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
+                if (r?.result?.[0]) labourProductId = r.result[0].id;
+                else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
+            } catch (e) { /* ignore */ }
+            const vatFactor = 1.15;
+            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatFactor).toFixed(4)), unit_price_with_vat: totalLabour, purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
+        }
+        const prefill = {
+            type,
+            customer_id: customer?.id || null,
+            customer_name: customer?.name || '',
+            customer: customer ? { id: customer.id, name: customer.name } : null,
+            vehicle_id: firstJobWithVehicle?.vehicle_id || null,
+            vehicle_snapshot: firstJobWithVehicle?.vehicle_id ? { vehicle_number: firstJobWithVehicle.vehicle_number || '', brand: firstJobWithVehicle.brand || '', model: firstJobWithVehicle.model || '' } : undefined,
+            km_driven: firstJobWithVehicle ? parseFloat(firstJobWithVehicle.km) || null : null,
+            products,
+        };
+        qt3FormRef.current?.open(null, prefill);
+    }
 
 
     function handleJobCreated(jobId) {
@@ -216,12 +324,15 @@ function RepairJobIndex(props) {
         <>
             <RepairJobCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onCreated={handleJobCreated} />
             <RepairJobView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
+            <QuotationType3Form ref={qt3FormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <RepairJobCardView
                 ref={cardViewRef}
                 onFullEdit={openUpdateForm}
                 onKanbanListChange={handleCardViewListChange}
                 onJobUpdated={() => { if (kanbanRef.current) kanbanRef.current.refresh(); }}
                 showToastMessage={props.showToastMessage}
+                onCreateSalesInvoice={handleCreateSalesInvoice}
+                onCreateQuotation={handleCreateQuotation}
             />
 
             {viewMode === 'board' && (
@@ -234,29 +345,49 @@ function RepairJobIndex(props) {
                         switchView('table');
                     }}
                     onListsChange={handleKanbanListsChange}
+                    onCreateSalesInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'invoice')}
+                    onCreateQuotation={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'quotation')}
                     showToastMessage={props.showToastMessage}
                 />
             )}
 
             <div className="container-fluid p-0">
-                <div className="row">
-                    <div className="col"><h1 className="h3">{t('Repair Jobs')}</h1></div>
-                    <div className="col text-end" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-                        <Button
-                            variant={viewMode === 'board' ? 'secondary' : 'outline-secondary'}
-                            className="mb-1"
-                            onClick={() => switchView(viewMode === 'board' ? 'table' : 'board')}
-                            title={t('Board / Kanban View')}
-                        >
-                            <i className="bi bi-kanban"></i>
-                        </Button>
+                <div className="row align-items-center mb-2">
+                    <div className="col">
+                        <ul className="nav nav-tabs border-bottom-0" style={{ gap: 2 }}>
+                            <li className="nav-item">
+                                <button
+                                    className={`nav-link${viewMode === 'table' ? ' active fw-semibold' : ''}`}
+                                    style={{ fontSize: 13, padding: '6px 14px', cursor: 'pointer', border: 'none', background: 'none' }}
+                                    onClick={() => switchView('table')}
+                                >
+                                    <i className="bi bi-list-ul me-1"></i>{t('Jobs List')}
+                                </button>
+                            </li>
+                            <li className="nav-item">
+                                <button
+                                    className={`nav-link${viewMode === 'board' ? ' active fw-semibold' : ''}`}
+                                    style={{ fontSize: 13, padding: '6px 14px', cursor: 'pointer', border: 'none', background: 'none' }}
+                                    onClick={() => switchView('board')}
+                                >
+                                    <i className="bi bi-kanban me-1"></i>{t('Kanban Board')}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="col-auto">
                         <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
 
-                <div className="row">
+                {viewMode === 'board' && (
+                    <div className="text-muted text-center py-4" style={{ fontSize: 13 }}>
+                        <i className="bi bi-kanban me-2"></i>{t('Use the Kanban Board above to manage jobs.')}
+                    </div>
+                )}
+                <div className="row" style={{ display: viewMode === 'board' ? 'none' : undefined }}>
                     <div className="col-12">
                         <div className="card">
                             <div className="card-body p-2">
