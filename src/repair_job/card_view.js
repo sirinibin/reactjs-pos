@@ -34,7 +34,7 @@ const CUST_COLS = [
     { key: 'credit_balance', label: 'Balance', w: '12%' },
 ];
 
-function fmtCurrency(val) { return val == null ? '0.00' : parseFloat(val || 0).toFixed(2); }
+function fmtCurrency(val) { const n = parseFloat(val); return isNaN(n) ? '0.00' : n.toFixed(2); }
 function fmtDate(val) { if (!val) return ''; try { return format(new Date(val), 'yyyy-MM-dd'); } catch (e) { return ''; } }
 function toISOSafe(str) { if (!str) return null; try { const d = new Date(str); return isNaN(d) ? null : d.toISOString(); } catch (e) { return null; } }
 
@@ -694,7 +694,9 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                                 return (
                                                                     <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
                                                                         <div
+                                                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                                                             onClick={(e) => {
+                                                                                e.preventDefault();
                                                                                 e.stopPropagation();
                                                                                 if (checked) { removePartByProductId(option.id); } else { addPart(option); }
                                                                                 setOpenProductSearch(true);

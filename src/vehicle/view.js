@@ -69,13 +69,13 @@ const VehicleView = forwardRef((props, ref) => {
         setLoadingTab(tab);
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
-        const qs = `search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=200&sort=-date_str`;
+        const qs = `search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=200&sort=-date`;
         try {
             if (tab === 'sales') {
-                const r = await fetch(`/v1/order?${qs}&select=id,code,date_str,customer_name,net_total,payment_status,km_driven`, { headers }).then(r => r.json());
+                const r = await fetch(`/v1/order?${qs}&select=id,code,date,customer_name,net_total,payment_status,km_driven`, { headers }).then(r => r.json());
                 setHistory(h => ({ ...h, sales: r?.result || [] }));
             } else if (tab === 'quotations') {
-                const r = await fetch(`/v1/quotation?${qs}&select=id,code,date_str,customer_name,net_total,type,km_driven`, { headers }).then(r => r.json());
+                const r = await fetch(`/v1/quotation?${qs}&select=id,code,date,customer_name,net_total,type,km_driven`, { headers }).then(r => r.json());
                 setHistory(h => ({ ...h, quotations: r?.result || [] }));
             } else if (tab === 'repairs') {
                 const r = await fetch(`/v1/repair-job?search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=200&sort=-date_str&select=id,job_number,title,date,status,labour_charge,total,km`, { headers }).then(r => r.json());
@@ -219,7 +219,7 @@ const VehicleView = forwardRef((props, ref) => {
                                                     ) : history.sales.map(r => (
                                                         <tr key={r.id}>
                                                             <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
-                                                            <td style={tdStyle}>{fmtDate(r.date_str)}</td>
+                                                            <td style={tdStyle}>{fmtDate(r.date)}</td>
                                                             <td style={tdStyle}>{r.customer_name || '-'}</td>
                                                             <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
                                                             <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
@@ -247,7 +247,7 @@ const VehicleView = forwardRef((props, ref) => {
                                                     ) : history.quotations.map(r => (
                                                         <tr key={r.id}>
                                                             <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
-                                                            <td style={tdStyle}>{fmtDate(r.date_str)}</td>
+                                                            <td style={tdStyle}>{fmtDate(r.date)}</td>
                                                             <td style={tdStyle}>{r.customer_name || '-'}</td>
                                                             <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: r.type === 'invoice' ? '#e8f5e9' : '#e3f2fd', color: r.type === 'invoice' ? '#2e7d32' : '#1565c0', borderRadius: 4, padding: '2px 8px' }}>{r.type || 'quotation'}</span></td>
                                                             <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import RepairJobCreate from "./create.js";
 import RepairJobView from "./view.js";
 import RepairJobKanban from "./kanban.js";
-import RepairJobCardView, { loadKanbanLists, loadCardMap, statusToDefaultListId } from "./card_view.js";
+import RepairJobCardView, { loadKanbanLists, loadCardMap, saveCardMap, statusToDefaultListId } from "./card_view.js";
 import QuotationType3Form from "../quotation/QuotationType3Form.js";
 
 import { format } from "date-fns";
@@ -18,6 +18,7 @@ const STATUS_COLORS = {
     completed: { bg: '#e8f5e9', color: '#2e7d32' },
     delivered: { bg: '#f3e5f5', color: '#6a1b9a' },
     cancelled: { bg: '#ffebee', color: '#c62828' },
+    closed: { bg: '#f0f4f8', color: '#455a64' },
 };
 
 function RepairJobIndex(props) {
@@ -156,9 +157,12 @@ function RepairJobIndex(props) {
     const kanbanRef = useRef();
     const cardViewRef = useRef();
     const qt3FormRef = useRef();
-    const pendingListId = useRef(null);
 
     const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' || window.location.hash === '#kanban' ? 'board' : 'table');
+
+    useEffect(() => {
+        if (props.defaultMode === 'board') setViewMode('board');
+    }, [props.defaultMode]);
 
     function switchView(mode) {
         window.location.hash = mode === 'board' ? 'kanban' : '';
@@ -276,12 +280,11 @@ function RepairJobIndex(props) {
     }
 
 
-    function handleJobCreated(jobId) {
-        if (pendingListId.current && jobId) {
+    function handleJobCreated(jobId, listId) {
+        if (listId && jobId) {
             const map = loadCardMap();
-            map[jobId] = pendingListId.current;
-            localStorage.setItem('repair_job_kanban_card_map', JSON.stringify(map));
-            pendingListId.current = null;
+            map[jobId] = listId;
+            saveCardMap(map);
         }
         if (kanbanRef.current) kanbanRef.current.refresh();
     }
@@ -307,12 +310,27 @@ function RepairJobIndex(props) {
 
     function StatusBadge({ status }) {
         const colors = STATUS_COLORS[status] || STATUS_COLORS.open;
+        const label = (status || 'open').replace(/_/g, ' ');
         return (
             <span style={{
                 padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                background: colors.bg, color: colors.color, textTransform: 'uppercase',
+                background: colors.bg, color: colors.color, textTransform: 'capitalize',
             }}>
-                {t(status === 'in_progress' ? 'In Progress' : status)}
+                {t(label)}
+            </span>
+        );
+    }
+
+    function OpenClosedBadge({ status }) {
+        const isClosed = status === 'closed';
+        return (
+            <span style={{
+                padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+                background: isClosed ? '#f0f4f8' : '#e3f2fd',
+                color: isClosed ? '#455a64' : '#1565c0',
+                textTransform: 'capitalize',
+            }}>
+                {isClosed ? t('Closed') : t('Open')}
             </span>
         );
     }
@@ -340,10 +358,8 @@ function RepairJobIndex(props) {
                     ref={kanbanRef}
                     onOpenCard={(id) => { if (cardViewRef.current) cardViewRef.current.open(id); }}
                     onCreate={openCreateForm}
-                    onClose={() => {
-                        setKanbanLists(loadKanbanLists());
-                        switchView('table');
-                    }}
+                    onClose={props.defaultMode === 'board' ? undefined : () => { setKanbanLists(loadKanbanLists()); switchView('table'); }}
+                    onSwitchToTable={props.defaultMode === 'board' ? () => { setKanbanLists(loadKanbanLists()); switchView('table'); } : undefined}
                     onListsChange={handleKanbanListsChange}
                     onCreateSalesInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'invoice')}
                     onCreateQuotation={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'quotation')}
@@ -439,6 +455,7 @@ function RepairJobIndex(props) {
                                                 <th><b>{t('Parts')}</b></th>
                                                 <th><b>{t('Total')}</b></th>
                                                 <th><b>{t('Status')}</b></th>
+                                                <th><b>{t('Open/Closed')}</b></th>
                                                 <th><b>{t('Est. Delivery')}</b></th>
                                                 <th>{t('Actions')}</th>
                                             </tr>
@@ -459,7 +476,7 @@ function RepairJobIndex(props) {
                                                         ))}
                                                     </select>
                                                 </th>
-                                                <th></th><th></th>
+                                                <th></th><th></th><th></th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
@@ -480,6 +497,7 @@ function RepairJobIndex(props) {
                                                     <td>{fmtCurrency(job.parts_total)}</td>
                                                     <td style={{ fontWeight: 600 }}>{fmtCurrency(job.total)}</td>
                                                     <td><StatusBadge status={job.status} /></td>
+                                                    <td><OpenClosedBadge status={job.status} /></td>
                                                     <td style={{ whiteSpace: "nowrap" }}>{job.estimated_delivery ? format(new Date(job.estimated_delivery), "MMM dd yyyy") : "-"}</td>
                                                     <td style={{ whiteSpace: "nowrap" }}>
                                                         <Button className="btn btn-light btn-sm me-1" onClick={() => openUpdateForm(job.id)}>

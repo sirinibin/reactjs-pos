@@ -1,9 +1,10 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { Modal, Spinner, Button } from "react-bootstrap";
+import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import { loadKanbanLists, loadCardMap, saveCardMap } from './card_view.js';
 
 const RepairJobCreate = forwardRef((props, ref) => {
 
@@ -20,6 +21,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                 km: 0,
             };
             setFormData({ ...formData });
+            setSelectedListId(loadKanbanLists()[0]?.id || '');
             setErrors({});
             selectedCustomers = [];
             setSelectedCustomers([]);
@@ -66,6 +68,9 @@ const RepairJobCreate = forwardRef((props, ref) => {
     const [technicianOptions, setTechnicianOptions] = useState([]);
     let [selectedTechnicians, setSelectedTechnicians] = useState([]);
     const technicianSearchRef = useRef();
+
+    const [kanbanLists] = useState(loadKanbanLists);
+    const [selectedListId, setSelectedListId] = useState(() => loadKanbanLists()[0]?.id || '');
 
     // Product search
     const [productOptions, setProductOptions] = useState([]);
@@ -192,10 +197,15 @@ const RepairJobCreate = forwardRef((props, ref) => {
                 } else {
                     if (props.showToastMessage) props.showToastMessage(t("Repair job created successfully!"), "success");
                 }
+                if (!formData.id && selectedListId && data.result?.id) {
+                    const map = loadCardMap();
+                    map[data.result.id] = selectedListId;
+                    saveCardMap(map);
+                }
                 if (props.refreshList) props.refreshList();
                 handleClose();
                 if (props.openDetailsView) props.openDetailsView(data.result.id);
-                if (props.onCreated) props.onCreated(data.result.id);
+                if (props.onCreated) props.onCreated(data.result.id, selectedListId);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -371,8 +381,8 @@ const RepairJobCreate = forwardRef((props, ref) => {
     const totalErrors = allErrors.length;
 
     function fmtCurrency(val) {
-        if (val === undefined || val === null) return "0.00";
-        return parseFloat(val).toFixed(2);
+        const n = parseFloat(val);
+        return isNaN(n) ? "0.00" : n.toFixed(2);
     }
 
     // Customer result columns
@@ -445,12 +455,10 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                     </div>
                                     <div className="col-md-4">
                                         <Label>{t('Status')}</Label>
-                                        <select value={formData.status || 'open'} onChange={(e) => setField("status", e.target.value)} style={INPUT}>
-                                            <option value="open">{t('Open')}</option>
-                                            <option value="in_progress">{t('In Progress')}</option>
-                                            <option value="completed">{t('Completed')}</option>
-                                            <option value="delivered">{t('Delivered')}</option>
-                                            <option value="cancelled">{t('Cancelled')}</option>
+                                        <select value={selectedListId} onChange={(e) => setSelectedListId(e.target.value)} style={INPUT}>
+                                            {kanbanLists.map(l => (
+                                                <option key={l.id} value={l.id}>{l.name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="col-md-4">
@@ -475,7 +483,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                 {/* Row A: Customer (narrow) | Vehicle | Date */}
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                                     {/* 1. Customer (narrow input, wide dropdown) */}
-                                    <div style={{ flex: '0 0 18%', minWidth: 0 }}>
+                                    <div style={{ flex: '0 0 30%', minWidth: 0 }}>
                                         <Label>{t('Customer')}</Label>
                                         <Typeahead
                                             id="customer_id"
@@ -510,6 +518,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 if (e.key === "Escape") { setCustomerOptions([]); customerSearchRef.current?.clear(); }
                                             }}
                                             renderMenu={(results, menuProps, state) => {
+                                                if (!results.length) return <Menu {...menuProps} style={{ display: 'none' }}></Menu>;
                                                 const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
                                                 function hl(text, bold) {
                                                     if (!text) return '–';
@@ -600,14 +609,32 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                             onKeyDown={(e) => {
                                                 if (e.key === "Escape") { setVehicleOptions([]); vehicleSearchRef.current?.clear(); }
                                             }}
-                                            renderMenuItemChildren={(option) => (
-                                                <div style={{ padding: '4px 2px' }}>
-                                                    <div style={{ fontWeight: 600, fontSize: '13px', color: '#191c1e' }}>
-                                                        {option.vehicle_number} {option.brand && <span style={{ fontWeight: 400, color: '#5e6c84' }}>— {option.brand} {option.model}</span>}
-                                                    </div>
-                                                    {option.customer_name && <div style={{ fontSize: '11px', color: '#6b7280', marginTop: 1 }}><i className="bi bi-person me-1"></i>{option.customer_name}</div>}
-                                                </div>
-                                            )}
+                                            renderMenu={(results, menuProps, state) => {
+                                                if (!results.length) return <Menu {...menuProps} style={{ display: 'none' }}></Menu>;
+                                                return (
+                                                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: 'min(95vw, 520px)', zIndex: 9999, padding: 0, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+                                                        <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, pointerEvents: 'none' }}>
+                                                            <div style={{ display: 'flex', background: '#0f172a', padding: '6px 12px', gap: 10, fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                                                                <span style={{ flex: '0 0 110px' }}>{t('Vehicle #')}</span>
+                                                                <span style={{ flex: '0 0 150px' }}>{t('Brand / Model')}</span>
+                                                                <span style={{ flex: 1 }}>{t('Customer')}</span>
+                                                            </div>
+                                                        </MenuItem>
+                                                        {results.map((option, idx) => {
+                                                            const isActive = state.activeIndex === idx || results.length === 1;
+                                                            return (
+                                                                <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: isActive ? '#e8f0fe' : (idx % 2 === 0 ? '#fff' : '#f8fafc'), fontSize: 13, borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }}>
+                                                                        <span style={{ flex: '0 0 110px', fontWeight: 600, color: isActive ? '#1a56db' : '#191c1e' }}>{option.vehicle_number}</span>
+                                                                        <span style={{ flex: '0 0 150px', color: isActive ? '#1a56db' : '#374151' }}>{[option.brand, option.model].filter(Boolean).join(' ') || '–'}</span>
+                                                                        <span style={{ flex: 1, color: isActive ? '#1a56db' : '#374151' }}>{option.customer_name || '–'}</span>
+                                                                    </div>
+                                                                </MenuItem>
+                                                            );
+                                                        })}
+                                                    </Menu>
+                                                );
+                                            }}
                                         />
                                     </div>
 
@@ -763,6 +790,158 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                 </div>{/* end 2-col flex */}
                             </div>
 
+                            {/* ── Parts & Labour ── */}
+                            <div style={CARD}>
+                                <SectionTitle icon="bi-box-seam">{t('Parts & Labour')}</SectionTitle>
+
+                                {/* Product search */}
+                                <div style={{ marginBottom: 12 }}>
+                                    <Typeahead
+                                        id="product_search"
+                                        labelKey="name"
+                                        filterBy={() => true}
+                                        open={openProductSearch}
+                                        onChange={() => { setSelectedProducts([]); }}
+                                        options={productOptions}
+                                        placeholder={t('Search products or services to add...')}
+                                        selected={selectedProducts}
+                                        highlightOnlyResult={false}
+                                        onInputChange={(searchTerm) => {
+                                            suggestProducts(searchTerm);
+                                            if (!searchTerm) { setOpenProductSearch(false); setProductOptions([]); }
+                                        }}
+                                        ref={productSearchRef}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Escape") { setProductOptions([]); setOpenProductSearch(false); productSearchRef.current?.clear(); }
+                                        }}
+                                        renderMenu={(results, menuProps) => (
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: 'min(96vw, 672px)', zIndex: 9999, padding: 0 }}>
+                                                <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0, pointerEvents: 'auto' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', background: '#0f172a', padding: '7px 10px', gap: 6 }}>
+                                                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', flex: 1 }}>{t('Select Products / Services')}</span>
+                                                        <button
+                                                            type="button"
+                                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenProductSearch(false); productSearchRef.current?.clear(); setProductOptions([]); }}
+                                                            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.28)', color: '#fff', borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
+                                                        >
+                                                            ✓ {t('Done')}
+                                                        </button>
+                                                    </div>
+                                                </MenuItem>
+                                                {results.map((option, idx) => {
+                                                    const checked = isPartAdded(option.id);
+                                                    return (
+                                                        <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                            <div
+                                                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    if (checked) { removePartByProductId(option.id); } else { addPart(option); }
+                                                                    setOpenProductSearch(true);
+                                                                }}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: checked ? '#e8f0fe' : (idx % 2 === 0 ? '#fff' : '#f8fafc'), cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
+                                                            >
+                                                                <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${checked ? '#004ac6' : '#94a3b8'}`, background: checked ? '#004ac6' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                                    {checked && <i className="bi bi-check" style={{ color: '#fff', fontSize: 12 }}></i>}
+                                                                </div>
+                                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                                    <div style={{ fontWeight: checked ? 700 : 500, fontSize: 13, color: '#191c1e' }}>{option.name}</div>
+                                                                    <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                                                                        {[option.item_code, option.is_service ? t('Service') : t('Product')].filter(Boolean).join(' • ')}
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                                    <div style={{ fontWeight: 700, fontSize: 13, color: '#004ac6' }}>{fmtCurrency(option.retail_price_with_vat)}</div>
+                                                                    <div style={{ fontSize: 10, color: '#6b7280' }}>{t('Excl.')}: {fmtCurrency(option.retail_price)}</div>
+                                                                </div>
+                                                            </div>
+                                                        </MenuItem>
+                                                    );
+                                                })}
+                                            </Menu>
+                                        )}
+                                    />
+                                </div>
+
+                                {/* Parts table */}
+                                {formData.parts && formData.parts.length > 0 && (
+                                    <div style={{ overflowX: 'auto', marginBottom: 10 }}>
+                                        <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', minWidth: 520 }}>
+                                            <thead>
+                                                <tr style={{ background: '#f4f5f7', borderBottom: '2px solid #dfe1e6' }}>
+                                                    <th style={{ textAlign: 'left', padding: '6px 8px', color: '#5e6c84', fontWeight: 700 }}>{t('Part / Service Name')}</th>
+                                                    <th style={{ textAlign: 'center', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 65 }}>{t('Qty')}</th>
+                                                    <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 105 }}>{t('Price (excl.)')}</th>
+                                                    <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 105 }}>{t('Price (incl.)')}</th>
+                                                    <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 95 }}>{t('Total')}</th>
+                                                    <th style={{ width: 32 }}></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {formData.parts.map((part, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: '1px solid #f4f5f7' }}>
+                                                        <td style={{ padding: '5px 8px' }}>
+                                                            <input value={part.name || ''} type="text" onChange={(e) => updatePart(idx, 'name', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 6px', fontSize: 12, width: '100%', outline: 'none' }} />
+                                                        </td>
+                                                        <td style={{ padding: '5px 4px' }}>
+                                                            <input value={part.qty ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'qty', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'center', outline: 'none' }} />
+                                                        </td>
+                                                        <td style={{ padding: '5px 4px' }}>
+                                                            <input value={part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none' }} />
+                                                        </td>
+                                                        <td style={{ padding: '5px 4px' }}>
+                                                            <input value={part.unit_price_with_vat ?? part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price_with_vat', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none', color: '#0052cc' }} />
+                                                        </td>
+                                                        <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: '#172b4d', whiteSpace: 'nowrap' }}>
+                                                            {fmtCurrency(part.total_price_with_vat !== undefined ? part.total_price_with_vat : part.total_price)}
+                                                        </td>
+                                                        <td style={{ padding: '5px 4px', textAlign: 'center' }}>
+                                                            <button type="button" onClick={() => removePart(idx)} style={{ background: 'none', border: 'none', color: '#c62828', cursor: 'pointer', padding: '2px 4px', fontSize: 15, lineHeight: 1 }}>
+                                                                <i className="bi bi-x"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {/* Totals summary */}
+                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 8 }}>
+                                    <div style={{ flex: '0 0 160px' }}>
+                                        <Label>{t('Labour Charge')}</Label>
+                                        <input value={formData.labour_charge ?? ''} type="number" step="0.01" min="0" onChange={(e) => setField("labour_charge", e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '5px 8px', fontSize: 12, width: '100%', outline: 'none' }} />
+                                    </div>
+                                    <div style={{ flex: 1, background: '#172b4d', borderRadius: 6, padding: '10px 14px', color: '#fff', minWidth: 240 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
+                                                <span>{t('Parts (excl. VAT)')}:</span>
+                                                <span>{fmtCurrency(formData.parts_total)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
+                                                <span>{t('Parts (incl. VAT)')}:</span>
+                                                <span>{fmtCurrency(formData.parts_total_with_vat)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
+                                                <span>{t('Labour')}:</span>
+                                                <span>{fmtCurrency(formData.labour_charge)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, color: '#fff', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 6, marginTop: 2 }}>
+                                                <span>{t('Grand Total (excl.)')}:</span>
+                                                <span>{fmtCurrency(formData.total)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#7dd3fc' }}>
+                                                <span>{t('Grand Total (incl.)')}:</span>
+                                                <span>{fmtCurrency(formData.total_with_vat)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* ── Service Details ── */}
                             <div style={CARD}>
                                 <SectionTitle icon="bi-tools">{t('Service Details')}</SectionTitle>
@@ -780,172 +959,6 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                         <textarea value={formData.work_done || ''} onChange={(e) => setField("work_done", e.target.value)} style={{ ...INPUT, minHeight: '80px' }} placeholder={t('Description of work performed')} />
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* ── Parts & Labour ── */}
-                            <div style={CARD}>
-                                <SectionTitle icon="bi-box-seam">{t('Parts & Labour')}</SectionTitle>
-
-                                <div className="row g-2 mb-3">
-                                    <div className="col-md-8">
-                                        <Label>{t('Search & Add Parts / Services')}</Label>
-                                        <Typeahead
-                                            id="product_search"
-                                            labelKey="name"
-                                            filterBy={() => true}
-                                            open={openProductSearch}
-                                            onChange={(selectedItems) => {
-                                                setSelectedProducts([]);
-                                            }}
-                                            options={productOptions}
-                                            placeholder={t('Search products or services to add...')}
-                                            selected={selectedProducts}
-                                            highlightOnlyResult={false}
-                                            onInputChange={(searchTerm) => {
-                                                suggestProducts(searchTerm);
-                                                if (!searchTerm) { setOpenProductSearch(false); setProductOptions([]); }
-                                            }}
-                                            ref={productSearchRef}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Escape") { setProductOptions([]); setOpenProductSearch(false); productSearchRef.current?.clear(); }
-                                            }}
-                                            renderMenu={(results, menuProps) => (
-                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: 'min(96vw, 920px)', zIndex: 9999, padding: 0 }}>
-                                                    <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, pointerEvents: 'auto' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', background: '#0f172a', padding: '7px 12px', gap: 10 }}>
-                                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', flex: 1 }}>{t('Select Products / Services')}</span>
-                                                            <button
-                                                                type="button"
-                                                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenProductSearch(false); productSearchRef.current?.clear(); setProductOptions([]); }}
-                                                                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.28)', color: '#fff', borderRadius: 5, padding: '4px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
-                                                            >
-                                                                ✓ {t('Done')}
-                                                            </button>
-                                                        </div>
-                                                    </MenuItem>
-                                                    {results.map((option, idx) => {
-                                                        let checked = isPartAdded(option.id);
-                                                        return (
-                                                            <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                                <div
-                                                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: checked ? '#eff6ff' : (idx % 2 === 0 ? '#fff' : '#f8fafc'), cursor: 'pointer', borderBottom: '1px solid #e5e7eb' }}
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        checked = !checked;
-                                                                        if (checked) { addPart(option); } else { removePartByProductId(option.id); }
-                                                                        setOpenProductSearch(true);
-                                                                    }}
-                                                                >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={isPartAdded(option.id)}
-                                                                        onChange={() => { }}
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                        style={{ cursor: 'pointer', width: 15, height: 15, flexShrink: 0, accentColor: '#004ac6' }}
-                                                                    />
-                                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                                        <div style={{ fontWeight: 600, fontSize: '13px', color: '#191c1e' }}>{option.name}</div>
-                                                                        <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                                                                            {[option.item_code, option.is_service ? t('Service') : t('Product')].filter(Boolean).join(' • ')}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                                                                            {t('Excl. VAT')}: <strong style={{ color: '#191c1e' }}>{fmtCurrency(option.retail_price)}</strong>
-                                                                        </div>
-                                                                        <div style={{ fontSize: '11px', color: '#004ac6' }}>
-                                                                            {t('Incl. VAT')}: <strong>{fmtCurrency(option.retail_price_with_vat)}</strong>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </MenuItem>
-                                                        );
-                                                    })}
-                                                </Menu>
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <Label>{t('Labour Charge')}</Label>
-                                        <input value={formData.labour_charge ?? ''} type="number" step="0.01" onChange={(e) => setField("labour_charge", e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} style={INPUT} />
-                                    </div>
-                                </div>
-
-                                {formData.parts && formData.parts.length > 0 && (
-                                    <div className="table-responsive">
-                                        <table className="table table-sm table-bordered">
-                                            <thead>
-                                                <tr className="text-center">
-                                                    <th>{t('Part / Service Name')}</th>
-                                                    <th style={{ width: '90px' }}>{t('Qty')}</th>
-                                                    <th style={{ width: '160px' }}>
-                                                        <div>{t('Unit Price')}</div>
-                                                        <div style={{ fontWeight: 400, fontSize: '10px', color: '#6b7280' }}>{t('Excl. VAT')} / {t('Incl. VAT')}</div>
-                                                    </th>
-                                                    <th style={{ width: '150px' }}>
-                                                        <div>{t('Total')}</div>
-                                                        <div style={{ fontWeight: 400, fontSize: '10px', color: '#6b7280' }}>{t('Excl. VAT')} / {t('Incl. VAT')}</div>
-                                                    </th>
-                                                    <th style={{ width: '50px' }}></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {formData.parts.map((part, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>
-                                                            <input value={part.name || ''} type="text" onChange={(e) => updatePart(idx, 'name', e.target.value)} style={INPUT} />
-                                                        </td>
-                                                        <td>
-                                                            <input value={part.qty ?? ''} type="number" step="0.01" onChange={(e) => updatePart(idx, 'qty', e.target.value)} style={INPUT} />
-                                                        </td>
-                                                        <td>
-                                                            <input value={part.unit_price ?? ''} type="number" step="0.01" onChange={(e) => updatePart(idx, 'unit_price', e.target.value)} style={INPUT} placeholder={t('Excl. VAT')} />
-                                                            <input value={part.unit_price_with_vat ?? part.unit_price ?? ''} type="number" step="0.01" onChange={(e) => updatePart(idx, 'unit_price_with_vat', e.target.value)} style={{ ...INPUT, marginTop: '3px', color: '#004ac6' }} placeholder={t('Incl. VAT')} />
-                                                        </td>
-                                                        <td className="text-end" style={{ paddingTop: '10px' }}>
-                                                            <div style={{ fontWeight: 600, color: '#191c1e', fontSize: '13px' }}>{fmtCurrency(part.total_price)}</div>
-                                                            <div style={{ fontWeight: 600, color: '#004ac6', fontSize: '13px', marginTop: '3px' }}>{fmtCurrency(part.total_price_with_vat !== undefined ? part.total_price_with_vat : part.total_price)}</div>
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <Button size="sm" variant="outline-danger" onClick={() => removePart(idx)}>
-                                                                <i className="bi bi-trash"></i>
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                            <tfoot>
-                                                <tr style={{ background: '#f0f2f4' }}>
-                                                    <td colSpan="3" className="text-end"><strong>{t('Parts Total')} ({t('Excl. VAT')}):</strong></td>
-                                                    <td className="text-end"><strong>{fmtCurrency(formData.parts_total)}</strong></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr style={{ background: '#e8f0fe' }}>
-                                                    <td colSpan="3" className="text-end"><strong style={{ color: '#004ac6' }}>{t('Parts Total')} ({t('Incl. VAT')}):</strong></td>
-                                                    <td className="text-end"><strong style={{ color: '#004ac6' }}>{fmtCurrency(formData.parts_total_with_vat)}</strong></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr style={{ background: '#f0f2f4' }}>
-                                                    <td colSpan="3" className="text-end"><strong>{t('Labour Charge')}:</strong></td>
-                                                    <td className="text-end"><strong>{fmtCurrency(formData.labour_charge)}</strong></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr style={{ background: '#d0e1fb' }}>
-                                                    <td colSpan="3" className="text-end"><strong style={{ fontSize: '14px' }}>{t('Grand Total')} ({t('Excl. VAT')}):</strong></td>
-                                                    <td className="text-end"><strong style={{ fontSize: '14px', color: '#004ac6' }}>{fmtCurrency(formData.total)}</strong></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr style={{ background: '#bbd0f5' }}>
-                                                    <td colSpan="3" className="text-end"><strong style={{ fontSize: '14px' }}>{t('Grand Total')} ({t('Incl. VAT')}):</strong></td>
-                                                    <td className="text-end"><strong style={{ fontSize: '14px', color: '#004ac6' }}>{fmtCurrency(formData.total_with_vat)}</strong></td>
-                                                    <td></td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                )}
                             </div>
 
                         </div>

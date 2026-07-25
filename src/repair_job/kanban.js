@@ -37,7 +37,7 @@ const STATUS_COLORS = {
     closed: { bg: '#f0f4f8', color: '#455a64' },
 };
 
-const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChange, onCreateSalesInvoice, onCreateQuotation }, ref) => {
+const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToTable, onListsChange, onCreateSalesInvoice, onCreateQuotation }, ref) => {
     const { t } = useTranslation('common');
     const [lists, setLists] = useState(loadLists);
     const [cardMap, setCardMap] = useState(loadCardMap);
@@ -245,6 +245,27 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
         setDraggingJobId(jobId);
         setDraggingListId(null);
         e.dataTransfer.effectAllowed = 'move';
+
+        // Tilted drag ghost (Trello-style)
+        const card = e.currentTarget;
+        const rect = card.getBoundingClientRect();
+        const ghost = card.cloneNode(true);
+        Object.assign(ghost.style, {
+            position: 'fixed',
+            top: '-9999px',
+            left: '-9999px',
+            width: rect.width + 'px',
+            transform: 'rotate(5deg)',
+            boxShadow: '0 12px 28px rgba(9,30,66,0.4)',
+            borderRadius: '6px',
+            opacity: '1',
+            pointerEvents: 'none',
+            background: '#fff',
+            zIndex: '9999',
+        });
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost, rect.width / 2, 30);
+        setTimeout(() => document.body.removeChild(ghost), 0);
     }
 
     // List drag
@@ -281,13 +302,23 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
         if (dragJobId.current) {
             const jobId = dragJobId.current;
             moveJob(jobId, listId);
-            // Auto-close when moved to the final list
-            if (lists.length > 0 && listId === lists[lists.length - 1].id) {
+            if (lists.length > 0) {
+                const isLastList = listId === lists[lists.length - 1].id;
                 const job = jobs.find(j => j.id === jobId);
-                if (job && job.status !== 'closed') {
-                    patchJob(jobId, { status: 'closed' }).then(updated => {
-                        if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
-                    });
+                if (isLastList) {
+                    // Auto-close when moved to the final list
+                    if (job && job.status !== 'closed') {
+                        patchJob(jobId, { status: 'closed' }).then(updated => {
+                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
+                        });
+                    }
+                } else {
+                    // Auto-reopen when moved away from the final list
+                    if (job && job.status === 'closed') {
+                        patchJob(jobId, { status: 'open' }).then(updated => {
+                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'open' } : j));
+                        });
+                    }
                 }
             }
         } else if (dragListId.current && dragListId.current !== listId) {
@@ -458,15 +489,25 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onListsChan
                         <i className="bi bi-file-earmark-text"></i><span>{t('Create Quotation')}</span>
                     </button>
                 )}
-                <button type="button" onClick={onClose}
-                    style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <i className="bi bi-arrow-left"></i>
-                    <span>{t('Back')}</span>
-                </button>
-                <button type="button" onClick={onClose}
-                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
-                    ×
-                </button>
+                {onSwitchToTable ? (
+                    <button type="button" onClick={onSwitchToTable}
+                        style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.35)', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="bi bi-table"></i>
+                        <span>{t('Table')}</span>
+                    </button>
+                ) : (
+                    <>
+                        <button type="button" onClick={onClose}
+                            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <i className="bi bi-arrow-left"></i>
+                            <span>{t('Back')}</span>
+                        </button>
+                        <button type="button" onClick={onClose}
+                            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: '#fff', borderRadius: 5, padding: '5px 10px', cursor: 'pointer', fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                            ×
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* Filter bar */}

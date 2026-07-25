@@ -219,6 +219,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/repair-jobs-board">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/repair-jobs">
             <Dashboard />
           </Route>

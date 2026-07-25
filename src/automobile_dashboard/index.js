@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from "react"
 import { Spinner } from "react-bootstrap";
 import { useTranslation } from 'react-i18next';
 import { Chart } from "react-google-charts";
-import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { tooltipHtml, onChartSelect } from '../business_dashboard/charts/chartTooltipSetup';
 import { generateInfoPdf, safeName } from '../utils/pdfGenerator';
 import { uploadPdfForShare } from '../utils/pdfShare';
@@ -427,11 +426,12 @@ function AutoMobileDashboard() {
     }, [storeId, appliedFrom, appliedTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function loadDashboard() {
-        const params = { store_id: storeId };
-        if (appliedFrom) params.from_month = appliedFrom;
-        if (appliedTo)   params.to_month   = appliedTo;
+        const params = new URLSearchParams();
+        params.set('search[store_id]', storeId);
+        if (appliedFrom) params.set('from_month', appliedFrom);
+        if (appliedTo)   params.set('to_month',   appliedTo);
         setIsLoading(true);
-        fetch(`/v1/automobile/dashboard?${ObjectToSearchQueryParams(params)}`, { headers: authHeaders() })
+        fetch(`/v1/automobile/dashboard?${params.toString()}`, { headers: authHeaders() })
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson ? await response.json() : null;
@@ -464,10 +464,14 @@ function AutoMobileDashboard() {
         return active.length ? active[active.length - 1].month : "";
     }, [monthly]);
 
-    const chartFilters = useMemo(() => ({
-        ...(appliedFrom ? { From: appliedFrom } : {}),
-        ...(appliedTo   ? { To:   appliedTo   } : {}),
-    }), [appliedFrom, appliedTo]);
+    const chartFilters = useMemo(() => {
+        if (!appliedFrom && !appliedTo) return {};
+        if (appliedFrom && appliedTo && appliedFrom === appliedTo) return { Date: appliedFrom };
+        return {
+            ...(appliedFrom ? { From: appliedFrom } : {}),
+            ...(appliedTo   ? { To:   appliedTo   } : {}),
+        };
+    }, [appliedFrom, appliedTo]);
 
     const monthlyPLData = useMemo(() => {
         const header = [
