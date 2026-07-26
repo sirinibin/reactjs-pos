@@ -14,7 +14,9 @@ export default function SidebarSettings() {
     const warehouseEnabled   = !!storeSettings?.enable_warehouse_module;
     const automobileEnabled  = !!storeSettings?.enable_automobile_module;
     const employeeEnabled    = !!storeSettings?.enable_employee_module;
-    const servicesEnabled    = !!storeSettings?.enable_services;
+    const servicesEnabled        = !!storeSettings?.enable_services;
+    const purchaseOrderEnabled   = !!storeSettings?.enable_purchase_order_module;
+    const purchaseRequestEnabled = !!storeSettings?.enable_purchase_request_module;
 
     useEffect(() => { setItems(loadSidebarConfig()); }, []);
 
@@ -116,6 +118,8 @@ export default function SidebarSettings() {
                     if (meta.requiresAutomobileModule && !automobileEnabled) return null;
                     if (meta.requiresEmployeeModule && !employeeEnabled) return null;
                     if (meta.requiresServices && !servicesEnabled) return null;
+                    if (meta.requiresPurchaseOrderModule && !purchaseOrderEnabled) return null;
+                    if (meta.purchaseRequestOnly && !purchaseRequestEnabled) return null;
                     const isLanding  = item.id === landingId && item.visible;
                     const isDragging = draggingId === item.id;
 
@@ -155,7 +159,9 @@ export default function SidebarSettings() {
                                 {meta.warehouseOnly            && <span className="badge bg-info text-dark"    style={{ fontSize: "0.6rem" }}>Warehouse</span>}
                                 {meta.requiresAutomobileModule && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Automobiles</span>}
                                 {meta.requiresEmployeeModule   && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Employees</span>}
-                                {meta.requiresServices         && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Services</span>}
+                                {meta.requiresServices             && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Services</span>}
+                                {meta.requiresPurchaseOrderModule  && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Purchase Orders</span>}
+                                {meta.purchaseRequestOnly          && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Purchase Requests</span>}
                                 {isLanding && (
                                     <span className="badge bg-success" style={{ fontSize: "0.6rem" }}>
                                         <i className="bi bi-house-fill me-1" />Landing
