@@ -9,6 +9,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import VehicleCreate from "../vehicle/create.js";
+import Products from "../utils/products.js";
 
 const pageBg = "#f8fafc";
 const borderColor = "#c3c6d7";
@@ -53,11 +54,14 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const [isVehicleLoading, setIsVehicleLoading] = useState(false);
     const [discount, setDiscount] = useState(0);
     const [shipping, setShipping] = useState(0);
+    const [vehicleReloadKey, setVehicleReloadKey] = useState(0);
     const customerSearchRef = useRef();
     const productSearchRef = useRef();
     const vehicleCreateRef = useRef();
+    const productsRef = useRef();
     const paymentRowsRef = useRef();
     const timerRef = useRef();
+    const reCalculateRef = useRef(null);
     const storeId = localStorage.getItem("store_id");
     const headers = useMemo(() => ({ "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") }), []);
 
@@ -74,7 +78,6 @@ const QuotationType3Form = forwardRef((props, ref) => {
             }
             setFormData({ ...fd });
             setSelectedProducts(prefill?.products || []);
-            setSelectedCustomers(prefill?.customer ? [prefill.customer] : []);
             setVehicleOptions([]);
             setSelectedVehicle(prefill?.vehicle || null);
             setDiscount(0);
@@ -85,8 +88,22 @@ const QuotationType3Form = forwardRef((props, ref) => {
             if (id) {
                 loadRecord(id);
                 setIsUpdateForm(true);
-            } else if (prefill?.products?.length) {
-                setTimeout(() => reCalculate(prefill.products), 200);
+            } else {
+                if (prefill?.products?.length) {
+                    setTimeout(() => reCalculateRef.current?.(prefill.products), 300);
+                }
+                if (prefill?.customer_id) {
+                    const customerSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                    fetch(`/v1/customer/${prefill.customer_id}?search[store_id]=${storeId}&select=${customerSelect}`, { headers })
+                        .then(cr => cr.json())
+                        .then(data => setSelectedCustomers(data?.result ? [data.result] : (prefill.customer ? [prefill.customer] : [])))
+                        .catch(() => setSelectedCustomers(prefill.customer ? [prefill.customer] : []));
+                } else {
+                    setSelectedCustomers(prefill?.customer ? [prefill.customer] : []);
+                }
+                if (prefill?.vehicle_id) {
+                    setVehicleReloadKey(k => k + 1);
+                }
             }
             setShow(true);
         },
@@ -100,12 +117,22 @@ const QuotationType3Form = forwardRef((props, ref) => {
             if (!r.result) return;
             const q = r.result;
             const fd = { ...q, store_id: storeId };
+            // date_str is bson:"-" so GET doesn't return it; use the stored date field
+            if (!fd.date_str && q.date) fd.date_str = q.date;
             if (!fd.payments_input?.length) fd.payments_input = [makePayment()];
+            // Populate payment date_str from date if missing
+            fd.payments_input = fd.payments_input.map(p => ({ ...p, date_str: p.date_str || p.date || new Date().toISOString() }));
             setFormData(fd);
             setDiscount(q.discount || 0);
             setShipping(q.shipping_handling_fees || 0);
             if (q.products) setSelectedProducts(q.products.map(p => ({ ...p, product_id: p.product_id || p.id })));
-            if (q.customer_id) setSelectedCustomers([{ id: q.customer_id, name: q.customer_name }]);
+            if (q.customer_id) {
+                const customerSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                fetch(`/v1/customer/${q.customer_id}?search[store_id]=${storeId}&select=${customerSelect}`, { headers })
+                    .then(cr => cr.json())
+                    .then(data => setSelectedCustomers(data?.result ? [data.result] : [{ id: q.customer_id, name: q.customer_name }]))
+                    .catch(() => setSelectedCustomers([{ id: q.customer_id, name: q.customer_name }]));
+            }
             if (q.vehicle_id) setSelectedVehicle({ id: q.vehicle_id, ...q.vehicle_snapshot });
         } catch (e) { console.error(e); }
     }
@@ -115,53 +142,105 @@ const QuotationType3Form = forwardRef((props, ref) => {
         const customerId = formData.customer_id;
         if (!customerId) { setVehicleOptions([]); setSelectedVehicle(null); return; }
         setIsVehicleLoading(true);
-        const qs = ObjectToSearchQueryParams({ "search[customer_id]": customerId, store_id: storeId, limit: 1000, select: "id,customer_id,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km" });
-        fetch(`/v1/vehicle?${qs}`, { headers })
+        const vehicleUrl = `/v1/vehicle?limit=1000&select=id,customer_id,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km&search[customer_id]=${encodeURIComponent(customerId)}&search[store_id]=${encodeURIComponent(storeId)}`;
+        fetch(vehicleUrl, { headers })
             .then(r => r.json()).then(data => {
                 const list = data?.result || [];
                 setVehicleOptions(list);
                 if (formData.vehicle_id) {
-                    const m = list.find(v => v.id === formData.vehicle_id);
-                    if (m) setSelectedVehicle(m);
+                    const matched = list.find(v => v.id === formData.vehicle_id);
+                    if (matched) {
+                        setSelectedVehicle(matched);
+                    } else if (formData.vehicle_snapshot) {
+                        const snapVehicle = { id: formData.vehicle_id, ...formData.vehicle_snapshot };
+                        setVehicleOptions(prev => [snapVehicle, ...prev.filter(v => v.id !== formData.vehicle_id)]);
+                        setSelectedVehicle(snapVehicle);
+                    }
                 }
-            }).catch(() => {}).finally(() => setIsVehicleLoading(false));
+            }).catch(() => {
+                if (formData.vehicle_id && formData.vehicle_snapshot) {
+                    const snapVehicle = { id: formData.vehicle_id, ...formData.vehicle_snapshot };
+                    setVehicleOptions([snapVehicle]);
+                    setSelectedVehicle(snapVehicle);
+                }
+            }).finally(() => setIsVehicleLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [formData.customer_id]);
+    }, [formData.customer_id, vehicleReloadKey]);
 
     function setVehicleSelection(v) {
         formData.vehicle_id = v?.id || null;
         formData.vehicle_snapshot = buildVehicleSnapshot(v);
         setSelectedVehicle(v || null);
         setFormData({ ...formData });
+        // For new quotations, fetch latest km from records to pre-fill km_driven
+        if (!formData.id && v?.id) fetchLatestKmForVehicle(v.id);
+    }
+
+    async function fetchLatestKmForVehicle(vehicleId) {
+        const qs = `search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=1&sort=-date&select=id,km_driven,date`;
+        const [orderData, quotData] = await Promise.all([
+            fetch(`/v1/order?${qs}`, { headers }).then(r => r.json()).catch(() => ({})),
+            fetch(`/v1/quotation?${qs}`, { headers }).then(r => r.json()).catch(() => ({})),
+        ]);
+        const latest = [orderData?.result?.[0], quotData?.result?.[0]]
+            .filter(r => r?.km_driven != null && r.km_driven !== '')
+            .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        if (latest?.km_driven != null) {
+            setFormData(prev => ({ ...prev, km_driven: parseFloat(latest.km_driven) || prev.km_driven }));
+        }
     }
 
     function reloadVehicles(selectId) {
         if (!formData.customer_id) return;
-        const qs = ObjectToSearchQueryParams({ "search[customer_id]": formData.customer_id, store_id: storeId, limit: 1000, select: "id,customer_id,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km" });
-        fetch(`/v1/vehicle?${qs}`, { headers }).then(r => r.json()).then(data => {
+        const vehicleUrl = `/v1/vehicle?limit=1000&select=id,customer_id,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km&search[customer_id]=${encodeURIComponent(formData.customer_id)}&search[store_id]=${encodeURIComponent(storeId)}`;
+        fetch(vehicleUrl, { headers }).then(r => r.json()).then(data => {
             const list = data?.result || [];
             setVehicleOptions(list);
             if (selectId) { const v = list.find(x => x.id === selectId); if (v) setVehicleSelection(v); }
         }).catch(() => {});
     }
 
-    function suggestCustomers(term) {
-        if (!term || term.length < 2) { setCustomerOptions([]); return; }
-        const qs = ObjectToSearchQueryParams({ name: term, store_id: storeId, limit: 20, select: "id,code,name,name_in_arabic,phone,vat_no,credit_balance,credit_limit,stores,use_remarks_in_sales,remarks" });
-        fetch(`/v1/customer?${qs}`, { headers }).then(r => r.json()).then(data => {
-            const list = data?.result || [];
-            setCustomerOptions(list);
-        }).catch(() => {});
+    async function suggestCustomers(searchTerm) {
+        setCustomerOptions([]);
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
+        const qs = ObjectToSearchQueryParams({ query: searchTerm, store_id: storeId });
+        const select = "select=id,code,credit_limit,credit_balance,remarks,use_remarks_in_sales,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+        try {
+            const r = await fetch(`/v1/customer?limit=100&${select}&${qs}`, { headers });
+            const data = await r.json();
+            setCustomerOptions(data?.result || []);
+        } catch (e) {}
     }
 
-    function suggestProducts(term) {
-        if (!term || term.length < 2) { setProductOptions([]); return; }
-        const sel = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.purchase_unit_price_with_vat,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock`;
-        const qs = ObjectToSearchQueryParams({ name: term, store_id: storeId, limit: 30 }) + "&" + sel;
-        fetch(`/v1/product?${qs}`, { headers }).then(r => r.json()).then(data => {
-            const list = data?.result || [];
-            setProductOptions(list);
-        }).catch(() => {});
+    async function suggestProducts(searchTerm) {
+        setProductOptions([]);
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
+        const apiTerm = searchTerm
+            .replace(/([a-zA-Z؀-ۿ]{2,})(\d{2,})/g, "$1 $2")
+            .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
+            .split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+        const qs = ObjectToSearchQueryParams({ search_text: apiTerm || searchTerm, store_id: storeId });
+        const select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.purchase_unit_price_with_vat,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock`;
+        try {
+            const r = await fetch(`/v1/product?${select}&${qs}&limit=100&sort=-country_name`, { headers });
+            const data = await r.json();
+            setProductOptions(data?.result || []);
+        } catch (e) {}
+    }
+
+    function openProductsModal() { productsRef.current?.open(true); }
+    function openServicesModal() { productsRef.current?.open(true, null, null, true); }
+    function handleSelectedProductsFromModal(selected) {
+        const newProds = selected.map(option => {
+            const ps = option.product_stores?.[storeId] || {};
+            return { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: parseFloat(ps.retail_unit_price) || 0, unit_price_with_vat: parseFloat(ps.retail_unit_price_with_vat) || 0, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service };
+        });
+        const updated = [...newProds, ...selectedProducts];
+        setSelectedProducts(updated);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(updated), 150);
     }
 
     function isProductAdded(id) { return selectedProducts.find(p => !p.deleted && (p.product_id === id || p.id === id)); }
@@ -190,11 +269,14 @@ const QuotationType3Form = forwardRef((props, ref) => {
         try {
             const r = await fetch("/v1/quotation/calculate-net-total", { method: "POST", headers, body: JSON.stringify(body) }).then(r => r.json());
             if (r?.result) {
-                setFormData(prev => ({ ...prev, ...r.result, products: prev.products }));
+                setFormData(prev => ({ ...prev, ...r.result, products: prev.products, id: prev.id, date_str: prev.date_str }));
             }
         } catch (e) { console.error(e); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData, selectedProducts, discount, shipping, headers]);
+
+    // Keep ref in sync so open()'s setTimeout always calls the latest version
+    useEffect(() => { reCalculateRef.current = reCalculate; }, [reCalculate]);
 
     async function handleCreate(e) {
         if (e) e.preventDefault();
@@ -243,9 +325,11 @@ const QuotationType3Form = forwardRef((props, ref) => {
             if (props.showToastMessage) props.showToastMessage(formData.id ? t("Quotation updated successfully!") : t("Quotation created successfully!"), "success");
             if (props.refreshList) props.refreshList();
             if (!formData.id && r.result?.id) {
-                setFormData(prev => ({ ...prev, id: r.result.id, code: r.result.code }));
-                setIsUpdateForm(true);
+                setShow(false);
                 if (props.openDetailsView) props.openDetailsView(r.result.id);
+            } else if (formData.id) {
+                setShow(false);
+                if (props.openDetailsView) props.openDetailsView(formData.id);
             }
             // Update vehicle km from latest
             if (formData.vehicle_id) updateVehicleKm(formData.vehicle_id);
@@ -286,10 +370,13 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     const vehiclePlaceholder = !formData.customer_id ? t("Select customer first") : isVehicleLoading ? t("Loading...") : vehicleOptions.length === 0 ? t("No vehicles found") : t("Select vehicle");
 
+    const activeCustomer = selectedCustomers[0];
+    const customerStore = activeCustomer?.stores?.[storeId] || {};
+
     return (
         <>
-        <style>{`.qt3-modal-wrap { z-index: 1070 !important; }`}</style>
-        <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="qt3-modal" className="qt3-modal-wrap">
+        <style>{`.qt3-modal-wrap { z-index: 1070 !important; } .pw-modal-wrap { z-index: 1080 !important; } .products-modal-wrap { z-index: 1090 !important; }`}</style>
+        <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="qt3-modal" className="qt3-modal-wrap">
             <Modal.Header style={{ backgroundColor: "#fff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 700, fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e" }}>
                     {isUpdateForm ? `${t("Update")} #${formData.code}` : (isInvoice ? t("Create Invoice (Workshop)") : t("Create Quotation (Workshop)"))}
@@ -337,7 +424,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                     setSelectedCustomers(items);
                                                     setCustomerOptions([]);
                                                 }}
-                                                options={customerOptions} selected={selectedCustomers} placeholder={t("Search customer...")} highlightOnlyResult={true}
+                                                options={customerOptions} selected={selectedCustomers} placeholder={t("Search customer...")} highlightOnlyResult={false}
                                                 onInputChange={(t) => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => suggestCustomers(t), 300); }}
                                                 onKeyDown={(e) => { if (e.key === "Escape") { setSelectedCustomers([]); setCustomerOptions([]); customerSearchRef.current?.clear(); } }}
                                                 renderMenu={(results, menuProps, state) => {
@@ -417,10 +504,10 @@ const QuotationType3Form = forwardRef((props, ref) => {
                             <div style={cardStyle}>
                                 <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Products & Services")}</span>
                                 <div className="d-flex gap-2 flex-wrap" style={{ marginBottom: "12px" }}>
-                                    <Button variant="primary" size="sm" type="button" onClick={() => props.openProducts?.()}>
+                                    <Button variant="primary" size="sm" type="button" onClick={openProductsModal}>
                                         <i className="bi bi-list me-1"></i>{t("Products")}
                                     </Button>
-                                    <Button variant="light" size="sm" className="border" type="button" onClick={() => props.openServices?.()}>
+                                    <Button variant="light" size="sm" className="border" type="button" onClick={openServicesModal}>
                                         <i className="bi bi-list me-1"></i>{t("Services")}
                                     </Button>
                                 </div>
@@ -443,7 +530,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                 const words = state.text.toLowerCase().split(" ").filter(Boolean);
                                                 return (
                                                     <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: "min(96vw, 480px)", zIndex: 9999, padding: 0 }}>
-                                                        <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0 }}>
+                                                        <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0, pointerEvents: "auto" }}>
                                                             <div style={{ display: "flex", alignItems: "center", background: "#0f172a", padding: "7px 10px", gap: 6 }}>
                                                                 <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", flex: 1 }}>{t("Select Products / Services")}</span>
                                                                 <button type="button" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }} onClick={e => { e.preventDefault(); e.stopPropagation(); productSearchRef.current?.clear(); setProductOptions([]); }} style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.28)", color: "#fff", borderRadius: 5, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✓ {t("Done")}</button>
@@ -510,15 +597,15 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                             <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={v => v} />
                                                         </td>
                                                         <td style={{ padding: "3px 6px" }}>
-                                                            <input type="number" min="0" className="form-control form-control-sm" value={product.quantity}
+                                                            <input type="number" min="0" step="any" className="form-control form-control-sm" value={product.quantity}
                                                                 onChange={e => { selectedProducts[liveIndex].quantity = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0); setSelectedProducts([...selectedProducts]); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculate(), 150); }} />
                                                         </td>
                                                         <td style={{ padding: "3px 6px" }}>
-                                                            <input type="number" min="0" className="form-control form-control-sm" style={{ width: "90px" }} value={product.unit_price}
+                                                            <input type="number" min="0" step="any" className="form-control form-control-sm" style={{ width: "90px" }} value={product.unit_price}
                                                                 onChange={e => { const v = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0); selectedProducts[liveIndex].unit_price = v; const vat = 1 + ((parseFloat(formData.vat_percent) || 0) / 100); selectedProducts[liveIndex].unit_price_with_vat = v === "" ? "" : trimTo2Decimals((parseFloat(v) || 0) * vat); setSelectedProducts([...selectedProducts]); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculate(), 150); }} />
                                                         </td>
                                                         <td style={{ padding: "3px 6px" }}>
-                                                            <input type="number" min="0" className="form-control form-control-sm" style={{ width: "90px" }} value={product.unit_price_with_vat}
+                                                            <input type="number" min="0" step="any" className="form-control form-control-sm" style={{ width: "90px" }} value={product.unit_price_with_vat}
                                                                 onChange={e => { const v = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0); selectedProducts[liveIndex].unit_price_with_vat = v; const vat = 1 + ((parseFloat(formData.vat_percent) || 0) / 100); selectedProducts[liveIndex].unit_price = v === "" ? "" : trimTo2Decimals((parseFloat(v) || 0) / vat); setSelectedProducts([...selectedProducts]); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculate(), 150); }} />
                                                         </td>
                                                         <td style={{ padding: "3px 6px", fontWeight: 700, color: "#0f172a" }}>
@@ -559,7 +646,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                                 <DatePicker selected={payment.date_str ? new Date(payment.date_str) : null} onChange={v => { formData.payments_input[pi].date_str = v; setFormData({ ...formData }); }} className="form-control form-control-sm" dateFormat="d MMM yy h:mm aa" showTimeSelect timeIntervals={1} placeholderText={t("Date")} />
                                                             </td>
                                                             <td style={{ padding: "3px 6px" }}>
-                                                                <input type="number" min="0" className="form-control form-control-sm text-end" value={payment.amount || ""} placeholder={t("Amount")} onChange={e => { formData.payments_input[pi].amount = e.target.value ? parseFloat(e.target.value) : ""; setFormData({ ...formData }); }} />
+                                                                <input type="number" min="0" step="any" className="form-control form-control-sm text-end" value={payment.amount || ""} placeholder={t("Amount")} onChange={e => { formData.payments_input[pi].amount = e.target.value ? parseFloat(e.target.value) : ""; setFormData({ ...formData }); }} />
                                                             </td>
                                                             <td style={{ padding: "3px 6px" }}>
                                                                 <select className={`form-select form-select-sm${errors[`payment_method_${index}`] ? " is-invalid" : ""}`} style={{ fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5", border: `1px solid ${borderColor}` }}
@@ -606,6 +693,85 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
                         {/* RIGHT ASIDE */}
                         <aside style={{ width: "100%", maxWidth: "320px", flexShrink: 0, overflowY: "auto", paddingTop: "10px" }}>
+
+                            {/* Customer & Vehicle info card */}
+                            {activeCustomer && (
+                                <div style={{ background: "rgba(0,74,198,0.04)", border: "1px solid #c7d7f5", borderRadius: "8px", padding: "12px 14px", marginBottom: "10px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
+                                        <i className="bi bi-person-circle" style={{ color: "#004ac6", fontSize: 16 }}></i>
+                                        {activeCustomer.code && (
+                                            <span style={{ background: "#dbeafe", color: "#1e40af", borderRadius: 4, padding: "2px 7px", fontSize: 10, fontWeight: 700 }}>{activeCustomer.code}</span>
+                                        )}
+                                        <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e" }}>{activeCustomer.name}</span>
+                                    </div>
+                                    {activeCustomer.name_in_arabic && (
+                                        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 4 }}>{activeCustomer.name_in_arabic}</div>
+                                    )}
+                                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12, color: "#374151", marginBottom: 5 }}>
+                                        {activeCustomer.phone && (
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                                <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone}
+                                            </span>
+                                        )}
+                                        {activeCustomer.phone2 && (
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                                <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone2}
+                                            </span>
+                                        )}
+                                        {activeCustomer.vat_no && (
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                                <i className="bi bi-receipt" style={{ color: "#6b7280", fontSize: 11 }}></i>
+                                                <span style={{ color: "#6b7280" }}>VAT:</span>
+                                                <strong>{activeCustomer.vat_no}</strong>
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 6, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                            <i className="bi bi-wallet2" style={{ color: "#004ac6", fontSize: 12 }}></i>
+                                            <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Balance")}:</span>
+                                            <strong style={{ fontSize: 14, color: (parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance) || 0) > 0 ? "#dc2626" : "#16a34a" }}>
+                                                {parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance ?? 0).toFixed(2)}
+                                            </strong>
+                                        </span>
+                                        {parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit) > 0 && (
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                                <i className="bi bi-shield-check" style={{ color: "#6b7280", fontSize: 12 }}></i>
+                                                <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Limit")}:</span>
+                                                <strong style={{ fontSize: 13, color: "#374151" }}>{parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit).toFixed(2)}</strong>
+                                            </span>
+                                        )}
+                                    </div>
+                                    {selectedVehicle && (
+                                        <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,135,90,0.05)", border: "1px solid #b3e0cc", borderRadius: 6 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                                <i className="bi bi-car-front" style={{ color: "#00875a", fontSize: 14 }}></i>
+                                                <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e", letterSpacing: "0.04em" }}>
+                                                    {selectedVehicle.vehicle_number || [selectedVehicle.brand, selectedVehicle.model].filter(Boolean).join(" ") || "—"}
+                                                </span>
+                                                {selectedVehicle.vehicle_number && (selectedVehicle.brand || selectedVehicle.model) && (
+                                                    <span style={{ fontSize: 12, color: "#5e6c84" }}>{selectedVehicle.brand} {selectedVehicle.model}</span>
+                                                )}
+                                            </div>
+                                            {selectedVehicle.year && (
+                                                <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{t("Year")}: <strong>{selectedVehicle.year}</strong></div>
+                                            )}
+                                            {(formData.km_driven != null && formData.km_driven !== '') ? (
+                                                <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 5, background: "#f0faf5", border: "1px solid #b3e0cc", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
+                                                    <i className="bi bi-speedometer2" style={{ color: "#00875a", fontSize: 11 }}></i>
+                                                    <strong>{parseFloat(formData.km_driven).toLocaleString()}</strong> km
+                                                </div>
+                                            ) : selectedVehicle.current_km ? (
+                                                <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 5, background: "#f0faf5", border: "1px solid #b3e0cc", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
+                                                    <i className="bi bi-speedometer2" style={{ color: "#00875a", fontSize: 11 }}></i>
+                                                    <strong>{parseFloat(selectedVehicle.current_km).toLocaleString()}</strong> km
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Bill Summary */}
                             <div style={cardStyle}>
                                 <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Bill Summary")}</span>
@@ -613,11 +779,11 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                 <div style={{ display: "grid", gap: "8px", marginBottom: "10px" }}>
                                     <div>
                                         <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Discount (excl. VAT)")}</label>
-                                        <input type="number" min="0" className="form-control form-control-sm" value={discount || ""} onChange={e => { const v = e.target.value ? parseFloat(e.target.value) : 0; setDiscount(v); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculate(), 150); }} />
+                                        <input type="number" min="0" step="any" className="form-control form-control-sm" value={discount || ""} onChange={e => { const v = e.target.value ? parseFloat(e.target.value) : 0; setDiscount(v); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculateRef.current?.(), 150); }} />
                                     </div>
                                     <div>
                                         <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Shipping / Handling")}</label>
-                                        <input type="number" min="0" className="form-control form-control-sm" value={shipping || ""} onChange={e => { const v = e.target.value ? parseFloat(e.target.value) : 0; setShipping(v); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculate(), 150); }} />
+                                        <input type="number" min="0" step="any" className="form-control form-control-sm" value={shipping || ""} onChange={e => { const v = e.target.value ? parseFloat(e.target.value) : 0; setShipping(v); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => reCalculateRef.current?.(), 150); }} />
                                     </div>
                                     <div>
                                         <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Remarks")}</label>
@@ -683,6 +849,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
         </Modal>
 
         <VehicleCreate ref={vehicleCreateRef} refreshList={() => {}} openDetailsView={newId => reloadVehicles(newId)} />
+        <Products ref={productsRef} onSelectProducts={handleSelectedProductsFromModal} showToastMessage={props.showToastMessage} />
         </>
     );
 });

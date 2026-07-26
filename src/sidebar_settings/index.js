@@ -11,7 +11,10 @@ export default function SidebarSettings() {
     const storeSettings = (() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     })();
-    const warehouseEnabled = !!storeSettings?.enable_warehouse_module;
+    const warehouseEnabled   = !!storeSettings?.enable_warehouse_module;
+    const automobileEnabled  = !!storeSettings?.enable_automobile_module;
+    const employeeEnabled    = !!storeSettings?.enable_employee_module;
+    const servicesEnabled    = !!storeSettings?.enable_services;
 
     useEffect(() => { setItems(loadSidebarConfig()); }, []);
 
@@ -110,6 +113,9 @@ export default function SidebarSettings() {
                     if (!meta) return null;
                     if (meta.adminOnly && !isAdmin) return null;
                     if (meta.warehouseOnly && !warehouseEnabled) return null;
+                    if (meta.requiresAutomobileModule && !automobileEnabled) return null;
+                    if (meta.requiresEmployeeModule && !employeeEnabled) return null;
+                    if (meta.requiresServices && !servicesEnabled) return null;
                     const isLanding  = item.id === landingId && item.visible;
                     const isDragging = draggingId === item.id;
 
@@ -145,8 +151,11 @@ export default function SidebarSettings() {
 
                             {/* Badges */}
                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                                {meta.adminOnly     && <span className="badge bg-warning text-dark" style={{ fontSize: "0.6rem" }}>Admin</span>}
-                                {meta.warehouseOnly && <span className="badge bg-info text-dark"    style={{ fontSize: "0.6rem" }}>Warehouse</span>}
+                                {meta.adminOnly                && <span className="badge bg-warning text-dark" style={{ fontSize: "0.6rem" }}>Admin</span>}
+                                {meta.warehouseOnly            && <span className="badge bg-info text-dark"    style={{ fontSize: "0.6rem" }}>Warehouse</span>}
+                                {meta.requiresAutomobileModule && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Automobiles</span>}
+                                {meta.requiresEmployeeModule   && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Employees</span>}
+                                {meta.requiresServices         && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Services</span>}
                                 {isLanding && (
                                     <span className="badge bg-success" style={{ fontSize: "0.6rem" }}>
                                         <i className="bi bi-house-fill me-1" />Landing

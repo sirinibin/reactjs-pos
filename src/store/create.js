@@ -5955,6 +5955,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 >
                                                     <option value="type1">Type 1 (Default)</option>
                                                     <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
                                                 </select>
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation creation and update form</div>
                                             </div>
@@ -5967,6 +5968,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 >
                                                     <option value="type1">Type 1 (Default)</option>
                                                     <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
                                                 </select>
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation sales return creation and update form</div>
                                             </div>

@@ -102,6 +102,7 @@ const Products = forwardRef((props, ref) => {
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
                 dialogAs={DraggableDialog}
+                className="products-modal-wrap"
             >
                 <Modal.Header>
                     <Modal.Title>

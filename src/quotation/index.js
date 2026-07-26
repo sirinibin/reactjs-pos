@@ -908,7 +908,7 @@ function QuotationIndex(props) {
       </Modal>
       {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
       {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
-      {showQuotationCreate && (store.settings?.enable_automobile_module
+      {showQuotationCreate && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
         ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
         : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       )}

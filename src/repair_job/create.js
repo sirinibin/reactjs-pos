@@ -13,7 +13,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
             const now = new Date();
             formData = {
                 date: now.toISOString(),
-                status: "open",
+                status: loadKanbanLists()[0]?.id || "open",
                 labour_charge: 0,
                 parts: [],
                 parts_total: 0,
@@ -21,7 +21,6 @@ const RepairJobCreate = forwardRef((props, ref) => {
                 km: 0,
             };
             setFormData({ ...formData });
-            setSelectedListId(loadKanbanLists()[0]?.id || '');
             setErrors({});
             selectedCustomers = [];
             setSelectedCustomers([]);
@@ -70,7 +69,6 @@ const RepairJobCreate = forwardRef((props, ref) => {
     const technicianSearchRef = useRef();
 
     const [kanbanLists] = useState(loadKanbanLists);
-    const [selectedListId, setSelectedListId] = useState(() => loadKanbanLists()[0]?.id || '');
 
     // Product search
     const [productOptions, setProductOptions] = useState([]);
@@ -197,15 +195,15 @@ const RepairJobCreate = forwardRef((props, ref) => {
                 } else {
                     if (props.showToastMessage) props.showToastMessage(t("Repair job created successfully!"), "success");
                 }
-                if (!formData.id && selectedListId && data.result?.id) {
+                if (data.result?.id && formData.status) {
                     const map = loadCardMap();
-                    map[data.result.id] = selectedListId;
+                    map[data.result.id] = formData.status;
                     saveCardMap(map);
                 }
                 if (props.refreshList) props.refreshList();
                 handleClose();
                 if (props.openDetailsView) props.openDetailsView(data.result.id);
-                if (props.onCreated) props.onCreated(data.result.id, selectedListId);
+                if (props.onCreated) props.onCreated(data.result.id, formData.status);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -455,7 +453,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                     </div>
                                     <div className="col-md-4">
                                         <Label>{t('Status')}</Label>
-                                        <select value={selectedListId} onChange={(e) => setSelectedListId(e.target.value)} style={INPUT}>
+                                        <select value={formData.status || kanbanLists[0]?.id || ''} onChange={(e) => setField("status", e.target.value)} style={INPUT}>
                                             {kanbanLists.map(l => (
                                                 <option key={l.id} value={l.id}>{l.name}</option>
                                             ))}
@@ -502,6 +500,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 }
                                                 const c = selectedItems[0];
                                                 formData.customer_id = c.id;
+                                                formData.customer_name = c.name || "";
                                                 setFormData({ ...formData });
                                                 selectedCustomers = [...selectedItems];
                                                 setSelectedCustomers([...selectedCustomers]);

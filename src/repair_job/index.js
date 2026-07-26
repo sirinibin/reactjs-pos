@@ -1,16 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import RepairJobCreate from "./create.js";
 import RepairJobView from "./view.js";
 import RepairJobKanban from "./kanban.js";
 import RepairJobCardView, { loadKanbanLists, loadCardMap, saveCardMap, statusToDefaultListId } from "./card_view.js";
 import QuotationType3Form from "../quotation/QuotationType3Form.js";
+import QuotationView from "../quotation/view.js";
 
 import { format } from "date-fns";
+import DatePicker from "react-datepicker";
 import { Button, Spinner } from "react-bootstrap";
+import { Typeahead } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const STATUS_COLORS = {
     open: { bg: '#e3f2fd', color: '#1565c0' },
@@ -21,8 +27,25 @@ const STATUS_COLORS = {
     closed: { bg: '#f0f4f8', color: '#455a64' },
 };
 
+const DEFAULT_COLUMNS = [
+    { key: 'date', label: 'Date', fieldName: 'date', visible: true },
+    { key: 'job', label: 'Job', fieldName: 'job', visible: true },
+    { key: 'vehicle', label: 'Vehicle', fieldName: 'vehicle', visible: true },
+    { key: 'customer', label: 'Customer', fieldName: 'customer', visible: true },
+    { key: 'technician', label: 'Technician', fieldName: 'technician', visible: true },
+    { key: 'status', label: 'Status', fieldName: 'status', visible: true },
+    { key: 'open_closed', label: 'Open/Closed', fieldName: 'open_closed', visible: true },
+    { key: 'est_delivery', label: 'Est. Delivery', fieldName: 'est_delivery', visible: true },
+    { key: 'km', label: 'KM', fieldName: 'km', visible: false },
+    { key: 'labour', label: 'Labour', fieldName: 'labour', visible: false },
+    { key: 'parts', label: 'Parts', fieldName: 'parts', visible: false },
+    { key: 'total', label: 'Total', fieldName: 'total', visible: false },
+    { key: 'actions', label: 'Actions', fieldName: 'actions', visible: true },
+];
+
 function RepairJobIndex(props) {
     const { t } = useTranslation('common');
+    const history = useHistory();
 
     const [jobList, setJobList] = useState([]);
 
@@ -46,6 +69,30 @@ function RepairJobIndex(props) {
     const [allJobsForFilter, setAllJobsForFilter] = useState([]);
     const [isFilterLoading, setIsFilterLoading] = useState(false);
 
+    // Date filter (single + range toggle)
+    const [filterDate, setFilterDate] = useState(null);
+    const [filterFromDate, setFilterFromDate] = useState(null);
+    const [filterToDate, setFilterToDate] = useState(null);
+    const [showDateRange, setShowDateRange] = useState(false);
+
+    // Est. Delivery filter
+    const [filterDeliveryDate, setFilterDeliveryDate] = useState(null);
+    const [filterDeliveryFromDate, setFilterDeliveryFromDate] = useState(null);
+    const [filterDeliveryToDate, setFilterDeliveryToDate] = useState(null);
+    const [showDeliveryRange, setShowDeliveryRange] = useState(false);
+
+    // Customer filter
+    const [customerOptions, setCustomerOptions] = useState([]);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    const customerSearchRef = useRef();
+    const timerRef = useRef();
+
+    // Table settings
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({
+        storageKey: 'repair_job_table_settings',
+        defaultColumns: DEFAULT_COLUMNS,
+    });
+
     useEffect(() => {
         list();
         getStore(localStorage.getItem("store_id"));
@@ -63,20 +110,85 @@ function RepairJobIndex(props) {
         list();
     }
 
+    function fmtDateParam(d) {
+        if (!d) return undefined;
+        return format(new Date(new Date(d).toUTCString()), "MMM dd yyyy");
+    }
+
+    function handleDateFilter(single, from, to) {
+        if (single !== undefined) {
+            searchParams["date"] = single ? fmtDateParam(single) : undefined;
+            searchParams["from_date"] = undefined;
+            searchParams["to_date"] = undefined;
+        } else {
+            searchParams["date"] = undefined;
+            searchParams["from_date"] = from ? fmtDateParam(from) : undefined;
+            searchParams["to_date"] = to ? fmtDateParam(to) : undefined;
+        }
+        page = 1;
+        setPage(page);
+        list();
+    }
+
+    function handleDeliveryFilter(single, from, to) {
+        if (single !== undefined) {
+            searchParams["estimated_delivery"] = single ? fmtDateParam(single) : undefined;
+            searchParams["estimated_delivery_from"] = undefined;
+            searchParams["estimated_delivery_to"] = undefined;
+        } else {
+            searchParams["estimated_delivery"] = undefined;
+            searchParams["estimated_delivery_from"] = from ? fmtDateParam(from) : undefined;
+            searchParams["estimated_delivery_to"] = to ? fmtDateParam(to) : undefined;
+        }
+        page = 1;
+        setPage(page);
+        list();
+    }
+
+    const customCustomerFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+        const q = normalize(query);
+        const qWords = q.split(" ");
+        const fields = [option.code, option.vat_no, option.name, option.name_in_arabic, option.phone, option.search_label];
+        const searchable = normalize(fields.join(" "));
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+    async function suggestCustomers(searchTerm) {
+        setCustomerOptions([]);
+        if (!searchTerm) return;
+
+        const params = { query: searchTerm };
+        if (localStorage.getItem("store_id")) params.store_id = localStorage.getItem("store_id");
+        let queryString = ObjectToSearchQueryParams(params);
+        if (queryString) queryString = "&" + queryString;
+
+        const requestOptions = {
+            method: "GET",
+            headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
+        };
+        const result = await fetch(
+            "/v1/customer?select=id,code,name,phone,name_in_arabic,search_label,vat_no" + queryString,
+            requestOptions
+        );
+        const data = await result.json();
+        const filtered = (data.result || []).filter((opt) => customCustomerFilter(opt, searchTerm));
+        setCustomerOptions(filtered);
+    }
+
     function list() {
         const requestOptions = {
             method: "GET",
             headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
         };
-        let Select = "select=id,job_number,title,date,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at";
+        let Select = "select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
-        let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["timezone_offset"] = parseFloat(d.getTimezoneOffset() / 60);
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -112,7 +224,7 @@ function RepairJobIndex(props) {
         const qp = storeId ? `search[store_id]=${storeId}&` : '';
         try {
             const res = await fetch(
-                `/v1/repair-job?select=id,job_number,title,date,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at&${qp}limit=1000&sort=-created_at`,
+                `/v1/repair-job?select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at&${qp}limit=1000&sort=-created_at`,
                 { method: 'GET', headers: { 'Content-Type': 'application/json', Authorization: token } }
             );
             const data = await res.json();
@@ -126,9 +238,7 @@ function RepairJobIndex(props) {
 
     function onKanbanListFilterChange(listId) {
         setSelectedKanbanListId(listId);
-        if (listId) {
-            fetchAllJobsForKanbanFilter(listId);
-        }
+        if (listId) fetchAllJobsForKanbanFilter(listId);
     }
 
     function sort(field) {
@@ -153,31 +263,36 @@ function RepairJobIndex(props) {
     }
 
     const DetailsViewRef = useRef();
+    const quotationViewRef = useRef();
     const CreateFormRef = useRef();
     const kanbanRef = useRef();
     const cardViewRef = useRef();
     const qt3FormRef = useRef();
 
-    const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' || window.location.hash === '#kanban' ? 'board' : 'table');
+    const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' ? 'board' : 'table');
 
     useEffect(() => {
         if (props.defaultMode === 'board') setViewMode('board');
     }, [props.defaultMode]);
 
     function switchView(mode) {
-        window.location.hash = mode === 'board' ? 'kanban' : '';
+        if (mode === 'board') {
+            history.push('/dashboard/repair-jobs-board');
+        } else {
+            history.push('/dashboard/repair-jobs');
+        }
         setViewMode(mode);
     }
 
     function openUpdateForm(id) { CreateFormRef.current.open(id); }
     function openDetailsView(id) { DetailsViewRef.current.open(id); }
     function openCreateForm() { CreateFormRef.current.open(); }
+    function openQuotationDetailsView(id) { quotationViewRef.current?.open(id); }
 
     async function buildJobPrefill(job, type) {
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
 
-        // Convert parts to quotation/order products format
         const products = (job.parts || []).map(p => ({
             product_id: p.product_id || null,
             name: p.name || '',
@@ -190,7 +305,6 @@ function RepairJobIndex(props) {
             unit: p.unit || '', is_service: false,
         }));
 
-        // Add labour charge as a service product
         const labour = parseFloat(job.labour_charge) || 0;
         if (labour > 0) {
             let labourProductId = null;
@@ -199,11 +313,10 @@ function RepairJobIndex(props) {
                 if (r?.result?.[0]) {
                     labourProductId = r.result[0].id;
                 } else {
-                    // Create it
                     const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json());
                     labourProductId = c?.result?.id || null;
                 }
-            } catch (e) { /* ignore */ }
+            } catch (e) { }
             const vatFactor = 1.15;
             products.push({
                 product_id: labourProductId,
@@ -243,7 +356,6 @@ function RepairJobIndex(props) {
 
     async function handleCreateFromJobs(jobsArr, customer, type) {
         if (!jobsArr || jobsArr.length === 0) return;
-        // Aggregate products from all jobs
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
         const products = [];
@@ -262,7 +374,7 @@ function RepairJobIndex(props) {
                 const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
                 if (r?.result?.[0]) labourProductId = r.result[0].id;
                 else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
-            } catch (e) { /* ignore */ }
+            } catch (e) { }
             const vatFactor = 1.15;
             products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatFactor).toFixed(4)), unit_price_with_vat: totalLabour, purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
         }
@@ -279,7 +391,6 @@ function RepairJobIndex(props) {
         qt3FormRef.current?.open(null, prefill);
     }
 
-
     function handleJobCreated(jobId, listId) {
         if (listId && jobId) {
             const map = loadCardMap();
@@ -291,14 +402,12 @@ function RepairJobIndex(props) {
 
     function handleKanbanListsChange(updatedLists) {
         setKanbanLists(updatedLists);
-        // If current filter list was deleted, clear filter
         if (selectedKanbanListId && !updatedLists.find(l => l.id === selectedKanbanListId)) {
             setSelectedKanbanListId('');
         }
     }
 
     function handleCardViewListChange(jobId, listId) {
-        // Re-fetch filtered list if active
         if (selectedKanbanListId) fetchAllJobsForKanbanFilter(selectedKanbanListId);
         if (kanbanRef.current) kanbanRef.current.refresh();
     }
@@ -309,13 +418,19 @@ function RepairJobIndex(props) {
     }
 
     function StatusBadge({ status }) {
+        const list = kanbanLists.find(l => l.id === status);
+        if (list) {
+            const bg = list.color + '22';
+            return (
+                <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: bg, color: list.color }}>
+                    {list.name}
+                </span>
+            );
+        }
         const colors = STATUS_COLORS[status] || STATUS_COLORS.open;
         const label = (status || 'open').replace(/_/g, ' ');
         return (
-            <span style={{
-                padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                background: colors.bg, color: colors.color, textTransform: 'capitalize',
-            }}>
+            <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: colors.bg, color: colors.color, textTransform: 'capitalize' }}>
                 {t(label)}
             </span>
         );
@@ -324,12 +439,7 @@ function RepairJobIndex(props) {
     function OpenClosedBadge({ status }) {
         const isClosed = status === 'closed';
         return (
-            <span style={{
-                padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                background: isClosed ? '#f0f4f8' : '#e3f2fd',
-                color: isClosed ? '#455a64' : '#1565c0',
-                textTransform: 'capitalize',
-            }}>
+            <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: isClosed ? '#f0f4f8' : '#e3f2fd', color: isClosed ? '#455a64' : '#1565c0', textTransform: 'capitalize' }}>
                 {isClosed ? t('Closed') : t('Open')}
             </span>
         );
@@ -338,11 +448,14 @@ function RepairJobIndex(props) {
     const displayJobs = selectedKanbanListId ? allJobsForFilter : jobList;
     const isLoading = isListLoading || isFilterLoading;
 
+    const colVisible = (key) => columns.find(c => c.key === key)?.visible;
+
     return (
         <>
             <RepairJobCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onCreated={handleJobCreated} />
             <RepairJobView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
-            <QuotationType3Form ref={qt3FormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <QuotationView ref={quotationViewRef} openUpdateForm={(id) => qt3FormRef.current?.open(id)} />
+            <QuotationType3Form ref={qt3FormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} />
             <RepairJobCardView
                 ref={cardViewRef}
                 onFullEdit={openUpdateForm}
@@ -351,6 +464,16 @@ function RepairJobIndex(props) {
                 showToastMessage={props.showToastMessage}
                 onCreateSalesInvoice={handleCreateSalesInvoice}
                 onCreateQuotation={handleCreateQuotation}
+            />
+
+            <TableSettingsModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                title={t('Repair Jobs Table Settings')}
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={restoreDefaults}
             />
 
             {viewMode === 'board' && (
@@ -370,29 +493,17 @@ function RepairJobIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row align-items-center mb-2">
                     <div className="col">
-                        <ul className="nav nav-tabs border-bottom-0" style={{ gap: 2 }}>
-                            <li className="nav-item">
-                                <button
-                                    className={`nav-link${viewMode === 'table' ? ' active fw-semibold' : ''}`}
-                                    style={{ fontSize: 13, padding: '6px 14px', cursor: 'pointer', border: 'none', background: 'none' }}
-                                    onClick={() => switchView('table')}
-                                >
-                                    <i className="bi bi-list-ul me-1"></i>{t('Jobs List')}
-                                </button>
-                            </li>
-                            <li className="nav-item">
-                                <button
-                                    className={`nav-link${viewMode === 'board' ? ' active fw-semibold' : ''}`}
-                                    style={{ fontSize: 13, padding: '6px 14px', cursor: 'pointer', border: 'none', background: 'none' }}
-                                    onClick={() => switchView('board')}
-                                >
-                                    <i className="bi bi-kanban me-1"></i>{t('Kanban Board')}
-                                </button>
-                            </li>
-                        </ul>
+                        <h5 style={{ fontWeight: 700, marginBottom: 0, color: "#172b4d" }}>{t('Repair Jobs')}</h5>
                     </div>
-                    <div className="col-auto">
-                        <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
+                    <div className="col-auto d-flex align-items-center gap-2">
+                        <button
+                            className={`btn btn-sm${viewMode === 'board' ? ' btn-primary' : ' btn-outline-secondary'}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: 13 }}
+                            onClick={() => switchView(viewMode === 'board' ? 'table' : 'board')}
+                        >
+                            <i className="bi bi-kanban"></i> {t('Kanban Board')}
+                        </button>
+                        <Button variant="primary" className="btn btn-primary btn-sm" onClick={openCreateForm}>
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
@@ -416,12 +527,11 @@ function RepairJobIndex(props) {
                                     )}
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
-                                    <Button onClick={() => { setIsRefreshInProcess(true); list(); }} variant="primary" disabled={isRefreshInProcess}>
-                                        {isRefreshInProcess ? (
-                                            <Spinner as="span" animation="border" size="sm" />
-                                        ) : (
-                                            <i className="fa fa-refresh"></i>
-                                        )}
+                                    <Button onClick={() => { setIsRefreshInProcess(true); list(); }} variant="primary" disabled={isRefreshInProcess} size="sm">
+                                        {isRefreshInProcess ? <Spinner as="span" animation="border" size="sm" /> : <i className="fa fa-refresh"></i>}
+                                    </Button>
+                                    <Button variant="outline-secondary" size="sm" title={t('Table Settings')} onClick={() => setShowSettings(true)}>
+                                        <i className="bi bi-gear"></i>
                                     </Button>
                                     {!selectedKanbanListId && (
                                         <PaginationControls
@@ -446,70 +556,242 @@ function RepairJobIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("job_number")}>{t('Job #')}</b></th>
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("date")}>{t('Date')}</b></th>
-                                                <th><b>{t('Vehicle')}</b></th>
-                                                <th><b>{t('KM')}</b></th>
-                                                <th><b>{t('Technician')}</b></th>
-                                                <th><b>{t('Labour')}</b></th>
-                                                <th><b>{t('Parts')}</b></th>
-                                                <th><b>{t('Total')}</b></th>
-                                                <th><b>{t('Status')}</b></th>
-                                                <th><b>{t('Open/Closed')}</b></th>
-                                                <th><b>{t('Est. Delivery')}</b></th>
-                                                <th>{t('Actions')}</th>
+                                                {colVisible('job') && <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("job_number")}>{t('Job')}</b></th>}
+                                                {colVisible('date') && <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("date")}>{t('Date')}</b></th>}
+                                                {colVisible('vehicle') && <th><b>{t('Vehicle')}</b></th>}
+                                                {colVisible('customer') && <th><b>{t('Customer')}</b></th>}
+                                                {colVisible('km') && <th><b>{t('KM')}</b></th>}
+                                                {colVisible('technician') && <th><b>{t('Technician')}</b></th>}
+                                                {colVisible('labour') && <th><b>{t('Labour')}</b></th>}
+                                                {colVisible('parts') && <th><b>{t('Parts')}</b></th>}
+                                                {colVisible('total') && <th><b>{t('Total')}</b></th>}
+                                                {colVisible('status') && <th><b>{t('Status')}</b></th>}
+                                                {colVisible('open_closed') && <th><b>{t('Open/Closed')}</b></th>}
+                                                {colVisible('est_delivery') && <th><b>{t('Est. Delivery')}</b></th>}
+                                                {colVisible('actions') && <th>{t('Actions')}</th>}
                                             </tr>
                                         </thead>
                                         <thead>
                                             <tr className="text-center">
-                                                <th><input type="text" onChange={(e) => searchByFieldValue("search", e.target.value)} className="form-control" placeholder={t('Search')} /></th>
-                                                <th></th><th></th><th></th><th></th><th></th><th></th><th></th>
-                                                <th>
-                                                    <select
-                                                        value={selectedKanbanListId}
-                                                        onChange={(e) => onKanbanListFilterChange(e.target.value)}
-                                                        className="form-control form-control-sm"
-                                                    >
-                                                        <option value="">{t('All')}</option>
-                                                        {kanbanLists.map(l => (
-                                                            <option key={l.id} value={l.id}>{l.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </th>
-                                                <th></th><th></th><th></th>
+                                                {colVisible('job') && (
+                                                    <th><input type="text" onChange={(e) => searchByFieldValue("search", e.target.value)} className="form-control form-control-sm" placeholder={t('Search')} /></th>
+                                                )}
+                                                {colVisible('date') && (
+                                                    <th style={{ minWidth: 140 }}>
+                                                        {!showDateRange ? (
+                                                            <>
+                                                                <DatePicker
+                                                                    selected={filterDate}
+                                                                    onChange={d => {
+                                                                        setFilterDate(d);
+                                                                        handleDateFilter(d, undefined, undefined);
+                                                                    }}
+                                                                    placeholderText={t("Date")}
+                                                                    dateFormat="dd/MM/yy"
+                                                                    className="form-control form-control-sm"
+                                                                    isClearable
+                                                                />
+                                                                <small style={{ color: '#004ac6', cursor: 'pointer', fontSize: 10, textDecoration: 'underline' }}
+                                                                    onClick={() => { setShowDateRange(true); setFilterDate(null); handleDateFilter(null, filterFromDate, filterToDate); }}>
+                                                                    {t('Range')}..
+                                                                </small>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div style={{ display: "flex", gap: "2px" }}>
+                                                                    <DatePicker
+                                                                        selected={filterFromDate}
+                                                                        onChange={d => { setFilterFromDate(d); handleDateFilter(undefined, d, filterToDate); }}
+                                                                        placeholderText={t("From")}
+                                                                        dateFormat="dd/MM/yy"
+                                                                        className="form-control form-control-sm"
+                                                                        isClearable
+                                                                    />
+                                                                    <DatePicker
+                                                                        selected={filterToDate}
+                                                                        onChange={d => { setFilterToDate(d); handleDateFilter(undefined, filterFromDate, d); }}
+                                                                        placeholderText={t("To")}
+                                                                        dateFormat="dd/MM/yy"
+                                                                        className="form-control form-control-sm"
+                                                                        isClearable
+                                                                    />
+                                                                </div>
+                                                                <small style={{ color: '#004ac6', cursor: 'pointer', fontSize: 10, textDecoration: 'underline' }}
+                                                                    onClick={() => { setShowDateRange(false); setFilterFromDate(null); setFilterToDate(null); handleDateFilter(filterDate, undefined, undefined); }}>
+                                                                    {t('Single')}..
+                                                                </small>
+                                                            </>
+                                                        )}
+                                                    </th>
+                                                )}
+                                                {colVisible('vehicle') && (
+                                                    <th><input type="text" onChange={(e) => searchByFieldValue("vehicle_number", e.target.value)} className="form-control form-control-sm" placeholder={t('Vehicle')} /></th>
+                                                )}
+                                                {colVisible('customer') && (
+                                                    <th style={{ minWidth: 220 }}>
+                                                        <Typeahead
+                                                            id="repair_customer_filter"
+                                                            filterBy={() => true}
+                                                            labelKey="search_label"
+                                                            onChange={(selectedItems) => {
+                                                                setSelectedCustomers(selectedItems);
+                                                                if (selectedItems.length > 0) {
+                                                                    searchByFieldValue("customer_id", selectedItems[0].id);
+                                                                } else {
+                                                                    searchByFieldValue("customer_id", "");
+                                                                }
+                                                            }}
+                                                            options={customerOptions}
+                                                            placeholder={t('Customer')}
+                                                            selected={selectedCustomers}
+                                                            highlightOnlyResult={true}
+                                                            ref={customerSearchRef}
+                                                            onInputChange={(searchTerm) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 350);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Escape") {
+                                                                    setCustomerOptions([]);
+                                                                    setSelectedCustomers([]);
+                                                                    customerSearchRef.current?.clear();
+                                                                    searchByFieldValue("customer_id", "");
+                                                                }
+                                                            }}
+                                                        />
+                                                    </th>
+                                                )}
+                                                {colVisible('km') && <th></th>}
+                                                {colVisible('technician') && (
+                                                    <th><input type="text" onChange={(e) => searchByFieldValue("technician_name", e.target.value)} className="form-control form-control-sm" placeholder={t('Technician')} /></th>
+                                                )}
+                                                {colVisible('labour') && <th></th>}
+                                                {colVisible('parts') && <th></th>}
+                                                {colVisible('total') && <th></th>}
+                                                {colVisible('status') && (
+                                                    <th>
+                                                        <select
+                                                            value={selectedKanbanListId}
+                                                            onChange={(e) => onKanbanListFilterChange(e.target.value)}
+                                                            className="form-control form-control-sm"
+                                                        >
+                                                            <option value="">{t('All')}</option>
+                                                            {kanbanLists.map(l => (
+                                                                <option key={l.id} value={l.id}>{l.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </th>
+                                                )}
+                                                {colVisible('open_closed') && <th></th>}
+                                                {colVisible('est_delivery') && (
+                                                    <th style={{ minWidth: 140 }}>
+                                                        {!showDeliveryRange ? (
+                                                            <>
+                                                                <DatePicker
+                                                                    selected={filterDeliveryDate}
+                                                                    onChange={d => {
+                                                                        setFilterDeliveryDate(d);
+                                                                        handleDeliveryFilter(d, undefined, undefined);
+                                                                    }}
+                                                                    placeholderText={t("Est. Delivery")}
+                                                                    dateFormat="dd/MM/yy"
+                                                                    className="form-control form-control-sm"
+                                                                    isClearable
+                                                                />
+                                                                <small style={{ color: '#004ac6', cursor: 'pointer', fontSize: 10, textDecoration: 'underline' }}
+                                                                    onClick={() => { setShowDeliveryRange(true); setFilterDeliveryDate(null); handleDeliveryFilter(null, filterDeliveryFromDate, filterDeliveryToDate); }}>
+                                                                    {t('Range')}..
+                                                                </small>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div style={{ display: "flex", gap: "2px" }}>
+                                                                    <DatePicker
+                                                                        selected={filterDeliveryFromDate}
+                                                                        onChange={d => { setFilterDeliveryFromDate(d); handleDeliveryFilter(undefined, d, filterDeliveryToDate); }}
+                                                                        placeholderText={t("From")}
+                                                                        dateFormat="dd/MM/yy"
+                                                                        className="form-control form-control-sm"
+                                                                        isClearable
+                                                                    />
+                                                                    <DatePicker
+                                                                        selected={filterDeliveryToDate}
+                                                                        onChange={d => { setFilterDeliveryToDate(d); handleDeliveryFilter(undefined, filterDeliveryFromDate, d); }}
+                                                                        placeholderText={t("To")}
+                                                                        dateFormat="dd/MM/yy"
+                                                                        className="form-control form-control-sm"
+                                                                        isClearable
+                                                                    />
+                                                                </div>
+                                                                <small style={{ color: '#004ac6', cursor: 'pointer', fontSize: 10, textDecoration: 'underline' }}
+                                                                    onClick={() => { setShowDeliveryRange(false); setFilterDeliveryFromDate(null); setFilterDeliveryToDate(null); handleDeliveryFilter(filterDeliveryDate, undefined, undefined); }}>
+                                                                    {t('Single')}..
+                                                                </small>
+                                                            </>
+                                                        )}
+                                                    </th>
+                                                )}
+                                                {colVisible('actions') && <th></th>}
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
                                             {displayJobs && displayJobs.map((job) => (
                                                 <tr key={job.id}>
-                                                    <td style={{ whiteSpace: "nowrap", textAlign: 'left' }}>
-                                                        <div style={{ fontWeight: 600 }}>{job.job_number}</div>
-                                                        {job.title && <small className="text-muted">{job.title}</small>}
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>{job.date ? format(new Date(job.date), "MMM dd yyyy") : "-"}</td>
-                                                    <td style={{ whiteSpace: "nowrap", textAlign: "left" }}>
-                                                        <div>{job.vehicle_number || "-"}</div>
-                                                        <small className="text-muted">{job.brand} {job.model}</small>
-                                                    </td>
-                                                    <td>{job.km ? parseFloat(job.km).toLocaleString() : '-'}</td>
-                                                    <td>{job.technician_name || '-'}</td>
-                                                    <td>{fmtCurrency(job.labour_charge)}</td>
-                                                    <td>{fmtCurrency(job.parts_total)}</td>
-                                                    <td style={{ fontWeight: 600 }}>{fmtCurrency(job.total)}</td>
-                                                    <td><StatusBadge status={job.status} /></td>
-                                                    <td><OpenClosedBadge status={job.status} /></td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>{job.estimated_delivery ? format(new Date(job.estimated_delivery), "MMM dd yyyy") : "-"}</td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
-                                                        <Button className="btn btn-light btn-sm me-1" onClick={() => openUpdateForm(job.id)}>
-                                                            <i className="bi bi-pencil"></i>
-                                                        </Button>
-                                                        <Button className="btn btn-primary btn-sm me-1" onClick={() => openDetailsView(job.id)}>
-                                                            <i className="bi bi-eye"></i>
-                                                        </Button>
-                                                        <Button className="btn btn-outline-secondary btn-sm" title={t('Open Card View')} onClick={() => cardViewRef.current?.open(job.id)}>
-                                                            <i className="bi bi-card-text"></i>
-                                                        </Button>
-                                                    </td>
+                                                    {colVisible('job') && (
+                                                        <td style={{ whiteSpace: "nowrap", textAlign: 'left' }}>
+                                                            <div style={{ fontWeight: 600 }}>{job.job_number}</div>
+                                                            {job.title && <small className="text-muted">{job.title}</small>}
+                                                        </td>
+                                                    )}
+                                                    {colVisible('date') && (
+                                                        <td style={{ whiteSpace: "nowrap" }}>{job.date ? format(new Date(job.date), "MMM dd yyyy") : "-"}</td>
+                                                    )}
+                                                    {colVisible('vehicle') && (
+                                                        <td style={{ whiteSpace: "nowrap", textAlign: "left" }}>
+                                                            <div>{job.vehicle_number || "-"}</div>
+                                                            <small className="text-muted">{job.brand} {job.model}</small>
+                                                        </td>
+                                                    )}
+                                                    {colVisible('customer') && (
+                                                        <td style={{ whiteSpace: "nowrap", textAlign: "left" }}>{job.customer_name || "-"}</td>
+                                                    )}
+                                                    {colVisible('km') && (
+                                                        <td>{job.km ? parseFloat(job.km).toLocaleString() : '-'}</td>
+                                                    )}
+                                                    {colVisible('technician') && (
+                                                        <td>{job.technician_name || '-'}</td>
+                                                    )}
+                                                    {colVisible('labour') && (
+                                                        <td>{fmtCurrency(job.labour_charge)}</td>
+                                                    )}
+                                                    {colVisible('parts') && (
+                                                        <td>{fmtCurrency(job.parts_total)}</td>
+                                                    )}
+                                                    {colVisible('total') && (
+                                                        <td style={{ fontWeight: 600 }}>{fmtCurrency(job.total)}</td>
+                                                    )}
+                                                    {colVisible('status') && (
+                                                        <td><StatusBadge status={job.status} /></td>
+                                                    )}
+                                                    {colVisible('open_closed') && (
+                                                        <td><OpenClosedBadge status={job.status} /></td>
+                                                    )}
+                                                    {colVisible('est_delivery') && (
+                                                        <td style={{ whiteSpace: "nowrap" }}>{job.estimated_delivery ? format(new Date(job.estimated_delivery), "MMM dd yyyy") : "-"}</td>
+                                                    )}
+                                                    {colVisible('actions') && (
+                                                        <td style={{ whiteSpace: "nowrap" }}>
+                                                            <Button className="btn btn-light btn-sm me-1" onClick={() => openUpdateForm(job.id)}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                            <Button className="btn btn-primary btn-sm me-1" onClick={() => openDetailsView(job.id)}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            <Button className="btn btn-outline-secondary btn-sm" title={t('Open Card View')} onClick={() => cardViewRef.current?.open(job.id)}>
+                                                                <i className="bi bi-card-text"></i>
+                                                            </Button>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))}
                                         </tbody>

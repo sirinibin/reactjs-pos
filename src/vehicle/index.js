@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import VehicleCreate from "./create.js";
 import VehicleView from "./view.js";
+import RepairJobCreate from "../repair_job/create.js";
+import QuotationType3Form from "../quotation/QuotationType3Form.js";
+import OrderCreate from "../order/create.js";
 
 import { Button, Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -146,6 +149,9 @@ function VehicleIndex(props) {
 
     const DetailsViewRef = useRef();
     const CreateFormRef = useRef();
+    const RepairJobCreateRef = useRef();
+    const QuotationFormRef = useRef();
+    const OrderCreateRef = useRef();
 
     function openUpdateForm(id) { CreateFormRef.current.open(id); }
     function openDetailsView(id) { DetailsViewRef.current.open(id); }
@@ -155,7 +161,17 @@ function VehicleIndex(props) {
     return (
         <>
             <VehicleCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-            <VehicleView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+            <RepairJobCreate ref={RepairJobCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            <QuotationType3Form ref={QuotationFormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            <OrderCreate ref={OrderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            <VehicleView
+                ref={DetailsViewRef}
+                openUpdateForm={openUpdateForm}
+                openCreateForm={openCreateForm}
+                onOpenSalesUpdate={(id) => OrderCreateRef.current?.open(id)}
+                onOpenQuotationUpdate={(id) => QuotationFormRef.current?.open(id)}
+                onOpenRepairJobUpdate={(id) => RepairJobCreateRef.current?.open(id)}
+            />
 
             <div className="container-fluid p-0">
                 <div className="row">

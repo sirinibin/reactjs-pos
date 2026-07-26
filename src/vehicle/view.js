@@ -204,7 +204,7 @@ const VehicleView = forwardRef((props, ref) => {
 
                                         {/* SALES */}
                                         {activeTab === 'sales' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 700 }}>
+                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
                                                 <thead><tr style={{ background: '#f7f9fb' }}>
                                                     <th style={thStyle}>{t('Code')}</th>
                                                     <th style={thStyle}>{t('Date')}</th>
@@ -212,10 +212,11 @@ const VehicleView = forwardRef((props, ref) => {
                                                     <th style={thStyle}>{t('Km Driven')}</th>
                                                     <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
                                                     <th style={thStyle}>{t('Payment')}</th>
+                                                    <th style={thStyle}></th>
                                                 </tr></thead>
                                                 <tbody>
                                                     {history.sales.length === 0 ? (
-                                                        <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No sales found')}</td></tr>
+                                                        <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No sales found')}</td></tr>
                                                     ) : history.sales.map(r => (
                                                         <tr key={r.id}>
                                                             <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
@@ -224,6 +225,14 @@ const VehicleView = forwardRef((props, ref) => {
                                                             <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
                                                             <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
                                                             <td style={tdStyle}>{payBadge(r.payment_status)}</td>
+                                                            <td style={tdStyle}>
+                                                                {props.onOpenSalesUpdate && (
+                                                                    <button type="button" onClick={() => props.onOpenSalesUpdate(r.id)}
+                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                                    </button>
+                                                                )}
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -232,7 +241,7 @@ const VehicleView = forwardRef((props, ref) => {
 
                                         {/* QUOTATIONS */}
                                         {activeTab === 'quotations' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 700 }}>
+                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
                                                 <thead><tr style={{ background: '#f7f9fb' }}>
                                                     <th style={thStyle}>{t('Code')}</th>
                                                     <th style={thStyle}>{t('Date')}</th>
@@ -240,10 +249,11 @@ const VehicleView = forwardRef((props, ref) => {
                                                     <th style={thStyle}>{t('Type')}</th>
                                                     <th style={thStyle}>{t('Km Driven')}</th>
                                                     <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
+                                                    <th style={thStyle}></th>
                                                 </tr></thead>
                                                 <tbody>
                                                     {history.quotations.length === 0 ? (
-                                                        <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No quotations found')}</td></tr>
+                                                        <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No quotations found')}</td></tr>
                                                     ) : history.quotations.map(r => (
                                                         <tr key={r.id}>
                                                             <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
@@ -252,6 +262,14 @@ const VehicleView = forwardRef((props, ref) => {
                                                             <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: r.type === 'invoice' ? '#e8f5e9' : '#e3f2fd', color: r.type === 'invoice' ? '#2e7d32' : '#1565c0', borderRadius: 4, padding: '2px 8px' }}>{r.type || 'quotation'}</span></td>
                                                             <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
                                                             <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
+                                                            <td style={tdStyle}>
+                                                                {props.onOpenQuotationUpdate && (
+                                                                    <button type="button" onClick={() => props.onOpenQuotationUpdate(r.id)}
+                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                                    </button>
+                                                                )}
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -260,7 +278,7 @@ const VehicleView = forwardRef((props, ref) => {
 
                                         {/* REPAIR JOBS */}
                                         {activeTab === 'repairs' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 700 }}>
+                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
                                                 <thead><tr style={{ background: '#f7f9fb' }}>
                                                     <th style={thStyle}>{t('Job #')}</th>
                                                     <th style={thStyle}>{t('Title')}</th>
@@ -269,10 +287,11 @@ const VehicleView = forwardRef((props, ref) => {
                                                     <th style={thStyle}>{t('Status')}</th>
                                                     <th style={{ ...thStyle, textAlign: 'right' }}>{t('Labour')}</th>
                                                     <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
+                                                    <th style={thStyle}></th>
                                                 </tr></thead>
                                                 <tbody>
                                                     {history.repairs.length === 0 ? (
-                                                        <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No repair jobs found')}</td></tr>
+                                                        <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No repair jobs found')}</td></tr>
                                                     ) : history.repairs.map(r => (
                                                         <tr key={r.id}>
                                                             <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.job_number || '-'}</span></td>
@@ -282,6 +301,14 @@ const VehicleView = forwardRef((props, ref) => {
                                                             <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: '#f0f4ff', color: '#004ac6', borderRadius: 4, padding: '2px 8px' }}>{r.status || '-'}</span></td>
                                                             <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtAmt(r.labour_charge)}</td>
                                                             <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.total)}</td>
+                                                            <td style={tdStyle}>
+                                                                {props.onOpenRepairJobUpdate && (
+                                                                    <button type="button" onClick={() => props.onOpenRepairJobUpdate(r.id)}
+                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                                    </button>
+                                                                )}
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>

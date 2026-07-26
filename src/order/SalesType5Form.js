@@ -109,9 +109,6 @@ export function SalesType5Header({
                 <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openCreateForm(); }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                     <i className="bi bi-plus" style={{ fontSize: "14px" }}></i> {t("Create New")}
                 </button>
-                <button type="button" disabled={!isUpdateForm} onClick={openPrint} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
-                    <i className="bi bi-printer" style={{ fontSize: "14px" }}></i> {t("Print")}
-                </button>
                 <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                     <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
                 </button>
@@ -708,8 +705,14 @@ export function SalesType5Body({
                                                     <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <div style={{ fontWeight: 600, color: "#191c1e" }}>{product.name}</div>
+                                                            {(product.item_code || product.code) && (
+                                                                <div style={{ fontSize: "11px", color: "#374151" }}>
+                                                                    <span style={{ color: "#6b7280", fontWeight: 500 }}>{t("Part No.")}:</span>{" "}
+                                                                    <span style={{ fontWeight: 600 }}>{product.item_code || product.code}</span>
+                                                                </div>
+                                                            )}
                                                             {product.name_in_arabic && <div style={{ fontSize: "12px", color: "#6b7280" }}>{product.name_in_arabic}</div>}
-                                                            <div style={{ fontSize: "11px", color: "#94a3b8" }}>{[product.code, product.unit, product.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
+                                                            <div style={{ fontSize: "11px", color: "#94a3b8" }}>{[product.unit, product.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
                                                         </div>
                                                         {openUpdateProductForm && (product.product_id || product.id) && (
                                                             <button type="button" onClick={() => openUpdateProductForm(product.product_id || product.id, product.is_service)}
