@@ -1,17 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import VehicleCreate from "./create.js";
+import CustomerCreate from "../customer/create.js";
 import VehicleView from "./view.js";
 import RepairJobCreate from "../repair_job/create.js";
 import QuotationType3Form from "../quotation/QuotationType3Form.js";
 import OrderCreate from "../order/create.js";
 
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Dropdown } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
+
+const DEFAULT_COLUMNS = [
+    { key: 'vehicle_number', label: 'Vehicle #',    fieldName: 'vehicle_number', visible: true },
+    { key: 'brand_model',    label: 'Brand / Model', fieldName: 'brand_model',   visible: true },
+    { key: 'year',           label: 'Year',          fieldName: 'year',          visible: false },
+    { key: 'customer',       label: 'Customer',      fieldName: 'customer',      visible: true },
+    { key: 'istimara_no',    label: 'Istimara No.',  fieldName: 'istimara_no',   visible: true },
+    { key: 'chassis',        label: 'Chassis #',     fieldName: 'chassis',       visible: true },
+    { key: 'km',             label: 'KM',            fieldName: 'km',            visible: true },
+    { key: 'color',          label: 'Color',         fieldName: 'color',         visible: false },
+    { key: 'created_at',     label: 'Created At',    fieldName: 'created_at',    visible: false },
+    { key: 'actions',        label: 'Actions',       fieldName: 'actions',       visible: true },
+];
 
 function VehicleIndex(props) {
     const { t } = useTranslation('common');
@@ -36,6 +52,12 @@ function VehicleIndex(props) {
     const [selectedCustomers, setSelectedCustomers] = useState([]);
     const customerSearchRef = useRef();
     const timerRef = useRef();
+
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({
+        storageKey: 'vehicle_table_settings',
+        defaultColumns: DEFAULT_COLUMNS,
+    });
+    const colVisible = (key) => columns.find(c => c.key === key)?.visible;
 
     useEffect(() => {
         list();
@@ -149,18 +171,29 @@ function VehicleIndex(props) {
 
     const DetailsViewRef = useRef();
     const CreateFormRef = useRef();
+    const CustomerCreateRef = useRef();
     const RepairJobCreateRef = useRef();
     const QuotationFormRef = useRef();
     const OrderCreateRef = useRef();
 
     function openUpdateForm(id) { CreateFormRef.current.open(id); }
-    function openDetailsView(id) { DetailsViewRef.current.open(id); }
+    function openDetailsView(id, tab) { DetailsViewRef.current.open(id, tab); }
     function openDetailsViewOnTab(id, tab) { DetailsViewRef.current.open(id, tab); }
     function openCreateForm() { CreateFormRef.current.open(); }
 
     return (
         <>
-            <VehicleCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <TableSettingsModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                title={t('Table Settings')}
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={restoreDefaults}
+            />
+            <VehicleCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onOpenCustomerForm={(id, cb) => CustomerCreateRef.current?.open(id, cb)} />
+            <CustomerCreate ref={CustomerCreateRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <RepairJobCreate ref={RepairJobCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
             <QuotationType3Form ref={QuotationFormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
             <OrderCreate ref={OrderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
@@ -200,6 +233,9 @@ function VehicleIndex(props) {
                                             <i className="fa fa-refresh"></i>
                                         )}
                                     </Button>
+                                    <Button variant="outline-secondary" size="sm" title={t('Column Settings')} onClick={() => setShowSettings(true)}>
+                                        <i className="bi bi-gear"></i>
+                                    </Button>
                                     <PaginationControls
                                         totalPages={totalPages} page={page} totalItems={totalItems} offset={offset}
                                         currentPageItemsCount={currentPageItemsCount} pageSize={pageSize}
@@ -207,7 +243,7 @@ function VehicleIndex(props) {
                                         pageSizes={[5, 10, 20, 40, 50, 100]}
                                     />
                                 </div>
-                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "350px" }}>
                                     {isListLoading && (
                                         <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
                                             <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
@@ -216,65 +252,81 @@ function VehicleIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("vehicle_number")}>{t('Vehicle #')}</b></th>
-                                                <th><b>{t('Brand / Model')}</b></th>
-                                                <th><b>{t('Year')}</b></th>
-                                                <th><b>{t('Customer')}</b></th>
-                                                <th><b>{t('Istimara No.')}</b></th>
-                                                <th><b>{t('Chassis #')}</b></th>
-                                                <th><b>{t('KM')}</b></th>
+                                                {colVisible('vehicle_number') && <th key="vehicle_number"><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("vehicle_number")}>{t('Vehicle #')}</b></th>}
+                                                {colVisible('brand_model') && <th key="brand_model"><b>{t('Brand / Model')}</b></th>}
+                                                {colVisible('year') && <th key="year" style={{ minWidth: '80px' }}><b>{t('Year')}</b></th>}
+                                                {colVisible('customer') && <th key="customer"><b>{t('Customer')}</b></th>}
+                                                {colVisible('istimara_no') && <th key="istimara_no"><b>{t('Istimara No.')}</b></th>}
+                                                {colVisible('chassis') && <th key="chassis"><b>{t('Chassis #')}</b></th>}
+                                                {colVisible('km') && <th key="km" style={{ minWidth: '120px' }}><b>{t('KM')}</b></th>}
+                                                {colVisible('color') && <th key="color"><b>{t('Color')}</b></th>}
+                                                {colVisible('created_at') && <th key="created_at"><b style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => sort("created_at")}>{t('Created At')}</b></th>}
                                                 <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
                                         <thead>
                                             <tr className="text-center">
-                                                <th><input type="text" onChange={(e) => searchByFieldValue("search", e.target.value)} className="form-control" placeholder={t('Search')} /></th>
-                                                <th></th><th></th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="vehicle_customer_filter"
-                                                        filterBy={['additional_keywords']}
-                                                        labelKey="search_label"
-                                                        style={{ minWidth: "220px" }}
-                                                        onChange={(selectedItems) => searchByCustomers(selectedItems)}
-                                                        options={customerOptions}
-                                                        placeholder={t('Customer Name / Mob')}
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 150);
-                                                        }}
-                                                        ref={customerSearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                setCustomerOptions([]);
-                                                                customerSearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th></th><th></th><th></th><th></th>
+                                                {colVisible('vehicle_number') && <th key="vehicle_number"><input type="text" onChange={(e) => searchByFieldValue("search", e.target.value)} className="form-control" placeholder={t('Search')} /></th>}
+                                                {colVisible('brand_model') && <th key="brand_model"></th>}
+                                                {colVisible('year') && <th key="year"></th>}
+                                                {colVisible('customer') && (
+                                                    <th key="customer">
+                                                        <Typeahead
+                                                            id="vehicle_customer_filter"
+                                                            filterBy={['additional_keywords']}
+                                                            labelKey="search_label"
+                                                            style={{ minWidth: "220px" }}
+                                                            onChange={(selectedItems) => searchByCustomers(selectedItems)}
+                                                            options={customerOptions}
+                                                            placeholder={t('Customer Name / Mob')}
+                                                            selected={selectedCustomers}
+                                                            highlightOnlyResult={true}
+                                                            onInputChange={(searchTerm) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 150);
+                                                            }}
+                                                            ref={customerSearchRef}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Escape") {
+                                                                    setCustomerOptions([]);
+                                                                    customerSearchRef.current?.clear();
+                                                                }
+                                                            }}
+                                                            multiple
+                                                        />
+                                                    </th>
+                                                )}
+                                                {colVisible('istimara_no') && <th key="istimara_no"></th>}
+                                                {colVisible('chassis') && <th key="chassis"></th>}
+                                                {colVisible('km') && <th key="km"></th>}
+                                                {colVisible('color') && <th key="color"></th>}
+                                                {colVisible('created_at') && <th key="created_at"></th>}
+                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
                                             {vehicleList && vehicleList.map((vehicle) => (
                                                 <tr key={vehicle.id}>
-                                                    <td className="text-start" style={{ whiteSpace: "nowrap", fontWeight: 600 }}>
-                                                        {vehicle.vehicle_number || '-'}
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
-                                                        {vehicle.brand} {vehicle.model}
-                                                        {vehicle.variant && <small className="text-muted d-block">{vehicle.variant}</small>}
-                                                    </td>
-                                                    <td>{vehicle.year || '-'}</td>
-                                                    <td className="text-start" style={{ whiteSpace: "nowrap" }}>
-                                                        <OverflowTooltip value={vehicle.customer_name || '-'} maxWidth={200} />
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>{vehicle.istimara_no || '-'}</td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>{vehicle.chassis_number || '-'}</td>
-                                                    <td>{vehicle.current_km ? parseFloat(vehicle.current_km).toLocaleString() : '-'}</td>
+                                                    {colVisible('vehicle_number') && <td key="vehicle_number" className="text-start" style={{ whiteSpace: "nowrap", fontWeight: 600 }}>{vehicle.vehicle_number || '-'}</td>}
+                                                    {colVisible('brand_model') && <td key="brand_model" style={{ whiteSpace: "nowrap" }}>{vehicle.brand} {vehicle.model}{vehicle.variant && <small className="text-muted d-block">{vehicle.variant}</small>}</td>}
+                                                    {colVisible('year') && <td key="year" style={{ minWidth: '80px' }}>{vehicle.year || '-'}</td>}
+                                                    {colVisible('customer') && (
+                                                        <td key="customer" className="text-start" style={{ whiteSpace: "nowrap" }}>
+                                                            {vehicle.customer_id ? (
+                                                                <button type="button" onClick={() => CustomerCreateRef.current?.open(vehicle.customer_id)}
+                                                                    style={{ background: "none", border: "none", padding: 0, color: "#004ac6", fontWeight: 500, cursor: "pointer", textDecoration: "underline", fontSize: "inherit", textAlign: "left" }}>
+                                                                    <OverflowTooltip value={vehicle.customer_name || '-'} maxWidth={200} />
+                                                                </button>
+                                                            ) : (
+                                                                <OverflowTooltip value={vehicle.customer_name || '-'} maxWidth={200} />
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                    {colVisible('istimara_no') && <td key="istimara_no" style={{ whiteSpace: "nowrap" }}>{vehicle.istimara_no || '-'}</td>}
+                                                    {colVisible('chassis') && <td key="chassis" style={{ whiteSpace: "nowrap" }}>{vehicle.chassis_number || '-'}</td>}
+                                                    {colVisible('km') && <td key="km" style={{ minWidth: '120px' }}>{vehicle.current_km ? parseFloat(vehicle.current_km).toLocaleString() : '-'}</td>}
+                                                    {colVisible('color') && <td key="color">{vehicle.color || '—'}</td>}
+                                                    {colVisible('created_at') && <td key="created_at" style={{ whiteSpace: "nowrap" }}>{vehicle.created_at ? new Date(vehicle.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>}
                                                     <td style={{ whiteSpace: "nowrap" }}>
                                                         <Button className="btn btn-light btn-sm me-1" title={t('Edit')} onClick={() => openUpdateForm(vehicle.id)}>
                                                             <i className="bi bi-pencil"></i>
@@ -282,15 +334,27 @@ function VehicleIndex(props) {
                                                         <Button className="btn btn-primary btn-sm me-1" title={t('Details')} onClick={() => openDetailsView(vehicle.id)}>
                                                             <i className="bi bi-eye"></i>
                                                         </Button>
-                                                        <Button className="btn btn-outline-success btn-sm me-1" title={t('Sales History')} onClick={() => openDetailsViewOnTab(vehicle.id, 'sales')}>
-                                                            <i className="bi bi-receipt"></i>
-                                                        </Button>
-                                                        <Button className="btn btn-outline-info btn-sm me-1" title={t('Quotation History')} onClick={() => openDetailsViewOnTab(vehicle.id, 'quotations')}>
-                                                            <i className="bi bi-file-earmark-text"></i>
-                                                        </Button>
-                                                        <Button className="btn btn-outline-warning btn-sm" title={t('Repair Jobs')} onClick={() => openDetailsViewOnTab(vehicle.id, 'repairs')}>
-                                                            <i className="bi bi-tools"></i>
-                                                        </Button>
+                                                        <Dropdown as="span" align="end">
+                                                            <Dropdown.Toggle variant="outline-secondary" size="sm" id={`veh-hist-${vehicle.id}`} title={t('History')}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                            </Dropdown.Toggle>
+                                                            <Dropdown.Menu style={{ minWidth: 200 }}>
+                                                                <Dropdown.Item onClick={() => openDetailsViewOnTab(vehicle.id, 'repairs')}>
+                                                                    <i className="bi bi-tools me-2 text-warning"></i>{t('Repair Jobs')}
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Divider />
+                                                                <Dropdown.Item onClick={() => openDetailsViewOnTab(vehicle.id, 'sales')}>
+                                                                    <i className="bi bi-receipt me-2 text-success"></i>{t('Sales History')}
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item onClick={() => openDetailsViewOnTab(vehicle.id, 'quotations')}>
+                                                                    <i className="bi bi-file-earmark-text me-2 text-info"></i>{t('Quotation History')}
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Divider />
+                                                                <Dropdown.Item onClick={() => openDetailsViewOnTab(vehicle.id, 'trello')}>
+                                                                    <i className="bi bi-kanban me-2" style={{ color: '#0052cc' }}></i>{t('Repair Job Board')}
+                                                                </Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                        </Dropdown>
                                                     </td>
                                                 </tr>
                                             ))}

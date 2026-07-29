@@ -12003,3 +12003,10 @@ span.flatpickr-weekday {
   .sc-header-actions button { font-size: 10px !important; padding: 3px 6px !important; }
   .sc-post-table-right { flex: 0 0 100%; }
 }
+
+.quotation-view-overlay { z-index: 1070 !important; }
+.quotation-view-overlay + .modal-backdrop { z-index: 1065 !important; }
+
+/* Secondary modals (pickers, history panels) that must float above the fullscreen sales modal */
+.above-sales-modal { z-index: 1065 !important; }
+.above-sales-modal + .modal-backdrop { z-index: 1060 !important; }

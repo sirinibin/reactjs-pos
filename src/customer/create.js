@@ -1,10 +1,13 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Dropdown } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import Quotations from "./../utils/quotations.js";
+import Sales from "./../utils/sales.js";
+import SalesReturns from "./../utils/salesReturn.js";
+import QuotationSalesReturns from "./../utils/quotation_sales_returns.js";
 import ImageGallery from '../utils/ImageGallery.js';
 import VehicleCreate from "../vehicle/create.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -17,8 +20,11 @@ const CustomerCreate = forwardRef((props, ref) => {
     const ImageGalleryRef = useRef();
     const VehicleCreateRef = useRef();
 
+    const onSavedRef = useRef(null);
+
     useImperativeHandle(ref, () => ({
-        async open(id) {
+        async open(id, onSaved) {
+            onSavedRef.current = onSaved || null;
             errors = {};
             setErrors({ ...errors });
             formData = {
@@ -390,6 +396,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                         props.refreshList();
                     }
 
+                    if (onSavedRef.current) {
+                        onSavedRef.current(data.result);
+                        onSavedRef.current = null;
+                    }
                     if (props.onUpdated) {
                         props.onUpdated(data.result);
                     }
@@ -431,6 +441,15 @@ const CustomerCreate = forwardRef((props, ref) => {
     let [selectedCountries, setSelectedCountries] = useState([]);
 
     const QuotationsRef = useRef();
+    const QtnSalesRef = useRef();
+    const SalesRef = useRef();
+    const SalesReturnsRef = useRef();
+    const QtnSalesReturnsRef = useRef();
+
+    const storeSettingsCreate = (() => {
+        try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
+    })();
+    const automobileEnabledCreate = !!storeSettingsCreate?.enable_automobile_module;
 
     function openCreditQuotationInvoices() {
         let selectedCustomers = [
@@ -556,10 +575,15 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            <Sales ref={SalesRef} showToastMessage={props.showToastMessage} />
+            <SalesReturns ref={SalesReturnsRef} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
-            <VehicleCreate ref={VehicleCreateRef} refreshList={() => loadCustomerVehicles()} showToastMessage={props.showToastMessage} />
+            <Quotations ref={QtnSalesRef} showToastMessage={props.showToastMessage} />
+            <QuotationSalesReturns ref={QtnSalesReturnsRef} showToastMessage={props.showToastMessage} />
+            {!props.noVehicleCreate && <VehicleCreate ref={VehicleCreateRef} refreshList={() => loadCustomerVehicles()} showToastMessage={props.showToastMessage} />}
             {/*  <CustomerView ref={DetailsViewRef} />*/}
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+            <style>{`.cust-create-wrap { z-index: 1090 !important; }`}</style>
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="cust-create-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
@@ -577,6 +601,47 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
                                 <i className="bi bi-eye me-1"></i>View Detail
                             </button>
+                        )}
+                        {formData.id && (
+                            <Dropdown align="end">
+                                <Dropdown.Toggle variant="outline-secondary" size="sm" id="cust-create-hist-dd" title="History & Links">
+                                    <i className="bi bi-clock-history me-1"></i>History
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu style={{ minWidth: 230 }}>
+                                    <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'repairs'); }}>
+                                        <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                    </Dropdown.Item>
+                                    {automobileEnabledCreate && (
+                                        <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'vehicles'); }}>
+                                            <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                        </Dropdown.Item>
+                                    )}
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => SalesRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
+                                        <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => SalesReturnsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
+                                        <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => QuotationsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], 'quotation', null)}>
+                                        <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => QtnSalesRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], 'invoice', null)}>
+                                        <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => QtnSalesReturnsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
+                                        <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'churnHistory'); }}>
+                                        <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'clvHistory'); }}>
+                                        <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                    </Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}

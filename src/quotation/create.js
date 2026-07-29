@@ -264,13 +264,12 @@ const QuotationCreate = forwardRef((props, ref) => {
         className="modal-dialog modal-xl"
         {...dialogProps}
         style={{
-          position: "absolute",
-          top: "10%",
-          left: "20%",
-          transform: "translate(-50%, -50%)",
+          position: "fixed",
+          top: "5%",
+          left: "15%",
           margin: "0",
-          zIndex: 1055,
-          width: "65%",
+          zIndex: 1082,
+          width: "70%",
         }}
       >
         <div className="modal-content">{children}</div>
@@ -1305,6 +1304,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         unit_discount_percent: 0,
         unit_discount_percent_vat: 0,
         stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+        warehouse_stocks: product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks || {},
         is_service: product.is_service || false,
 
       });
@@ -3246,6 +3246,7 @@ async function checkWarning(i) {
         animation={false}
         backdrop="static"
         scrollable={true}
+        className={enableProductSelection ? "above-sales-modal" : ""}
         {...(enableProductSelection ? {
           backdrop: false,
           keyboard: false,

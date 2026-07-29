@@ -61,7 +61,7 @@ const ImageViewerModal = forwardRef((props, ref) => {
     }, []);
 
     return (
-        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen>
+        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen className="above-sales-modal">
             <Modal.Header closeButton />
             <Modal.Body
                 className="p-0 d-flex justify-content-center align-items-center position-relative"

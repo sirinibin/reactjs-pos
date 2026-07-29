@@ -5,7 +5,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal, Dropdown } from "react-bootstrap";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
@@ -18,6 +18,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import Sales from "../utils/sales.js";
 import SalesReturns from "../utils/salesReturn.js";
 import Quotations from "../utils/quotations.js";
+import QuotationSalesReturns from "../utils/quotation_sales_returns.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
@@ -480,8 +481,8 @@ function CustomerIndex(props) {
     }
 
     const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+    function openDetailsView(id, tab) {
+        DetailsViewRef.current.open(id, tab);
     }
 
     const CreateFormRef = useRef();
@@ -896,6 +897,11 @@ function CustomerIndex(props) {
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyTab, setHistoryTab] = useState("churn");
 
+    const storeSettings = (() => {
+        try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
+    })();
+    const automobileModuleEnabled = !!storeSettings?.enable_automobile_module;
+
     const SalesRef = useRef();
     function openCustomerSales(customer) {
         SalesRef.current.open(false, [customer], null);
@@ -908,13 +914,23 @@ function CustomerIndex(props) {
 
     const QuotationsRef = useRef();
     function openCustomerQuotations(customer) {
-        QuotationsRef.current.open(false, [customer], null);
+        QuotationsRef.current.open(false, [customer], 'quotation', null);
     }
 
-    async function openHistoryModal(customerId, customerName) {
+    const QtnSalesRef = useRef();
+    function openCustomerQtnSales(customer) {
+        QtnSalesRef.current.open(false, [customer], 'invoice', null);
+    }
+
+    const QtnSalesReturnsRef = useRef();
+    function openCustomerQtnSalesReturns(customer) {
+        QtnSalesReturnsRef.current.open(false, [customer], null);
+    }
+
+    async function openHistoryModal(customerId, customerName, initialTab = "churn") {
         setHistoryCustomer(customerName);
         setHistoryData({ churn_history: [], clv_history: [] });
-        setHistoryTab("churn");
+        setHistoryTab(initialTab);
         setHistoryLoading(true);
         setShowHistoryModal(true);
         try {
@@ -1078,6 +1094,8 @@ function CustomerIndex(props) {
             <Sales ref={SalesRef} showToastMessage={props.showToastMessage} />
             <SalesReturns ref={SalesReturnsRef} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
+            <Quotations ref={QtnSalesRef} showToastMessage={props.showToastMessage} />
+            <QuotationSalesReturns ref={QtnSalesReturnsRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
@@ -2929,35 +2947,45 @@ function CustomerIndex(props) {
                                                                         <i className="bi bi-eye"></i>
                                                                     </Button>
 
-                                                                    <Button className="btn btn-secondary btn-sm" title="View BI History" onClick={() => {
-                                                                        openHistoryModal(customer.id, customer.name);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                    </Button>
-
-                                                                    <Button className="btn btn-outline-success btn-sm" title="Sales History" onClick={() => {
-                                                                        openCustomerSales(customer);
-                                                                    }}>
-                                                                        <i className="bi bi-receipt"></i>
-                                                                    </Button>
-
-                                                                    <Button className="btn btn-outline-warning btn-sm" title="Sales Return History" onClick={() => {
-                                                                        openCustomerSalesReturns(customer);
-                                                                    }}>
-                                                                        <i className="bi bi-arrow-return-left"></i>
-                                                                    </Button>
-
-                                                                    <Button className="btn btn-outline-info btn-sm" title="Quotation History" onClick={() => {
-                                                                        openCustomerQuotations(customer);
-                                                                    }}>
-                                                                        <i className="bi bi-file-earmark-text"></i>
-                                                                    </Button>
-
-                                                                    <Button className="btn btn-outline-secondary btn-sm" title="Repair Jobs" onClick={() => {
-                                                                        DetailsViewRef.current?.open(customer.id, 'repairs');
-                                                                    }}>
-                                                                        <i className="bi bi-tools"></i>
-                                                                    </Button>
+                                                                    <Dropdown as="span" align="end">
+                                                                        <Dropdown.Toggle variant="outline-secondary" size="sm" id={`cust-hist-${customer.id}`} title="History & Links">
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                        </Dropdown.Toggle>
+                                                                        <Dropdown.Menu style={{ minWidth: 230 }}>
+                                                                            <Dropdown.Item onClick={() => DetailsViewRef.current?.open(customer.id, 'repairs')}>
+                                                                                <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                                                            </Dropdown.Item>
+                                                                            {automobileModuleEnabled && (
+                                                                                <Dropdown.Item onClick={() => DetailsViewRef.current?.open(customer.id, 'vehicles')}>
+                                                                                    <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                                                                </Dropdown.Item>
+                                                                            )}
+                                                                            <Dropdown.Divider />
+                                                                            <Dropdown.Item onClick={() => openCustomerSales(customer)}>
+                                                                                <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openCustomerSalesReturns(customer)}>
+                                                                                <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Divider />
+                                                                            <Dropdown.Item onClick={() => openCustomerQuotations(customer)}>
+                                                                                <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openCustomerQtnSales(customer)}>
+                                                                                <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openCustomerQtnSalesReturns(customer)}>
+                                                                                <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Divider />
+                                                                            <Dropdown.Item onClick={() => openHistoryModal(customer.id, customer.name, 'churn')}>
+                                                                                <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                                                            </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openHistoryModal(customer.id, customer.name, 'clv')}>
+                                                                                <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                                                            </Dropdown.Item>
+                                                                        </Dropdown.Menu>
+                                                                    </Dropdown>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                     <OverflowTooltip value={customer.name + (customer.name_in_arabic ? " | " + customer.name_in_arabic : "")} />

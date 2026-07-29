@@ -27,13 +27,12 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
                 className="modal-dialog modal-xl"
                 {...dialogProps}
                 style={{
-                    position: "absolute",
-                    top: "10%",
-                    left: "20%",
-                    transform: "translate(-50%, -50%)",
+                    position: "fixed",
+                    top: "5%",
+                    left: "15%",
                     margin: "0",
-                    zIndex: 1055,
-                    width: "65%",
+                    zIndex: 1060,
+                    width: "70%",
                 }}
             >
                 <div className="modal-content">{dialogChildren}</div>
@@ -48,6 +47,7 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
             centered={false}
             enforceFocus={false}
             dialogAs={DialogComponent}
+            className="above-sales-modal"
         >
             <Modal.Header>
                 <Modal.Title>

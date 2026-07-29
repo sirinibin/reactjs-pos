@@ -338,7 +338,7 @@ const ServiceCreate = forwardRef((props, ref) => {
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
 
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="pw-modal-wrap">
                 <style>{`
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .svc-body { overflow-y: auto !important; padding: 0 !important; flex: 1; min-height: 0; }

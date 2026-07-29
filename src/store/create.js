@@ -1,5 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { Modal } from "react-bootstrap";
+import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -4920,12 +4921,16 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <span>Enable Customer P.O No. Field</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_automobile_module">
-                                                <input type="checkbox" id="enable_automobile_module" checked={!!formData.settings.enable_automobile_module} value={formData.settings.enable_automobile_module} onChange={() => { const nextEnabled = !formData.settings.enable_automobile_module; formData.settings.enable_automobile_module = nextEnabled; const currentDesign = formData.settings.sales_create_form_design || "type1"; if (nextEnabled) { if (!formData.settings.sales_create_form_design || currentDesign === "type1") { formData.settings.sales_create_form_design = "type5"; } } else if (currentDesign === "type5") { formData.settings.sales_create_form_design = "type1"; } setFormData({ ...formData }); }} />
+                                                <input type="checkbox" id="enable_automobile_module" checked={!!formData.settings.enable_automobile_module} value={formData.settings.enable_automobile_module} onChange={() => { const nextEnabled = !formData.settings.enable_automobile_module; formData.settings.enable_automobile_module = nextEnabled; const currentDesign = formData.settings.sales_create_form_design || "type1"; if (nextEnabled) { if (!formData.settings.sales_create_form_design || currentDesign === "type1") { formData.settings.sales_create_form_design = "type5"; } applyAutomobileMenuOrder(); } else if (currentDesign === "type5") { formData.settings.sales_create_form_design = "type1"; } setFormData({ ...formData }); }} />
                                                 <span>Enable AutoMobile Workshop Module</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_employee_module">
                                                 <input type="checkbox" id="enable_employee_module" checked={!!formData.settings.enable_employee_module} value={formData.settings.enable_employee_module} onChange={() => { formData.settings.enable_employee_module = !formData.settings.enable_employee_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Employee Module</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_purchase_unit_price_validation">
+                                                <input type="checkbox" id="enable_purchase_unit_price_validation" checked={!!formData.settings.enable_purchase_unit_price_validation} value={formData.settings.enable_purchase_unit_price_validation} onChange={() => { formData.settings.enable_purchase_unit_price_validation = !formData.settings.enable_purchase_unit_price_validation; setFormData({ ...formData }); }} />
+                                                <span>Enable Purchase Unit Price Validation</span>
                                             </label>
                                         </div>
                                     </div>

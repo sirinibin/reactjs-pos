@@ -20,7 +20,7 @@ const Products = forwardRef((props, ref) => {
                     top: "5%",
                     left: "15%",
                     margin: "0",
-                    zIndex: 1055,
+                    zIndex: 1060,
                     width: "70%",
                     maxHeight: "90vh",
                 }}
@@ -102,7 +102,7 @@ const Products = forwardRef((props, ref) => {
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
                 dialogAs={DraggableDialog}
-                className="products-modal-wrap"
+                className="products-modal-wrap above-sales-modal"
             >
                 <Modal.Header>
                     <Modal.Title>

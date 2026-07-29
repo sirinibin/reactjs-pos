@@ -2097,6 +2097,7 @@ const Preview = forwardRef((props, ref) => {
         />
 
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}
+            className="order-preview-wrap"
             backdrop={silentMode ? false : true}
             style={silentMode ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
         >

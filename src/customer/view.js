@@ -1,15 +1,25 @@
 import React, { useState, useCallback, forwardRef, useImperativeHandle, useRef } from "react";
-import { Modal, Spinner } from 'react-bootstrap';
+import { Modal, Spinner, Dropdown } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import ImageGallery from '../utils/ImageGallery.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone } from '../utils/dateUtils.js';
+import Sales from '../utils/sales.js';
+import SalesReturns from '../utils/salesReturn.js';
+import Quotations from '../utils/quotations.js';
+import QuotationSalesReturns from '../utils/quotation_sales_returns.js';
+
+const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+const automobileEnabled = !!storeSettings?.enable_automobile_module;
 
 const TABS = [
-    { key: 'details', label: 'Details', icon: 'bi-person-vcard' },
-    { key: 'sales', label: 'Sales History', icon: 'bi-receipt' },
-    { key: 'quotations', label: 'Quotation History', icon: 'bi-file-earmark-text' },
-    { key: 'repairs', label: 'Repair Jobs', icon: 'bi-tools' },
+    { key: 'details',       label: 'Details',                   icon: 'bi-person-vcard' },
+    { key: 'sales',         label: 'Sales History',              icon: 'bi-receipt' },
+    { key: 'quotations',    label: 'Quotation History',          icon: 'bi-file-earmark-text' },
+    { key: 'repairs',       label: 'Repair Jobs',                icon: 'bi-tools' },
+    ...(automobileEnabled ? [{ key: 'vehicles', label: 'Vehicles', icon: 'bi-car-front' }] : []),
+    { key: 'churnHistory',  label: 'Churn Risk History',         icon: 'bi-exclamation-triangle' },
+    { key: 'clvHistory',    label: 'CLV History',                icon: 'bi-graph-up-arrow' },
 ];
 
 function fmtDate(val) { if (!val) return '-'; try { return new Date(val).toLocaleDateString(); } catch { return '-'; } }
@@ -19,18 +29,25 @@ const CustomerView = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef();
+    const SalesRef = useRef();
+    const SalesReturnsRef = useRef();
+    const QuotationsRef = useRef();
+    const QtnSalesRef = useRef();
+    const QtnSalesReturnsRef = useRef();
 
     const [model, setModel] = useState({});
     const [show, SetShow] = useState(false);
     const [activeTab, setActiveTab] = useState('details');
-    const [history, setHistory] = useState({ sales: [], quotations: [], repairs: [] });
+    const [history, setHistory] = useState({ sales: [], quotations: [], repairs: [], vehicles: [] });
+    const [biHistory, setBiHistory] = useState({ churn_history: [], clv_history: [] });
     const [loadingTab, setLoadingTab] = useState(null);
 
     useImperativeHandle(ref, () => ({
         async open(id, initialTab) {
             if (!id) return;
             setActiveTab(initialTab || 'details');
-            setHistory({ sales: [], quotations: [], repairs: [] });
+            setHistory({ sales: [], quotations: [], repairs: [], vehicles: [] });
+            setBiHistory({ churn_history: [], clv_history: [] });
             setLoadingTab(null);
             await getCustomer(id);
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -73,6 +90,12 @@ const CustomerView = forwardRef((props, ref) => {
             } else if (tab === 'repairs') {
                 const r = await fetch(`/v1/repair_job?search[customer_id]=${customerId}&search[store_id]=${storeId}&limit=200&sort=-date_str&select=id,job_number,title,date,status,labour_charge,total,km`, { headers }).then(r => r.json());
                 setHistory(h => ({ ...h, repairs: r?.result || [] }));
+            } else if (tab === 'vehicles') {
+                const r = await fetch(`/v1/vehicle?search[customer_id]=${customerId}&search[store_id]=${storeId}&limit=200&sort=-created_at&select=id,vehicle_number,brand,model,variant,year,color,chassis_number,istimara_no,current_km`, { headers }).then(r => r.json());
+                setHistory(h => ({ ...h, vehicles: r?.result || [] }));
+            } else if (tab === 'churnHistory' || tab === 'clvHistory') {
+                const r = await fetch(`/v1/customer/${customerId}/history?search[store_id]=${storeId}`, { headers }).then(r => r.json());
+                if (r?.result) setBiHistory(r.result);
             }
         } catch (e) { console.error(e); }
         setLoadingTab(null);
@@ -111,6 +134,47 @@ const CustomerView = forwardRef((props, ref) => {
                             onClick={() => { handleClose(); props.openUpdateForm(model.id); }}>
                             <i className="bi bi-pencil me-1"></i>{t('Edit')}
                         </button>
+                    )}
+                    {model.id && (
+                        <Dropdown align="end">
+                            <Dropdown.Toggle variant="outline-secondary" size="sm" id="cust-view-hist-dd" title="History & Links">
+                                <i className="bi bi-clock-history me-1"></i>{t('History')}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu style={{ minWidth: 230 }}>
+                                <Dropdown.Item onClick={() => handleTabClick('repairs')}>
+                                    <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                </Dropdown.Item>
+                                {automobileEnabled && (
+                                    <Dropdown.Item onClick={() => handleTabClick('vehicles')}>
+                                        <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                    </Dropdown.Item>
+                                )}
+                                <Dropdown.Divider />
+                                <Dropdown.Item onClick={() => SalesRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
+                                    <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => SalesReturnsRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
+                                    <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item onClick={() => QuotationsRef.current?.open(false, [{ id: model.id, name: model.name }], 'quotation', null)}>
+                                    <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => QtnSalesRef.current?.open(false, [{ id: model.id, name: model.name }], 'invoice', null)}>
+                                    <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => QtnSalesReturnsRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
+                                    <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item onClick={() => handleTabClick('churnHistory')}>
+                                    <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => handleTabClick('clvHistory')}>
+                                    <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
                     )}
                     <button type="button" className="btn-close ms-1" onClick={handleClose} />
                 </div>
@@ -302,6 +366,90 @@ const CustomerView = forwardRef((props, ref) => {
                                             </tbody>
                                         </table>
                                     )}
+
+                                    {/* VEHICLES */}
+                                    {activeTab === 'vehicles' && (
+                                        <table className="table table-sm mb-0" style={{ minWidth: 700 }}>
+                                            <thead><tr style={{ background: '#f7f9fb' }}>
+                                                <th style={thS}>{t('Vehicle #')}</th>
+                                                <th style={thS}>{t('Brand / Model')}</th>
+                                                <th style={thS}>{t('Year')}</th>
+                                                <th style={thS}>{t('Color')}</th>
+                                                <th style={thS}>{t('Istimara No.')}</th>
+                                                <th style={thS}>{t('Chassis No.')}</th>
+                                                <th style={thS}>{t('Current Km')}</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {history.vehicles.length === 0
+                                                    ? <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No vehicles found')}</td></tr>
+                                                    : history.vehicles.map(r => (
+                                                        <tr key={r.id}>
+                                                            <td style={tdS}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.vehicle_number || '-'}</span></td>
+                                                            <td style={tdS}>{[r.brand, r.model, r.variant].filter(Boolean).join(' ') || '-'}</td>
+                                                            <td style={tdS}>{r.year || '-'}</td>
+                                                            <td style={tdS}>{r.color || '-'}</td>
+                                                            <td style={tdS}>{r.istimara_no || '-'}</td>
+                                                            <td style={tdS}>{r.chassis_number || '-'}</td>
+                                                            <td style={tdS}>{r.current_km != null ? parseFloat(r.current_km).toLocaleString() + ' km' : '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {/* CHURN RISK HISTORY */}
+                                    {activeTab === 'churnHistory' && (
+                                        <table className="table table-sm mb-0" style={{ minWidth: 600 }}>
+                                            <thead><tr style={{ background: '#f7f9fb' }}>
+                                                <th style={thS}>{t('Date')}</th>
+                                                <th style={thS}>{t('Tier')}</th>
+                                                <th style={thS}>{t('Churn %')}</th>
+                                                <th style={thS}>{t('Days Since Last Buy')}</th>
+                                                <th style={thS}>{t('Reason')}</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {(!biHistory.churn_history || biHistory.churn_history.length === 0)
+                                                    ? <tr><td colSpan={5} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No churn history found')}</td></tr>
+                                                    : biHistory.churn_history.map((r, i) => (
+                                                        <tr key={i}>
+                                                            <td style={tdS}>{fmtDate(r.date)}</td>
+                                                            <td style={tdS}><span style={{ fontSize: 11, fontWeight: 700, background: '#fff3e0', color: '#e65100', borderRadius: 4, padding: '2px 8px' }}>{r.tier || '-'}</span></td>
+                                                            <td style={tdS}>{r.churn_percent != null ? r.churn_percent + '%' : '-'}</td>
+                                                            <td style={tdS}>{r.days_since_last_buy != null ? r.days_since_last_buy + ' days' : '-'}</td>
+                                                            <td style={tdS}>{r.reason || '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {/* CLV HISTORY */}
+                                    {activeTab === 'clvHistory' && (
+                                        <table className="table table-sm mb-0" style={{ minWidth: 600 }}>
+                                            <thead><tr style={{ background: '#f7f9fb' }}>
+                                                <th style={thS}>{t('Date')}</th>
+                                                <th style={thS}>{t('Segment')}</th>
+                                                <th style={thS}>{t('Predicted CLV')}</th>
+                                                <th style={thS}>{t('Avg Order')}</th>
+                                                <th style={thS}>{t('Orders Count')}</th>
+                                                <th style={thS}>{t('Total Spend')}</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {(!biHistory.clv_history || biHistory.clv_history.length === 0)
+                                                    ? <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No CLV history found')}</td></tr>
+                                                    : biHistory.clv_history.map((r, i) => (
+                                                        <tr key={i}>
+                                                            <td style={tdS}>{fmtDate(r.date)}</td>
+                                                            <td style={tdS}><span style={{ fontSize: 11, fontWeight: 700, background: '#e8f5e9', color: '#2e7d32', borderRadius: 4, padding: '2px 8px' }}>{r.segment || '-'}</span></td>
+                                                            <td style={{ ...tdS, fontWeight: 600 }}>{r.predicted_clv_amount != null ? fmtAmt(r.predicted_clv_amount) : '-'}</td>
+                                                            <td style={tdS}>{r.predicted_avg_order_amount != null ? fmtAmt(r.predicted_avg_order_amount) : '-'}</td>
+                                                            <td style={tdS}>{r.history_orders_count != null ? r.history_orders_count : '-'}</td>
+                                                            <td style={tdS}>{r.history_spend_amount != null ? fmtAmt(r.history_spend_amount) : '-'}</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -309,6 +457,11 @@ const CustomerView = forwardRef((props, ref) => {
                 </div>
             </Modal.Body>
         </Modal>
+        <Sales ref={SalesRef} />
+        <SalesReturns ref={SalesReturnsRef} />
+        <Quotations ref={QuotationsRef} />
+        <Quotations ref={QtnSalesRef} />
+        <QuotationSalesReturns ref={QtnSalesReturnsRef} />
     </>);
 });
 

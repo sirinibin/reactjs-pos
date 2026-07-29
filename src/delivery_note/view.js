@@ -100,7 +100,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
         <OrderPreview ref={PreviewRef} />
         <DeliveryNotePrint ref={PrintRef} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className="above-sales-modal">
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button */}

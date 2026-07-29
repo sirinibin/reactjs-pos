@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from 'react-i18next';
-import { Modal, Spinner } from "react-bootstrap";
+import { Modal, Spinner, Dropdown } from "react-bootstrap";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
-
-const TABS = [
-    { key: 'details', label: 'Details', icon: 'bi-car-front' },
-    { key: 'sales', label: 'Sales History', icon: 'bi-receipt' },
-    { key: 'quotations', label: 'Quotation History', icon: 'bi-file-earmark-text' },
-    { key: 'repairs', label: 'Repair Jobs', icon: 'bi-tools' },
-];
+import RepairJobKanban from '../repair_job/kanban.js';
+import RepairJobCardView from '../repair_job/card_view.js';
+import QuotationType3Form from '../quotation/QuotationType3Form.js';
+import OrderCreate from '../order/create.js';
 
 function fmtDate(val) {
     if (!val) return '-';
@@ -16,34 +13,107 @@ function fmtDate(val) {
 }
 function fmtAmt(val) { return val != null ? parseFloat(val).toFixed(2) : '-'; }
 
+const HIST_TABS = [
+    { key: 'repairs',    label: 'Repair Jobs',        icon: 'bi-tools',             color: '#e65100' },
+    { key: 'sales',      label: 'Sales History',      icon: 'bi-receipt',           color: '#2e7d32' },
+    { key: 'quotations', label: 'Quotation History',  icon: 'bi-file-earmark-text', color: '#1565c0' },
+    { key: 'trello',     label: 'Repair Job Board',   icon: 'bi-kanban',            color: '#0052cc' },
+];
+
 const VehicleView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
+    // ── Details modal ──
+    let [formData, setFormData] = useState({});
+    const [show, SetShow] = useState(false);
+
+    // ── History modal ──
+    const [histShow, setHistShow] = useState(false);
+    const [histVehicle, setHistVehicle] = useState({});
+    const [histTab, setHistTab] = useState('repairs');
+    // null = not fetched yet; [] / [...] = fetched
+    const [histData, setHistData] = useState({ sales: null, quotations: null, repairs: null });
+    const [histLoading, setHistLoading] = useState(null); // tab key currently loading
+
+    const vehicleIdRef = useRef(null);
+    const cardViewRef = useRef();
+    const qt3FormRef = useRef();
+    const orderCreateRef = useRef();
+
+    async function buildJobPrefill(job, type) {
+        const storeId = localStorage.getItem('store_id');
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        const products = (job.parts || []).map(p => ({
+            product_id: p.product_id || null, name: p.name || '',
+            quantity: parseFloat(p.qty) || 1,
+            unit_price: parseFloat(p.unit_price) || 0,
+            unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0,
+            purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+            purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+            unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false,
+        }));
+        const labour = parseFloat(job.labour_charge) || 0;
+        if (labour > 0) {
+            let labourProductId = null;
+            try {
+                const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
+                if (r?.result?.[0]) { labourProductId = r.result[0].id; }
+                else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
+            } catch (e) {}
+            const vatFactor = 1.15;
+            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((labour / vatFactor).toFixed(4)), unit_price_with_vat: labour, purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
+        }
+        return {
+            type,
+            customer_id: job.customer_id || null,
+            customer_name: job.customer_name || '',
+            customer: job.customer_id ? { id: job.customer_id, name: job.customer_name } : null,
+            vehicle_id: job.vehicle_id || null,
+            vehicle_snapshot: job.vehicle_id ? { vehicle_number: job.vehicle_number || '', brand: job.brand || '', model: job.model || '' } : undefined,
+            vehicle: job.vehicle_id ? { id: job.vehicle_id, vehicle_number: job.vehicle_number, brand: job.brand, model: job.model } : null,
+            km_driven: parseFloat(job.km) || null,
+            products,
+        };
+    }
+
     useImperativeHandle(ref, () => ({
-        open(id, initialTab) {
-            const tab = initialTab || 'details';
-            setActiveTab(tab);
-            setHistory({ sales: [], quotations: [], repairs: [] });
-            setLoadingTab(null);
-            getVehicle(id);
-            SetShow(true);
-            if (tab !== 'details') {
-                setTimeout(() => fetchHistory(tab, id), 300);
+        open(id, tab) {
+            if (tab && tab !== 'details') {
+                // Open history modal directly — no details view
+                vehicleIdRef.current = id;
+                setHistVehicle({});
+                setHistData({ sales: null, quotations: null, repairs: null });
+                setHistTab(tab);
+                setHistShow(true);
+                fetchVehicleBasic(id);
+                if (tab !== 'trello') fetchHistTab(tab, id);
+            } else {
+                // Open details view
+                setHistShow(false);
+                setHistData({ sales: null, quotations: null, repairs: null });
+                vehicleIdRef.current = id;
+                getVehicle(id);
+                SetShow(true);
             }
         },
     }));
 
-    const { t } = useTranslation('common');
-    let [formData, setFormData] = useState({});
-    const [show, SetShow] = useState(false);
-    const [activeTab, setActiveTab] = useState('details');
-    const [history, setHistory] = useState({ sales: [], quotations: [], repairs: [] });
-    const [loadingTab, setLoadingTab] = useState(null);
-
     function handleClose() { SetShow(false); }
+    function handleHistClose() { setHistShow(false); setHistData({ sales: null, quotations: null, repairs: null }); }
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");
         if (!at) { window.location = "/"; }
     });
+
+    async function fetchVehicleBasic(id) {
+        try {
+            const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+            const storeId = localStorage.getItem('store_id') || '';
+            const r = await fetch(`/v1/vehicle/${id}?search[store_id]=${storeId}&select=id,brand,model,variant,vehicle_number,year,customer_id,customer_name`, { headers }).then(r => r.json());
+            if (r?.result) setHistVehicle(r.result);
+        } catch(e) {}
+    }
 
     function getVehicle(id) {
         const requestOptions = {
@@ -64,32 +134,44 @@ const VehicleView = forwardRef((props, ref) => {
             .catch(error => console.log(error));
     }
 
-    const fetchHistory = useCallback(async (tab, vehicleId) => {
-        if (!vehicleId) return;
-        setLoadingTab(tab);
-        const storeId = localStorage.getItem('store_id');
+    async function fetchHistTab(tab, id) {
+        const vid = id || vehicleIdRef.current;
+        if (!vid) return;
+        setHistLoading(tab);
+        const storeId = localStorage.getItem('store_id') || '';
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
-        const qs = `search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=200&sort=-date`;
+        const qs = `search[vehicle_id]=${vid}&search[store_id]=${storeId}&limit=200&sort=-date`;
         try {
             if (tab === 'sales') {
                 const r = await fetch(`/v1/order?${qs}&select=id,code,date,customer_name,net_total,payment_status,km_driven`, { headers }).then(r => r.json());
-                setHistory(h => ({ ...h, sales: r?.result || [] }));
+                setHistData(h => ({ ...h, sales: r?.result || [] }));
             } else if (tab === 'quotations') {
                 const r = await fetch(`/v1/quotation?${qs}&select=id,code,date,customer_name,net_total,type,km_driven`, { headers }).then(r => r.json());
-                setHistory(h => ({ ...h, quotations: r?.result || [] }));
+                setHistData(h => ({ ...h, quotations: r?.result || [] }));
             } else if (tab === 'repairs') {
-                const r = await fetch(`/v1/repair-job?search[vehicle_id]=${vehicleId}&search[store_id]=${storeId}&limit=200&sort=-date_str&select=id,job_number,title,date,status,labour_charge,total,km`, { headers }).then(r => r.json());
-                setHistory(h => ({ ...h, repairs: r?.result || [] }));
+                const r = await fetch(`/v1/repair-job?search[vehicle_id]=${vid}&search[store_id]=${storeId}&limit=200&sort=-date_str&select=id,job_number,title,date,status,labour_charge,total,km`, { headers }).then(r => r.json());
+                setHistData(h => ({ ...h, repairs: r?.result || [] }));
             }
-        } catch (e) { console.error(e); }
-        setLoadingTab(null);
-    }, []);
+        } catch(e) { console.error(e); }
+        setHistLoading(null);
+    }
 
-    function handleTabClick(tab) {
-        setActiveTab(tab);
-        if (tab !== 'details' && formData.id) {
-            fetchHistory(tab, formData.id);
+    function handleHistTabClick(tab) {
+        setHistTab(tab);
+        if (tab !== 'trello' && !histData[tab]) {
+            fetchHistTab(tab);
         }
+    }
+
+    // Open history modal from within the details view
+    function openHistFromDetails(tab) {
+        const vid = formData.id || vehicleIdRef.current;
+        vehicleIdRef.current = vid;
+        setHistVehicle(formData);
+        setHistData({ sales: null, quotations: null, repairs: null });
+        setHistTab(tab);
+        setHistShow(true);
+        if (tab !== 'trello') fetchHistTab(tab, vid);
     }
 
     const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
@@ -113,8 +195,15 @@ const VehicleView = forwardRef((props, ref) => {
         return <span style={{ background: bg, color: col, borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>{status?.replace(/_/g, ' ') || '-'}</span>;
     };
 
+    const histVehicleTitle = [histVehicle.brand, histVehicle.model, histVehicle.variant].filter(Boolean).join(' ')
+        || histVehicle.vehicle_number || '';
+
+    const rows = histData[histTab];
+    const isLoading = histLoading === histTab;
+
     return (
         <>
+            {/* ── Vehicle Details Modal ── */}
             <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}
@@ -132,6 +221,29 @@ const VehicleView = forwardRef((props, ref) => {
                                 <i className="bi bi-pencil me-1"></i>{t('Edit')}
                             </button>
                         )}
+                        {formData.id && (
+                            <Dropdown align="end">
+                                <Dropdown.Toggle variant="outline-secondary" size="sm" id="veh-view-hist" title={t('History')}>
+                                    <i className="bi bi-clock-history"></i>
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu style={{ minWidth: 200 }}>
+                                    <Dropdown.Item onClick={() => openHistFromDetails('repairs')}>
+                                        <i className="bi bi-tools me-2 text-warning"></i>{t('Repair Jobs')}
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => openHistFromDetails('sales')}>
+                                        <i className="bi bi-receipt me-2 text-success"></i>{t('Sales History')}
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => openHistFromDetails('quotations')}>
+                                        <i className="bi bi-file-earmark-text me-2 text-info"></i>{t('Quotation History')}
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => openHistFromDetails('trello')}>
+                                        <i className="bi bi-kanban me-2" style={{ color: '#0052cc' }}></i>{t('Repair Job Board')}
+                                    </Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        )}
                         <button type="button" className="btn-close ms-1" onClick={handleClose} />
                     </div>
                 </Modal.Header>
@@ -139,188 +251,251 @@ const VehicleView = forwardRef((props, ref) => {
                 <style>{`
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
-                    .veh-tab { border: none; background: none; padding: 8px 16px; font-size: 13px; font-weight: 500; color: #54647a; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
-                    .veh-tab.active { color: #004ac6; border-bottom-color: #004ac6; font-weight: 700; }
-                    .veh-tab:hover:not(.active) { color: #191c1e; }
                 `}</style>
-
-                {/* Tab bar */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#fff', padding: '0 20px', flexShrink: 0, overflowX: 'auto' }}>
-                    {TABS.map(tab => (
-                        <button key={tab.key} className={`veh-tab${activeTab === tab.key ? ' active' : ''}`} onClick={() => handleTabClick(tab.key)}>
-                            <i className={`bi ${tab.icon} me-1`}></i>{t(tab.label)}
-                        </button>
-                    ))}
-                </div>
 
                 <Modal.Body className="pw-body">
                     <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', background: '#f7f9fb' }}>
-
-                        {/* DETAILS TAB */}
-                        {activeTab === 'details' && (
-                            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-                                <div style={CARD}>
-                                    <SectionTitle icon="bi-person">{t('Customer')}</SectionTitle>
-                                    <div className="row g-3">
-                                        <div className="col-12"><Label>{t('Customer Name')}</Label><div style={VALUE_BOX}>{formData.customer_name || '-'}</div></div>
-                                    </div>
+                        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <div style={CARD}>
+                                <SectionTitle icon="bi-person">{t('Customer')}</SectionTitle>
+                                <div className="row g-3">
+                                    <div className="col-12"><Label>{t('Customer Name')}</Label><div style={VALUE_BOX}>{formData.customer_name || '-'}</div></div>
                                 </div>
-                                <div style={CARD}>
-                                    <SectionTitle icon="bi-car-front">{t('Vehicle Identification')}</SectionTitle>
-                                    <div className="row g-3">
-                                        <div className="col-md-4"><Label>{t('Brand')}</Label><div style={VALUE_BOX}>{formData.brand || '-'}</div></div>
-                                        <div className="col-md-4"><Label>{t('Model')}</Label><div style={VALUE_BOX}>{formData.model || '-'}</div></div>
-                                        <div className="col-md-4"><Label>{t('Variant')}</Label><div style={VALUE_BOX}>{formData.variant || '-'}</div></div>
-                                        <div className="col-md-4"><Label>{t('Manufacture Year')}</Label><div style={VALUE_BOX}>{formData.year || '-'}</div></div>
-                                        <div className="col-md-4"><Label>{t('Color')}</Label><div style={VALUE_BOX}>{formData.color || '-'}</div></div>
-                                        <div className="col-md-4"><Label>{t('Current KM')}</Label><div style={VALUE_BOX}>{formData.current_km ? parseFloat(formData.current_km).toLocaleString() : '-'}</div></div>
-                                    </div>
-                                </div>
-                                <div style={CARD}>
-                                    <SectionTitle icon="bi-file-earmark-text">{t('Registration & Technical')}</SectionTitle>
-                                    <div className="row g-3">
-                                        <div className="col-md-6"><Label>{t('Vehicle Number (Plate)')}</Label><div style={VALUE_BOX}>{formData.vehicle_number || '-'}</div></div>
-                                        <div className="col-md-6"><Label>{t('Istimara No.')}</Label><div style={VALUE_BOX}>{formData.istimara_no || '-'}</div></div>
-                                        <div className="col-md-6"><Label>{t('Chassis Number')}</Label><div style={VALUE_BOX}>{formData.chassis_number || '-'}</div></div>
-                                        <div className="col-md-6"><Label>{t('Engine Number')}</Label><div style={VALUE_BOX}>{formData.engine_number || '-'}</div></div>
-                                    </div>
-                                </div>
-                                {formData.remarks && (
-                                    <div style={CARD}>
-                                        <SectionTitle icon="bi-chat-square-text">{t('Remarks')}</SectionTitle>
-                                        <div style={VALUE_BOX}>{formData.remarks}</div>
-                                    </div>
-                                )}
                             </div>
-                        )}
-
-                        {/* HISTORY TABS */}
-                        {activeTab !== 'details' && (
-                            <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                {loadingTab === activeTab ? (
-                                    <div style={{ padding: 40, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
-                                ) : (
-                                    <div style={{ overflowX: 'auto' }}>
-
-                                        {/* SALES */}
-                                        {activeTab === 'sales' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
-                                                <thead><tr style={{ background: '#f7f9fb' }}>
-                                                    <th style={thStyle}>{t('Code')}</th>
-                                                    <th style={thStyle}>{t('Date')}</th>
-                                                    <th style={thStyle}>{t('Customer')}</th>
-                                                    <th style={thStyle}>{t('Km Driven')}</th>
-                                                    <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
-                                                    <th style={thStyle}>{t('Payment')}</th>
-                                                    <th style={thStyle}></th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {history.sales.length === 0 ? (
-                                                        <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No sales found')}</td></tr>
-                                                    ) : history.sales.map(r => (
-                                                        <tr key={r.id}>
-                                                            <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
-                                                            <td style={tdStyle}>{fmtDate(r.date)}</td>
-                                                            <td style={tdStyle}>{r.customer_name || '-'}</td>
-                                                            <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
-                                                            <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
-                                                            <td style={tdStyle}>{payBadge(r.payment_status)}</td>
-                                                            <td style={tdStyle}>
-                                                                {props.onOpenSalesUpdate && (
-                                                                    <button type="button" onClick={() => props.onOpenSalesUpdate(r.id)}
-                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                                    </button>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        )}
-
-                                        {/* QUOTATIONS */}
-                                        {activeTab === 'quotations' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
-                                                <thead><tr style={{ background: '#f7f9fb' }}>
-                                                    <th style={thStyle}>{t('Code')}</th>
-                                                    <th style={thStyle}>{t('Date')}</th>
-                                                    <th style={thStyle}>{t('Customer')}</th>
-                                                    <th style={thStyle}>{t('Type')}</th>
-                                                    <th style={thStyle}>{t('Km Driven')}</th>
-                                                    <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
-                                                    <th style={thStyle}></th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {history.quotations.length === 0 ? (
-                                                        <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No quotations found')}</td></tr>
-                                                    ) : history.quotations.map(r => (
-                                                        <tr key={r.id}>
-                                                            <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
-                                                            <td style={tdStyle}>{fmtDate(r.date)}</td>
-                                                            <td style={tdStyle}>{r.customer_name || '-'}</td>
-                                                            <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: r.type === 'invoice' ? '#e8f5e9' : '#e3f2fd', color: r.type === 'invoice' ? '#2e7d32' : '#1565c0', borderRadius: 4, padding: '2px 8px' }}>{r.type || 'quotation'}</span></td>
-                                                            <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
-                                                            <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
-                                                            <td style={tdStyle}>
-                                                                {props.onOpenQuotationUpdate && (
-                                                                    <button type="button" onClick={() => props.onOpenQuotationUpdate(r.id)}
-                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                                    </button>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        )}
-
-                                        {/* REPAIR JOBS */}
-                                        {activeTab === 'repairs' && (
-                                            <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
-                                                <thead><tr style={{ background: '#f7f9fb' }}>
-                                                    <th style={thStyle}>{t('Job #')}</th>
-                                                    <th style={thStyle}>{t('Title')}</th>
-                                                    <th style={thStyle}>{t('Date')}</th>
-                                                    <th style={thStyle}>{t('Km')}</th>
-                                                    <th style={thStyle}>{t('Status')}</th>
-                                                    <th style={{ ...thStyle, textAlign: 'right' }}>{t('Labour')}</th>
-                                                    <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
-                                                    <th style={thStyle}></th>
-                                                </tr></thead>
-                                                <tbody>
-                                                    {history.repairs.length === 0 ? (
-                                                        <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No repair jobs found')}</td></tr>
-                                                    ) : history.repairs.map(r => (
-                                                        <tr key={r.id}>
-                                                            <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.job_number || '-'}</span></td>
-                                                            <td style={tdStyle}>{r.title || '-'}</td>
-                                                            <td style={tdStyle}>{fmtDate(r.date)}</td>
-                                                            <td style={tdStyle}>{r.km != null ? parseFloat(r.km).toLocaleString() + ' km' : '-'}</td>
-                                                            <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: '#f0f4ff', color: '#004ac6', borderRadius: 4, padding: '2px 8px' }}>{r.status || '-'}</span></td>
-                                                            <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtAmt(r.labour_charge)}</td>
-                                                            <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.total)}</td>
-                                                            <td style={tdStyle}>
-                                                                {props.onOpenRepairJobUpdate && (
-                                                                    <button type="button" onClick={() => props.onOpenRepairJobUpdate(r.id)}
-                                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                                        <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                                    </button>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        )}
-
-                                    </div>
-                                )}
+                            <div style={CARD}>
+                                <SectionTitle icon="bi-car-front">{t('Vehicle Identification')}</SectionTitle>
+                                <div className="row g-3">
+                                    <div className="col-md-4"><Label>{t('Brand')}</Label><div style={VALUE_BOX}>{formData.brand || '-'}</div></div>
+                                    <div className="col-md-4"><Label>{t('Model')}</Label><div style={VALUE_BOX}>{formData.model || '-'}</div></div>
+                                    <div className="col-md-4"><Label>{t('Variant')}</Label><div style={VALUE_BOX}>{formData.variant || '-'}</div></div>
+                                    <div className="col-md-4"><Label>{t('Manufacture Year')}</Label><div style={VALUE_BOX}>{formData.year || '-'}</div></div>
+                                    <div className="col-md-4"><Label>{t('Color')}</Label><div style={VALUE_BOX}>{formData.color || '-'}</div></div>
+                                    <div className="col-md-4"><Label>{t('Current KM')}</Label><div style={VALUE_BOX}>{formData.current_km ? parseFloat(formData.current_km).toLocaleString() : '-'}</div></div>
+                                </div>
                             </div>
-                        )}
-
+                            <div style={CARD}>
+                                <SectionTitle icon="bi-file-earmark-text">{t('Registration & Technical')}</SectionTitle>
+                                <div className="row g-3">
+                                    <div className="col-md-6"><Label>{t('Vehicle Number (Plate)')}</Label><div style={VALUE_BOX}>{formData.vehicle_number || '-'}</div></div>
+                                    <div className="col-md-6"><Label>{t('Istimara No.')}</Label><div style={VALUE_BOX}>{formData.istimara_no || '-'}</div></div>
+                                    <div className="col-md-6"><Label>{t('Chassis Number')}</Label><div style={VALUE_BOX}>{formData.chassis_number || '-'}</div></div>
+                                    <div className="col-md-6"><Label>{t('Engine Number')}</Label><div style={VALUE_BOX}>{formData.engine_number || '-'}</div></div>
+                                </div>
+                            </div>
+                            {formData.remarks && (
+                                <div style={CARD}>
+                                    <SectionTitle icon="bi-chat-square-text">{t('Remarks')}</SectionTitle>
+                                    <div style={VALUE_BOX}>{formData.remarks}</div>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                </Modal.Body>
+            </Modal>
+
+            {/* ── Vehicle History Modal (standalone, no details behind) ── */}
+            <Modal show={histShow} size="xl" onHide={handleHistClose} animation={false} backdrop="static" scrollable>
+                <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
+                        <i className="bi bi-clock-history me-2 text-secondary"></i>{t('Vehicle History')}
+                        {histVehicleTitle && (
+                            <span style={{ marginLeft: 10, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>
+                                — {histVehicleTitle}
+                                {histVehicle.vehicle_number && histVehicleTitle !== histVehicle.vehicle_number && ` (${histVehicle.vehicle_number})`}
+                            </span>
+                        )}
+                    </Modal.Title>
+                    <button type="button" className="btn-close" onClick={handleHistClose} />
+                </Modal.Header>
+
+                {/* Sub-tab bar — pill style */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#f4f6f8', borderBottom: '1px solid #e2e8f0', padding: '10px 20px', flexShrink: 0, flexWrap: 'wrap' }}>
+                    {HIST_TABS.map(tab => {
+                        const isActive = histTab === tab.key;
+                        const count = histData[tab.key];
+                        return (
+                            <button
+                                key={tab.key}
+                                type="button"
+                                onClick={() => handleHistTabClick(tab.key)}
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                                    padding: '7px 16px', borderRadius: 999, border: 'none',
+                                    cursor: 'pointer', whiteSpace: 'nowrap',
+                                    fontSize: 13, fontWeight: isActive ? 700 : 500,
+                                    background: isActive ? tab.color : '#ffffff',
+                                    color: isActive ? '#ffffff' : '#4b5563',
+                                    boxShadow: isActive ? `0 2px 8px ${tab.color}55` : '0 1px 3px rgba(0,0,0,0.08)',
+                                    transition: 'all 0.18s ease',
+                                    outline: 'none',
+                                }}
+                            >
+                                <i className={`bi ${tab.icon}`} style={{ fontSize: 13, color: isActive ? '#fff' : tab.color }}></i>
+                                {t(tab.label)}
+                                {count != null && (
+                                    <span style={{
+                                        background: isActive ? 'rgba(255,255,255,0.25)' : '#f0f2f4',
+                                        color: isActive ? '#fff' : '#6b7280',
+                                        borderRadius: 999, padding: '1px 7px',
+                                        fontSize: 11, fontWeight: 700, lineHeight: 1.4,
+                                    }}>
+                                        {count?.length || 0}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <Modal.Body style={histTab === 'trello' ? { padding: 0, height: '65vh', overflow: 'hidden' } : { padding: 0, minHeight: 300 }}>
+
+                    {/* REPAIR JOB BOARD — full-height embedded kanban */}
+                    {histTab === 'trello' && (
+                        histVehicle.id ? (
+                            <>
+                                <RepairJobKanban
+                                    embedded
+                                    presetVehicleId={histVehicle.id}
+                                    presetVehicleLabel={[histVehicle.vehicle_number, histVehicle.brand, histVehicle.model].filter(Boolean).join(' — ')}
+                                    presetCustomerId={histVehicle.customer_id}
+                                    presetCustomerName={histVehicle.customer_name}
+                                    onOpenCard={(jobId) => cardViewRef.current?.open(jobId)}
+                                />
+                                <RepairJobCardView
+                                    ref={cardViewRef}
+                                    showToastMessage={props.showToastMessage}
+                                    onFullEdit={props.onOpenRepairJobUpdate}
+                                    onCreateSalesInvoice={async (job) => { const p = await buildJobPrefill(job, 'invoice'); orderCreateRef.current?.openWithPrefill(p); }}
+                                    onCreateQuotation={async (job) => { const p = await buildJobPrefill(job, 'quotation'); qt3FormRef.current?.open(null, p); }}
+                                />
+                                <QuotationType3Form ref={qt3FormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+                                <OrderCreate ref={orderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+                            </>
+                        ) : (
+                            <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
+                        )
+                    )}
+
+                    {isLoading && histTab !== 'trello' ? (
+                        <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
+                    ) : histTab !== 'trello' && (
+                        <div style={{ overflowX: 'auto' }}>
+
+                            {/* REPAIRS */}
+                            {histTab === 'repairs' && (
+                                <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
+                                    <thead><tr style={{ background: '#f7f9fb' }}>
+                                        <th style={thStyle}>{t('Job #')}</th>
+                                        <th style={thStyle}>{t('Title')}</th>
+                                        <th style={thStyle}>{t('Date')}</th>
+                                        <th style={thStyle}>{t('Km')}</th>
+                                        <th style={thStyle}>{t('Status')}</th>
+                                        <th style={{ ...thStyle, textAlign: 'right' }}>{t('Labour')}</th>
+                                        <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
+                                        <th style={thStyle}></th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {!rows || rows.length === 0 ? (
+                                            <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No repair jobs found')}</td></tr>
+                                        ) : rows.map(r => (
+                                            <tr key={r.id}>
+                                                <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.job_number || '-'}</span></td>
+                                                <td style={tdStyle}>{r.title || '-'}</td>
+                                                <td style={tdStyle}>{fmtDate(r.date)}</td>
+                                                <td style={tdStyle}>{r.km != null ? parseFloat(r.km).toLocaleString() + ' km' : '-'}</td>
+                                                <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: '#f0f4ff', color: '#004ac6', borderRadius: 4, padding: '2px 8px' }}>{r.status || '-'}</span></td>
+                                                <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtAmt(r.labour_charge)}</td>
+                                                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.total)}</td>
+                                                <td style={tdStyle}>
+                                                    {props.onOpenRepairJobUpdate && (
+                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenRepairJobUpdate(r.id); }}
+                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {/* SALES */}
+                            {histTab === 'sales' && (
+                                <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
+                                    <thead><tr style={{ background: '#f7f9fb' }}>
+                                        <th style={thStyle}>{t('Code')}</th>
+                                        <th style={thStyle}>{t('Date')}</th>
+                                        <th style={thStyle}>{t('Customer')}</th>
+                                        <th style={thStyle}>{t('Km Driven')}</th>
+                                        <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
+                                        <th style={thStyle}>{t('Payment')}</th>
+                                        <th style={thStyle}></th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {!rows || rows.length === 0 ? (
+                                            <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No sales found')}</td></tr>
+                                        ) : rows.map(r => (
+                                            <tr key={r.id}>
+                                                <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
+                                                <td style={tdStyle}>{fmtDate(r.date)}</td>
+                                                <td style={tdStyle}>{r.customer_name || '-'}</td>
+                                                <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
+                                                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
+                                                <td style={tdStyle}>{payBadge(r.payment_status)}</td>
+                                                <td style={tdStyle}>
+                                                    {props.onOpenSalesUpdate && (
+                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenSalesUpdate(r.id); }}
+                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {/* QUOTATIONS */}
+                            {histTab === 'quotations' && (
+                                <table className="table table-sm mb-0" style={{ minWidth: 750 }}>
+                                    <thead><tr style={{ background: '#f7f9fb' }}>
+                                        <th style={thStyle}>{t('Code')}</th>
+                                        <th style={thStyle}>{t('Date')}</th>
+                                        <th style={thStyle}>{t('Customer')}</th>
+                                        <th style={thStyle}>{t('Type')}</th>
+                                        <th style={thStyle}>{t('Km Driven')}</th>
+                                        <th style={{ ...thStyle, textAlign: 'right' }}>{t('Total')}</th>
+                                        <th style={thStyle}></th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {!rows || rows.length === 0 ? (
+                                            <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No quotations found')}</td></tr>
+                                        ) : rows.map(r => (
+                                            <tr key={r.id}>
+                                                <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
+                                                <td style={tdStyle}>{fmtDate(r.date)}</td>
+                                                <td style={tdStyle}>{r.customer_name || '-'}</td>
+                                                <td style={tdStyle}><span style={{ fontSize: 11, fontWeight: 700, background: r.type === 'invoice' ? '#e8f5e9' : '#e3f2fd', color: r.type === 'invoice' ? '#2e7d32' : '#1565c0', borderRadius: 4, padding: '2px 8px' }}>{r.type || 'quotation'}</span></td>
+                                                <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
+                                                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
+                                                <td style={tdStyle}>
+                                                    {props.onOpenQuotationUpdate && (
+                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenQuotationUpdate(r.id); }}
+                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                        </div>
+                    )}
                 </Modal.Body>
             </Modal>
         </>

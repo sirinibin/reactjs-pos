@@ -1239,12 +1239,11 @@ export function SalesType1Body({
                                                             )}
                                                         </ResizableTableCell>);
                                                         if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                                                            <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                             <Dropdown drop="top">
                                                                 <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
                                                                     <i className="bi bi-info"></i>
                                                                 </Dropdown.Toggle>
-                                                                <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                                     <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                         <i className="bi bi-link"></i>&nbsp;
                                                                         {t("Linked Products")} ({getShortcut('linkedProducts')})
@@ -1302,7 +1301,6 @@ export function SalesType1Body({
                                                                 </Dropdown.Menu>
 
                                                             </Dropdown>
-                                                            </div>
 
                                                         </td>);
 

@@ -7,6 +7,9 @@ import RepairJobKanban from "./kanban.js";
 import RepairJobCardView, { loadKanbanLists, loadCardMap, saveCardMap, statusToDefaultListId } from "./card_view.js";
 import QuotationType3Form from "../quotation/QuotationType3Form.js";
 import QuotationView from "../quotation/view.js";
+import OrderCreate from "../order/create.js";
+import ProductCreate from "../product/create.js";
+import ServiceCreate from "../service/create.js";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -39,7 +42,7 @@ const DEFAULT_COLUMNS = [
     { key: 'km', label: 'KM', fieldName: 'km', visible: false },
     { key: 'labour', label: 'Labour', fieldName: 'labour', visible: false },
     { key: 'parts', label: 'Parts', fieldName: 'parts', visible: false },
-    { key: 'total', label: 'Total', fieldName: 'total', visible: false },
+    { key: 'total', label: 'Net Total', fieldName: 'total', visible: true },
     { key: 'actions', label: 'Actions', fieldName: 'actions', visible: true },
 ];
 
@@ -181,7 +184,7 @@ function RepairJobIndex(props) {
             method: "GET",
             headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
         };
-        let Select = "select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at";
+        let Select = "select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -224,7 +227,7 @@ function RepairJobIndex(props) {
         const qp = storeId ? `search[store_id]=${storeId}&` : '';
         try {
             const res = await fetch(
-                `/v1/repair-job?select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,status,estimated_delivery,created_at&${qp}limit=1000&sort=-created_at`,
+                `/v1/repair-job?select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total&${qp}limit=1000&sort=-created_at`,
                 { method: 'GET', headers: { 'Content-Type': 'application/json', Authorization: token } }
             );
             const data = await res.json();
@@ -239,6 +242,20 @@ function RepairJobIndex(props) {
     function onKanbanListFilterChange(listId) {
         setSelectedKanbanListId(listId);
         if (listId) fetchAllJobsForKanbanFilter(listId);
+    }
+
+    function refreshAllViews() {
+        list();
+        if (kanbanRef.current) kanbanRef.current.refresh();
+    }
+
+    function openUpdateProductForm(id, isService) {
+        lastEditedProductIdRef.current = id;
+        if (isService) {
+            serviceCreateRef.current?.open(id);
+        } else {
+            productCreateRef.current?.open(id);
+        }
     }
 
     function sort(field) {
@@ -268,6 +285,10 @@ function RepairJobIndex(props) {
     const kanbanRef = useRef();
     const cardViewRef = useRef();
     const qt3FormRef = useRef();
+    const orderCreateRef = useRef();
+    const productCreateRef = useRef();
+    const serviceCreateRef = useRef();
+    const lastEditedProductIdRef = useRef(null);
 
     const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' ? 'board' : 'table');
 
@@ -293,17 +314,32 @@ function RepairJobIndex(props) {
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
 
-        const products = (job.parts || []).map(p => ({
-            product_id: p.product_id || null,
-            name: p.name || '',
-            quantity: parseFloat(p.qty) || 1,
-            unit_price: parseFloat(p.unit_price) || 0,
-            unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0,
-            purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
-            purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
-            unit_discount: 0, unit_discount_with_vat: 0,
-            unit: p.unit || '', is_service: false,
-        }));
+        let vatPercent = 15;
+        try {
+            const sr = await fetch(`/v1/store/${storeId}?select=vat_percent`, { headers });
+            const sd = await sr.json();
+            if (sd.result?.vat_percent != null) vatPercent = parseFloat(sd.result.vat_percent) || 0;
+        } catch (e) {}
+        const vatMultiplier = 1 + (vatPercent / 100);
+
+        const products = (job.parts || []).map(p => {
+            const excl = parseFloat(p.unit_price) || 0;
+            const storedIncl = parseFloat(p.unit_price_with_vat) || 0;
+            const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMultiplier).toFixed(2));
+            return {
+                product_id: p.product_id || null,
+                item_code: p.item_code || '',
+                part_number: p.part_number || '',
+                name: p.name || '',
+                quantity: parseFloat(p.qty) || 1,
+                unit_price: excl,
+                unit_price_with_vat: incl,
+                purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+                purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+                unit_discount: 0, unit_discount_with_vat: 0,
+                unit: p.unit || '', is_service: false,
+            };
+        });
 
         const labour = parseFloat(job.labour_charge) || 0;
         if (labour > 0) {
@@ -317,12 +353,11 @@ function RepairJobIndex(props) {
                     labourProductId = c?.result?.id || null;
                 }
             } catch (e) { }
-            const vatFactor = 1.15;
             products.push({
                 product_id: labourProductId,
                 name: 'Labour Charge',
                 quantity: 1,
-                unit_price: parseFloat((labour / vatFactor).toFixed(4)),
+                unit_price: parseFloat((labour / vatMultiplier).toFixed(4)),
                 unit_price_with_vat: labour,
                 purchase_unit_price: 0,
                 purchase_unit_price_with_vat: 0,
@@ -333,6 +368,7 @@ function RepairJobIndex(props) {
 
         return {
             type,
+            repair_job_id: job.id,
             customer_id: job.customer_id || null,
             customer_name: job.customer_name || '',
             customer: job.customer_id ? { id: job.customer_id, name: job.customer_name } : null,
@@ -346,7 +382,7 @@ function RepairJobIndex(props) {
 
     async function handleCreateSalesInvoice(job) {
         const prefill = await buildJobPrefill(job, 'invoice');
-        qt3FormRef.current?.open(null, prefill);
+        orderCreateRef.current?.openWithPrefill(prefill);
     }
 
     async function handleCreateQuotation(job) {
@@ -452,10 +488,13 @@ function RepairJobIndex(props) {
 
     return (
         <>
+            <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
+            <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
             <RepairJobCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onCreated={handleJobCreated} />
             <RepairJobView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
             <QuotationView ref={quotationViewRef} openUpdateForm={(id) => qt3FormRef.current?.open(id)} />
-            <QuotationType3Form ref={qt3FormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} />
+            <QuotationType3Form ref={qt3FormRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
+            <OrderCreate ref={orderCreateRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={() => {}} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
             <RepairJobCardView
                 ref={cardViewRef}
                 onFullEdit={openUpdateForm}
@@ -464,6 +503,9 @@ function RepairJobIndex(props) {
                 showToastMessage={props.showToastMessage}
                 onCreateSalesInvoice={handleCreateSalesInvoice}
                 onCreateQuotation={handleCreateQuotation}
+                onOpenSalesInvoice={(orderId) => orderCreateRef.current?.open(orderId)}
+                onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)}
+                openUpdateProductForm={openUpdateProductForm}
             />
 
             <TableSettingsModal
@@ -564,7 +606,7 @@ function RepairJobIndex(props) {
                                                 {colVisible('technician') && <th><b>{t('Technician')}</b></th>}
                                                 {colVisible('labour') && <th><b>{t('Labour')}</b></th>}
                                                 {colVisible('parts') && <th><b>{t('Parts')}</b></th>}
-                                                {colVisible('total') && <th><b>{t('Total')}</b></th>}
+                                                {colVisible('total') && <th><b>{t('Net Total')}</b></th>}
                                                 {colVisible('status') && <th><b>{t('Status')}</b></th>}
                                                 {colVisible('open_closed') && <th><b>{t('Open/Closed')}</b></th>}
                                                 {colVisible('est_delivery') && <th><b>{t('Est. Delivery')}</b></th>}
@@ -768,7 +810,7 @@ function RepairJobIndex(props) {
                                                         <td>{fmtCurrency(job.parts_total)}</td>
                                                     )}
                                                     {colVisible('total') && (
-                                                        <td style={{ fontWeight: 600 }}>{fmtCurrency(job.total)}</td>
+                                                        <td style={{ fontWeight: 600 }}>{fmtCurrency(job.total_with_vat || job.total)}</td>
                                                     )}
                                                     {colVisible('status') && (
                                                         <td><StatusBadge status={job.status} /></td>

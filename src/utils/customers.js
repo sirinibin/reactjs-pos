@@ -36,7 +36,7 @@ const Customers = forwardRef((props, ref) => {
                     top: "5%",
                     left: "15%",
                     margin: "0",
-                    zIndex: 1055,
+                    zIndex: 1060,
                     width: "70%",
                     maxHeight: "90vh",
                 }}
@@ -58,6 +58,7 @@ const Customers = forwardRef((props, ref) => {
             centered={false}
             enforceFocus={false}
             dialogAs={DraggableDialog}
+            className="above-sales-modal"
         >
             <Modal.Header>
                 <Modal.Title>Select Customer</Modal.Title>

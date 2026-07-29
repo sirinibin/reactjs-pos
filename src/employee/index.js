@@ -16,9 +16,28 @@ import PaginationControls from '../utils/PaginationControls.js';
 import { getEmployeeBalanceInfo } from '../utils/employeeBalance.js';
 import PostingIndex from "../posting/index.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
+
+const DEFAULT_COLUMNS = [
+    { key: 'name', label: 'Name', fieldName: 'name', visible: true },
+    { key: 'mobile', label: 'Mobile', fieldName: 'mobile', visible: true },
+    { key: 'salary', label: 'Salary', fieldName: 'salary', visible: false },
+    { key: 'joining_date', label: 'Joining Date', fieldName: 'joining_date', visible: false },
+    { key: 'balance', label: 'Balance', fieldName: 'balance', visible: true },
+    { key: 'created_at', label: 'Created At', fieldName: 'created_at', visible: true },
+    { key: 'actions', label: 'Actions', fieldName: 'actions', visible: true },
+];
 
 function EmployeeIndex(props) {
     const { t } = useTranslation('common');
+
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({
+        storageKey: 'employee_table_settings',
+        defaultColumns: DEFAULT_COLUMNS,
+    });
+
+    const colVisible = (key) => columns.find(c => c.key === key)?.visible;
 
     const [employeeList, setEmployeeList] = useState([]);
 
@@ -279,6 +298,15 @@ function EmployeeIndex(props) {
 
     return (
         <>
+            <TableSettingsModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                title={t('Table Settings')}
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={restoreDefaults}
+            />
             <EmployeeCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openBalanceSheetDialogue={openBalanceSheetDialogue} />
             <EmployeeView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} refreshList={list} openBalanceSheetDialogue={openBalanceSheetDialogue} />
             <EmployeeSalaryPaymentCreate ref={SalaryPaymentRef} refreshList={list} showToastMessage={props.showToastMessage} />
@@ -365,6 +393,9 @@ function EmployeeIndex(props) {
                                             <i className="fa fa-refresh"></i>
                                         )}
                                     </Button>
+                                    <Button variant="outline-secondary" size="sm" title={t('Table Settings')} onClick={() => setShowSettings(true)}>
+                                        <i className="bi bi-gear"></i>
+                                    </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
                                         page={page}
@@ -386,41 +417,45 @@ function EmployeeIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("name")}>
+                                                {colVisible('name') && <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("name")}>
                                                     {t('Name')}
                                                     {sortField === "name" && sortDir === "-" ? <i className="bi bi-sort-alpha-up-alt"></i> : null}
                                                     {sortField === "name" && sortDir === "" ? <i className="bi bi-sort-alpha-up"></i> : null}
-                                                </b></th>
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("mob1")}>
+                                                </b></th>}
+                                                {colVisible('mobile') && <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("mob1")}>
                                                     {t('Mobile')}
-                                                </b></th>
-                                                <th><b>{t('Balance')}</b></th>
-                                                <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("created_at")}>
+                                                </b></th>}
+                                                {colVisible('salary') && <th><b>{t('Salary')}</b></th>}
+                                                {colVisible('joining_date') && <th><b>{t('Joining Date')}</b></th>}
+                                                {colVisible('balance') && <th><b>{t('Balance')}</b></th>}
+                                                {colVisible('created_at') && <th><b style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => sort("created_at")}>
                                                     {t('Created At')}
-                                                </b></th>
-                                                <th>{t('Actions')}</th>
+                                                </b></th>}
+                                                {colVisible('actions') && <th>{t('Actions')}</th>}
                                             </tr>
                                         </thead>
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
+                                                {colVisible('name') && <th>
                                                     <input
                                                         type="text"
                                                         onChange={(e) => searchByFieldValue("search", e.target.value)}
                                                         className="form-control"
                                                         placeholder={t('Search')}
                                                     />
-                                                </th>
-                                                <th>
+                                                </th>}
+                                                {colVisible('mobile') && <th>
                                                     <input
                                                         type="text"
                                                         onChange={(e) => searchByFieldValue("mob1", e.target.value)}
                                                         className="form-control"
                                                         placeholder={t('Mobile')}
                                                     />
-                                                </th>
-                                                <th></th>
-                                                <th>
+                                                </th>}
+                                                {colVisible('salary') && <th></th>}
+                                                {colVisible('joining_date') && <th></th>}
+                                                {colVisible('balance') && <th></th>}
+                                                {colVisible('created_at') && <th>
                                                     <div style={{ minWidth: "130px" }}>
                                                         <small
                                                             style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
@@ -475,21 +510,27 @@ function EmployeeIndex(props) {
                                                             </span>
                                                         )}
                                                     </div>
-                                                </th>
-                                                <th></th>
+                                                </th>}
+                                                {colVisible('actions') && <th></th>}
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
                                             {employeeList && employeeList.map((employee) => (
                                                 <tr key={employee.id}>
-                                                    <td className="text-start" style={{ whiteSpace: "nowrap" }}>
+                                                    {colVisible('name') && <td className="text-start" style={{ whiteSpace: "nowrap" }}>
                                                         <OverflowTooltip value={employee.name} maxWidth={250} />
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                    </td>}
+                                                    {colVisible('mobile') && <td style={{ whiteSpace: "nowrap" }}>
                                                         {employee.mob1}
                                                         {employee.mob2 && <div><small className="text-muted">{employee.mob2}</small></div>}
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                    </td>}
+                                                    {colVisible('salary') && <td style={{ whiteSpace: "nowrap" }}>
+                                                        {employee.salary != null ? formatCurrency(employee.salary) : <span className="text-muted">&mdash;</span>}
+                                                    </td>}
+                                                    {colVisible('joining_date') && <td style={{ whiteSpace: "nowrap" }}>
+                                                        {employee.joining_date ? format(new Date(employee.joining_date), "MMM dd yyyy") : <span className="text-muted">&mdash;</span>}
+                                                    </td>}
+                                                    {colVisible('balance') && <td style={{ whiteSpace: "nowrap" }}>
                                                         {(() => {
                                                             const info = getEmployeeBalanceInfo(employee.account, t);
                                                             if (!employee.account) {
@@ -502,11 +543,11 @@ function EmployeeIndex(props) {
                                                                 </Button>
                                                             );
                                                         })()}
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                    </td>}
+                                                    {colVisible('created_at') && <td style={{ whiteSpace: "nowrap" }}>
                                                         {employee.created_at ? format(new Date(employee.created_at), "MMM dd yyyy H:mma") : ""}
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                    </td>}
+                                                    {colVisible('actions') && <td style={{ whiteSpace: "nowrap" }}>
                                                         <Button className="btn btn-success btn-sm me-1" title={t('Pay Salary')} onClick={() => openPaySalary(employee.id)}>
                                                             <i className="bi bi-cash-coin me-1"></i>{t('PAY SALARY')}
                                                         </Button>
@@ -522,7 +563,7 @@ function EmployeeIndex(props) {
                                                         <Button className="btn btn-danger btn-sm ms-1" title={t('Delete Permanently')} onClick={() => deleteEmployee(employee)}>
                                                             <i className="bi bi-trash"></i>
                                                         </Button>
-                                                    </td>
+                                                    </td>}
                                                 </tr>
                                             ))}
                                         </tbody>

@@ -50,6 +50,7 @@ const QuotationSalesReturns = forwardRef((props, ref) => {
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
+                className="above-sales-modal"
                 dialogAs={({ children, ...props }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
@@ -57,13 +58,12 @@ const QuotationSalesReturns = forwardRef((props, ref) => {
                             className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
                             {...props}
                             style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
+                                position: "fixed",
+                                top: "5%",
+                                left: "15%",
                                 margin: "0",
-                                zIndex: 1055,
-                                width: "65%",           // Full width inside container
+                                zIndex: 1060,
+                                width: "70%",
                             }}
                         >
                             <div className="modal-content">{children}</div>

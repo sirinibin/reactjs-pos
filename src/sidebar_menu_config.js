@@ -45,6 +45,16 @@ export const DEFAULT_MENU = [
 
 const STORAGE_KEY = "sidebar_config";
 
+// IDs promoted to the top when the automobile module is first enabled, in this order
+const AUTOMOBILE_FIRST_IDS = [
+    "automobile_dashboard",
+    "repair_jobs_board",
+    "repair_jobs",
+    "vehicles",
+    "customers",
+    "employees",
+];
+
 // Returns ordered array of { id, visible } merged with DEFAULT_MENU metadata.
 // Falls back to all items visible when nothing is stored.
 export function loadSidebarConfig() {
@@ -73,6 +83,20 @@ export function loadSidebarConfig() {
         }
     } catch { }
     return DEFAULT_MENU.map(m => ({ ...m, visible: true }));
+}
+
+// Called once when the automobile module is enabled in store settings.
+// Moves automobile items to the top of the sidebar, preserving all other order/visibility.
+// Subsequent user customisations via Menu Settings override this freely.
+export function applyAutomobileMenuOrder() {
+    const current = loadSidebarConfig();
+    const firstSet = new Set(AUTOMOBILE_FIRST_IDS);
+    const front = AUTOMOBILE_FIRST_IDS.map(id => current.find(m => m.id === id)).filter(Boolean);
+    const rest = current.filter(m => !firstSet.has(m.id));
+    const reordered = [...front, ...rest];
+    saveSidebarConfig(reordered);
+    // Notify Sidebar.js immediately
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
 }
 
 export function saveSidebarConfig(items) {
