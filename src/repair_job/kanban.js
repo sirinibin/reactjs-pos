@@ -22,6 +22,12 @@ function loadCardMap() {
 }
 function saveCardMap(map) { localStorage.setItem('repair_job_kanban_card_map', JSON.stringify(map)); }
 
+function loadCardOrder() {
+    try { const s = localStorage.getItem('repair_job_kanban_card_order'); if (s) return JSON.parse(s); } catch (e) {}
+    return {};
+}
+function saveCardOrder(order) { localStorage.setItem('repair_job_kanban_card_order', JSON.stringify(order)); }
+
 function statusToListId(status) {
     if (status === 'in_progress') return 'in_progress';
     if (status === 'completed' || status === 'delivered') return 'done';
@@ -37,10 +43,11 @@ const STATUS_COLORS = {
     closed: { bg: '#f0f4f8', color: '#455a64' },
 };
 
-const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToTable, onListsChange, onCreateSalesInvoice, onCreateQuotation }, ref) => {
+const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToTable, onListsChange, onCreateSalesInvoice, onCreateQuotation, presetVehicleId, presetVehicleLabel, presetCustomerId, presetCustomerName, embedded }, ref) => {
     const { t } = useTranslation('common');
     const [lists, setLists] = useState(loadLists);
     const [cardMap, setCardMap] = useState(loadCardMap);
+    const [cardOrder, setCardOrder] = useState(loadCardOrder);
     const [jobs, setJobs] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -50,11 +57,15 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     const [dragOverListId, setDragOverListId] = useState(null);
     const [draggingJobId, setDraggingJobId] = useState(null);
     const [draggingListId, setDraggingListId] = useState(null);
+    const [dragOverJobId, setDragOverJobId] = useState(null);
+    const [dragOverPosition, setDragOverPosition] = useState(null);
+    const autoScrollRef = useRef(null);
+    const autoScrollListId = useRef(null);
+    const autoScrollCursorY = useRef(0);
 
     const [hoveredJobId, setHoveredJobId] = useState(null);
     const [showArchived, setShowArchived] = useState(false);
     const showArchivedRef = useRef(false);
-
 
     // List editing
     const [editingListId, setEditingListId] = useState(null);
@@ -68,36 +79,55 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     const [newCardTitle, setNewCardTitle] = useState('');
     const [isCreatingCard, setIsCreatingCard] = useState(false);
 
+    // Auto-scroll: holds DOM refs to each column's scrollable cards container
+    const columnCardsRef = useRef({});
+    const pendingScrollListId = useRef(null);
+
     // New Job modal (header button)
     const [showNewJobModal, setShowNewJobModal] = useState(false);
     const [newJobTitle, setNewJobTitle] = useState('');
     const [newJobListId, setNewJobListId] = useState('');
 
-    // Filters
-    const [customerSearchText, setCustomerSearchText] = useState('');
+    // Filters — pre-seeded from props when embedded with a preset vehicle
+    const [customerSearchText, setCustomerSearchText] = useState(presetCustomerName || '');
     const [customerResults, setCustomerResults] = useState([]);
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedCustomer, setSelectedCustomer] = useState(
+        presetCustomerId ? { id: presetCustomerId, name: presetCustomerName || '' } : null
+    );
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const customerDebounceRef = useRef();
 
-    // Vehicle filter (Typeahead)
-    const [vehicleFilterOptions, setVehicleFilterOptions] = useState([]);
-    const [selectedVehicleFilter, setSelectedVehicleFilter] = useState([]);
+    // Vehicle filter (Typeahead — scoped to selected customer)
+    const _presetVehicleOption = presetVehicleId
+        ? [{ id: presetVehicleId, label: presetVehicleLabel || String(presetVehicleId) }]
+        : [];
+    const [vehicleFilterOptions, setVehicleFilterOptions] = useState(_presetVehicleOption);
+    const [selectedVehicleFilter, setSelectedVehicleFilter] = useState(_presetVehicleOption);
     const vehicleFilterRef = useRef();
     const vehicleFilterDebounceRef = useRef();
 
-    const activeFiltersRef = useRef({});
+    // Global vehicle search (by vehicle number / chassis / istimara — independent of customer)
+    const [vehicleSearchText, setVehicleSearchText] = useState('');
+    const [vehicleSearchResults, setVehicleSearchResults] = useState([]);
+    const [showVehicleSearchDropdown, setShowVehicleSearchDropdown] = useState(false);
+    const vehicleSearchDebounceRef = useRef();
+
+    // Pre-seed active filters from props (only used by useRef on first mount)
+    const _initFilters = {};
+    if (presetCustomerId) _initFilters.customer_id = presetCustomerId;
+    if (presetVehicleId) _initFilters.vehicle_id = presetVehicleId;
+    const activeFiltersRef = useRef(_initFilters);
 
     useImperativeHandle(ref, () => ({ refresh: refreshAll, getLists: () => lists }));
     useEffect(() => { fetchJobs(); }, []);
 
-    function refreshAll() { setCardMap(loadCardMap()); fetchJobs(); }
+    function refreshAll() { setCardMap(loadCardMap()); setCardOrder(loadCardOrder()); fetchJobs(); }
 
     function fetchJobs() {
         const opts = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
         const qp = ObjectToSearchQueryParams({ store_id: localStorage.getItem("store_id") || '', ...activeFiltersRef.current });
         const archivedParam = showArchivedRef.current ? '&search[archived]=1' : '';
-        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,total,status,customer_id,archived&limit=500&${qp}${archivedParam}`;
+        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,total,total_with_vat,status,customer_id,archived,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total,date,estimated_delivery&limit=500&${qp}${archivedParam}`;
         console.log('[Kanban] fetchJobs:', url, 'filters:', activeFiltersRef.current);
         setIsLoading(true);
         fetch(url, opts)
@@ -106,6 +136,18 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                 console.log('[Kanban] fetchJobs result:', d.result?.length ?? 0, 'jobs', d.errors || '');
                 setJobs(d.result || []);
                 setIsLoading(false);
+                if (pendingScrollListId.current) {
+                    const targetListId = pendingScrollListId.current;
+                    pendingScrollListId.current = null;
+                    setTimeout(() => {
+                        const el = columnCardsRef.current[targetListId];
+                        if (el) el.scrollTop = el.scrollHeight;
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        Object.values(columnCardsRef.current).forEach(el => { if (el) el.scrollTop = el.scrollHeight; });
+                    }, 100);
+                }
             })
             .catch(e => { console.error('[Kanban] fetchJobs error:', e); setIsLoading(false); });
     }
@@ -134,10 +176,13 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         setSelectedVehicleFilter(selected);
         if (selected.length > 0) {
             activeFiltersRef.current = { ...activeFiltersRef.current, vehicle_id: selected[0].id };
+            // Sync vehicle search bar text
+            setVehicleSearchText(selected[0].label || '');
         } else {
             const f = { ...activeFiltersRef.current };
             delete f.vehicle_id;
             activeFiltersRef.current = f;
+            setVehicleSearchText('');
         }
         fetchJobs();
     }
@@ -203,10 +248,13 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         setCustomerSearchText('');
         setCustomerResults([]);
         setShowCustomerDropdown(false);
-        // Also clear vehicle filter
+        // Also clear vehicle filters
         setSelectedVehicleFilter([]);
         setVehicleFilterOptions([]);
         vehicleFilterRef.current?.clear();
+        setVehicleSearchText('');
+        setVehicleSearchResults([]);
+        setShowVehicleSearchDropdown(false);
         const f = { ...activeFiltersRef.current };
         delete f.customer_id;
         delete f.vehicle_id;
@@ -214,10 +262,80 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         fetchJobs();
     }
 
+    // Global vehicle search handlers
+    function onVehicleSearchChange(value) {
+        setVehicleSearchText(value);
+        clearTimeout(vehicleSearchDebounceRef.current);
+        if (!value.trim()) {
+            setVehicleSearchResults([]);
+            setShowVehicleSearchDropdown(false);
+            return;
+        }
+        vehicleSearchDebounceRef.current = setTimeout(() => fetchVehicleSearchResults(value), 300);
+    }
+
+    async function fetchVehicleSearchResults(search) {
+        const token = localStorage.getItem('access_token');
+        const storeId = localStorage.getItem('store_id');
+        const qp = ObjectToSearchQueryParams({ store_id: storeId || '', search, limit: 15 });
+        try {
+            const res = await fetch(`/v1/vehicle?select=id,vehicle_number,chassis_number,istimara_no,brand,model,customer_id,customer_name&${qp}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            setVehicleSearchResults(data.result || []);
+            setShowVehicleSearchDropdown(true);
+        } catch (e) {}
+    }
+
+    function selectVehicleFromSearch(vehicle) {
+        setVehicleSearchText([vehicle.vehicle_number, vehicle.brand, vehicle.model].filter(Boolean).join(' — '));
+        setVehicleSearchResults([]);
+        setShowVehicleSearchDropdown(false);
+
+        const vehicleOption = {
+            ...vehicle,
+            label: [vehicle.vehicle_number, vehicle.brand, vehicle.model].filter(Boolean).join(' — '),
+        };
+
+        // Set customer filter
+        if (vehicle.customer_id) {
+            const customer = { id: vehicle.customer_id, name: vehicle.customer_name || '' };
+            setSelectedCustomer(customer);
+            setCustomerSearchText(vehicle.customer_name || '');
+            setCustomerResults([]);
+            setShowCustomerDropdown(false);
+        }
+
+        // Set vehicle filter
+        setVehicleFilterOptions([vehicleOption]);
+        setSelectedVehicleFilter([vehicleOption]);
+
+        // Update active filters and refresh
+        const f = { ...activeFiltersRef.current };
+        if (vehicle.customer_id) f.customer_id = vehicle.customer_id;
+        f.vehicle_id = vehicle.id;
+        activeFiltersRef.current = f;
+        fetchJobs();
+    }
+
+    function clearVehicleSearch() {
+        setVehicleSearchText('');
+        setVehicleSearchResults([]);
+        setShowVehicleSearchDropdown(false);
+    }
+
     function getJobListId(job) { return cardMap[job.id] || statusToListId(job.status); }
 
     function getListJobs(listId) {
-        return jobs.filter(j => getJobListId(j) === listId);
+        const filtered = jobs.filter(j => getJobListId(j) === listId);
+        const order = cardOrder[listId];
+        if (!order || order.length === 0) return filtered;
+        const idxMap = {};
+        order.forEach((id, i) => { idxMap[id] = i; });
+        return [...filtered].sort((a, b) => {
+            const ai = idxMap[a.id] !== undefined ? idxMap[a.id] : Infinity;
+            const bi = idxMap[b.id] !== undefined ? idxMap[b.id] : Infinity;
+            return ai - bi;
+        });
     }
 
     function moveJob(jobId, toListId) {
@@ -277,23 +395,72 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         e.dataTransfer.effectAllowed = 'move';
     }
 
+    function onCardDragOver(e, jobId) {
+        e.preventDefault();
+        if (!dragJobId.current || dragJobId.current === jobId) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        setDragOverJobId(jobId);
+        setDragOverPosition(e.clientY < rect.top + rect.height / 2 ? 'above' : 'below');
+    }
+
+    function onCardDragLeave() {
+        // Intentionally empty — clearing here causes blink when placeholder shifts layout.
+        // dragOverJobId is cleared by onColumnDragLeave (leaving the column) or onDragEnd/onColumnDrop.
+    }
+
     function onDragEnd() {
+        stopAutoScroll();
         dragJobId.current = null;
         dragListId.current = null;
         setDraggingJobId(null);
         setDraggingListId(null);
         setDragOverListId(null);
+        setDragOverJobId(null);
+        setDragOverPosition(null);
+    }
+
+    function stopAutoScroll() {
+        autoScrollListId.current = null;
+        if (autoScrollRef.current) { cancelAnimationFrame(autoScrollRef.current); autoScrollRef.current = null; }
+    }
+
+    function ensureAutoScrollLoop() {
+        if (autoScrollRef.current) return; // loop already running
+        const tick = () => {
+            const listId = autoScrollListId.current;
+            if (!listId) { autoScrollRef.current = null; return; }
+            const container = columnCardsRef.current[listId];
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                const EDGE = 60;
+                const distBottom = rect.bottom - autoScrollCursorY.current;
+                const distTop = autoScrollCursorY.current - rect.top;
+                if (distBottom > 0 && distBottom < EDGE) {
+                    container.scrollTop += Math.ceil(((EDGE - distBottom) / EDGE) * 12);
+                } else if (distTop > 0 && distTop < EDGE) {
+                    container.scrollTop -= Math.ceil(((EDGE - distTop) / EDGE) * 12);
+                }
+            }
+            autoScrollRef.current = requestAnimationFrame(tick);
+        };
+        autoScrollRef.current = requestAnimationFrame(tick);
     }
 
     function onColumnDragOver(e, listId) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         setDragOverListId(listId);
+        autoScrollCursorY.current = e.clientY;
+        autoScrollListId.current = listId;
+        ensureAutoScrollLoop();
     }
 
     function onColumnDragLeave(e) {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
+        if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) {
+            stopAutoScroll();
             setDragOverListId(null);
+            setDragOverJobId(null);
+            setDragOverPosition(null);
         }
     }
 
@@ -301,19 +468,54 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         e.preventDefault();
         if (dragJobId.current) {
             const jobId = dragJobId.current;
+
+            // Build ordered id list for target column, excluding the card being moved
+            const targetJobs = getListJobs(listId);
+            const orderedIds = targetJobs.map(j => j.id).filter(id => id !== jobId);
+
+            if (dragOverJobId) {
+                const targetIdx = orderedIds.indexOf(dragOverJobId);
+                if (targetIdx >= 0) {
+                    orderedIds.splice(dragOverPosition === 'above' ? targetIdx : targetIdx + 1, 0, jobId);
+                } else {
+                    orderedIds.push(jobId);
+                }
+            } else {
+                orderedIds.push(jobId);
+            }
+
+            // Update card order: remove from source list, insert into target list
+            const sourceListId = getJobListId(jobs.find(j => j.id === jobId));
+            const newCardOrder = { ...cardOrder };
+            if (sourceListId && sourceListId !== listId) {
+                newCardOrder[sourceListId] = (newCardOrder[sourceListId] || []).filter(id => id !== jobId);
+            }
+            newCardOrder[listId] = orderedIds;
+            setCardOrder(newCardOrder);
+            saveCardOrder(newCardOrder);
+
             moveJob(jobId, listId);
+
+            // Scroll the placed card into view after React re-renders
+            const _scrollJobId = jobId;
+            const _scrollListId = listId;
+            setTimeout(() => {
+                const container = columnCardsRef.current[_scrollListId];
+                if (!container) return;
+                const cardEl = container.querySelector(`[data-job-id="${_scrollJobId}"]`);
+                if (cardEl) cardEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }, 100);
+
             if (lists.length > 0) {
                 const isLastList = listId === lists[lists.length - 1].id;
                 const job = jobs.find(j => j.id === jobId);
                 if (isLastList) {
-                    // Auto-close when moved to the final list
                     if (job && job.status !== 'closed') {
                         patchJob(jobId, { status: 'closed' }).then(updated => {
                             if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
                         });
                     }
                 } else {
-                    // Auto-reopen when moved away from the final list
                     if (job && job.status === 'closed') {
                         patchJob(jobId, { status: 'open' }).then(updated => {
                             if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'open' } : j));
@@ -324,11 +526,14 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         } else if (dragListId.current && dragListId.current !== listId) {
             reorderLists(dragListId.current, listId);
         }
+        stopAutoScroll();
         dragJobId.current = null;
         dragListId.current = null;
         setDraggingJobId(null);
         setDraggingListId(null);
         setDragOverListId(null);
+        setDragOverJobId(null);
+        setDragOverPosition(null);
     }
 
     function startEditList(list) {
@@ -389,6 +594,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                 const newMap = { ...cardMap, [data.result.id]: listId };
                 setCardMap(newMap);
                 saveCardMap(newMap);
+                pendingScrollListId.current = listId;
                 fetchJobs();
                 setIsCreatingCard(false);
                 return true;
@@ -445,6 +651,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     }
 
     function fmtCurrency(val) { return val && parseFloat(val) > 0 ? parseFloat(val).toFixed(2) : null; }
+    function fmtDate(iso) { if (!iso) return null; try { return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return null; } }
 
     function StatusBadge({ status }) {
         const c = STATUS_COLORS[status] || STATUS_COLORS.open;
@@ -457,7 +664,10 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     const filterBoxStyle = { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.13)', borderRadius: 5, padding: '5px 10px', gap: 6, position: 'relative' };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 900, display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden' }}>
+        <div style={embedded
+            ? { display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden', width: '100%', height: '100%' }
+            : { position: 'fixed', inset: 0, zIndex: 900, display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden' }
+        }>
 
             {/* Board header — title row */}
             <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px 6px', background: 'rgba(0,0,0,0.3)', flexWrap: 'wrap' }}>
@@ -489,7 +699,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                         <i className="bi bi-file-earmark-text"></i><span>{t('Create Quotation')}</span>
                     </button>
                 )}
-                {onSwitchToTable ? (
+                {!embedded && (onSwitchToTable ? (
                     <button type="button" onClick={onSwitchToTable}
                         style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.35)', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                         <i className="bi bi-table"></i>
@@ -507,7 +717,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                             ×
                         </button>
                     </>
-                )}
+                ))}
             </div>
 
             {/* Filter bar */}
@@ -544,6 +754,55 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                 >
                                     <i className="bi bi-person me-2" style={{ color: '#5e6c84', fontSize: 11 }}></i>
                                     {c.name}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Global vehicle search — by number / chassis / istimara */}
+                <div style={{ position: 'relative' }}>
+                    <div style={filterBoxStyle}>
+                        <i className="bi bi-search" style={{ color: '#b3bac5', fontSize: 12 }}></i>
+                        <input
+                            type="text"
+                            value={vehicleSearchText}
+                            onChange={e => onVehicleSearchChange(e.target.value)}
+                            onFocus={() => { if (vehicleSearchResults.length > 0) setShowVehicleSearchDropdown(true); }}
+                            onBlur={() => setTimeout(() => setShowVehicleSearchDropdown(false), 150)}
+                            placeholder={t('Search vehicle...')}
+                            style={{ ...filterInputStyle, width: 170 }}
+                        />
+                        {vehicleSearchText && (
+                            <button type="button" onClick={clearVehicleSearch}
+                                style={{ background: 'none', border: 'none', color: '#b3bac5', cursor: 'pointer', padding: 0, fontSize: 16, lineHeight: 1 }}>
+                                <i className="bi bi-x"></i>
+                            </button>
+                        )}
+                    </div>
+                    {showVehicleSearchDropdown && vehicleSearchResults.length > 0 && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, background: '#fff', borderRadius: 6, boxShadow: '0 4px 20px rgba(0,0,0,0.25)', zIndex: 200, minWidth: 280, maxHeight: 260, overflowY: 'auto', marginTop: 3 }}>
+                            {vehicleSearchResults.map(v => (
+                                <div key={v.id}
+                                    onMouseDown={e => { e.preventDefault(); selectVehicleFromSearch(v); }}
+                                    style={{ padding: '9px 14px', cursor: 'pointer', borderBottom: '1px solid #f4f5f7' }}
+                                    onMouseOver={e => e.currentTarget.style.background = '#f4f5f7'}
+                                    onMouseOut={e => e.currentTarget.style.background = '#fff'}
+                                >
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#172b4d' }}>
+                                        <i className="bi bi-car-front me-2" style={{ color: '#5e6c84', fontSize: 11 }}></i>
+                                        {[v.vehicle_number, v.brand, v.model].filter(Boolean).join(' — ') || '—'}
+                                    </div>
+                                    {v.chassis_number && (
+                                        <div style={{ fontSize: 11, color: '#5e6c84', marginTop: 2 }}>
+                                            <span style={{ fontWeight: 600 }}>{t('Chassis')}:</span> {v.chassis_number}
+                                        </div>
+                                    )}
+                                    {v.customer_name && (
+                                        <div style={{ fontSize: 11, color: '#5e6c84' }}>
+                                            <i className="bi bi-person me-1"></i>{v.customer_name}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -601,7 +860,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 12, padding: '14px 18px', alignItems: 'flex-start' }}>
                 {lists.map(list => {
                     const listJobs = getListJobs(list.id);
-                    const isCardTarget = dragOverListId === list.id && draggingJobId;
+                    const isCardTarget = dragOverListId === list.id && draggingJobId && !dragOverJobId;
                     const isListTarget = dragOverListId === list.id && draggingListId && draggingListId !== list.id;
                     const isBeingDragged = draggingListId === list.id;
 
@@ -656,34 +915,54 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                             </div>
 
                             {/* Cards */}
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 60 }}>
+                            <div ref={el => { columnCardsRef.current[list.id] = el; }} style={{ flex: 1, overflowY: 'auto', padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 60 }}>
+                                {(() => {
+                                    const firstDroppable = listJobs.find(j => j.id !== draggingJobId);
+                                    return draggingJobId && firstDroppable ? (
+                                        <div
+                                            style={{ height: 6, flexShrink: 0 }}
+                                            onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverJobId(firstDroppable.id); setDragOverPosition('above'); }}
+                                        />
+                                    ) : null;
+                                })()}
                                 {listJobs.map(job => {
                                     const isHovered = hoveredJobId === job.id;
                                     const isDragging = draggingJobId === job.id;
+                                    const showAbove = dragOverJobId === job.id && dragOverPosition === 'above' && !isDragging;
+                                    const showBelow = dragOverJobId === job.id && dragOverPosition === 'below' && !isDragging;
+                                    const dropPlaceholder = (
+                                        <div style={{ height: 56, border: '2px dashed #0052cc', borderRadius: 6, background: 'rgba(0,82,204,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#0052cc', fontWeight: 600, flexShrink: 0 }}>
+                                            {t('Drop here')}
+                                        </div>
+                                    );
                                     return (
-                                        <div
-                                            key={job.id}
-                                            draggable
-                                            onDragStart={(e) => { onCardDragStart(e, job.id); setHoveredJobId(null); }}
-                                            onDragEnd={onDragEnd}
-                                            onMouseEnter={() => setHoveredJobId(job.id)}
-                                            onMouseLeave={() => setHoveredJobId(null)}
-                                            onClick={() => { if (!isDragging && onOpenCard) onOpenCard(job.id); }}
-                                            style={{
-                                                position: 'relative',
-                                                background: isDragging ? '#f0f4ff' : isHovered ? '#e8edf9' : '#fff',
-                                                borderRadius: 6,
-                                                padding: '10px 12px',
-                                                boxShadow: isHovered && !isDragging
-                                                    ? '0 4px 12px rgba(9,30,66,0.22), 0 1px 3px rgba(9,30,66,0.1)'
-                                                    : '0 1px 3px rgba(9,30,66,0.15)',
-                                                cursor: isDragging ? 'grabbing' : 'pointer',
-                                                opacity: isDragging ? 0.4 : 1,
-                                                userSelect: 'none',
-                                                transform: isHovered && !isDragging ? 'translateY(-1px)' : 'none',
-                                                transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
-                                            }}
-                                        >
+                                        <React.Fragment key={job.id}>
+                                            {showAbove && dropPlaceholder}
+                                            <div
+                                                data-job-id={job.id}
+                                                draggable
+                                                onDragStart={(e) => { onCardDragStart(e, job.id); setHoveredJobId(null); }}
+                                                onDragEnd={onDragEnd}
+                                                onDragOver={(e) => onCardDragOver(e, job.id)}
+                                                onDragLeave={onCardDragLeave}
+                                                onMouseEnter={() => setHoveredJobId(job.id)}
+                                                onMouseLeave={() => setHoveredJobId(null)}
+                                                onClick={() => { if (!isDragging && onOpenCard) onOpenCard(job.id); }}
+                                                style={{
+                                                    position: 'relative',
+                                                    background: isDragging ? '#f0f4ff' : isHovered ? '#e8edf9' : '#fff',
+                                                    borderRadius: 6,
+                                                    padding: '10px 12px',
+                                                    boxShadow: isHovered && !isDragging
+                                                        ? '0 4px 12px rgba(9,30,66,0.22), 0 1px 3px rgba(9,30,66,0.1)'
+                                                        : '0 1px 3px rgba(9,30,66,0.15)',
+                                                    cursor: isDragging ? 'grabbing' : 'pointer',
+                                                    opacity: isDragging ? 0.4 : 1,
+                                                    userSelect: 'none',
+                                                    transform: isHovered && !isDragging ? 'translateY(-1px)' : 'none',
+                                                    transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
+                                                }}
+                                            >
                                             {/* Action buttons on hover */}
                                             {isHovered && !isDragging && (
                                                 <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3, zIndex: 1 }}>
@@ -738,10 +1017,44 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                                     <span>{job.technician_name}</span>
                                                 </div>
                                             )}
-                                            {fmtCurrency(job.total) && (
-                                                <div style={{ fontSize: 12, fontWeight: 600, color: '#0052cc', marginTop: 4 }}>{fmtCurrency(job.total)}</div>
+                                            {(fmtDate(job.date) || fmtDate(job.estimated_delivery)) && (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 3 }}>
+                                                    {fmtDate(job.date) && (
+                                                        <div style={{ fontSize: 11, color: '#42526e', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                            <i className="bi bi-calendar" style={{ fontSize: 10 }}></i>
+                                                            <span>{fmtDate(job.date)}</span>
+                                                        </div>
+                                                    )}
+                                                    {fmtDate(job.estimated_delivery) && (
+                                                        <div style={{ fontSize: 11, color: '#974f0c', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                            <i className="bi bi-calendar-check" style={{ fontSize: 10 }}></i>
+                                                            <span>{fmtDate(job.estimated_delivery)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                        </div>
+                                            {(job.total_with_vat || job.total) ? (
+                                                <div style={{ fontSize: 12, fontWeight: 600, color: '#0052cc', marginTop: 4 }}>{fmtCurrency(job.total_with_vat || job.total)}</div>
+                                            ) : null}
+                                            {(job.order_id || job.quotation_id) && (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
+                                                    {job.order_id && (
+                                                        <span style={{ fontSize: 10, background: '#e3fcef', color: '#006644', borderRadius: 3, padding: '2px 6px', fontWeight: 600, border: '1px solid #abf5d1' }}>
+                                                            <i className="bi bi-receipt" style={{ marginRight: 3 }}></i>
+                                                            {job.order_code}{job.order_net_total ? ` · ${fmtCurrency(job.order_net_total)}` : ''}
+                                                        </span>
+                                                    )}
+                                                    {job.quotation_id && (
+                                                        <span style={{ fontSize: 10, background: '#fffae6', color: '#974f0c', borderRadius: 3, padding: '2px 6px', fontWeight: 600, border: '1px solid #ffe380' }}>
+                                                            <i className="bi bi-file-earmark-text" style={{ marginRight: 3 }}></i>
+                                                            {job.quotation_code}{job.quotation_net_total ? ` · ${fmtCurrency(job.quotation_net_total)}` : ''}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            </div>
+                                            {showBelow && dropPlaceholder}
+                                        </React.Fragment>
                                     );
                                 })}
 

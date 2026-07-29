@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Spinner } from "react-bootstrap";
+import { Modal, Button, Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -10,6 +10,7 @@ import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import VehicleCreate from "../vehicle/create.js";
 import Products from "../utils/products.js";
+import OrderPreview from "../order/preview.js";
 
 const pageBg = "#f8fafc";
 const borderColor = "#c3c6d7";
@@ -42,6 +43,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
     const [isUpdateForm, setIsUpdateForm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [disablePreviousButton, setDisablePreviousButton] = useState(false);
     const [formData, setFormData] = useState(makeFormData());
     const [errors, setErrors] = useState({});
     const [toastErrors, setToastErrors] = useState([]);
@@ -52,6 +54,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const [vehicleOptions, setVehicleOptions] = useState([]);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [isVehicleLoading, setIsVehicleLoading] = useState(false);
+    const [showVehicleModal, setShowVehicleModal] = useState(false);
     const [discount, setDiscount] = useState(0);
     const [shipping, setShipping] = useState(0);
     const [vehicleReloadKey, setVehicleReloadKey] = useState(0);
@@ -62,6 +65,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const paymentRowsRef = useRef();
     const timerRef = useRef();
     const reCalculateRef = useRef(null);
+    const previewRef = useRef();
+    const [store, setStore] = useState({});
     const storeId = localStorage.getItem("store_id");
     const headers = useMemo(() => ({ "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") }), []);
 
@@ -75,6 +80,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 if (prefill.customer_id) { fd.customer_id = prefill.customer_id; fd.customer_name = prefill.customer_name || ""; }
                 if (prefill.vehicle_id) { fd.vehicle_id = prefill.vehicle_id; fd.vehicle_snapshot = prefill.vehicle_snapshot || undefined; }
                 if (prefill.km_driven != null) fd.km_driven = prefill.km_driven;
+                if (prefill.repair_job_id) fd.repair_job_id = prefill.repair_job_id;
             }
             setFormData({ ...fd });
             setSelectedProducts(prefill?.products || []);
@@ -106,10 +112,61 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 }
             }
             setShow(true);
+            fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
+                .then(r => r.json()).then(d => { if (d.result) setStore(d.result); }).catch(() => {});
         },
     }));
 
     function handleClose() { setShow(false); }
+
+    async function openCreateForm() {
+        setDisablePreviousButton(false);
+        const fd = makeFormData();
+        fd.store_id = storeId;
+        fd.store_name = localStorage.getItem("store_name") || "";
+        setFormData({ ...fd });
+        setSelectedProducts([]);
+        setSelectedCustomers([]);
+        setSelectedVehicle(null);
+        setDiscount(0);
+        setShipping(0);
+        setErrors({});
+        setToastErrors([]);
+        setIsUpdateForm(false);
+    }
+
+    async function openPreviousForm() {
+        if (!formData.id) return;
+        const qs = `search[store_id]=${storeId}`;
+        const r = await fetch(`/v1/previous-quotation/${formData.id}?${qs}`, { headers }).then(r => r.json()).catch(() => ({}));
+        if (r.result?.id) {
+            setDisablePreviousButton(false);
+            loadRecord(r.result.id);
+            setIsUpdateForm(true);
+        } else {
+            setDisablePreviousButton(true);
+        }
+    }
+
+    async function openNextForm() {
+        if (!formData.id) return;
+        const qs = `search[store_id]=${storeId}`;
+        const r = await fetch(`/v1/next-quotation/${formData.id}?${qs}`, { headers }).then(r => r.json()).catch(() => ({}));
+        if (r.result?.id) {
+            loadRecord(r.result.id);
+            setIsUpdateForm(true);
+        }
+    }
+
+    async function openLastForm() {
+        const qs = `search[store_id]=${storeId}`;
+        const r = await fetch(`/v1/last-quotation?${qs}`, { headers }).then(r => r.json()).catch(() => ({}));
+        if (r.result?.id) {
+            setDisablePreviousButton(false);
+            loadRecord(r.result.id);
+            setIsUpdateForm(true);
+        }
+    }
 
     async function loadRecord(id) {
         try {
@@ -222,7 +279,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
             .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
             .split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
         const qs = ObjectToSearchQueryParams({ search_text: apiTerm || searchTerm, store_id: storeId });
-        const select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.purchase_unit_price_with_vat,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock`;
+        const select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.purchase_unit_price_with_vat,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`;
         try {
             const r = await fetch(`/v1/product?${select}&${qs}&limit=100&sort=-country_name`, { headers });
             const data = await r.json();
@@ -235,7 +292,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
     function handleSelectedProductsFromModal(selected) {
         const newProds = selected.map(option => {
             const ps = option.product_stores?.[storeId] || {};
-            return { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: parseFloat(ps.retail_unit_price) || 0, unit_price_with_vat: parseFloat(ps.retail_unit_price_with_vat) || 0, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service };
+            return { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: parseFloat(ps.retail_unit_price) || 0, unit_price_with_vat: parseFloat(ps.retail_unit_price_with_vat) || 0, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service, stock: parseFloat(ps.stock) || 0, warehouse_stocks: ps.warehouse_stocks || {} };
         });
         const updated = [...newProds, ...selectedProducts];
         setSelectedProducts(updated);
@@ -247,7 +304,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     function addProduct(option) {
         const ps = option.product_stores?.[storeId] || {};
-        const newProd = { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: parseFloat(ps.retail_unit_price) || 0, unit_price_with_vat: parseFloat(ps.retail_unit_price_with_vat) || 0, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service };
+        const newProd = { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: parseFloat(ps.retail_unit_price) || 0, unit_price_with_vat: parseFloat(ps.retail_unit_price_with_vat) || 0, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service, stock: parseFloat(ps.stock) || 0, warehouse_stocks: ps.warehouse_stocks || {} };
         const updated = [newProd, ...selectedProducts];
         setSelectedProducts(updated);
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -324,9 +381,15 @@ const QuotationType3Form = forwardRef((props, ref) => {
             setErrors({});
             if (props.showToastMessage) props.showToastMessage(formData.id ? t("Quotation updated successfully!") : t("Quotation created successfully!"), "success");
             if (props.refreshList) props.refreshList();
+            const createdRepairJobId = !formData.id ? (r.result?.repair_job_id || formData.repair_job_id) : formData.repair_job_id;
             if (!formData.id && r.result?.id) {
                 setShow(false);
-                if (props.openDetailsView) props.openDetailsView(r.result.id);
+                if (store.settings?.enable_automobile_module) {
+                    setTimeout(() => previewRef.current?.open(r.result, undefined, "quotation"), 100);
+                } else {
+                    if (props.openDetailsView) props.openDetailsView(r.result.id);
+                }
+                if (createdRepairJobId && props.openJobCard) props.openJobCard(createdRepairJobId);
             } else if (formData.id) {
                 setShow(false);
                 if (props.openDetailsView) props.openDetailsView(formData.id);
@@ -375,13 +438,30 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     return (
         <>
-        <style>{`.qt3-modal-wrap { z-index: 1070 !important; } .pw-modal-wrap { z-index: 1080 !important; } .products-modal-wrap { z-index: 1090 !important; }`}</style>
+        <style>{`.qt3-modal-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: 1080 !important; } .order-preview-wrap { z-index: 1100 !important; }`}</style>
         <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="qt3-modal" className="qt3-modal-wrap">
             <Modal.Header style={{ backgroundColor: "#fff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 700, fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e" }}>
-                    {isUpdateForm ? `${t("Update")} #${formData.code}` : (isInvoice ? t("Create Invoice (Workshop)") : t("Create Quotation (Workshop)"))}
+                    {isUpdateForm ? `${t("Update")} #${formData.code}` : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}
                 </h1>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button type="button" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: disablePreviousButton ? 0.5 : 1 }}>
+                        <i className="bi-chevron-double-left" style={{ fontSize: "13px" }}></i> {t("Previous")}
+                    </button>
+                    <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openNextForm(); }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
+                        {t("Next")} <i className="bi-chevron-double-right" style={{ fontSize: "13px" }}></i>
+                    </button>
+                    <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openCreateForm(); }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
+                        <i className="bi bi-plus" style={{ fontSize: "14px" }}></i> {t("Create New")}
+                    </button>
+                    <button type="button" disabled={!isUpdateForm} onClick={() => previewRef.current?.open(formData, undefined, "quotation")} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
+                        <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
+                    </button>
+                    {isUpdateForm && props.openJobCard && formData.repair_job_id && (
+                        <button type="button" onClick={() => props.openJobCard(formData.repair_job_id)} style={{ display: "flex", alignItems: "center", gap: "4px", border: "1px solid #004ac6", backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                            <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
+                        </button>
+                    )}
                     <button type="button" onClick={(e) => handleCreate(e)} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                         {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {isUpdateForm ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}</>}
                     </button>
@@ -572,6 +652,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                 <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
                                                 <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
                                                 <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
+                                                <th style={{ width: "70px", padding: "3px 6px" }}>{t("Stock")}</th>
                                                 <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
                                                 <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price ex. VAT")}</th>
                                                 <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price with VAT")}</th>
@@ -581,7 +662,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         </thead>
                                         <tbody>
                                             {activeProducts.length === 0 && (
-                                                <tr><td colSpan={8} className="text-center text-muted py-5"><i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>{t("Search and add products or services")}</td></tr>
+                                                <tr><td colSpan={9} className="text-center text-muted py-5"><i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>{t("Search and add products or services")}</td></tr>
                                             )}
                                             {activeProducts.map((product, index) => {
                                                 const lineTotal = trimTo2Decimals((parseFloat(product.quantity) || 0) * ((parseFloat(product.unit_price_with_vat) || 0) - (parseFloat(product.unit_discount_with_vat) || 0)));
@@ -595,6 +676,29 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                         </td>
                                                         <td style={{ padding: "3px 6px", fontSize: "13px", color: "#374151" }}>
                                                             <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={v => v} />
+                                                        </td>
+                                                        <td style={{ padding: "3px 6px", whiteSpace: "nowrap" }}>
+                                                            {!product.is_service && (
+                                                                <OverlayTrigger
+                                                                    placement="top"
+                                                                    overlay={
+                                                                        <Tooltip id={`qt3-stock-tooltip-${liveIndex}`}>
+                                                                            {(() => {
+                                                                                const ws = product.warehouse_stocks || {};
+                                                                                const entries = [];
+                                                                                if (ws.hasOwnProperty("main_store")) entries.push(["main_store", ws["main_store"]]);
+                                                                                Object.entries(ws).forEach(([k, v]) => { if (k !== "main_store") entries.push([k, v]); });
+                                                                                const details = entries.map(([k, v]) => `${k === "main_store" ? t("Main Store") : k.replace(/^wh/, "WH").toUpperCase()}: ${v}`).join(", ");
+                                                                                return details || `${t("Main Store")}: ${product.stock ?? 0}`;
+                                                                            })()}
+                                                                        </Tooltip>
+                                                                    }
+                                                                >
+                                                                    <span style={{ cursor: "pointer", textDecoration: "underline dotted", fontSize: "13px" }}>
+                                                                        {product.stock ?? 0}
+                                                                    </span>
+                                                                </OverlayTrigger>
+                                                            )}
                                                         </td>
                                                         <td style={{ padding: "3px 6px" }}>
                                                             <input type="number" min="0" step="any" className="form-control form-control-sm" value={product.quantity}
@@ -741,6 +845,13 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                 <strong style={{ fontSize: 13, color: "#374151" }}>{parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit).toFixed(2)}</strong>
                                             </span>
                                         )}
+                                        {!isVehicleLoading && (
+                                            <button type="button" onClick={() => setShowVehicleModal(true)}
+                                                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563eb", fontWeight: 600 }}>
+                                                <i className="bi bi-car-front" style={{ fontSize: 12 }}></i>
+                                                {vehicleOptions.length} {vehicleOptions.length === 1 ? t("vehicle") : t("vehicles")}
+                                            </button>
+                                        )}
                                     </div>
                                     {selectedVehicle && (
                                         <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,135,90,0.05)", border: "1px solid #b3e0cc", borderRadius: 6 }}>
@@ -809,6 +920,36 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                 </div>
 
                                 <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "10px", paddingTop: "10px" }}>
+                                    {parseFloat(formData.rounding_amount || 0) !== 0 && (
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                            <span style={{ color: "#6b7280" }}>{t("Net Total Before Rounding")}</span>
+                                            <span style={{ fontWeight: 600, color: "#191c1e" }}>
+                                                <NumberFormat value={trimTo2Decimals((formData.net_total || 0) - (formData.rounding_amount || 0))} displayType="text" thousandSeparator renderText={v => v} />
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                        <span style={{ color: "#6b7280" }}>
+                                            {t("Rounding Amount")}
+                                            {" "}[<label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontWeight: 500 }}>
+                                                <input type="checkbox" style={{ width: 13, height: 13 }} checked={!!formData.auto_rounding_amount} onChange={() => {
+                                                    formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                                    setFormData({ ...formData });
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    timerRef.current = setTimeout(() => reCalculateRef.current?.(), 100);
+                                                }} />
+                                                {t("Auto")}
+                                            </label>]
+                                        </span>
+                                        <input type="number" disabled={!!formData.auto_rounding_amount} style={{ width: 100, fontSize: 12 }} className="form-control form-control-sm" value={formData.rounding_amount || ""} onWheel={e => e.target.blur()}
+                                            onChange={e => {
+                                                formData.rounding_amount = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                timerRef.current = setTimeout(() => reCalculateRef.current?.(), 100);
+                                            }}
+                                        />
+                                    </div>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
                                         <span style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e" }}>{t("Net Total")}</span>
                                         <span style={{ fontSize: "22px", fontWeight: 800, color: "#004ac6", lineHeight: 1 }}>
@@ -850,6 +991,55 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
         <VehicleCreate ref={vehicleCreateRef} refreshList={() => {}} openDetailsView={newId => reloadVehicles(newId)} />
         <Products ref={productsRef} onSelectProducts={handleSelectedProductsFromModal} showToastMessage={props.showToastMessage} />
+        <Modal show={showVehicleModal} onHide={() => setShowVehicleModal(false)} size="lg" className="vehicle-list-modal-wrap">
+            <Modal.Header closeButton>
+                <Modal.Title style={{ fontSize: "15px", fontWeight: 700 }}>
+                    <i className="bi bi-car-front me-2"></i>
+                    {t("Vehicles")} — {formData.customer_name || t("Customer")}
+                    <span style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>({vehicleOptions.length})</span>
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ padding: 0 }}>
+                {vehicleOptions.length === 0 ? (
+                    <div style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                        <i className="bi bi-car-front" style={{ fontSize: "32px", display: "block", marginBottom: "8px" }}></i>
+                        {t("No vehicles found for this customer")}
+                    </div>
+                ) : (
+                    <div style={{ overflowX: "auto" }}>
+                        <table className="table table-sm table-hover align-middle mb-0">
+                            <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
+                                <tr>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Vehicle No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Brand / Model")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Year")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Chassis No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Istimara No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Current KM")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px" }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {vehicleOptions.map((v) => (
+                                    <tr key={v.id} style={{ cursor: "pointer" }} onClick={() => { setVehicleSelection(v); setShowVehicleModal(false); }}>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px", fontWeight: 600 }}>{v.vehicle_number || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{[v.brand, v.model, v.variant].filter(Boolean).join(" ") || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.year || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.chassis_number || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.istimara_no || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.current_km || "—"}</td>
+                                        <td style={{ padding: "8px 12px" }}>
+                                            <button type="button" className="btn btn-sm btn-primary" onClick={(e) => { e.stopPropagation(); setVehicleSelection(v); setShowVehicleModal(false); }} style={{ fontSize: "11px", padding: "3px 10px" }}>{t("Select")}</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Modal.Body>
+        </Modal>
+        <OrderPreview ref={previewRef} />
         </>
     );
 });

@@ -32,6 +32,8 @@ const RepairJobCreate = forwardRef((props, ref) => {
             setVehicleOptions([]);
             if (id) {
                 getRepairJob(id);
+            } else {
+                setTimeout(() => fetchAndSetUnknownCustomer(), 50);
             }
             getStore(localStorage.getItem("store_id"));
             SetShow(true);
@@ -134,6 +136,38 @@ const RepairJobCreate = forwardRef((props, ref) => {
                 setSelectedCustomers([...selectedCustomers]);
             }
         } catch (e) { }
+    }
+
+    async function fetchAndSetUnknownCustomer() {
+        const token = localStorage.getItem('access_token');
+        const storeId = localStorage.getItem('store_id');
+        try {
+            const res = await fetch(`/v1/customer?select=id,name,code,phone,vat_no,credit_balance&search[name]=UNKNOWN&search[store_id]=${storeId}&limit=1`, {
+                headers: { 'Content-Type': 'application/json', Authorization: token }
+            });
+            const d = await res.json();
+            const c = d.result?.[0];
+            if (c) {
+                const cu = { ...c, label: c.name || 'UNKNOWN' };
+                selectedCustomers = [cu];
+                setSelectedCustomers([cu]);
+                formData.customer_id = c.id;
+                formData.customer_name = c.name || 'UNKNOWN';
+                setFormData({ ...formData });
+            } else {
+                formData.customer_id = '';
+                formData.customer_name = '';
+                setFormData({ ...formData });
+                selectedCustomers = [];
+                setSelectedCustomers([]);
+            }
+        } catch (e) {
+            formData.customer_id = '';
+            formData.customer_name = '';
+            setFormData({ ...formData });
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+        }
     }
 
     function calculateTotals(data) {
@@ -482,7 +516,14 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                                     {/* 1. Customer (narrow input, wide dropdown) */}
                                     <div style={{ flex: '0 0 30%', minWidth: 0 }}>
-                                        <Label>{t('Customer')}</Label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                                            <label style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#191c1e' }}>{t('Customer')}</label>
+                                            {selectedCustomers.length > 0 && (
+                                                <button type="button" onClick={() => { setVehicleOptions([]); fetchAndSetUnknownCustomer(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '0 2px', fontSize: 13, lineHeight: 1 }} title={t('Clear customer')}>
+                                                    <i className="bi bi-x-circle"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                         <Typeahead
                                             id="customer_id"
                                             labelKey="label"
@@ -491,11 +532,8 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 errors.customer_id = "";
                                                 setErrors({ ...errors });
                                                 if (selectedItems.length === 0) {
-                                                    formData.customer_id = "";
-                                                    setFormData({ ...formData });
-                                                    selectedCustomers = [];
-                                                    setSelectedCustomers([]);
                                                     setVehicleOptions([]);
+                                                    fetchAndSetUnknownCustomer();
                                                     return;
                                                 }
                                                 const c = selectedItems[0];
@@ -567,7 +605,14 @@ const RepairJobCreate = forwardRef((props, ref) => {
 
                                     {/* 2. Vehicle */}
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <Label>{t('Vehicle')}</Label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                                            <label style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#191c1e' }}>{t('Vehicle')}</label>
+                                            {selectedVehicles.length > 0 && (
+                                                <button type="button" onClick={() => { formData.vehicle_id = ''; formData.vehicle_number = ''; formData.brand = ''; formData.model = ''; setFormData({ ...formData }); setSelectedVehicles([]); vehicleSearchRef.current?.clear(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '0 2px', fontSize: 13, lineHeight: 1 }} title={t('Clear vehicle')}>
+                                                    <i className="bi bi-x-circle"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                         <Typeahead
                                             id="vehicle_id"
                                             labelKey="label"
@@ -885,13 +930,13 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                             <input value={part.name || ''} type="text" onChange={(e) => updatePart(idx, 'name', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 6px', fontSize: 12, width: '100%', outline: 'none' }} />
                                                         </td>
                                                         <td style={{ padding: '5px 4px' }}>
-                                                            <input value={part.qty ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'qty', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'center', outline: 'none' }} />
+                                                            <input value={part.qty ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'qty', e.target.value)} onFocus={e => e.target.select()} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'center', outline: 'none' }} />
                                                         </td>
                                                         <td style={{ padding: '5px 4px' }}>
-                                                            <input value={part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none' }} />
+                                                            <input value={part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price', e.target.value)} onFocus={e => e.target.select()} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none' }} />
                                                         </td>
                                                         <td style={{ padding: '5px 4px' }}>
-                                                            <input value={part.unit_price_with_vat ?? part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price_with_vat', e.target.value)} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none', color: '#0052cc' }} />
+                                                            <input value={part.unit_price_with_vat ?? part.unit_price ?? ''} type="number" step="0.01" min="0" onChange={(e) => updatePart(idx, 'unit_price_with_vat', e.target.value)} onFocus={e => e.target.select()} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none', color: '#0052cc' }} />
                                                         </td>
                                                         <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: '#172b4d', whiteSpace: 'nowrap' }}>
                                                             {fmtCurrency(part.total_price_with_vat !== undefined ? part.total_price_with_vat : part.total_price)}
@@ -912,7 +957,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 8 }}>
                                     <div style={{ flex: '0 0 160px' }}>
                                         <Label>{t('Labour Charge')}</Label>
-                                        <input value={formData.labour_charge ?? ''} type="number" step="0.01" min="0" onChange={(e) => setField("labour_charge", e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '5px 8px', fontSize: 12, width: '100%', outline: 'none' }} />
+                                        <input value={formData.labour_charge ?? ''} type="number" step="0.01" min="0" onChange={(e) => setField("labour_charge", e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))} onFocus={e => e.target.select()} style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '5px 8px', fontSize: 12, width: '100%', outline: 'none' }} />
                                     </div>
                                     <div style={{ flex: 1, background: '#172b4d', borderRadius: 6, padding: '10px 14px', color: '#fff', minWidth: 240 }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>

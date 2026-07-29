@@ -243,6 +243,42 @@ const OrderCreate = forwardRef((props, ref) => {
                 handleSelectedDeliveryNote({ id: dnId });
             }, 200);
         },
+        async openWithPrefill(prefill) {
+            fromJobCardRef.current = true;
+            await this.open();
+            if (!prefill) return;
+            setTimeout(() => {
+                if (prefill.vehicle_id) {
+                    setFormType('type5');
+                }
+                if (prefill.customer_id) {
+                    formData.customer_id = prefill.customer_id;
+                    formData.customer_name = prefill.customer_name || '';
+                    fetchAndSetCustomer(prefill.customer_id, { id: prefill.customer_id, name: prefill.customer_name || '' });
+                }
+                if (prefill.vehicle_id) {
+                    formData.vehicle_id = prefill.vehicle_id;
+                    formData.vehicle_snapshot = prefill.vehicle_snapshot || undefined;
+                    if (prefill.km_driven != null) formData.km_driven = prefill.km_driven;
+                }
+                if (prefill.products?.length) {
+                    selectedProducts = [...prefill.products];
+                    setSelectedProducts([...prefill.products]);
+                    formData.products = [...prefill.products];
+                }
+                if (prefill.repair_job_id) {
+                    formData.repair_job_id = prefill.repair_job_id;
+                }
+                setFormData({ ...formData });
+                // After React commits the render (SalesType5Body mounts and reCalculateRef sees fresh formData),
+                // select the vehicle and recalculate products so reCalculate closes over the updated customer_id.
+                const vehicle = prefill.vehicle_id ? (prefill.vehicle || { id: prefill.vehicle_id, ...(prefill.vehicle_snapshot || {}) }) : null;
+                setTimeout(() => {
+                    if (vehicle) type5BodyRef.current?.selectVehicle(vehicle);
+                    if (prefill.products?.length) reCalculateRef.current?.();
+                }, 50);
+            }, 200);
+        },
     }));
 
     async function open(id) {
@@ -1273,6 +1309,7 @@ const OrderCreate = forwardRef((props, ref) => {
     //Delivered By Signature Auto Suggestion
 
     const [show, setShow] = useState(false);
+    const fromJobCardRef = useRef(false);
 
     function handleClose() {
         selectedProducts = [];
@@ -2080,8 +2117,12 @@ const OrderCreate = forwardRef((props, ref) => {
                     setSelectedProducts([]);
                     formData.customer_id = "";
                     setSelectedCustomers([]);*/
+                const wasNew = !isUpdateForm;
                 if (data.result?.id) {
                     isUpdateForm = true;
+                    if (wasNew && data.result.repair_job_id && props.openJobCard) {
+                        props.openJobCard(data.result.repair_job_id);
+                    }
                     setIsUpdateForm(true);
                     // Allow Prev/Next navigation after creation
                     pendingOrderIdRef.current = data.result.id;
@@ -3733,6 +3774,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
     const reCalculateRef = useRef(null);
     reCalculateRef.current = reCalculate;
+    const type5BodyRef = useRef(null);
 
     // Always points to the latest fetchAdvanceDepositsForCustomer (avoids stale closure in useEffect)
     const fetchAdvanceDepositsRef = useRef(null);
@@ -4132,6 +4174,7 @@ const OrderCreate = forwardRef((props, ref) => {
     //const CreateFormRef = useRef();
     let [disablePreviousButton, setDisablePreviousButton] = useState(false)
     async function openCreateForm() {
+        fromJobCardRef.current = false;
         disablePreviousButton = false;
         setDisablePreviousButton(false);
 
@@ -4166,6 +4209,12 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     async function handlePrintClose() {
+        if (fromJobCardRef.current) {
+            fromJobCardRef.current = false;
+            setShowOrderPreview(false);
+            setShow(false);
+            return;
+        }
         selectedProducts = [];
         setSelectedProducts([]);
         formData.products = [];
@@ -5342,6 +5391,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1090 !important; } .products-modal-wrap { z-index: 1095 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5613,7 +5663,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen id="sales_create_form"
+            <Modal show={show} size="xl" fullscreen id="sales_create_form" className="order-create-wrap"
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 {formType === "type1" && <SalesType1Header
                     formData={formData} setFormData={setFormData}
@@ -5652,6 +5702,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     handleClose={handleClose}
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
+                    openJobCard={props.openJobCard}
                 />}
                 {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -8492,6 +8543,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     />}
 
                     {formType === "type5" && <SalesType5Body
+                        ref={type5BodyRef}
                         formData={formData} setFormData={setFormData}
                         errors={errors} setErrors={setErrors}
                         warnings={warnings}

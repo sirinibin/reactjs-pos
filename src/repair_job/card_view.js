@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from 'react-i18next';
-import { Spinner } from "react-bootstrap";
+import { Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -71,7 +71,7 @@ function SearchDropdown({ value, onChange, onSelect, placeholder, options, loadi
     );
 }
 
-const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpdated, showToastMessage, onCreateSalesInvoice, onCreateQuotation }, ref) => {
+const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpdated, showToastMessage, onCreateSalesInvoice, onCreateQuotation, onOpenSalesInvoice, onOpenQuotation, openUpdateProductForm }, ref) => {
     const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -101,6 +101,21 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
     const [techOptions, setTechOptions] = useState([]);
     const [techLoading, setTechLoading] = useState(false);
     const techDebounce = useRef();
+
+    // Labour charge — local state so summary updates on every keystroke
+    const [labourInput, setLabourInput] = useState(0);
+    useEffect(() => { setLabourInput(job.labour_charge ?? 0); }, [job.labour_charge]);
+
+    const [vatPercent, setVatPercent] = useState(0);
+    useEffect(() => {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId) return;
+        fetch(`/v1/store/${storeId}?select=vat_percent`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => { if (d.result?.vat_percent != null) { const vp = parseFloat(d.result.vat_percent) || 0; setVatPercent(vp); jobRef.current = { ...jobRef.current, vat_percent: vp }; } })
+            .catch(() => {});
+    }, []);
 
     // Products
     const [productOptions, setProductOptions] = useState([]);
@@ -163,6 +178,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                     setTitleValue(j.title || '');
                     setTechSearch(j.technician_name || '');
                     if (j.customer_id) fetchCustomerById(j.customer_id);
+                    else fetchAndSetUnknownCustomer();
                     if (j.vehicle_id) {
                         setSelectedVehicles([{
                             id: j.vehicle_id,
@@ -258,6 +274,26 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
         } catch (e) {}
     }
 
+    async function fetchAndSetUnknownCustomer() {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch(`/v1/customer?select=id,name,code,phone,vat_no,credit_balance&search[name]=UNKNOWN&search[store_id]=${storeId}&limit=1`, {
+                headers: { Authorization: token }
+            });
+            const d = await res.json();
+            const c = d.result?.[0];
+            if (c) {
+                setSelectedCustomers([{ ...c, label: c.name || 'UNKNOWN' }]);
+                saveJobFields({ customer_id: c.id, customer_name: c.name || 'UNKNOWN' });
+            } else {
+                saveJobFields({ customer_id: null, customer_name: '' });
+            }
+        } catch (e) {
+            saveJobFields({ customer_id: null, customer_name: '' });
+        }
+    }
+
     // ── Vehicle ──
     async function suggestVehicles(searchTerm, customerIdFilter) {
         setVehicleOptions([]);
@@ -320,10 +356,10 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
         let qs = ObjectToSearchQueryParams(params);
         if (qs) qs = '&' + qs;
         const psFields = storeId
-            ? `,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat`
+            ? `,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`
             : '';
         try {
-            const res = await fetch(`/v1/product?select=id,name,is_service,item_code${psFields}${qs}&limit=20`, {
+            const res = await fetch(`/v1/product?select=id,name,is_service,item_code,part_number${psFields}${qs}&limit=20`, {
                 headers: { Authorization: localStorage.getItem('access_token') }
             });
             const d = await res.json();
@@ -331,7 +367,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                 const ps = (storeId && p.product_stores?.[storeId]) || {};
                 const excl = ps.retail_unit_price ?? p.price ?? 0;
                 const incl = ps.retail_unit_price_with_vat ?? p.unit_price_with_vat ?? excl;
-                return { ...p, retail_price: excl, retail_price_with_vat: incl };
+                return { ...p, retail_price: excl, retail_price_with_vat: incl, purchase_unit_price: ps.purchase_unit_price ?? 0, stock: ps.stock ?? 0, warehouse_stocks: ps.warehouse_stocks ?? {} };
             });
             setProductOptions(mapped);
             if (mapped.length > 0) setOpenProductSearch(true);
@@ -344,14 +380,23 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
     function addPart(product) {
         const currentParts = jobRef.current.parts || [];
         if (currentParts.some(p => p.product_id === product.id)) return;
+        const vatMul = 1 + (vatPercent / 100);
+        const excl = parseFloat(product.retail_price || 0);
+        const storedIncl = parseFloat(product.retail_price_with_vat || 0);
+        const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMul).toFixed(2));
         const newPart = {
             product_id: product.id,
+            item_code: product.item_code || '',
+            part_number: product.part_number || '',
             name: product.name,
             qty: 1,
-            unit_price: parseFloat(product.retail_price || 0),
-            unit_price_with_vat: parseFloat(product.retail_price_with_vat || product.retail_price || 0),
-            total_price: parseFloat(product.retail_price || 0),
-            total_price_with_vat: parseFloat(product.retail_price_with_vat || product.retail_price || 0),
+            purchase_unit_price: parseFloat(product.purchase_unit_price || 0),
+            stock: parseFloat(product.stock || 0),
+            warehouse_stocks: product.warehouse_stocks || {},
+            unit_price: excl,
+            unit_price_with_vat: incl,
+            total_price: excl,
+            total_price_with_vat: incl,
         };
         saveJobFields({ parts: [...currentParts, newPart] });
     }
@@ -361,14 +406,20 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
     }
 
     function updatePart(index, field, value) {
+        const vatMul = 1 + (vatPercent / 100);
         const parts = (jobRef.current.parts || []).map((p, i) => {
             if (i !== index) return p;
             const updated = { ...p, [field]: value };
-            if (field === 'qty' || field === 'unit_price') {
+            if (field === 'unit_price') {
+                updated.unit_price_with_vat = parseFloat((parseFloat(value || 0) * vatMul).toFixed(2));
+                updated.total_price = parseFloat(updated.qty || 0) * parseFloat(updated.unit_price || 0);
+                updated.total_price_with_vat = parseFloat(updated.qty || 0) * updated.unit_price_with_vat;
+            } else if (field === 'qty') {
                 updated.total_price = parseFloat(updated.qty || 0) * parseFloat(updated.unit_price || 0);
                 updated.total_price_with_vat = parseFloat(updated.qty || 0) * parseFloat(updated.unit_price_with_vat || 0);
-            }
-            if (field === 'unit_price_with_vat') {
+            } else if (field === 'unit_price_with_vat') {
+                updated.unit_price = parseFloat((parseFloat(value || 0) / vatMul).toFixed(4));
+                updated.total_price = parseFloat(updated.qty || 0) * updated.unit_price;
                 updated.total_price_with_vat = parseFloat(updated.qty || 0) * parseFloat(updated.unit_price_with_vat || 0);
             }
             return updated;
@@ -385,14 +436,21 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
 
     function computeSummary() {
         const parts = job.parts || [];
+        const vatMul = 1 + (vatPercent / 100);
         let partsExcl = 0, partsIncl = 0;
         parts.forEach(p => {
-            partsExcl += parseFloat(p.total_price || 0);
-            partsIncl += parseFloat(p.total_price_with_vat || p.total_price || 0);
+            const excl = parseFloat(p.total_price || 0);
+            const storedIncl = parseFloat(p.total_price_with_vat || 0);
+            const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMul).toFixed(2));
+            partsExcl += excl;
+            partsIncl += incl;
         });
-        const labour = parseFloat(job.labour_charge || 0);
-        const vatAmount = partsIncl - partsExcl;
-        return { partsExcl, partsIncl, vatAmount, labour, totalExcl: partsExcl + labour, totalIncl: partsIncl + labour };
+        const labour = parseFloat(labourInput || 0);
+        const labourExcl = vatMul > 1 ? parseFloat((labour / vatMul).toFixed(2)) : labour;
+        const subtotal = parseFloat((partsExcl + labourExcl).toFixed(2));
+        const vatAmount = parseFloat((subtotal * vatPercent / 100).toFixed(2));
+        const totalIncl = parseFloat((subtotal + vatAmount).toFixed(2));
+        return { partsExcl, partsIncl, labour, labourExcl, subtotal, vatAmount, totalIncl };
     }
 
     const currentListId = cardMap[job.id] || statusToDefaultListId(job.status);
@@ -495,7 +553,14 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
 
                                     {/* Customer */}
                                     <div style={sectionBox}>
-                                        <div style={SL}><i className="bi bi-person-vcard"></i>{t('Customer')}</div>
+                                        <div style={{ ...SL, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-person-vcard"></i>{t('Customer')}</span>
+                                            {selectedCustomers.length > 0 && (
+                                                <button type="button" onClick={() => { setSelectedVehicles([]); setVehicleOptions([]); vehicleSearchRef.current?.clear(); fetchAndSetUnknownCustomer(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '0 2px', fontSize: 13, lineHeight: 1 }} title={t('Clear customer')}>
+                                                    <i className="bi bi-x-circle"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                         <Typeahead
                                             id="cv-customer"
                                             labelKey="label"
@@ -505,11 +570,10 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                             open={customerOptions.length === 0 ? false : undefined}
                                             onChange={(selectedItems) => {
                                                 if (selectedItems.length === 0) {
-                                                    setSelectedCustomers([]);
                                                     setSelectedVehicles([]);
                                                     setVehicleOptions([]);
                                                     vehicleSearchRef.current?.clear();
-                                                    saveJobFields({ customer_id: null, customer_name: '', vehicle_id: null, vehicle_number: '', brand: '', model: '' });
+                                                    fetchAndSetUnknownCustomer();
                                                     return;
                                                 }
                                                 const c = selectedItems[0];
@@ -575,7 +639,14 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
 
                                     {/* Vehicle */}
                                     <div style={sectionBox}>
-                                        <div style={SL}><i className="bi bi-car-front"></i>{t('Vehicle')}</div>
+                                        <div style={{ ...SL, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-car-front"></i>{t('Vehicle')}</span>
+                                            {selectedVehicles.length > 0 && (
+                                                <button type="button" onClick={() => { setSelectedVehicles([]); vehicleSearchRef.current?.clear(); saveJobFields({ vehicle_id: null, vehicle_number: '', brand: '', model: '' }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '0 2px', fontSize: 13, lineHeight: 1 }} title={t('Clear vehicle')}>
+                                                    <i className="bi bi-x-circle"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                         <Typeahead
                                             id="cv-vehicle"
                                             labelKey="label"
@@ -631,19 +702,6 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                 );
                                             }}
                                         />
-                                        {(job.vehicle_id || (!job.vehicle_id)) && (
-                                            <div style={{ marginTop: 8 }}>
-                                                <label style={{ fontSize: 11, color: '#5e6c84', display: 'block', marginBottom: 3 }}>{t('KM')}</label>
-                                                <input
-                                                    type="number"
-                                                    key={`km-${job.id}`}
-                                                    defaultValue={job.km || ''}
-                                                    onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) saveJobFields({ km: v }); }}
-                                                    placeholder="0"
-                                                    style={{ ...inputCls, width: 140 }}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
 
                                     {/* Parts & Services */}
@@ -706,9 +764,9 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                                             <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${checked ? '#004ac6' : '#94a3b8'}`, background: checked ? '#004ac6' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                                                 {checked && <i className="bi bi-check" style={{ color: '#fff', fontSize: 12 }}></i>}
                                                                             </div>
-                                                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                                                <div style={{ fontWeight: checked ? 700 : 500, fontSize: 13, color: '#191c1e' }}>{highlightWords(option.name, searchWords, checked)}</div>
-                                                                                <div style={{ fontSize: 10, color: '#94a3b8' }}>
+                                                                            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                                                                <div style={{ fontWeight: checked ? 700 : 500, fontSize: 13, color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{highlightWords(option.name, searchWords, checked)}</div>
+                                                                                <div style={{ fontSize: 10, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                     {[option.item_code, option.is_service ? t('Service') : t('Product')].filter(Boolean).join(' • ')}
                                                                                 </div>
                                                                             </div>
@@ -733,6 +791,8 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                     <thead>
                                                         <tr style={{ background: '#f4f5f7', borderBottom: '2px solid #dfe1e6' }}>
                                                             <th style={{ textAlign: 'left', padding: '6px 8px', color: '#5e6c84', fontWeight: 700 }}>{t('Name')}</th>
+                                                            <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 80 }}>{t('P. U.Price(excl.)')}</th>
+                                                            <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 60 }}>{t('Stock')}</th>
                                                             <th style={{ textAlign: 'center', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 60 }}>{t('Qty')}</th>
                                                             <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 100 }}>{t('Price (excl.)')}</th>
                                                             <th style={{ textAlign: 'right', padding: '6px 8px', color: '#5e6c84', fontWeight: 700, width: 100 }}>{t('Price (incl.)')}</th>
@@ -744,11 +804,46 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                         {job.parts.map((p, i) => (
                                                             <tr key={i} style={{ borderBottom: '1px solid #f4f5f7' }}>
                                                                 <td style={{ padding: '5px 8px' }}>
-                                                                    <input
-                                                                        defaultValue={p.name}
-                                                                        onBlur={e => { updatePart(i, 'name', e.target.value); saveParts(); }}
-                                                                        style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 6px', fontSize: 12, width: '100%', outline: 'none' }}
-                                                                    />
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                        <input
+                                                                            defaultValue={p.name}
+                                                                            onBlur={e => { updatePart(i, 'name', e.target.value); saveParts(); }}
+                                                                            style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 6px', fontSize: 12, flex: 1, minWidth: 0, outline: 'none' }}
+                                                                        />
+                                                                        {openUpdateProductForm && p.product_id && (
+                                                                            <button type="button" onClick={() => openUpdateProductForm(p.product_id, p.is_service)}
+                                                                                style={{ background: 'none', border: 'none', padding: '2px 4px', cursor: 'pointer', color: '#6b7280', flexShrink: 0 }}
+                                                                                title={t('Edit product')}>
+                                                                                <i className="bi bi-pencil" style={{ fontSize: 11 }}></i>
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 12, color: '#374151', whiteSpace: 'nowrap' }}>
+                                                                    {(p.purchase_unit_price || 0).toFixed(2)}
+                                                                </td>
+                                                                <td style={{ padding: '5px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                                    {p.product_id ? (
+                                                                        <OverlayTrigger
+                                                                            placement="top"
+                                                                            overlay={
+                                                                                <Tooltip id={`cv-stock-tooltip-${i}`}>
+                                                                                    {(() => {
+                                                                                        const ws = p.warehouse_stocks || {};
+                                                                                        const entries = [];
+                                                                                        if (ws.hasOwnProperty('main_store')) entries.push(['main_store', ws['main_store']]);
+                                                                                        Object.entries(ws).forEach(([k, v]) => { if (k !== 'main_store') entries.push([k, v]); });
+                                                                                        const details = entries.map(([k, v]) => `${k === 'main_store' ? t('Main Store') : k.replace(/^wh/, 'WH').toUpperCase()}: ${v}`).join(', ');
+                                                                                        return details || `${t('Main Store')}: ${p.stock ?? 0}`;
+                                                                                    })()}
+                                                                                </Tooltip>
+                                                                            }
+                                                                        >
+                                                                            <span style={{ cursor: 'pointer', textDecoration: 'underline dotted', fontSize: 12 }}>
+                                                                                {p.stock ?? 0}
+                                                                            </span>
+                                                                        </OverlayTrigger>
+                                                                    ) : null}
                                                                 </td>
                                                                 <td style={{ padding: '5px 4px' }}>
                                                                     <input
@@ -757,6 +852,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                                         min="0"
                                                                         onChange={e => updatePart(i, 'qty', parseFloat(e.target.value) || 0)}
                                                                         onBlur={e => { updatePart(i, 'qty', parseFloat(e.target.value) || 0); saveParts(); }}
+                                                                        onFocus={e => e.target.select()}
                                                                         style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'center', outline: 'none' }}
                                                                     />
                                                                 </td>
@@ -768,6 +864,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                                         step="0.01"
                                                                         onChange={e => updatePart(i, 'unit_price', parseFloat(e.target.value) || 0)}
                                                                         onBlur={e => { updatePart(i, 'unit_price', parseFloat(e.target.value) || 0); saveParts(); }}
+                                                                        onFocus={e => e.target.select()}
                                                                         style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none' }}
                                                                     />
                                                                 </td>
@@ -779,6 +876,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                                         step="0.01"
                                                                         onChange={e => updatePart(i, 'unit_price_with_vat', parseFloat(e.target.value) || 0)}
                                                                         onBlur={e => { updatePart(i, 'unit_price_with_vat', parseFloat(e.target.value) || 0); saveParts(); }}
+                                                                        onFocus={e => e.target.select()}
                                                                         style={{ border: '1px solid #dfe1e6', borderRadius: 3, padding: '3px 4px', fontSize: 12, width: '100%', textAlign: 'right', outline: 'none', color: '#0052cc' }}
                                                                     />
                                                                 </td>
@@ -858,16 +956,22 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
 
                                     {/* Labour Charge */}
                                     <div style={sectionBox}>
-                                        <div style={SL}><i className="bi bi-hammer"></i>{t('Labour Charge')}</div>
+                                        <div style={SL}><i className="bi bi-hammer"></i>{t('Labour Charge')} ({t('incl. VAT')})</div>
                                         <input
                                             type="number"
-                                            key={`labour-${job.id}`}
-                                            defaultValue={job.labour_charge || 0}
+                                            value={labourInput}
                                             min="0"
                                             step="0.01"
-                                            onBlur={e => { const v = parseFloat(e.target.value) || 0; saveJobFields({ labour_charge: v }); }}
+                                            onChange={e => setLabourInput(e.target.value)}
+                                            onBlur={e => { const v = parseFloat(e.target.value) || 0; setLabourInput(v); saveJobFields({ labour_charge: v }); }}
+                                            onFocus={e => e.target.select()}
                                             style={inputCls}
                                         />
+                                        {parseFloat(labourInput) > 0 && vatPercent > 0 && (
+                                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 5 }}>
+                                                {t('Labour (excl. VAT)')}: <span style={{ fontWeight: 600 }}>{fmtCurrency(parseFloat((parseFloat(labourInput) / (1 + vatPercent / 100)).toFixed(2)))}</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Cost Summary */}
@@ -878,53 +982,75 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                 <span>{t('Parts (excl. VAT)')}:</span>
                                                 <span>{fmtCurrency(summary.partsExcl)}</span>
                                             </div>
-                                            {summary.vatAmount > 0 && (
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
-                                                    <span>{t('VAT')}:</span>
-                                                    <span>{fmtCurrency(summary.vatAmount)}</span>
-                                                </div>
-                                            )}
-                                            {summary.partsIncl > 0 && (
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
-                                                    <span>{t('Parts (incl. VAT)')}:</span>
-                                                    <span>{fmtCurrency(summary.partsIncl)}</span>
-                                                </div>
-                                            )}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
-                                                <span>{t('Labour')}:</span>
-                                                <span>{fmtCurrency(summary.labour)}</span>
+                                                <span>{t('Labour (excl. VAT)')}:</span>
+                                                <span>{fmtCurrency(summary.labourExcl)}</span>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, color: '#fff', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 7, marginTop: 3 }}>
-                                                <span>{t('Total (excl.)')}:</span>
-                                                <span>{fmtCurrency(summary.totalExcl)}</span>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 5, marginTop: 2 }}>
+                                                <span>{t('Subtotal (excl. VAT)')}:</span>
+                                                <span>{fmtCurrency(summary.subtotal)}</span>
                                             </div>
-                                            {summary.vatAmount > 0 && (
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#57d9a3' }}>
-                                                    <span>{t('Total (incl. VAT)')}:</span>
-                                                    <span>{fmtCurrency(summary.totalIncl)}</span>
-                                                </div>
-                                            )}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#b3c6e0' }}>
+                                                <span>{t('VAT')} ({vatPercent}%):</span>
+                                                <span>{fmtCurrency(summary.vatAmount)}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#57d9a3', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 7, marginTop: 3 }}>
+                                                <span>{t('Total (incl. VAT)')}:</span>
+                                                <span>{fmtCurrency(summary.totalIncl)}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Create Sales / Quotation */}
                                     {(onCreateSalesInvoice || onCreateQuotation) && (
                                         <div style={sectionBox}>
-                                            <div style={SL}><i className="bi bi-file-earmark-plus"></i>{t('Create Document')}</div>
+                                            <div style={SL}><i className="bi bi-file-earmark-plus"></i>{t('Document')}</div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                                 {onCreateSalesInvoice && (
-                                                    <button type="button"
-                                                        onClick={() => onCreateSalesInvoice(job)}
-                                                        style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        <i className="bi bi-receipt"></i>{t('Create Sales Invoice')}
-                                                    </button>
+                                                    job.order_id ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#e3fcef', border: '1px solid #abf5d1', borderRadius: 5, padding: '8px 12px' }}>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ fontSize: 11, color: '#006644', fontWeight: 700 }}><i className="bi bi-receipt me-1"></i>{t('Sales Invoice Created')}</div>
+                                                                <div style={{ fontSize: 11, color: '#006644' }}>{job.order_code}{job.order_net_total ? ` · ${parseFloat(job.order_net_total).toFixed(2)}` : ''}</div>
+                                                            </div>
+                                                            {onOpenSalesInvoice && (
+                                                                <button type="button"
+                                                                    onClick={() => { setShow(false); onOpenSalesInvoice(job.order_id); }}
+                                                                    style={{ background: '#006644', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                                    <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <button type="button"
+                                                            onClick={() => onCreateSalesInvoice(job)}
+                                                            style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <i className="bi bi-receipt"></i>{t('Create Sales Invoice')}
+                                                        </button>
+                                                    )
                                                 )}
                                                 {onCreateQuotation && (
-                                                    <button type="button"
-                                                        onClick={() => onCreateQuotation(job)}
-                                                        style={{ background: '#fff', color: '#004ac6', border: '2px solid #004ac6', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        <i className="bi bi-file-earmark-text"></i>{t('Create Quotation')}
-                                                    </button>
+                                                    job.quotation_id ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fffae6', border: '1px solid #ffe380', borderRadius: 5, padding: '8px 12px' }}>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ fontSize: 11, color: '#974f0c', fontWeight: 700 }}><i className="bi bi-file-earmark-text me-1"></i>{t('Quotation Created')}</div>
+                                                                <div style={{ fontSize: 11, color: '#974f0c' }}>{job.quotation_code}{job.quotation_net_total ? ` · ${parseFloat(job.quotation_net_total).toFixed(2)}` : ''}</div>
+                                                            </div>
+                                                            {onOpenQuotation && (
+                                                                <button type="button"
+                                                                    onClick={() => { setShow(false); onOpenQuotation(job.quotation_id); }}
+                                                                    style={{ background: '#974f0c', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                                    <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <button type="button"
+                                                            onClick={() => onCreateQuotation(job)}
+                                                            style={{ background: '#fff', color: '#004ac6', border: '2px solid #004ac6', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <i className="bi bi-file-earmark-text"></i>{t('Create Quotation')}
+                                                        </button>
+                                                    )
                                                 )}
                                             </div>
                                         </div>

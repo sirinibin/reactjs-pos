@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Button, Spinner } from "react-bootstrap";
+import React, { useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { Modal, Button, Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -82,6 +82,7 @@ export function SalesType5Header({
     handleClose,
     openSalesFromDnInForm,
     dismissDnNotification,
+    openJobCard,
 }) {
     const { t } = useTranslation("common");
 
@@ -89,7 +90,7 @@ export function SalesType5Header({
         <Modal.Header style={{ backgroundColor: "#ffffff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
             <div className="sc-header-title" style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flexShrink: 1 }}>
                 <h1 style={{ margin: 0, fontSize: "20px", lineHeight: "28px", fontWeight: 700, letterSpacing: "-0.01em", fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e", whiteSpace: "nowrap" }}>
-                    {isUpdateForm ? `${t("Update Sales")} #${formData.code}` : t("Create New Sales Order (Workshop)")}
+                    {isUpdateForm ? `${t("Update Sales")} #${formData.code}` : t("Create New Sales Order")}
                 </h1>
                 {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                     <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "#434655", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
@@ -112,6 +113,11 @@ export function SalesType5Header({
                 <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                     <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
                 </button>
+                {isUpdateForm && openJobCard && formData.repair_job_id && (
+                    <button type="button" onClick={() => openJobCard(formData.repair_job_id)} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid #004ac6`, backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                        <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
+                    </button>
+                )}
                 <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#ffffff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer", minWidth: "70px", justifyContent: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
                     {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: "14px" }}></i> {isUpdateForm ? t("Update") : t("Create")}</>}
                 </button>
@@ -121,7 +127,7 @@ export function SalesType5Header({
     );
 }
 
-export function SalesType5Body({
+export const SalesType5Body = forwardRef(function SalesType5Body({
     formData, setFormData,
     errors, setErrors,
     selectedProducts, setSelectedProducts,
@@ -155,6 +161,7 @@ export function SalesType5Body({
     validatePaymentAmounts,
     CalCulateLineTotals,
     reCalculate,
+    reCalculateRef,
     checkErrors,
     checkWarnings,
     isProductAdded,
@@ -164,6 +171,8 @@ export function SalesType5Body({
     discount, setDiscount,
     setDiscountWithVAT,
     shipping, setShipping,
+    roundingAmount, setRoundingAmount,
+    renderNetTotalBeforeRoundingTooltip,
     totalPaymentAmount,
     balanceAmount,
     paymentStatus,
@@ -171,11 +180,12 @@ export function SalesType5Body({
     isUpdateForm,
     handleClose,
     fetchAndSetCustomer,
-}) {
+}, ref) {
     const { t } = useTranslation("common");
     const [vehicleOptions, setVehicleOptions] = useState([]);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [isVehicleLoading, setIsVehicleLoading] = useState(false);
+    const [showVehicleModal, setShowVehicleModal] = useState(false);
     const paymentRowsRef = useRef(null);
     const vehicleCreateRef = useRef(null);
     const storeId = localStorage.getItem("store_id");
@@ -184,6 +194,18 @@ export function SalesType5Body({
     const activeProducts = useMemo(() => (selectedProducts || []).filter((product) => !product.deleted), [selectedProducts]);
     const paymentRows = (formData.payments_input || []).filter((payment) => !payment.deleted);
     const canUseType5 = !!store?.settings?.enable_automobile_module;
+
+    useImperativeHandle(ref, () => ({
+        selectVehicle(vehicle) {
+            if (!vehicle) return;
+            const v = { id: vehicle.id, vehicle_number: vehicle.vehicle_number || '', brand: vehicle.brand || '', model: vehicle.model || '', ...vehicle };
+            setSelectedVehicle(v);
+            setVehicleOptions((prev) => prev.some((o) => o.id === v.id) ? prev : [v, ...prev]);
+            formData.vehicle_id = v.id || '';
+            formData.vehicle_snapshot = { vehicle_number: v.vehicle_number, brand: v.brand, model: v.model };
+            setFormData({ ...formData });
+        },
+    }));
 
     function removeDepositPayments() {
         if (!formData.payments_input) return;
@@ -254,21 +276,30 @@ export function SalesType5Body({
             })
             .then((vehicles) => {
                 if (cancelled) return;
-                setVehicleOptions(vehicles);
                 const matchedVehicle = vehicles.find((vehicle) => vehicle.id === formData.vehicle_id);
                 if (matchedVehicle) {
+                    setVehicleOptions(vehicles);
                     setSelectedVehicle(matchedVehicle);
                 } else if (formData.vehicle_id && formData.vehicle_snapshot) {
-                    setSelectedVehicle({ id: formData.vehicle_id, ...formData.vehicle_snapshot });
+                    const snapVehicle = { id: formData.vehicle_id, ...formData.vehicle_snapshot };
+                    setVehicleOptions([snapVehicle, ...vehicles.filter((v) => v.id !== formData.vehicle_id)]);
+                    setSelectedVehicle(snapVehicle);
                 } else {
+                    setVehicleOptions(vehicles);
                     setSelectedVehicle(null);
                 }
                 setIsVehicleLoading(false);
             })
             .catch(() => {
                 if (cancelled) return;
-                setVehicleOptions([]);
-                setSelectedVehicle(formData.vehicle_id && formData.vehicle_snapshot ? { id: formData.vehicle_id, ...formData.vehicle_snapshot } : null);
+                if (formData.vehicle_id && formData.vehicle_snapshot) {
+                    const snapVehicle = { id: formData.vehicle_id, ...formData.vehicle_snapshot };
+                    setVehicleOptions([snapVehicle]);
+                    setSelectedVehicle(snapVehicle);
+                } else {
+                    setVehicleOptions([]);
+                    setSelectedVehicle(null);
+                }
                 setIsVehicleLoading(false);
             });
 
@@ -679,6 +710,7 @@ export function SalesType5Body({
                                         <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
                                         <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
+                                        <th style={{ width: "70px", padding: "3px 6px" }}>{t("Stock")}</th>
                                         <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price ex. VAT")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price with VAT")}</th>
@@ -689,7 +721,7 @@ export function SalesType5Body({
                                 <tbody>
                                     {activeProducts.length === 0 && (
                                         <tr>
-                                            <td colSpan={8} className="text-center text-muted py-5">
+                                            <td colSpan={9} className="text-center text-muted py-5">
                                                 <i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>
                                                 {t("Search and add products or services to continue")}
                                             </td>
@@ -705,10 +737,10 @@ export function SalesType5Body({
                                                     <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <div style={{ fontWeight: 600, color: "#191c1e" }}>{product.name}</div>
-                                                            {(product.item_code || product.code) && (
+                                                            {(product.item_code || product.code || product.part_number) && (
                                                                 <div style={{ fontSize: "11px", color: "#374151" }}>
                                                                     <span style={{ color: "#6b7280", fontWeight: 500 }}>{t("Part No.")}:</span>{" "}
-                                                                    <span style={{ fontWeight: 600 }}>{product.item_code || product.code}</span>
+                                                                    <span style={{ fontWeight: 600 }}>{product.item_code || product.code || product.part_number}</span>
                                                                 </div>
                                                             )}
                                                             {product.name_in_arabic && <div style={{ fontSize: "12px", color: "#6b7280" }}>{product.name_in_arabic}</div>}
@@ -725,6 +757,29 @@ export function SalesType5Body({
                                                 </td>
                                                 <td style={{ padding: "3px 6px", fontSize: "13px", color: "#374151", whiteSpace: "nowrap" }}>
                                                     <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={(v) => v} />
+                                                </td>
+                                                <td style={{ padding: "3px 6px", whiteSpace: "nowrap" }}>
+                                                    {!product.is_service && (
+                                                        <OverlayTrigger
+                                                            placement="top"
+                                                            overlay={
+                                                                <Tooltip id={`t5-stock-tooltip-${liveIndex}`}>
+                                                                    {(() => {
+                                                                        const ws = product.warehouse_stocks || {};
+                                                                        const entries = [];
+                                                                        if (ws.hasOwnProperty("main_store")) entries.push(["main_store", ws["main_store"]]);
+                                                                        Object.entries(ws).forEach(([k, v]) => { if (k !== "main_store") entries.push([k, v]); });
+                                                                        const details = entries.map(([k, v]) => `${k === "main_store" ? t("Main Store") : k.replace(/^wh/, "WH").toUpperCase()}: ${v}`).join(", ");
+                                                                        return details || `${t("Main Store")}: ${product.stock ?? 0}`;
+                                                                    })()}
+                                                                </Tooltip>
+                                                            }
+                                                        >
+                                                            <span style={{ cursor: "pointer", textDecoration: "underline dotted", fontSize: "13px" }}>
+                                                                {product.stock ?? 0}
+                                                            </span>
+                                                        </OverlayTrigger>
+                                                    )}
                                                 </td>
                                                 <td style={{ padding: "3px 6px" }}>
                                                     <input
@@ -990,6 +1045,13 @@ export function SalesType5Body({
                                         <strong style={{ fontSize: 13, color: "#374151" }}>{parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit).toFixed(2)}</strong>
                                     </span>
                                 )}
+                                {!isVehicleLoading && (
+                                    <button type="button" onClick={() => setShowVehicleModal(true)}
+                                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563eb", fontWeight: 600 }}>
+                                        <i className="bi bi-car-front" style={{ fontSize: 12 }}></i>
+                                        {vehicleOptions.length} {vehicleOptions.length === 1 ? t("vehicle") : t("vehicles")}
+                                    </button>
+                                )}
                             </div>
                             {selectedVehicle && (
                                 <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,135,90,0.05)", border: "1px solid #b3e0cc", borderRadius: 6 }}>
@@ -1073,6 +1135,43 @@ export function SalesType5Body({
                         </div>
 
                         <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "10px", paddingTop: "10px" }}>
+                            {parseFloat(roundingAmount || 0) !== 0 && (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                    <span style={{ color: "#6b7280", display: "flex", alignItems: "center", gap: 4 }}>
+                                        {t("Net Total Before Rounding")}
+                                        {renderNetTotalBeforeRoundingTooltip && (
+                                            <OverlayTrigger placement="left" overlay={renderNetTotalBeforeRoundingTooltip()}>
+                                                <span style={{ textDecoration: "underline dotted", cursor: "pointer" }}>ℹ️</span>
+                                            </OverlayTrigger>
+                                        )}
+                                    </span>
+                                    <span style={{ fontWeight: 600, color: "#191c1e" }}>
+                                        <NumberFormat value={trimTo2Decimals((formData.net_total || 0) - (roundingAmount || 0))} displayType="text" thousandSeparator renderText={v => v} />
+                                    </span>
+                                </div>
+                            )}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                <span style={{ color: "#6b7280" }}>
+                                    {t("Rounding Amount")}
+                                    {" "}[<label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontWeight: 500 }}>
+                                        <input type="checkbox" style={{ width: 13, height: 13 }} checked={!!formData.auto_rounding_amount} onChange={() => {
+                                            formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                            setFormData({ ...formData });
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
+                                        }} />
+                                        {t("Auto")}
+                                    </label>]
+                                </span>
+                                <input type="number" disabled={!!formData.auto_rounding_amount} style={{ width: 100, fontSize: 12 }} className="form-control form-control-sm" value={roundingAmount || ""} onWheel={e => e.target.blur()}
+                                    onChange={e => {
+                                        const v = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                        setRoundingAmount(v);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
+                                    }}
+                                />
+                            </div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
                                 <span style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e" }}>{t("Net Total")}</span>
                                 <span style={{ fontSize: "22px", fontWeight: 800, color: "#004ac6", lineHeight: 1 }}>
@@ -1110,6 +1209,54 @@ export function SalesType5Body({
             refreshList={() => {}}
             openDetailsView={(newId) => reloadVehicles(newId)}
         />
+        <Modal show={showVehicleModal} onHide={() => setShowVehicleModal(false)} size="lg" className="vehicle-list-modal-wrap">
+            <Modal.Header closeButton>
+                <Modal.Title style={{ fontSize: "15px", fontWeight: 700 }}>
+                    <i className="bi bi-car-front me-2"></i>
+                    {t("Vehicles")} — {formData.customer_name || t("Customer")}
+                    <span style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>({vehicleOptions.length})</span>
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ padding: 0 }}>
+                {vehicleOptions.length === 0 ? (
+                    <div style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                        <i className="bi bi-car-front" style={{ fontSize: "32px", display: "block", marginBottom: "8px" }}></i>
+                        {t("No vehicles found for this customer")}
+                    </div>
+                ) : (
+                    <div style={{ overflowX: "auto" }}>
+                        <table className="table table-sm table-hover align-middle mb-0">
+                            <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
+                                <tr>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Vehicle No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Brand / Model")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Year")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Chassis No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Istimara No.")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Current KM")}</th>
+                                    <th style={{ fontSize: "12px", padding: "8px 12px" }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {vehicleOptions.map((v) => (
+                                    <tr key={v.id} style={{ cursor: "pointer" }} onClick={() => { setVehicleSelection(v); setShowVehicleModal(false); }}>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px", fontWeight: 600 }}>{v.vehicle_number || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{[v.brand, v.model, v.variant].filter(Boolean).join(" ") || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.year || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.chassis_number || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.istimara_no || "—"}</td>
+                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.current_km || "—"}</td>
+                                        <td style={{ padding: "8px 12px" }}>
+                                            <button type="button" className="btn btn-sm btn-primary" onClick={(e) => { e.stopPropagation(); setVehicleSelection(v); setShowVehicleModal(false); }} style={{ fontSize: "11px", padding: "3px 10px" }}>{t("Select")}</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Modal.Body>
+        </Modal>
         </>
     );
-}
+});

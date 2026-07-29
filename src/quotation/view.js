@@ -219,7 +219,7 @@ const QuotationView = forwardRef((props, ref) => {
         {showOrderPreview && <OrderPreview ref={PreviewRef} />}
         <OrderPrint ref={PrintRef} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className="quotation-view-overlay">
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button - always top right */}
@@ -571,6 +571,9 @@ const QuotationView = forwardRef((props, ref) => {
             <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                     {t("Cancel")}
+                </button>
+                <button onClick={openPreview} style={{ backgroundColor: '#fff', color: '#004ac6', border: '1px solid #004ac6', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                    <i className="bi bi-file-earmark-pdf me-1"></i>{t("Print A4")}
                 </button>
                 <button onClick={openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
                     {t("Print Quotation")}
