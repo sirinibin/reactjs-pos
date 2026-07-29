@@ -295,7 +295,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       // history.push("/dashboard/quotations");
       window.location = "/";
     }
-  });
+  }, []);
 
 
 

@@ -51,6 +51,7 @@ export default function WhatsAppAPIModal({
     storeId,
     customer,         // { phone, phone2, name }
     defaultCaption,   // optional pre-filled message (document type text)
+    className,
 }) {
     const { t } = useTranslation('common');
     const [caption, setCaption] = useState('');
@@ -432,7 +433,7 @@ export default function WhatsAppAPIModal({
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered size="lg">
+        <Modal show={show} onHide={onClose} centered size="lg" className={className}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i className="bi bi-whatsapp text-success me-2"></i>

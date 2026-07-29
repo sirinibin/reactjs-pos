@@ -5391,7 +5391,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1090 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1090 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />

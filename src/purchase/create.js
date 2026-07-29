@@ -260,7 +260,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             // history.push("/dashboard/purchases");
             window.location = "/";
         }
-    });
+    }, []);
 
 
     async function getPurchase(id) {

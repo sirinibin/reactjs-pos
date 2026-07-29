@@ -2083,6 +2083,7 @@ const Preview = forwardRef((props, ref) => {
             onChoice={handleChoice}
             defaultNumber={defaultNumber}
             defaultMessage={defaultMessage}
+            className="above-preview-modal"
         />
 
         {/* API modal — shown when Use WhatsApp API is ON */}
@@ -2094,6 +2095,7 @@ const Preview = forwardRef((props, ref) => {
             storeId={model?.store?.id || model?.store_id || localStorage.getItem('store_id')}
             customer={model?.customer}
             defaultCaption=""
+            className="above-preview-modal"
         />
 
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}

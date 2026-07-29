@@ -3,7 +3,7 @@ import React from 'react';
 import { Modal, Button, Form, Spinner, Alert } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-const WhatsAppModal = ({ show, onClose, onChoice, onSendDirect, defaultNumber, defaultMessage, hideMessage }) => {
+const WhatsAppModal = ({ show, onClose, onChoice, onSendDirect, defaultNumber, defaultMessage, hideMessage, className }) => {
     const { t } = useTranslation('common');
     const [number, setNumber] = React.useState(defaultNumber || "");
     const [message, setMessage] = React.useState(defaultMessage || "");
@@ -54,7 +54,7 @@ const WhatsAppModal = ({ show, onClose, onChoice, onSendDirect, defaultNumber, d
     const hasDirect = !!onSendDirect;
 
     return (
-        <Modal show={show} onHide={onClose} centered>
+        <Modal show={show} onHide={onClose} centered className={className}>
             <Modal.Header closeButton>
                 <Modal.Title><i className="bi bi-whatsapp text-success me-2"></i>{t("Send WhatsApp Message")}</Modal.Title>
             </Modal.Header>
