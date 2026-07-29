@@ -869,7 +869,7 @@ const PostingIndex = forwardRef((props, ref) => {
                 <DividentCreate ref={DividentUpdateFormRef} onUpdated={handleUpdated} /></>}
 
             <BalanceSheetPrintPreview ref={PreviewRef} />
-            <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
+            <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true} className="above-sales-modal">
                 <Modal.Header>
                     <Modal.Title>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
 

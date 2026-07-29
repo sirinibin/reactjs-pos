@@ -5409,6 +5409,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
+                className="above-sales-modal"
             />
 
             <TableSettingsModal
@@ -5419,6 +5420,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 onToggleColumn={handleToggleCustomerCol}
                 onDragEnd={handleCustomerColDragEnd}
                 onRestoreDefaults={restoreCustomerColDefaults}
+                className="above-sales-modal"
             />
 
             {/* ⚙️ Selected Products Table Settings Modal */}
@@ -5427,6 +5429,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 onHide={() => setShowSelectedProductsSettings(false)}
                 centered
                 size="lg"
+                className="above-sales-modal"
             >
                 <Modal.Header closeButton>
                     <Modal.Title>
@@ -5500,6 +5503,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 onHide={() => setShowCustomerDetailsSettings(false)}
                 centered
                 size="lg"
+                className="above-sales-modal"
             >
                 <Modal.Header closeButton>
                     <Modal.Title>

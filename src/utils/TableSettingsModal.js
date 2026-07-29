@@ -14,11 +14,12 @@ function TableSettingsModal({
     enableSelection,
     onCheckAll,
     onUncheckAll,
+    className,
 }) {
     const { t } = useTranslation('common');
 
     return (
-        <Modal show={show} onHide={onHide} centered size="lg">
+        <Modal show={show} onHide={onHide} centered size="lg" className={className}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i

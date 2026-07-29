@@ -235,20 +235,20 @@ const CustomerPending = forwardRef((props, ref) => {
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
+                className="above-sales-modal"
                 dialogAs={({ children, ...props }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
                             ref={dragRef}
-                            className="modal-dialog modal-fullscreen"    // ✅ preserve Bootstrap xl class
+                            className="modal-dialog modal-fullscreen"
                             {...props}
                             style={{
-                                position: "absolute",
-                                top: "0%",
-                                left: "0%",
-                                transform: "translate(-50%, -50%)",
+                                position: "fixed",
+                                top: "0",
+                                left: "0",
                                 margin: "0",
-                                zIndex: 1055,
-                                width: "100%",           // Full width inside container
+                                zIndex: 1082,
+                                width: "100%",
                             }}
                         >
                             <div className="modal-content">{children}</div>

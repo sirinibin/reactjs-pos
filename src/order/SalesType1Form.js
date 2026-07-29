@@ -3139,6 +3139,7 @@ export function SalesType1Body({
                             onToggleColumn={handleToggleCustomerCol}
                             onDragEnd={handleCustomerColDragEnd}
                             onRestoreDefaults={restoreCustomerColDefaults}
+                            className="above-sales-modal"
                         />
         </>
     );
