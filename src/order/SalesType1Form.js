@@ -51,6 +51,7 @@ const T1_CUSTOMER_COLS_KEY = 'sales_t1_customer_search_columns';
 export function SalesType1Header({
     formData, setFormData,
     isUpdateForm,
+    isResumingDraft,
     store,
     formType, setFormType,
     disablePreviousButton,
@@ -73,9 +74,9 @@ export function SalesType1Header({
     return (
                     <Modal.Header>
                         <Modal.Title>
-                            {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
+                            {isResumingDraft ? t("Create New Sales Order") + " 📝 Draft" : isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
                         </Modal.Title>
-                        {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && <div style={{ marginLeft: "20px" }}>
+                        {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && <div style={{ marginLeft: "20px" }}>
                             <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                                 formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                 setFormData({ ...formData });
@@ -104,7 +105,7 @@ export function SalesType1Header({
                             &nbsp;&nbsp;
                             <Button variant="primary" style={{ minWidth: "80px" }} onClick={(e) => { e.preventDefault(); handleCreate(e); }}>
                                 {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : ""}
-                                {isUpdateForm && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
+                                {(isUpdateForm && !isResumingDraft) && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
                             </Button>
                             &nbsp;&nbsp;
                             {store.settings?.enable_sales_page_selection === true && (
@@ -274,6 +275,7 @@ export function SalesType1Body({
     paymentStatus,
     isSubmitting,
     isUpdateForm,
+    isResumingDraft,
     handleClose,
     renderTotalWithoutVATTooltip,
     renderTotalWithVATTooltip,
@@ -3150,7 +3152,7 @@ export function SalesType1Body({
 
                                         : ""
                                     }
-                                    {isUpdateForm && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
+                                    {(isUpdateForm && !isResumingDraft) && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
 
                                 </Button>
                             </Modal.Footer>

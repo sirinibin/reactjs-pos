@@ -207,6 +207,20 @@ function PurchaseIndex(props) {
     }, []);
 
     let [store, setStore] = useState({});
+    const [showDrafts, setShowDrafts] = useState(false);
+    const [draftCount, setDraftCount] = useState(0);
+
+    useEffect(() => {
+        if (showDrafts) return;
+        const storeId = localStorage.getItem('store_id');
+        if (!storeId) return;
+        fetch('/v1/purchase?search[store_id]=' + encodeURIComponent(storeId) + '&search[status]=draft&limit=1', {
+            headers: { Authorization: localStorage.getItem('access_token') },
+        })
+            .then(r => r.json())
+            .then(data => { if (data.total_count != null) setDraftCount(data.total_count); })
+            .catch(() => {});
+    }, [showDrafts]);
 
     async function getStore(id) {
         try {
@@ -753,6 +767,12 @@ function PurchaseIndex(props) {
             searchParams["stats"] = "0";
         }
 
+        if (showDrafts) {
+            searchParams["status"] = "draft";
+        } else {
+            delete searchParams["status"];
+        }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -818,7 +838,7 @@ function PurchaseIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, showDrafts]);
 
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
@@ -896,6 +916,14 @@ function PurchaseIndex(props) {
         }, 100);
     }
 
+    function openDraftForm(id) {
+        setShowPurchaseCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.openDraft(id);
+        }, 100);
+    }
+
     let [showPurchaseView, setShowPurchaseView] = useState(false);
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -907,6 +935,15 @@ function PurchaseIndex(props) {
         }, 100);
     }
 
+    function deleteDraftPurchase(id) {
+        if (!window.confirm('Delete this draft?')) return;
+        const storeId = localStorage.getItem('store_id');
+        fetch('/v1/purchase/' + id + '/draft?search[store_id]=' + storeId, {
+            method: 'DELETE',
+            headers: { Authorization: localStorage.getItem('access_token') },
+        }).then(() => list());
+    }
+
     const CreateFormRef = useRef();
     function openCreateForm() {
         setShowPurchaseCreate(true);
@@ -915,6 +952,15 @@ function PurchaseIndex(props) {
         timerRef.current = setTimeout(() => {
             CreateFormRef.current?.open(undefined, selectedVendors);
         }, 100);
+    }
+
+    function onDraftSaved() {
+        setDraftCount(d => d + 1);
+    }
+
+    function onDraftCreated() {
+        setDraftCount(d => Math.max(0, d - 1));
+        setShowDrafts(false);
     }
 
     let [showPurchaseReturnCreate, setShowPurchaseReturnCreate] = useState(true);
@@ -1154,7 +1200,7 @@ function PurchaseIndex(props) {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showPreview && <Preview ref={PreviewRef} />}
-            {showPurchaseCreate && <PurchaseCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
+            {showPurchaseCreate && <PurchaseCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
             {showPurchaseView && <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
             {showPurchaseReturnCreate && <PurchaseReturnCreate refreshList={list} ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />}
 
@@ -1210,10 +1256,11 @@ function PurchaseIndex(props) {
                         <h1 className="h3">{t('Purchases')}</h1>
                     </div>
 
-                    <div className="col text-end">
+                    <div className="col-auto">
+                        <div className="d-flex align-items-center justify-content-end flex-nowrap gap-2">
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
+                        }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
                             {t('Print Report')}
                         </Button>
@@ -1223,7 +1270,6 @@ function PurchaseIndex(props) {
                         </ExcelFile>
 
                         {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? t('Preparing...') : t('Purchase Report')}</Button> : ""}
-                        &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
@@ -1233,6 +1279,17 @@ function PurchaseIndex(props) {
                         >
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
+                        {store.settings?.enable_drafts && (
+                            <Button
+                                variant={showDrafts ? "warning" : "outline-secondary"}
+                                className="btn mb-1"
+                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => setShowDrafts(d => !d)}
+                            >
+                                <i className="bi bi-file-earmark-text"></i> {(showDrafts ? t('Hide Drafts') : t('Drafts')) + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                            </Button>
+                        )}
+                        </div>
                     </div>
                 </div>
 
@@ -2089,6 +2146,14 @@ function PurchaseIndex(props) {
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {showDrafts ? (<>
+                                                                        <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(purchase.id)}>
+                                                                            <i className="bi bi-pencil"></i> Resume
+                                                                        </Button>&nbsp;
+                                                                        <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftPurchase(purchase.id)}>
+                                                                            <i className="bi bi-trash"></i>
+                                                                        </Button>
+                                                                    </>) : (<>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(purchase.id);
                                                                     }}>
@@ -2124,6 +2189,7 @@ function PurchaseIndex(props) {
                                                                     >
                                                                         <i className="bi bi-arrow-left"></i> {t('Return')}
                                                                     </Button>
+                                                                    </>)}
                                                                 </td>
                                                                 }
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2140,7 +2206,7 @@ function PurchaseIndex(props) {
                                                                     {purchase.vendor_invoice_no}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
+                                                                    {purchase[col.key] ? format(new Date(purchase[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale }) : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

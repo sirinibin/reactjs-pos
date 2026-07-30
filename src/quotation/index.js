@@ -166,6 +166,21 @@ function QuotationIndex(props) {
   }, []);
 
   let [store, setStore] = useState({});
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [draftCount, setDraftCount] = useState(0);
+
+  useEffect(() => {
+      if (showDrafts) return;
+      const storeId = localStorage.getItem('store_id');
+      if (!storeId) return;
+      fetch('/v1/quotation?search[store_id]=' + encodeURIComponent(storeId) + '&search[status]=draft&limit=1', {
+          headers: { Authorization: localStorage.getItem('access_token') },
+      })
+          .then(r => r.json())
+          .then(data => { if (data.total_count != null) setDraftCount(data.total_count); })
+          .catch(() => {});
+  }, [showDrafts]);
+
   async function getStore(id) {
       try {
           const data = await fetchStore(id);
@@ -432,6 +447,12 @@ function QuotationIndex(props) {
       searchParams["stats"] = "0";
     }
 
+    if (showDrafts) {
+      searchParams["status"] = "draft";
+    } else {
+      delete searchParams["status"];
+    }
+
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
     if (queryParams !== "") {
@@ -504,7 +525,7 @@ function QuotationIndex(props) {
         setIsRefreshInProcess(false);
         console.log(error);
       });
-  }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
+  }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, showDrafts]);
 
   const handleSummaryToggle = (isOpen) => {
     statsOpen = isOpen
@@ -582,6 +603,14 @@ function QuotationIndex(props) {
     }, 50);
   }
 
+  function openDraftForm(id) {
+    setShowQuotationCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      CreateFormRef.current?.openDraft(id);
+    }, 50);
+  }
+
   let [showQuotationView, setShowQuotationView] = useState(false);
   const DetailsViewRef = useRef();
   function openDetailsView(id) {
@@ -594,6 +623,15 @@ function QuotationIndex(props) {
 
   let [showQuotationCreate, setShowQuotationCreate] = useState(false);
 
+  function deleteDraftQuotation(id) {
+    if (!window.confirm('Delete this draft?')) return;
+    const storeId = localStorage.getItem('store_id');
+    fetch('/v1/quotation/' + id + '?search[store_id]=' + storeId, {
+      method: 'DELETE',
+      headers: { Authorization: localStorage.getItem('access_token') },
+    }).then(() => list());
+  }
+
   const CreateFormRef = useRef();
   function openCreateForm() {
     setShowQuotationCreate(true);
@@ -604,6 +642,14 @@ function QuotationIndex(props) {
     }, 50);
   }
 
+  function onDraftSaved() {
+    setDraftCount(d => d + 1);
+  }
+
+  function onDraftCreated() {
+    setDraftCount(d => Math.max(0, d - 1));
+    setShowDrafts(false);
+  }
 
   function sendWhatsAppMessage(model) {
     showOrderPreview = true;
@@ -911,8 +957,8 @@ function QuotationIndex(props) {
       {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
       {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
       {showQuotationCreate && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />
-        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />
+        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
       {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
@@ -987,7 +1033,7 @@ function QuotationIndex(props) {
             <div className="card">
               <div className="card-header p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <h1 className="h3 mb-0">Quotations</h1>
-                <div className="d-flex gap-2 flex-wrap">
+                <div className="d-flex gap-2 flex-nowrap">
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={() => openReportPreview("quotation_invoice_report")}>
                     <i className="bi bi-printer"></i> Print Sales Report
                   </Button>
@@ -997,6 +1043,16 @@ function QuotationIndex(props) {
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
                     <i className="bi bi-plus-lg"></i> Create
                   </Button>
+                  {store.settings?.enable_drafts && (
+                    <Button
+                      variant={showDrafts ? "warning" : "outline-secondary"}
+                      className="btn mb-1 ms-2"
+                      style={{ whiteSpace: 'nowrap' }}
+                      onClick={() => setShowDrafts(d => !d)}
+                    >
+                      <i className="bi bi-file-earmark-text"></i> {(showDrafts ? 'Hide Drafts' : 'Drafts') + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="card-body p-2">
@@ -2200,6 +2256,14 @@ function QuotationIndex(props) {
                             {columns.filter(c => c.visible).map((col) => {
                               return (<React.Fragment key={col.key}>
                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  {showDrafts ? (<>
+                                    <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
+                                      <i className="bi bi-pencil"></i> Resume
+                                    </Button>&nbsp;
+                                    <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
+                                      <i className="bi bi-trash"></i>
+                                    </Button>
+                                  </>) : (<>
                                   <Button className="btn btn-light btn-sm" onClick={() => {
                                     openUpdateForm(quotation.id);
                                   }}>
@@ -2236,6 +2300,7 @@ function QuotationIndex(props) {
                                   >
                                     <i className="bi bi-arrow-left"></i> Return
                                   </Button>
+                                  </>)}
                                 </td>}
                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button className="btn btn-success btn-sm" onClick={() => {
@@ -2259,7 +2324,7 @@ function QuotationIndex(props) {
                                   }}>{quotation.order_code}</span>}
                                 </td>}
                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {format(new Date(quotation[col.key]), "MMM dd yyyy h:mma")}
+                                  {quotation[col.key] ? format(new Date(quotation[col.key]), "MMM dd yyyy h:mma") : ""}
                                 </td>}
                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

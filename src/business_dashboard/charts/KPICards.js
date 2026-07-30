@@ -167,10 +167,20 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
                             <tbody>
                                 {detailLines.map((line, i) => (
-                                    <tr key={i} style={{ lineHeight: 1.7, borderTop: line.divider ? `1px solid ${BORDER}` : 'none' }}>
+                                    <tr key={i}
+                                        onClick={line.onClick ? (e) => { e.stopPropagation(); line.onClick(); } : undefined}
+                                        style={{ lineHeight: 1.7, borderTop: line.divider ? `1px solid ${BORDER}` : 'none',
+                                            cursor: line.onClick ? 'pointer' : 'default' }}>
                                         <td style={{ padding: line.divider ? '6px 8px 2px 14px' : '1px 8px 1px 14px',
                                             color: '#adb5bd', whiteSpace: 'nowrap', verticalAlign: 'top', width: '1%' }}>
                                             {line.label || ''}
+                                            {line.link && (
+                                                <a href={line.link} target="_blank" rel="noopener noreferrer"
+                                                    onClick={e => e.stopPropagation()}
+                                                    style={{ marginLeft: 4, color: '#6c97d4', fontSize: '0.68rem' }}>
+                                                    <i className="bi bi-box-arrow-up-right" />
+                                                </a>
+                                            )}
                                         </td>
                                         <td style={{ padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
                                             textAlign: 'right', fontWeight: line.bold ? 700 : 400,
@@ -306,6 +316,7 @@ export default function KPICards({
     orders,
     filters,
     employeeStats,
+    openPosting,
 }) {
     // ── Store flags — identical to stats/index.js ──────────────────────────
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
@@ -320,6 +331,8 @@ export default function KPICards({
     const totalExpense            = expenseStats?.total || 0;
     const totalSalaryPaid         = store?.settings?.enable_employee_module ? (expenseStats?.salary_paid || 0) : 0;
     const salaryBalance           = employeeStats?.salary_balance ?? 0;
+    const salaryAccrued           = employeeStats?.salary_accrued ?? 0;
+    const salaryPaidEmp           = employeeStats?.salary_paid ?? 0;
     const totalPurchase           = purchaseStats?.total_purchase || 0;
     const totalPurchaseReturn     = purchaseReturnStats?.total_purchase_return || 0;
     const totalDepositPurchaseFund    = depositStats?.purchase_fund || 0;
@@ -511,7 +524,22 @@ export default function KPICards({
             {store?.settings?.enable_employee_module && (
                 <KPICard filters={filters} store={store}
                     title="Salary Balance"
-                    tooltip={[{ label: "SAR", value: fmt(Math.abs(salaryBalance)), bold: true }]}
+                    tooltip={[
+                        { label: "Owed to Employees", value: fmt(salaryAccrued) },
+                        { label: "Salary Paid",        value: fmt(salaryPaidEmp) },
+                        { label: "Net Balance",    value: fmt(Math.abs(salaryBalance)), bold: true },
+                        ...(employeeStats?.employee_accounts?.length ? [
+                            { label: "── Accounts ──", value: "", divider: true },
+                            ...employeeStats.employee_accounts.map(a => ({
+                                label: a.name,
+                                value: a.balance < 0
+                                    ? `-${fmt(Math.abs(a.balance))} (We Owe)`
+                                    : (a.balance > 0 ? `${fmt(a.balance)} (Owe us)` : "Settled"),
+                                color: a.balance < 0 ? '#f8a5a5' : (a.balance > 0 ? '#a3d9a5' : '#adb5bd'),
+                                onClick: openPosting ? () => openPosting({ id: a.id }, { title: `${a.name} — Balance Sheet` }) : undefined,
+                            })),
+                        ] : []),
+                    ]}
                     fieldValue={salaryBalance}
                     value={fmtCompact(Math.abs(salaryBalance))}
                     exact={fmt(Math.abs(salaryBalance))}

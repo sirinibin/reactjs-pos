@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { useDraft } from '../utils/useDraft';
 import Preview from "./../order/preview.js";
 import { Modal, Button, } from "react-bootstrap";
 import CustomerCreate from "./../customer/create.js";
@@ -125,8 +126,17 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const [enableProductSelection, setEnableProductSelection] = useState(false);
+
+  const clearDraftRef = useRef(() => {});
+  const draftFlashShownRef = useRef(false);
+  const [isResumingDraft, setIsResumingDraft] = useState(false);
+  const [draftSavedFlash, setDraftSavedFlash] = useState(false);
+
   useImperativeHandle(ref, () => ({
     open(id, operationType) {
+      setIsResumingDraft(false);
+      clearDraftRef.current();
+      draftFlashShownRef.current = false;
       selectedProducts = [];
       setSelectedProducts([]);
       if (!id) {
@@ -204,6 +214,57 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       SetShow(true);
     },
+
+    openDraft(id) {
+      setIsResumingDraft(true);
+      clearDraftRef.current();
+      selectedProducts = [];
+      setSelectedProducts([]);
+
+      formData = {
+        vat_percent: 15.0,
+        discount: 0.0,
+        discountValue: 0.0,
+        discount_percent: 0.0,
+        shipping_handling_fees: 0.0,
+        is_discount_percent: false,
+        date_str: new Date(),
+        signature_date_str: format(new Date(), "MMM dd yyyy"),
+        status: "delivered",
+        price_type: "retail",
+        delivery_days: 7,
+        validity_days: 2,
+        remarks: "",
+        type: "quotation",
+        payment_status: "",
+        rounding_amount: 0.00,
+        auto_rounding_amount: true,
+      };
+
+      ResetForm();
+      reCalculate();
+
+      if (localStorage.getItem("user_id")) {
+        selectedDeliveredByUsers = [
+          {
+            id: localStorage.getItem("user_id"),
+            name: localStorage.getItem("user_name"),
+          },
+        ];
+        formData.delivered_by = localStorage.getItem("user_id");
+        setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
+      }
+      if (localStorage.getItem("store_id")) {
+        formData.store_id = localStorage.getItem("store_id");
+        formData.store_name = localStorage.getItem("store_name");
+      }
+
+      setFormData({ ...formData });
+      pendingQuotationIdRef.current = id || null;
+      getQuotation(id);
+      getStore(localStorage.getItem("store_id"));
+      SetShow(true);
+    },
   }));
 
 
@@ -255,27 +316,17 @@ const QuotationCreate = forwardRef((props, ref) => {
   let selectedProduct = [];
   let [selectedProducts, setSelectedProducts] = useState([]);
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
+
+  const { draftId: quotationDraftId, clearDraft: clearQuotationDraft } = useDraft({
+    enabled: !!store?.settings?.enable_drafts && formData.status !== 'draft' && !isResumingDraft,
+    entityType: 'quotation',
+    getFormData: () => ({ ...formData, products: selectedProducts }),
+    productsCount: selectedProducts.length,
+    onNewDraftSaved: () => { if (props.onDraftSaved) props.onDraftSaved(); if (!draftFlashShownRef.current) { draftFlashShownRef.current = true; setDraftSavedFlash(true); setTimeout(() => setDraftSavedFlash(false), 2500); } },
+  });
+  clearDraftRef.current = clearQuotationDraft;
   const pendingQuotationIdRef = useRef(null);
   const quotationDragRef = useRef(null);
-  const draggableDialogAs = useMemo(() => ({ children, ...dialogProps }) => (
-    <ReactDraggable handle=".modal-header" nodeRef={quotationDragRef}>
-      <div
-        ref={quotationDragRef}
-        className="modal-dialog modal-xl"
-        {...dialogProps}
-        style={{
-          position: "fixed",
-          top: "5%",
-          left: "15%",
-          margin: "0",
-          zIndex: 1082,
-          width: "70%",
-        }}
-      >
-        <div className="modal-content">{children}</div>
-      </div>
-    </ReactDraggable>
-  ), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -286,6 +337,8 @@ const QuotationCreate = forwardRef((props, ref) => {
   function handleClose() {
     selectedProducts = [];
     setSelectedProducts([]);
+    setIsResumingDraft(false);
+    draftFlashShownRef.current = false;
     SetShow(false);
   }
 
@@ -443,13 +496,22 @@ const QuotationCreate = forwardRef((props, ref) => {
           delivery_days: quotation.delivery_days ? quotation.delivery_days : 7,
           validity_days: quotation.validity_days ? quotation.validity_days : 2,
         };
-        formData.date_str = data.result.date;
-
-        if (data.result?.payments) {
-          console.log("data.result.payments:", data.result.payments);
-          formData.payments_input = data.result?.payments;
-          for (var i = 0; i < formData.payments_input?.length; i++) {
-            formData.payments_input[i].date_str = formData.payments_input[i].date
+        if (data.result.status === 'draft') {
+          setIsResumingDraft(true);
+          formData.date_str = new Date();
+          const draftPayments = data.result.draft_payments_input;
+          if (Array.isArray(draftPayments) && draftPayments.length > 0) {
+            const today = new Date();
+            formData.payments_input = draftPayments.map(p => ({ ...p, date_str: today }));
+          }
+        } else {
+          formData.date_str = data.result.date;
+          if (data.result?.payments) {
+            console.log("data.result.payments:", data.result.payments);
+            formData.payments_input = data.result?.payments;
+            for (var i = 0; i < formData.payments_input?.length; i++) {
+              formData.payments_input[i].date_str = formData.payments_input[i].date;
+            }
           }
         }
 
@@ -1156,11 +1218,24 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     console.log("formData.discount:", formData.discount);
 
+    const isResumingDraft = formData.status === "draft";
+    if (isResumingDraft) {
+      formData.status = "created";
+    }
+
     let endPoint = "/v1/quotation";
     let method = "POST";
-    if (formData.id) {
+    if (formData.id && !isResumingDraft) {
       endPoint = "/v1/quotation/" + formData.id;
       method = "PUT";
+    } else if (isResumingDraft) {
+      endPoint = "/v1/quotation/" + formData.id;
+      method = "PUT";
+      clearQuotationDraft();
+    } else if (quotationDraftId) {
+      endPoint = "/v1/quotation/" + quotationDraftId;
+      method = "PUT";
+      clearQuotationDraft();
     }
 
     const requestOptions = {
@@ -1211,7 +1286,9 @@ const QuotationCreate = forwardRef((props, ref) => {
           if (props.showToastMessage) props.showToastMessage("Quotation created successfully!", "success");
         }
 
-        if (props.refreshList) {
+        if (isResumingDraft) {
+          if (props.onDraftCreated) props.onDraftCreated();
+        } else if (props.refreshList) {
           props.refreshList();
         }
 
@@ -3145,8 +3222,29 @@ async function checkWarning(i) {
 
   };
 
+  const draggableDialogAs = useMemo(() => ({ children, ...dialogProps }) => (
+    <ReactDraggable handle=".modal-header" nodeRef={quotationDragRef}>
+      <div
+        ref={quotationDragRef}
+        className="modal-dialog modal-xl"
+        {...dialogProps}
+        style={{
+          position: "fixed",
+          top: "5%",
+          left: "15%",
+          margin: "0",
+          zIndex: 1082,
+          width: "70%",
+        }}
+      >
+        <div className="modal-content">{children}</div>
+      </div>
+    </ReactDraggable>
+  ), []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
+      {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
       <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
       {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
       {showReferenceUpdateForm && <>
@@ -3257,7 +3355,9 @@ async function checkWarning(i) {
       >
         <Modal.Header>
           <Modal.Title>
-            {!enableProductSelection && formData.id
+            {!enableProductSelection && isResumingDraft
+              ? "Create New Quotation 📝 Draft"
+              : !enableProductSelection && formData.id
               ? "Update Quotation #" + formData.code
               : !enableProductSelection ? "Create New Quotation" : ""}
             {enableProductSelection ? "Select products from quotation #" + formData.code : ""}
@@ -3281,7 +3381,7 @@ async function checkWarning(i) {
 
                 : ""
               }
-              {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+              {(formData.id && !isResumingDraft) && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
             </Button>
             <button
               type="button"
@@ -8317,7 +8417,7 @@ async function checkWarning(i) {
                       aria-hidden={true}
                     />
                   ) + " Processing..."
-                  : formData.id
+                  : (formData.id && formData.status !== "draft")
                     ? "Update"
                     : "Create"}
               </Button>

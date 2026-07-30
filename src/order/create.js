@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
+import { useDraft } from '../utils/useDraft';
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 //import ProductHistory from "./../product/product_history.js";
@@ -127,7 +128,49 @@ const OrderCreate = forwardRef((props, ref) => {
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     useImperativeHandle(ref, () => ({
+        async openDraft(id) {
+            draftFlashShownRef.current = false;
+            clearOrderDraft();
+            setIsResumingDraft(true);
+            isUpdateForm = true;
+            setIsUpdateForm(true);
+            setIsZatcaLocked(false);
+            errors = {};
+            setErrors({ ...errors });
+            warnings = {};
+            setWarnings({ ...warnings });
+            selectedProducts = [];
+            setSelectedProducts([]);
+            formData.products = [];
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+            formData.customer_id = "";
+            formData.customer_name = "";
+            formData.customerName = "";
+            formData.vehicle_id = "";
+            formData.vehicle_snapshot = undefined;
+            customerSearchRef?.current?.clear();
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+                formData["store_id"] = localStorage.getItem('store_id');
+                formData["store_name"] = localStorage.getItem('store_name');
+            }
+            formData.id = undefined;
+            formData.code = "";
+            formData.payment_status = "";
+            formData.remarks = "";
+            formData.date_str = new Date();
+            ResetForm();
+            pendingOrderIdRef.current = id || null;
+            if (id) {
+                getOrder(id);
+            }
+            setFormData({ ...formData });
+            reCalculate();
+            setShow(true);
+        },
         async open(id) {
+            draftFlashShownRef.current = false;
             if (id) {
                 isUpdateForm = true;
             } else {
@@ -139,6 +182,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     ResetForm();
                 }, 50);
             }
+            setIsResumingDraft(false);
             setIsUpdateForm(isUpdateForm)
             setIsZatcaLocked(false);
             //ResetFormData();
@@ -292,6 +336,7 @@ const OrderCreate = forwardRef((props, ref) => {
     async function open(id) {
         // Immediately invalidate any in-flight reCalculate so it can't set products
         latestRequestRef.current = Date.now();
+        setIsResumingDraft(false);
 
         if (id) {
             isUpdateForm = true;
@@ -412,6 +457,9 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     let [isUpdateForm, setIsUpdateForm] = useState(false);
+    const [isResumingDraft, setIsResumingDraft] = useState(false);
+    const draftFlashShownRef = useRef(false);
+    const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
     const prevIsUpdateFormRef = useRef(false);
     const pendingOrderIdRef = useRef(null);
@@ -504,8 +552,14 @@ const OrderCreate = forwardRef((props, ref) => {
                 oldProducts = formData.products.map(obj => ({ ...obj }));
                 setOldProducts([...oldProducts]);
 
+                if (data.result.status === "draft") {
+                    setIsResumingDraft(true);
+                    formData.date_str = new Date();
+                } else {
+                    formData.date_str = data.result.date;
+                }
+
                 formData.enable_report_to_zatca = false;
-                formData.date_str = data.result.date;
 
                 if (data.result?.cash_discount) {
                     cashDiscount = data.result.cash_discount;
@@ -551,12 +605,18 @@ const OrderCreate = forwardRef((props, ref) => {
                     setShipping(shipping);
                 }
 
-
-                if (data.result?.payments) {
+                if (data.result.status === "draft") {
+                    const draftPayments = data.result.draft_payments_input;
+                    if (Array.isArray(draftPayments) && draftPayments.length > 0) {
+                        const today = new Date();
+                        formData.payments_input = draftPayments.map(p => ({ ...p, date_str: today }));
+                        setFormData({ ...formData });
+                    }
+                } else if (data.result?.payments?.length > 0) {
                     console.log("data.result.payments:", data.result.payments);
                     formData.payments_input = data.result.payments;
-                    for (var i = 0; i < formData.payments_input?.length; i++) {
-                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    for (var i = 0; i < formData.payments_input.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date;
                     }
                     setFormData({ ...formData });
                 }
@@ -1323,6 +1383,14 @@ const OrderCreate = forwardRef((props, ref) => {
     let [selectedProducts, setSelectedProducts] = useState([]);
     // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
+    const { draftId: orderDraftId, clearDraft: clearOrderDraft } = useDraft({
+        enabled: !!store?.settings?.enable_drafts && !isResumingDraft,
+        entityType: 'order',
+        getFormData: () => ({ ...formData, products: selectedProducts }),
+        productsCount: selectedProducts.length,
+        onNewDraftSaved: () => { if (props.onDraftSaved) props.onDraftSaved(); if (!draftFlashShownRef.current) { draftFlashShownRef.current = true; setDraftSavedFlash(true); setTimeout(() => setDraftSavedFlash(false), 2500); } },
+    });
+
     //Delivered By Auto Suggestion
     let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
 
@@ -1336,6 +1404,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
+        draftFlashShownRef.current = false;
         setShow(false);
     }
 
@@ -2056,11 +2125,23 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.repair_job_ids = repairJobIdsRef.current;
         }
 
+        if (isResumingDraft) {
+            formData.status = "delivered";
+        }
+
         let endPoint = "/v1/order";
         let method = "POST";
-        if (isUpdateForm) {
+        if (isUpdateForm && !isResumingDraft) {
             endPoint = "/v1/order/" + formData.id;
             method = "PUT";
+        } else if (isResumingDraft) {
+            endPoint = "/v1/order/" + formData.id;
+            method = "PUT";
+            clearOrderDraft();
+        } else if (orderDraftId) {
+            endPoint = "/v1/order/" + orderDraftId;
+            method = "PUT";
+            clearOrderDraft();
         }
 
         const requestOptions = {
@@ -2129,7 +2210,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-                if (props.refreshList) {
+                if (isResumingDraft) {
+                    if (props.onDraftCreated) props.onDraftCreated();
+                } else if (props.refreshList) {
                     props.refreshList();
                 }
 
@@ -2158,8 +2241,19 @@ const OrderCreate = forwardRef((props, ref) => {
                 //formData.code = data.result?.code;
                 // alert(formData.code + "|" + formData.date);
                 setFormData({ ...formData });
+                if (isResumingDraft) {
+                    setIsResumingDraft(false);
+                }
                 // VAN form: generate A4 PDF and open browser print dialog directly (no preview modal)
-                if (formType === "type4") {
+                if (isResumingDraft) {
+                    // Open preview directly with fresh data.result — stale closures don't have the new code yet
+                    setShowOrderPreview(true);
+                    setShowPrintTypeSelection(false);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        PreviewRef.current?.open(data.result, undefined, "sales");
+                    }, 150);
+                } else if (formType === "type4") {
                     setShowOrderPreview(true);
                     setShowPrintTypeSelection(false);
                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -4203,6 +4297,8 @@ const OrderCreate = forwardRef((props, ref) => {
         fromJobCardRef.current = false;
         disablePreviousButton = false;
         setDisablePreviousButton(false);
+        clearOrderDraft();
+        setIsResumingDraft(false);
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
@@ -5417,6 +5513,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
             <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
@@ -5698,6 +5795,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 {formType === "type1" && <SalesType1Header
                     formData={formData} setFormData={setFormData}
                     isUpdateForm={isUpdateForm}
+                    isResumingDraft={isResumingDraft}
                     store={store}
                     formType={formType} setFormType={setFormType}
                     disablePreviousButton={disablePreviousButton}
@@ -5719,6 +5817,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 {formType === "type5" && <SalesType5Header
                     formData={formData} setFormData={setFormData}
                     isUpdateForm={isUpdateForm}
+                    isResumingDraft={isResumingDraft}
                     store={store}
                     formType={formType} setFormType={setFormType}
                     disablePreviousButton={disablePreviousButton}
@@ -5742,9 +5841,9 @@ const OrderCreate = forwardRef((props, ref) => {
                         {/* Left: title + ZATCA */}
                         <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
                             <h1 style={{ margin: 0, fontSize: '20px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.01em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e', whiteSpace: 'nowrap' }}>
-                                {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
+                                {isResumingDraft ? t("Create New Sales Order") + " 📝 Draft" : isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
                             </h1>
-                            {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                            {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#434655', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
                                     <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
                                     {t("Report to Zatca")}
@@ -5769,7 +5868,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <i className="bi bi-file-earmark-pdf" style={{ fontSize: '14px' }}></i> {t('Print A4')}
                             </button>
                             <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                                {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {isUpdateForm ? t('Update') : t('Create')}</>}
+                                {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {(isUpdateForm && !isResumingDraft) ? t('Update') : t('Create')}</>}
                             </button>
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
@@ -5846,6 +5945,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 {formType === "type4" && <SalesVanStoreHeader
                     formData={formData} setFormData={setFormData}
                     isUpdateForm={isUpdateForm}
+                    isResumingDraft={isResumingDraft}
                     store={store}
                     formType={formType} setFormType={setFormType}
                     disablePreviousButton={disablePreviousButton}
@@ -5868,9 +5968,9 @@ const OrderCreate = forwardRef((props, ref) => {
                         <span className="font-headline-lg text-headline-lg font-black text-primary">Start POS</span>
                         <div className="h-5 w-px bg-outline-variant mx-xs"></div>
                         <h1 className="font-headline-md text-headline-md text-on-surface m-0">
-                            {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("New Sales Order")}
+                            {isResumingDraft ? t("New Sales Order") + " 📝 Draft" : isUpdateForm ? t("Update Sales") + " #" + formData.code : t("New Sales Order")}
                         </h1>
-                        {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                        {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                             <label style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "16px", cursor: "pointer" }}>
                                 <input
                                     type="checkbox"
@@ -5945,7 +6045,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             {isSubmitting ? (
                                 <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} className="mr-1" />
                             ) : null}
-                            {isUpdateForm ? t('Update') : t('Create')}
+                            {(isUpdateForm && !isResumingDraft) ? t('Update') : t('Create')}
                         </Button>
                         {store.settings?.enable_sales_page_selection === true && (
                             <><div className="h-5 w-px bg-outline-variant mx-xs"></div>
@@ -8505,7 +8605,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                         : ""
                                     }
-                                    {isUpdateForm && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
+                                    {(isUpdateForm && !isResumingDraft) && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
 
                                 </Button>
                             </Modal.Footer>
@@ -8605,6 +8705,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         paymentStatus={paymentStatus}
                         isSubmitting={isSubmitting}
                         isUpdateForm={isUpdateForm}
+                        isResumingDraft={isResumingDraft}
                         handleClose={handleClose}
                         renderTotalWithoutVATTooltip={renderTotalWithoutVATTooltip}
                         renderTotalWithVATTooltip={renderTotalWithVATTooltip}
@@ -8714,6 +8815,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         paymentStatus={paymentStatus}
                         isSubmitting={isSubmitting}
                         isUpdateForm={isUpdateForm}
+                        isResumingDraft={isResumingDraft}
                         handleClose={handleClose}
                         renderTotalWithoutVATTooltip={renderTotalWithoutVATTooltip}
                         renderTotalWithVATTooltip={renderTotalWithVATTooltip}
@@ -10975,7 +11077,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 <i className="bi bi-check-circle text-[16px]"></i>
                                             )}
                                             {" "}
-                                            {isUpdateForm ? t("Update") : t("Create")}
+                                            {(isUpdateForm && !isResumingDraft) ? t("Update") : t("Create")}
                                         </Button>
                                     </div>
                                 </aside>

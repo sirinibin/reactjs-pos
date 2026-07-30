@@ -5,6 +5,7 @@ import { Chart } from "react-google-charts";
 import { tooltipHtml, onChartSelect } from '../business_dashboard/charts/chartTooltipSetup';
 import { generateInfoPdf, safeName } from '../utils/pdfGenerator';
 import { uploadPdfForShare } from '../utils/pdfShare';
+import PostingIndex from '../posting/index.js';
 
 function fmt(n) {
     if (n === undefined || n === null || isNaN(Number(n))) return "0.00";
@@ -221,10 +222,20 @@ function InfoTooltip({ lines, cardTitle, store, filters }) {
                     <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.75rem' }}>
                         <tbody>
                             {lines.map((line, i) => (
-                                <tr key={i} style={{ lineHeight:1.7, borderTop: line.divider ? `1px solid ${BORDER}` : 'none' }}>
+                                <tr key={i}
+                                    onClick={line.onClick ? (e) => { e.stopPropagation(); line.onClick(); } : undefined}
+                                    style={{ lineHeight:1.7, borderTop: line.divider ? `1px solid ${BORDER}` : 'none',
+                                        cursor: line.onClick ? 'pointer' : 'default' }}>
                                     <td style={{ padding: line.divider ? '6px 8px 2px 14px' : '1px 8px 1px 14px',
                                         color:'#adb5bd', whiteSpace:'nowrap', verticalAlign:'top', width:'1%' }}>
                                         {line.label || ''}
+                                        {line.link && (
+                                            <a href={line.link} target="_blank" rel="noopener noreferrer"
+                                                onClick={e => e.stopPropagation()}
+                                                style={{ marginLeft:4, color:'#6c97d4', fontSize:'0.68rem' }}>
+                                                <i className="bi bi-box-arrow-up-right" />
+                                            </a>
+                                        )}
                                     </td>
                                     <td style={{ padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
                                         textAlign:'right', fontWeight: line.bold ? 700 : 400,
@@ -395,6 +406,7 @@ function AutoMobileDashboard() {
     const [dashboard, setDashboard] = useState({});
     const [store, setStore] = useState({});
     const [isLoading, setIsLoading] = useState(true);
+    const postingRef = useRef();
 
     // ── Filter state ──────────────────────────────────────────────────────────
     const [filterMode, setFilterMode]     = useState("range");
@@ -708,7 +720,22 @@ function AutoMobileDashboard() {
                         valueColor: dashboard.salary_balance < 0 ? '#ba1a1a' : (dashboard.salary_balance > 0 ? '#0a58ca' : '#191c1e'),
                         note: dashboard.salary_balance < 0 ? t('Owed to Employees') : (dashboard.salary_balance > 0 ? t('Employees Owe Us') : t('Settled')),
                         noteColor: dashboard.salary_balance < 0 ? '#ba1a1a' : (dashboard.salary_balance > 0 ? '#0a58ca' : '#6c757d'),
-                        tooltip: [{ label:'SAR', value: fmt(Math.abs(dashboard.salary_balance||0)), bold:true }],
+                        tooltip: [
+                            { label: t('Owed to Employees'), value: fmt(dashboard.salary_accrued||0) },
+                            { label: t('Salary Paid'),        value: fmt(dashboard.salary_paid||0) },
+                            { label: t('Net Balance'),    value: fmt(Math.abs(dashboard.salary_balance||0)), bold: true },
+                            ...(dashboard.employee_accounts?.length ? [
+                                { label: '── Accounts ──', value: '', divider: true },
+                                ...dashboard.employee_accounts.map(a => ({
+                                    label: a.name,
+                                    value: a.balance < 0
+                                        ? `-${fmt(Math.abs(a.balance))} (${t('We Owe')})`
+                                        : (a.balance > 0 ? `${fmt(a.balance)} (${t('Owe us')})` : t('Settled')),
+                                    color: a.balance < 0 ? '#f8a5a5' : (a.balance > 0 ? '#a3d9a5' : '#adb5bd'),
+                                    onClick: () => postingRef.current?.open({ id: a.id }, { title: `${a.name} — Balance Sheet` }),
+                                })),
+                            ] : []),
+                        ],
                     },
                     { title: t('Additional Expense'), value: dashboard.additional_expense, icon:'bi-wallet2', color:'#54647a',
                       tooltip: [{ label:'SAR', value: fmt(dashboard.additional_expense||0), bold:true, color:'#adb5bd' }] },
@@ -734,6 +761,7 @@ function AutoMobileDashboard() {
     }
 
     return (
+        <>
         <div className="container-fluid px-3 py-3">
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .7s linear infinite;display:inline-block;}`}</style>
 
@@ -922,6 +950,8 @@ function AutoMobileDashboard() {
                 </div>
             </div>
         </div>
+        <PostingIndex ref={postingRef} />
+        </>
     );
 }
 

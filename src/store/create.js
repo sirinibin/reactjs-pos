@@ -4906,6 +4906,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_purchase_request_module" checked={!!formData.settings.enable_purchase_request_module} value={formData.settings.enable_purchase_request_module} onChange={() => { formData.settings.enable_purchase_request_module = !formData.settings.enable_purchase_request_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Purchase Requests Module (P.R)</span>
                                             </label>
+                                            <label className="pw-check" htmlFor="enable_drafts">
+                                                <input type="checkbox" id="enable_drafts" checked={!!formData.settings.enable_drafts} value={formData.settings.enable_drafts} onChange={() => { formData.settings.enable_drafts = !formData.settings.enable_drafts; setFormData({ ...formData }); }} />
+                                                <span>Enable Drafts</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="enable_rbac_module">
                                                 <input type="checkbox" id="enable_rbac_module" checked={!!formData.settings.enable_rbac_module} value={formData.settings.enable_rbac_module} onChange={() => { formData.settings.enable_rbac_module = !formData.settings.enable_rbac_module; setFormData({ ...formData }); }} />
                                                 <span>Enable RBAC Module (Role Based Access Control)</span>

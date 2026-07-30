@@ -716,6 +716,20 @@ const OrderIndex = forwardRef((props, ref) => {
     //const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
     let [store, setStore] = useState({});
+    const [showDrafts, setShowDrafts] = useState(false);
+    const [draftCount, setDraftCount] = useState(0);
+
+    useEffect(() => {
+        if (showDrafts) return;
+        const storeId = localStorage.getItem('store_id');
+        if (!storeId) return;
+        fetch('/v1/order?search[store_id]=' + encodeURIComponent(storeId) + '&search[status]=draft&limit=1', {
+            headers: { Authorization: localStorage.getItem('access_token') },
+        })
+            .then(r => r.json())
+            .then(data => { if (data.total_count != null) setDraftCount(data.total_count); })
+            .catch(() => {});
+    }, [showDrafts]);
 
     function getStore(id) {
         console.log("inside get Store");
@@ -991,6 +1005,11 @@ const OrderIndex = forwardRef((props, ref) => {
             searchParams["stats"] = "0";
         }
 
+        if (showDrafts) {
+            searchParams["status"] = "draft";
+        } else {
+            delete searchParams["status"];
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -1033,6 +1052,9 @@ const OrderIndex = forwardRef((props, ref) => {
 
                 setTotalPages(pageCount);
                 setTotalItems(data.total_count);
+                if (showDrafts) {
+                    setDraftCount(data.total_count);
+                }
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
@@ -1062,7 +1084,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, showDrafts]);
 
 
     const handleSummaryToggle = (isOpen) => {
@@ -1248,6 +1270,15 @@ const OrderIndex = forwardRef((props, ref) => {
 
     let [showOrderCreateForm, setShowOrderCreateForm] = useState(false);
     const CreateFormRef = useRef();
+    function deleteDraftOrder(id) {
+        if (!window.confirm('Delete this draft?')) return;
+        const storeId = localStorage.getItem('store_id');
+        fetch('/v1/order/' + id + '/draft?search[store_id]=' + storeId, {
+            method: 'DELETE',
+            headers: { Authorization: localStorage.getItem('access_token') },
+        }).then(() => list());
+    }
+
     function openCreateForm() {
         showOrderCreateForm = true;
         setShowOrderCreateForm(true);
@@ -1266,6 +1297,24 @@ const OrderIndex = forwardRef((props, ref) => {
         timerRef.current = setTimeout(() => {
             CreateFormRef.current?.open(id);
         }, 50);
+    }
+
+    function openDraftForm(id) {
+        setShowOrderCreateForm(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.openDraft(id);
+        }, 50);
+    }
+
+    function onDraftCreated() {
+        setDraftCount(d => Math.max(0, d - 1));
+        setShowDrafts(false);
+    }
+
+    function onDraftSaved() {
+        setDraftCount(d => d + 1);
     }
 
 
@@ -1584,7 +1633,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
-            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />}
+            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} onDraftCreated={onDraftCreated} onDraftSaved={onDraftSaved} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />}
             <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
             {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />}
@@ -1680,11 +1729,12 @@ const OrderIndex = forwardRef((props, ref) => {
                     </div>
 
 
-                    <div className="col text-end">
+                    <div className="col-auto">
+                        <div className="d-flex align-items-center justify-content-end flex-nowrap gap-2">
 
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
+                        }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
                             {t('Print Report')}
                         </Button>
@@ -1694,7 +1744,6 @@ const OrderIndex = forwardRef((props, ref) => {
                         </ExcelFile>
 
                         {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllOrders} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Sales Report(XLS)')}</Button> : ""}
-                        &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
@@ -1706,6 +1755,17 @@ const OrderIndex = forwardRef((props, ref) => {
                         >
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
+                        {store.settings?.enable_drafts && (
+                            <Button
+                                variant={showDrafts ? "warning" : "outline-secondary"}
+                                className="btn mb-1"
+                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => setShowDrafts(d => !d)}
+                            >
+                                <i className="bi bi-file-earmark-text"></i> {(showDrafts ? t('Hide Drafts') : t('Drafts')) + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                            </Button>
+                        )}
+                        </div>
                     </div>
                 </div>
 
@@ -2224,6 +2284,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {showDrafts ? (<>
+                                                                        <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(order.id)}>
+                                                                            <i className="bi bi-pencil"></i> Resume
+                                                                        </Button>&nbsp;
+                                                                        <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftOrder(order.id)}>
+                                                                            <i className="bi bi-trash"></i>
+                                                                        </Button>
+                                                                    </>) : (<>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(order.id);
                                                                     }}>
@@ -2259,6 +2327,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     >
                                                                         <i className="bi bi-arrow-left"></i> {t("Return")}
                                                                     </Button>
+                                                                    </>)}
                                                                 </td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
@@ -2271,7 +2340,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {order.code}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
+                                                                    {order[col.key] ? format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale }) : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useMemo, useImperativeHandle, useCallback } from "react";
+import { useDraft } from '../utils/useDraft';
 import Preview from "./../order/preview.js";
 import { Modal, Button } from "react-bootstrap";
 import VendorCreate from "./../vendor/create.js";
@@ -104,8 +105,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     }
 
+    const clearDraftRef = useRef(() => {});
+    const draftFlashShownRef = useRef(false);
+    const [isResumingDraft, setIsResumingDraft] = useState(false);
+    const [draftSavedFlash, setDraftSavedFlash] = useState(false);
+
     useImperativeHandle(ref, () => ({
         open(id, selectedVendorsValue) {
+            setIsResumingDraft(false);
+            draftFlashShownRef.current = false;
+            clearDraftRef.current();
             errors = {};
             setErrors({ ...errors });
             selectedProducts = [];
@@ -195,6 +204,59 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setShow(true);
         },
 
+        openDraft(id) {
+            setIsResumingDraft(true);
+            clearDraftRef.current();
+            errors = {};
+            setErrors({ ...errors });
+            selectedProducts = [];
+            setSelectedProducts([]);
+            selectedVendors = [];
+            setSelectedVendors([]);
+            selectedOrderPlacedByUsers = [];
+            setSelectedOrderPlacedByUsers([]);
+
+            formData = {
+                vat_percent: 15.0,
+                discount: 0.0,
+                discountValue: 0.0,
+                discount_percent: 0.0,
+                shipping_handling_fees: 0.00,
+                partial_payment_amount: 0.00,
+                is_discount_percent: false,
+                rounding_amount: 0.00,
+                auto_rounding_amount: true,
+                date_str: new Date(),
+                signature_date_str: format(new Date(), "MMM dd yyyy"),
+                status: "delivered",
+                payment_method: "",
+                payment_status: "paid",
+            };
+
+            ResetForm();
+
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+                formData.store_id = localStorage.getItem('store_id');
+                formData.store_name = localStorage.getItem('store_name');
+            }
+
+            if (localStorage.getItem("user_id")) {
+                selectedOrderPlacedByUsers = [{
+                    id: localStorage.getItem("user_id"),
+                    name: localStorage.getItem("user_name"),
+                }];
+                formData.order_placed_by = localStorage.getItem("user_id");
+                setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
+            }
+
+            setFormData({ ...formData });
+            pendingPurchaseIdRef.current = id || null;
+            getPurchase(id);
+            getStore(localStorage.getItem("store_id"));
+            setShow(true);
+        },
+
     }));
 
 
@@ -238,6 +300,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const [productOptions, setProductOptions] = useState([]);
     let selectedProduct = [];
     let [selectedProducts, setSelectedProducts] = useState([]);
+
+    const { draftId: purchaseDraftId, clearDraft: clearPurchaseDraft } = useDraft({
+        enabled: !!store?.settings?.enable_drafts && formData.status !== 'draft' && !isResumingDraft,
+        entityType: 'purchase',
+        getFormData: () => ({ ...formData, products: selectedProducts }),
+        productsCount: selectedProducts.length,
+        onNewDraftSaved: () => { if (props.onDraftSaved) props.onDraftSaved(); if (!draftFlashShownRef.current) { draftFlashShownRef.current = true; setDraftSavedFlash(true); setTimeout(() => setDraftSavedFlash(false), 2500); } },
+    });
+    clearDraftRef.current = clearPurchaseDraft;
+
     // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Order Placed By Auto Suggestion
@@ -251,6 +323,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
+        setIsResumingDraft(false);
+        draftFlashShownRef.current = false;
         setShow(false);
     }
 
@@ -380,11 +454,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     remarks: purchase.remarks,
                 };
 
-                if (data.result.payments) {
+                if (data.result.status === 'draft') {
+                    setIsResumingDraft(true);
+                    formData.date_str = new Date();
+                    const draftPayments = data.result.draft_payments_input;
+                    if (Array.isArray(draftPayments) && draftPayments.length > 0) {
+                        const today = new Date();
+                        formData.payments_input = draftPayments.map(p => ({ ...p, date_str: today }));
+                    }
+                } else if (data.result.payments) {
                     console.log("data.result.payments:", data.result.payments);
                     formData.payments_input = data.result.payments;
                     for (var i = 0; i < formData.payments_input?.length; i++) {
-                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                        formData.payments_input[i].date_str = formData.payments_input[i].date;
                     }
                 }
 
@@ -944,11 +1026,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
         formData.balance_amount = parseFloat(balanceAmount);
 
 
+        const isResumingDraft = formData.status === "draft";
+        if (isResumingDraft) {
+            formData.status = "delivered";
+        }
+
         let endPoint = "/v1/purchase";
         let method = "POST";
-        if (formData.id) {
+        if (formData.id && !isResumingDraft) {
             endPoint = "/v1/purchase/" + formData.id;
             method = "PUT";
+        } else if (isResumingDraft) {
+            endPoint = "/v1/purchase/" + formData.id;
+            method = "PUT";
+            clearPurchaseDraft();
+        } else if (purchaseDraftId) {
+            endPoint = "/v1/purchase/" + purchaseDraftId;
+            method = "PUT";
+            clearPurchaseDraft();
         }
 
 
@@ -997,7 +1092,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     if (props.showToastMessage) props.showToastMessage("Purchase created successfully!", "success");
                 }
 
-                if (props.refreshList) {
+                if (isResumingDraft) {
+                    if (props.onDraftCreated) props.onDraftCreated();
+                } else if (props.refreshList) {
                     props.refreshList();
                 }
                 handleClose();
@@ -3279,6 +3376,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
 
             {showVendorPending && <VendorPending ref={VendorPendingRef} />}
             {showReferenceUpdateForm && <>
@@ -3354,7 +3452,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         {/* Left: title + ZATCA */}
                         <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
                             <h1 style={{ margin: 0, fontSize: '20px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.01em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e', whiteSpace: 'nowrap' }}>
-                                {formData.id ? t('Update Purchase') + " #" + formData.code : t('Create New Purchase')}
+                                {isResumingDraft ? t('Create New Purchase') + " 📝 Draft" : formData.id ? t('Update Purchase') + " #" + formData.code : t('Create New Purchase')}
                             </h1>
                             {store?.zatca?.phase === "2" && store?.zatca?.connected && !formData.id && (
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#434655', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -3369,7 +3467,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 <i className="bi bi-printer" style={{ fontSize: '14px' }}></i> {t('Print')}
                             </button>
                             <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {formData.id ? t('Update') : t('Create')}</>}
+                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {(formData.id && !isResumingDraft) ? t('Update') : t('Create')}</>}
                             </button>
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" style={{ marginLeft: '4px' }}></button>
                         </div>
@@ -3378,7 +3476,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 {formType !== 'type2' && (
                     <Modal.Header>
                         <Modal.Title>
-                            {formData.id ? t('Update Purchase') + " #" + formData.code : t('Create New Purchase')}
+                            {isResumingDraft ? t('Create New Purchase') + " 📝 Draft" : formData.id ? t('Update Purchase') + " #" + formData.code : t('Create New Purchase')}
                         </Modal.Title>
 
                         <div className="col align-self-end text-end">
@@ -3400,7 +3498,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                     : ""
                                 }
-                                {formData.id && !isProcessing ? t('Update') : !isProcessing ? t('Create') : ""}
+                                {(formData.id && !isResumingDraft) && !isProcessing ? t('Update') : !isProcessing ? t('Create') : ""}
                             </Button>
 
                             <button
@@ -7440,7 +7538,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         aria-hidden={true}
                                     />
 
-                                    : formData.id ? "Update" : "Create"
+                                    : (formData.id && formData.status !== "draft") ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

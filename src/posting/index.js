@@ -39,6 +39,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
     let [selectedAccount, setSelectedAccount] = useState(null);
     let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
+    let [customModalTitle, setCustomModalTitle] = useState("");
     function handleAccountBalanceSheetClose() {
         showAccountBalanceSheet = false;
         setShowAccountBalanceSheet(false);
@@ -46,12 +47,15 @@ const PostingIndex = forwardRef((props, ref) => {
     }
 
     useImperativeHandle(ref, () => ({
-        open(account) {
-            searchParams = {};
+        open(account, opts = {}) {
+            const { title = "", extraSearchParams = {} } = opts;
+            searchParams = { ...extraSearchParams };
             showAccountBalanceSheet = true;
             setShowAccountBalanceSheet(true);
             selectedAccount = account;
             setSelectedAccount(selectedAccount);
+            customModalTitle = title;
+            setCustomModalTitle(title);
 
             dateValue = "";
             fromDateValue = "";
@@ -901,7 +905,7 @@ const PostingIndex = forwardRef((props, ref) => {
             <BalanceSheetPrintPreview ref={PreviewRef} />
             <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true} className="above-sales-modal">
                 <Modal.Header>
-                    <Modal.Title>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
+                    <Modal.Title>{customModalTitle || ("Balance sheet of " + selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")" + (selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""))}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         &nbsp;&nbsp;

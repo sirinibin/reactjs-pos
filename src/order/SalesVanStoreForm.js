@@ -41,6 +41,7 @@ const pill = (bg, color, text) => (
 export function SalesVanStoreHeader({
     formData, setFormData,
     isUpdateForm,
+    isResumingDraft,
     store,
     formType, setFormType,
     disablePreviousButton,
@@ -77,11 +78,11 @@ export function SalesVanStoreHeader({
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                        {isUpdateForm ? t("Update") + " #" + formData.code : t("VAN Store Sales")}
+                        {isResumingDraft ? t("Create New Sales Order") + " 📝 Draft" : isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
                     </div>
                     <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontFamily: "Tajawal, sans-serif" }}>مبيعات الفان</div>
                 </div>
-                {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                     <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", flexShrink: 0 }}>
                         <input type="checkbox" className="form-check-input"
                             checked={formData.enable_report_to_zatca}
@@ -167,7 +168,7 @@ export function SalesVanStoreHeader({
                     }}>
                     {isSubmitting
                         ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden />
-                        : <><i className="bi bi-check2" style={{ fontSize: 14 }} /><span className="d-none d-sm-inline">{isUpdateForm ? t("Update") : t("Create")}</span></>
+                        : <><i className="bi bi-check2" style={{ fontSize: 14 }} /><span className="d-none d-sm-inline">{(isUpdateForm && !isResumingDraft) ? t("Update") : t("Create")}</span></>
                     }
                 </button>
 

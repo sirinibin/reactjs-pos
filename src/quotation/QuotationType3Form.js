@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
+import { useDraft } from "../utils/useDraft";
 import VehicleCreate from "../vehicle/create.js";
 import Products from "../utils/products.js";
 import OrderPreview from "../order/preview.js";
@@ -67,13 +68,37 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const reCalculateRef = useRef(null);
     const previewRef = useRef();
     const repairJobIdsRef = useRef(null);
+    const clearDraftRef = useRef(null);
+    const draftFlashShownRef = useRef(false);
     const [store, setStore] = useState({});
     const [repairJobInfos, setRepairJobInfos] = useState([]);
+    const [isResumingDraft, setIsResumingDraft] = useState(false);
+    const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const storeId = localStorage.getItem("store_id");
     const headers = useMemo(() => ({ "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") }), []);
 
+    const getFormDataForDraft = useCallback(() => ({ ...formData, products: selectedProducts }), [formData, selectedProducts]);
+    const { clearDraft } = useDraft({
+        enabled: !!store?.settings?.enable_drafts && formData.status !== 'draft' && !isResumingDraft,
+        entityType: 'quotation',
+        getFormData: getFormDataForDraft,
+        productsCount: selectedProducts.filter(p => !p.deleted).length,
+        onNewDraftSaved: () => {
+            if (props.onDraftSaved) props.onDraftSaved();
+            if (!draftFlashShownRef.current) {
+                draftFlashShownRef.current = true;
+                setDraftSavedFlash(true);
+                setTimeout(() => setDraftSavedFlash(false), 2500);
+            }
+        },
+    });
+    clearDraftRef.current = clearDraft;
+
     useImperativeHandle(ref, () => ({
         open(id, prefill) {
+            setIsResumingDraft(false);
+            clearDraftRef.current?.();
+            draftFlashShownRef.current = false;
             const fd = makeFormData();
             fd.store_id = storeId;
             fd.store_name = localStorage.getItem("store_name") || "";
@@ -121,9 +146,38 @@ const QuotationType3Form = forwardRef((props, ref) => {
             fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
                 .then(r => r.json()).then(d => { if (d.result) setStore(d.result); }).catch(() => {});
         },
+        openDraft(id) {
+            setIsResumingDraft(true);
+            clearDraftRef.current?.();
+            draftFlashShownRef.current = false;
+            const fd = makeFormData();
+            fd.store_id = storeId;
+            fd.store_name = localStorage.getItem("store_name") || "";
+            setRepairJobInfos([]);
+            repairJobIdsRef.current = null;
+            setFormData({ ...fd });
+            setSelectedProducts([]);
+            setVehicleOptions([]);
+            setSelectedVehicle(null);
+            setSelectedCustomers([]);
+            setDiscount(0);
+            setShipping(0);
+            setErrors({});
+            setToastErrors([]);
+            setIsUpdateForm(true);
+            loadRecord(id);
+            setShow(true);
+            fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
+                .then(r => r.json()).then(d => { if (d.result) setStore(d.result); }).catch(() => {});
+        },
     }));
 
-    function handleClose() { setShow(false); }
+    function handleClose() {
+        setIsResumingDraft(false);
+        clearDraftRef.current?.();
+        draftFlashShownRef.current = false;
+        setShow(false);
+    }
 
     async function openCreateForm() {
         setDisablePreviousButton(false);
@@ -180,11 +234,21 @@ const QuotationType3Form = forwardRef((props, ref) => {
             if (!r.result) return;
             const q = r.result;
             const fd = { ...q, store_id: storeId };
-            // date_str is bson:"-" so GET doesn't return it; use the stored date field
-            if (!fd.date_str && q.date) fd.date_str = q.date;
-            if (!fd.payments_input?.length) fd.payments_input = [makePayment()];
-            // Populate payment date_str from date if missing
-            fd.payments_input = fd.payments_input.map(p => ({ ...p, date_str: p.date_str || p.date || new Date().toISOString() }));
+            if (q.status === 'draft') {
+                setIsResumingDraft(true);
+                fd.date_str = new Date().toISOString();
+                const draftPayments = q.draft_payments_input;
+                if (Array.isArray(draftPayments) && draftPayments.length > 0) {
+                    const today = new Date();
+                    fd.payments_input = draftPayments.map(p => ({ ...p, date_str: today.toISOString() }));
+                } else if (!fd.payments_input?.length) {
+                    fd.payments_input = [makePayment()];
+                }
+            } else {
+                if (!fd.date_str && q.date) fd.date_str = q.date;
+                if (!fd.payments_input?.length) fd.payments_input = [makePayment()];
+                fd.payments_input = fd.payments_input.map(p => ({ ...p, date_str: p.date_str || p.date || new Date().toISOString() }));
+            }
             setFormData(fd);
             setDiscount(q.discount || 0);
             setShipping(q.shipping_handling_fees || 0);
@@ -388,6 +452,10 @@ const QuotationType3Form = forwardRef((props, ref) => {
             formData.repair_job_ids = repairJobIdsRef.current;
         }
 
+        if (isResumingDraft) {
+            formData.status = "created";
+        }
+
         const endpoint = formData.id ? `/v1/quotation/${formData.id}` : "/v1/quotation";
         const method = formData.id ? "PUT" : "POST";
         setIsSubmitting(true);
@@ -395,10 +463,15 @@ const QuotationType3Form = forwardRef((props, ref) => {
             const r = await fetch(`${endpoint}?search[store_id]=${storeId}`, { method, headers, body: JSON.stringify(formData) }).then(r => r.json());
             if (r.status === false) { setErrors(r.errors || {}); return; }
             setErrors({});
+            const wasResumingDraft = isResumingDraft;
             if (props.showToastMessage) props.showToastMessage(formData.id ? t("Quotation updated successfully!") : t("Quotation created successfully!"), "success");
-            if (props.refreshList) props.refreshList();
-            const createdRepairJobId = !formData.id ? (r.result?.repair_job_id || formData.repair_job_id) : formData.repair_job_id;
-            if (!formData.id && r.result?.id) {
+            if (wasResumingDraft) {
+                if (props.onDraftCreated) props.onDraftCreated();
+            } else if (props.refreshList) {
+                props.refreshList();
+            }
+            const createdRepairJobId = (!formData.id || wasResumingDraft) ? (r.result?.repair_job_id || formData.repair_job_id) : formData.repair_job_id;
+            if ((!formData.id && r.result?.id) || (wasResumingDraft && r.result?.id)) {
                 setShow(false);
                 if (store.settings?.enable_automobile_module) {
                     setTimeout(() => previewRef.current?.open(r.result, undefined, "quotation"), 100);
@@ -406,7 +479,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                     if (props.openDetailsView) props.openDetailsView(r.result.id);
                 }
                 if (createdRepairJobId && props.openJobCard) props.openJobCard(createdRepairJobId);
-            } else if (formData.id) {
+            } else if (formData.id && !wasResumingDraft) {
                 setShow(false);
                 if (props.openDetailsView) props.openDetailsView(formData.id);
             }
@@ -454,11 +527,12 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     return (
         <>
+        {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
         <style>{`.qt3-modal-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: 1080 !important; } .order-preview-wrap { z-index: 1300 !important; }`}</style>
         <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="qt3-modal" className="qt3-modal-wrap">
             <Modal.Header style={{ backgroundColor: "#fff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 700, fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e" }}>
-                    {isUpdateForm ? `${t("Update")} #${formData.code}` : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}
+                    {isResumingDraft ? `${t("Create Quotation")} 📝 ${t("Draft")}` : isUpdateForm ? `${t("Update")} #${formData.code}` : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}
                 </h1>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                     <button type="button" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: disablePreviousButton ? 0.5 : 1 }}>
@@ -496,7 +570,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                         </button>
                     ) : null)}
                     <button type="button" onClick={(e) => handleCreate(e)} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                        {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {isUpdateForm ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}</>}
+                        {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {(isUpdateForm && !isResumingDraft) ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}</>}
                     </button>
                     <button type="button" className="btn-close" onClick={handleClose}></button>
                 </div>

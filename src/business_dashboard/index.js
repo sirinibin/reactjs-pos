@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import KPICards from "./charts/KPICards";
+import PostingIndex from '../posting/index.js';
 import {
     MonthlyRevenueTrendChart,
     CumulativeRevenueChart,
@@ -271,6 +272,7 @@ function Spinner() {
 const PAYMENT_METHODS = ["cash", "debit_card", "bank_card", "credit_card", "bank_transfer", "bank_cheque", "customer_account"];
 
 export default function BusinessDashboard() {
+    const postingRef = useRef();
     const [activeTab, setActiveTab] = useState("overview");
     const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -301,6 +303,8 @@ export default function BusinessDashboard() {
     // Full year list — populated only on unfiltered loads so it always covers
     // the complete store history, not just the currently-filtered date range.
     const [fullYears, setFullYears]         = useState([]);
+    const [fullMinMonth, setFullMinMonth]   = useState("");
+    const [fullMaxMonth, setFullMaxMonth]   = useState("");
 
     // Derived data range — first and last month that have actual data.
     // monthlyData is already zero-filtered and sorted ascending by month_str.
@@ -361,7 +365,7 @@ export default function BusinessDashboard() {
                 fetchDashboard(`/v1/dashboard/vendors?${base}`),
                 fetchDashboard(`/v1/dashboard/accounts?store_id=${storeId}`),
                 fetchDashboard(`/v1/dashboard/stock?store_id=${storeId}`),
-                fetchDashboard(`/v1/dashboard/employee?store_id=${storeId}`),
+                fetchDashboard(`/v1/dashboard/employee?${base}`),
             ]);
 
             setStore(storeData);
@@ -383,6 +387,10 @@ export default function BusinessDashboard() {
                 const years = [...new Set(filtered.map(d => d.month_str.slice(0, 4)))]
                     .sort((a, b) => b - a);
                 setFullYears(years);
+                if (filtered.length > 0) {
+                    setFullMinMonth(filtered[0].month_str);
+                    setFullMaxMonth(filtered[filtered.length - 1].month_str);
+                }
             }
             setProductSummaries(products    || []);
             setCustomerSummaries(customers  || []);
@@ -481,6 +489,7 @@ export default function BusinessDashboard() {
     };
 
     return (
+        <>
         <div className="container-fluid px-3 py-3">
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .7s linear infinite;display:inline-block;}`}</style>
             {/* Page header */}
@@ -581,8 +590,8 @@ export default function BusinessDashboard() {
                         className="form-control form-control-sm"
                         style={{ width: "auto" }}
                         value={singleMonth}
-                        min={dataMinMonth}
-                        max={dataMaxMonth}
+                        min={fullMinMonth}
+                        max={fullMaxMonth}
                         onChange={e => {
                             setSingleMonth(e.target.value);
                             setAppliedFrom(e.target.value);
@@ -598,9 +607,9 @@ export default function BusinessDashboard() {
                             className="form-control form-control-sm"
                             style={{ width: "auto" }}
                             value={fromMonth}
-                            min={dataMinMonth}
-                            max={dataMaxMonth}
-                            placeholder={dataMinMonth}
+                            min={fullMinMonth}
+                            max={fullMaxMonth}
+                            placeholder={fullMinMonth}
                             onChange={e => {
                                 setFromMonth(e.target.value);
                                 setAppliedFrom(e.target.value);
@@ -612,9 +621,9 @@ export default function BusinessDashboard() {
                             className="form-control form-control-sm"
                             style={{ width: "auto" }}
                             value={toMonth}
-                            min={dataMinMonth}
-                            max={dataMaxMonth}
-                            placeholder={dataMaxMonth}
+                            min={fullMinMonth}
+                            max={fullMaxMonth}
+                            placeholder={fullMaxMonth}
                             onChange={e => {
                                 setToMonth(e.target.value);
                                 setAppliedTo(e.target.value);
@@ -707,6 +716,7 @@ export default function BusinessDashboard() {
                                 qtnSalesReturnStats={kpiStats.qtnSalesReturnStats}
                                 orders={{ length: kpiStats.orderCount }}
                                 employeeStats={employeeStats}
+                                openPosting={(account, opts) => postingRef.current?.open(account, opts)}
                                 filters={{
                                     ...(appliedFrom ? { 'From': appliedFrom } : {}),
                                     ...(appliedTo   ? { 'To':   appliedTo   } : {}),
@@ -898,5 +908,7 @@ export default function BusinessDashboard() {
                 </>
             )}
         </div>
+        <PostingIndex ref={postingRef} />
+        </>
     );
 }

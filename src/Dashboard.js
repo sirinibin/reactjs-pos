@@ -338,8 +338,8 @@ function Dashboard() {
         </Modal>
 
         <ToastContainer position="top-end" className="p-3" style={{
-            zIndex: 1,
-            position: "relative",
+            zIndex: 99999,
+            position: "fixed",
         }}>
             {toastMessages.map((message, index) =>
 

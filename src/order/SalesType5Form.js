@@ -67,6 +67,7 @@ const cardStyle = {
 export function SalesType5Header({
     formData, setFormData,
     isUpdateForm,
+    isResumingDraft,
     store,
     formType, setFormType,
     disablePreviousButton,
@@ -91,9 +92,9 @@ export function SalesType5Header({
         <Modal.Header style={{ backgroundColor: "#ffffff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
             <div className="sc-header-title" style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flexShrink: 1 }}>
                 <h1 style={{ margin: 0, fontSize: "20px", lineHeight: "28px", fontWeight: 700, letterSpacing: "-0.01em", fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e", whiteSpace: "nowrap" }}>
-                    {isUpdateForm ? `${t("Update Sales")} #${formData.code}` : t("Create New Sales Order")}
+                    {isResumingDraft ? t("Create New Sales Order") + " 📝 Draft" : isUpdateForm ? `${t("Update Sales")} #${formData.code}` : t("Create New Sales Order")}
                 </h1>
-                {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                     <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "#434655", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                         <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={() => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: "14px", height: "14px", margin: 0 }} />
                         {t("Report to Zatca")}
@@ -137,7 +138,7 @@ export function SalesType5Header({
                     </button>&nbsp;&nbsp;</>
                 ) : null)}
                 <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#ffffff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer", minWidth: "70px", justifyContent: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
-                    {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: "14px" }}></i> {isUpdateForm ? t("Update") : t("Create")}</>}
+                    {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: "14px" }}></i> {(isUpdateForm && !isResumingDraft) ? t("Update") : t("Create")}</>}
                 </button>
                 <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" style={{ marginLeft: "4px" }}></button>
             </div>
