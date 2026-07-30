@@ -97,13 +97,16 @@ export function VendorSpendPieChart({ vendorSummaries, store, filters }) {
 // Total Expense = disablePurchasesOnAccounts
 //   ? Expenses − DepositPurchaseFund + AccountedPurchases − AccountedPurchaseReturns
 //   : Expenses + Purchases − Purchase Returns
+//             + (enableEmployeeModule ? SalaryPaid : 0)
 export function PurchaseVsSalesChart({
     store, filters, orders, returns, purchases, purchaseReturns, expenses,
+    salaryPaid = [],
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
     const qtnInvoiceAccounting       = store?.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
+    const enableEmployeeModule       = store?.settings?.enable_employee_module === true;
     const vatPercent                 = store?.vat_percent || 15;
 
     const data = useMemo(() => {
@@ -121,6 +124,7 @@ export function PurchaseVsSalesChart({
         const purchaseMap   = buildMap(purchases,                p => p.date, p => p.net_total || 0);
         const purRetMap     = buildMap(purchaseReturns,          p => p.date, p => p.net_total || 0);
         const expenseMap    = buildMap(expenses,                 e => e.date, e => e.amount    || 0);
+        const salaryPaidMap = buildMap(salaryPaid || [],         e => e.date, e => e.amount    || 0);
         const acctPurMap    = buildMap(accountedPurchases    || [], p => p.date, p => p.net_total || 0);
         const acctPurRetMap = buildMap(accountedPurchaseReturns || [], p => p.date, p => p.net_total || 0);
 
@@ -142,6 +146,7 @@ export function PurchaseVsSalesChart({
             ...Object.keys(salesMap), ...Object.keys(returnMap),
             ...Object.keys(purchaseMap), ...Object.keys(purRetMap),
             ...Object.keys(expenseMap),
+            ...(enableEmployeeModule ? Object.keys(salaryPaidMap) : []),
             ...(qtnInvoiceAccounting ? [...Object.keys(qtnInvMap), ...Object.keys(qtnRetMap)] : []),
             ...(disablePurchasesOnAccounts ? [...Object.keys(acctPurMap), ...Object.keys(acctPurRetMap), ...Object.keys(depositPurchaseFundMap)] : []),
         ])).sort();
@@ -162,17 +167,18 @@ export function PurchaseVsSalesChart({
             const ret        = returnMap[k]   || 0;
             const qtnInv     = qtnInvMap[k]   || 0;
             const qtnRet     = qtnRetMap[k]   || 0;
-            const exp        = expenseMap[k]  || 0;
-            const pur        = purchaseMap[k] || 0;
-            const purRet     = purRetMap[k]   || 0;
+            const exp        = expenseMap[k]    || 0;
+            const sal        = enableEmployeeModule ? (salaryPaidMap[k] || 0) : 0;
+            const pur        = purchaseMap[k]   || 0;
+            const purRet     = purRetMap[k]     || 0;
             const depFund    = depositPurchaseFundMap[k] || 0;
             const acctPur    = acctPurMap[k]    || 0;
             const acctPurRet = acctPurRetMap[k] || 0;
 
             const revenue = (sales - ret) + (qtnInvoiceAccounting ? qtnInv - qtnRet : 0);
-            const expense = disablePurchasesOnAccounts
+            const expense = (disablePurchasesOnAccounts
                 ? exp - depFund + acctPur - acctPurRet
-                : exp + pur - purRet;
+                : exp + pur - purRet) + sal;
 
             const revenueVat        = revenue * vatPercent / (100 + vatPercent);
             const revenueWithoutVAT = revenue - revenueVat;
@@ -194,6 +200,7 @@ export function PurchaseVsSalesChart({
                 { label: "Purchase Return Fund", value: `− ${fmtT(depFund)}` },
                 { label: "Accounted Purchases",  value: `+ ${fmtT(acctPur)}` },
                 { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
+                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
                 { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
                 { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
@@ -201,6 +208,7 @@ export function PurchaseVsSalesChart({
                 { label: "Expenses",         value: `${fmtT(exp)}` },
                 { label: "Purchases",        value: `+ ${fmtT(pur)}` },
                 { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
+                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
                 { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
                 { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
@@ -216,9 +224,9 @@ export function PurchaseVsSalesChart({
         });
 
         return [header, ...rows];
-    }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns,
+    }, [orders, returns, purchases, purchaseReturns, expenses, salaryPaid, quotations, quotationSalesReturns,
         accountedPurchases, accountedPurchaseReturns, customerDeposits,
-        qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent, store, filters]);
+        qtnInvoiceAccounting, disablePurchasesOnAccounts, enableEmployeeModule, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (

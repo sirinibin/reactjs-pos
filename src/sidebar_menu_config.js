@@ -38,6 +38,7 @@ export const DEFAULT_MENU = [
     // AutoMobile Workshop module
     { id: "automobile_dashboard", resource: "automobile_dashboard", label: "Workshop Dashboard", path: "/dashboard/automobile-dashboard", icon: "bi-speedometer2", requiresAutomobileModule: true },
     { id: "employees", resource: "employees", label: "Employees", path: "/dashboard/employees", icon: "bi-person-badge", requiresEmployeeModule: true },
+    { id: "salaries", resource: "salaries", label: "Salaries", path: "/dashboard/salaries", icon: "bi-cash-coin", requiresEmployeeModule: true, parentId: "employees" },
     { id: "vehicles", resource: "vehicles", label: "Vehicles", path: "/dashboard/vehicles", icon: "bi-car-front", requiresAutomobileModule: true },
     { id: "repair_jobs", resource: "repair_jobs", label: "Repair Jobs", path: "/dashboard/repair-jobs", icon: "bi-tools", requiresAutomobileModule: true },
     { id: "repair_jobs_board", resource: "repair_jobs", label: "Repair Jobs Board", path: "/dashboard/repair-jobs-board", icon: "bi-kanban", requiresAutomobileModule: true },

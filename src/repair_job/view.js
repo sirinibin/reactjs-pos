@@ -80,7 +80,19 @@ const RepairJobView = forwardRef((props, ref) => {
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
                         {formData.job_number || t('Repair Job')}
                     </Modal.Title>
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                        {formData.order_id && props.onOpenSalesInvoice && (
+                            <button type="button" onClick={() => { handleClose(); props.onOpenSalesInvoice(formData.order_id); }}
+                                style={{ background: '#e3fcef', color: '#006644', border: '1px solid #abf5d1', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="bi bi-receipt"></i> {formData.order_code || t('Sales Invoice')}
+                            </button>
+                        )}
+                        {formData.quotation_id && props.onOpenQuotation && (
+                            <button type="button" onClick={() => { handleClose(); props.onOpenQuotation(formData.quotation_id); }}
+                                style={{ background: '#fffae6', color: '#974f0c', border: '1px solid #ffe380', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="bi bi-file-earmark-text"></i> {formData.quotation_code || t('Quotation')}
+                            </button>
+                        )}
                         {props.openUpdateForm && (
                             <button type="button" style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                                 onClick={() => { handleClose(); props.openUpdateForm(formData.id); }}>

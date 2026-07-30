@@ -9,7 +9,7 @@ const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false }) => {
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        if (tooltipRef.current) {
+        if (tooltipRef.current && value != null && value !== "") {
             tooltipInstance.current = new Tooltip(tooltipRef.current, {
                 title: value,
                 trigger: "manual",
@@ -19,6 +19,7 @@ const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false }) => {
         return () => {
             if (tooltipInstance.current) {
                 tooltipInstance.current.dispose();
+                tooltipInstance.current = null;
             }
         };
     }, [value]);

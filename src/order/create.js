@@ -245,6 +245,7 @@ const OrderCreate = forwardRef((props, ref) => {
         },
         async openWithPrefill(prefill) {
             fromJobCardRef.current = true;
+            setRepairJobInfos([]);
             await this.open();
             if (!prefill) return;
             setTimeout(() => {
@@ -268,6 +269,13 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
                 if (prefill.repair_job_id) {
                     formData.repair_job_id = prefill.repair_job_id;
+                }
+                if (prefill.repair_job_ids?.length) {
+                    formData.repair_job_ids = prefill.repair_job_ids;
+                    repairJobIdsRef.current = prefill.repair_job_ids;
+                }
+                if (prefill.repair_job_infos?.length) {
+                    setRepairJobInfos(prefill.repair_job_infos);
                 }
                 setFormData({ ...formData });
                 // After React commits the render (SalesType5Body mounts and reCalculateRef sees fresh formData),
@@ -358,6 +366,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         formData.id = undefined;
+        formData.repair_job_id = undefined;
+        formData.repair_job_ids = undefined;
+        repairJobIdsRef.current = null;
+        setRepairJobInfos([]);
 
         formData.vat_no = "";
         formData.enable_report_to_zatca = false;
@@ -690,6 +702,14 @@ const OrderCreate = forwardRef((props, ref) => {
         reCalculate();
         setFormData({ ...formData });
 
+        if (formData.repair_job_ids?.length) {
+            const token = localStorage.getItem('access_token');
+            const sid = localStorage.getItem('store_id');
+            Promise.all(formData.repair_job_ids.map(jid =>
+                fetch(`/v1/repair-job/${jid}?search[store_id]=${sid}`, { headers: { Authorization: token } })
+                    .then(r => r.json()).then(d => d.result ? { id: jid, job_number: d.result.job_number, customer_name: d.result.customer_name } : null).catch(() => null)
+            )).then(infos => setRepairJobInfos(infos.filter(Boolean)));
+        }
 
         checkWarnings();
         checkErrors();
@@ -1310,6 +1330,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
     const fromJobCardRef = useRef(false);
+    const repairJobIdsRef = useRef(null);
+    const [repairJobInfos, setRepairJobInfos] = useState([]);
 
     function handleClose() {
         selectedProducts = [];
@@ -2029,6 +2051,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (!formData.vehicle_id) formData.vehicle_id = null;
+
+        if (repairJobIdsRef.current?.length) {
+            formData.repair_job_ids = repairJobIdsRef.current;
+        }
 
         let endPoint = "/v1/order";
         let method = "POST";
@@ -5391,7 +5417,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1090 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5687,6 +5713,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     handleClose={handleClose}
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
+                    openJobCard={props.openJobCard}
+                    repairJobInfos={repairJobInfos}
                 />}
                 {formType === "type5" && <SalesType5Header
                     formData={formData} setFormData={setFormData}
@@ -5707,6 +5735,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
                     openJobCard={props.openJobCard}
+                    repairJobInfos={repairJobInfos}
                 />}
                 {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -5787,6 +5816,28 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </Dropdown.Menu>
                                 </Dropdown>
                             )}
+                            {props.openJobCard && (formData.repair_job_ids?.length > 0 ? (
+                                <Dropdown>
+                                    <Dropdown.Toggle as="button" id="jc-drop-t3" style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                        <i className="bi bi-tools" style={{ fontSize: '13px' }}></i>&nbsp;{formData.repair_job_ids.length}&nbsp;{t('Jobs')}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {formData.repair_job_ids.map((id, idx) => {
+                                            const info = repairJobInfos.find(j => j.id === id);
+                                            return (
+                                                <Dropdown.Item key={id} onClick={() => props.openJobCard(id)}>
+                                                    <i className="bi bi-tools me-2 text-primary"></i>
+                                                    {info ? `${info.job_number || ('Job ' + (idx + 1))}${info.customer_name ? ' · ' + info.customer_name : ''}` : `Job ${idx + 1}`}
+                                                </Dropdown.Item>
+                                            );
+                                        })}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            ) : (isUpdateForm && formData.repair_job_id) ? (
+                                <button type="button" onClick={() => props.openJobCard(formData.repair_job_id)} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                    <i className="bi bi-tools" style={{ fontSize: '13px' }}></i> {t("View Job Card")}
+                                </button>
+                            ) : null)}
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" style={{ marginLeft: '4px' }}></button>
                         </div>
                     </Modal.Header>
@@ -5946,6 +5997,28 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </Dropdown.Menu>
                             </Dropdown>
                         )}
+                        {props.openJobCard && (formData.repair_job_ids?.length > 0 ? (
+                            <Dropdown>
+                                <Dropdown.Toggle as="button" id="jc-drop-t2" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                    <i className="bi bi-tools" style={{ fontSize: '13px' }}></i>&nbsp;{formData.repair_job_ids.length}&nbsp;{t('Jobs')}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu>
+                                    {formData.repair_job_ids.map((id, idx) => {
+                                        const info = repairJobInfos.find(j => j.id === id);
+                                        return (
+                                            <Dropdown.Item key={id} onClick={() => props.openJobCard(id)}>
+                                                <i className="bi bi-tools me-2 text-primary"></i>
+                                                {info ? `${info.job_number || ('Job ' + (idx + 1))}${info.customer_name ? ' · ' + info.customer_name : ''}` : `Job ${idx + 1}`}
+                                            </Dropdown.Item>
+                                        );
+                                    })}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        ) : (isUpdateForm && formData.repair_job_id) ? (
+                            <button type="button" onClick={() => props.openJobCard(formData.repair_job_id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                <i className="bi bi-tools" style={{ fontSize: '13px' }}></i> {t("View Job Card")}
+                            </button>
+                        ) : null)}
                         <button type="button" className="text-on-surface-variant hover:text-error transition-colors ml-xs border-0 bg-transparent flex items-center justify-center cursor-pointer" onClick={handleClose} title={t("Close")}>
                             <span className="material-symbols-outlined">close</span>
                         </button>

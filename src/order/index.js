@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback
 import { useTranslation } from 'react-i18next';
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
+import RepairJobCardView from "../repair_job/card_view.js";
 
 import SalesPaymentIndex from "./../sales_payment/index.js";
 import SalesReturnIndex from "./../sales_return/index.js";
@@ -48,6 +49,7 @@ const OrderIndex = forwardRef((props, ref) => {
     let [pendingView, setPendingView] = useState(false);
 
     const dragRef = useRef(null);
+    const jobCardViewRef = useRef(null);
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
     let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
@@ -1582,7 +1584,8 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
-            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />}
+            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />}
+            <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
             {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />}
 

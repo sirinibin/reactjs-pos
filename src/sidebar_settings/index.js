@@ -148,6 +148,7 @@ export default function SidebarSettings() {
                             />
 
                             {/* Icon + Label */}
+                            {meta.parentId && <span style={{ color: "#adb5bd", fontSize: "0.85rem", marginLeft: "8px" }}>↳</span>}
                             <i className={`bi ${meta.icon} text-secondary`} style={{ flexShrink: 0 }} />
                             <span className="flex-grow-1" style={{ fontSize: "0.9rem", fontWeight: item.visible ? 500 : 400, color: item.visible ? "#212529" : "#adb5bd" }}>
                                 {meta.label}

@@ -408,6 +408,7 @@ export default function BusinessDashboard() {
     const synPur        = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_amount || 0, cash_discount: d.purchase_cash_discount || 0 })), [monthlyData]);
     const synPurRet     = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_return_amount || 0, cash_discount: d.purchase_return_cash_discount || 0 })), [monthlyData]);
     const synExpenses   = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), amount:    d.expense_amount || 0 })), [monthlyData]);
+    const synSalaryPaid = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), amount:    d.salary_paid    || 0 })), [monthlyData]);
     const synAcctPur    = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_amount || 0, cash_discount: d.accounted_purchase_cash_discount || 0 })), [monthlyData]);
     const synAcctPurRet = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_return_amount || 0, cash_discount: d.accounted_purchase_return_cash_discount || 0 })), [monthlyData]);
 
@@ -462,7 +463,7 @@ export default function BusinessDashboard() {
             salesReturnStats:    { total_sales_return: sum("sales_return_amount"), cash_discount: sum("sales_return_cash_discount"), commission: sum("sales_return_commission") },
             quotationStats:      { invoice_total_sales: sum("qtn_invoice_amount"), invoice_cash_discount: sum("qtn_sales_cash_discount") },
             qtnSalesReturnStats: { total_quotation_sales_return: sum("qtn_invoice_return_amount"), cash_discount: sum("qtn_sales_return_cash_discount") },
-            expenseStats:        { total:                        sum("expense_amount") },
+            expenseStats:        { total: sum("expense_amount"), salary_paid: sum("salary_paid") },
             purchaseStats:       { total_purchase: sum("purchase_amount"), accounted_purchase: sum("accounted_purchase_amount"), cash_discount: sum("purchase_cash_discount"), accounted_purchase_cash_discount: sum("accounted_purchase_cash_discount") },
             purchaseReturnStats: { total_purchase_return: sum("purchase_return_amount"), accounted_purchase_return: sum("accounted_purchase_return_amount"), cash_discount: sum("purchase_return_cash_discount"), accounted_purchase_return_cash_discount: sum("accounted_purchase_return_cash_discount") },
             depositStats:        { purchase_fund:                sum("deposit_purchase_fund") },
@@ -709,7 +710,7 @@ export default function BusinessDashboard() {
                             <div className="row mt-4">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} salaryPaid={synSalaryPaid} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
@@ -740,7 +741,7 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} salaryPaid={synSalaryPaid} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -883,7 +884,7 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <PurchaseVsSalesChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <PurchaseVsSalesChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} salaryPaid={synSalaryPaid} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                             </div>

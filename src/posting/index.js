@@ -20,6 +20,10 @@ import CapitalCreate from "../capital/create.js";
 import DividentCreate from "../divident/create.js";
 import QuotationCreate from "../quotation/create.js";
 import EmployeeSalaryPaymentCreate from "../employee/salaryPayment.js";
+import CustomerCreate from "../customer/create.js";
+import VendorCreate from "../vendor/create.js";
+import EmployeeCreate from "../employee/create.js";
+import UserCreate from "../user/create.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -107,6 +111,16 @@ const PostingIndex = forwardRef((props, ref) => {
         moveToLastPage();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [totalPages]);
+
+    useEffect(() => {
+        if (showAccountBalanceSheet) {
+            document.body.classList.add('balance-sheet-open');
+        } else {
+            document.body.classList.remove('balance-sheet-open');
+        }
+        return () => document.body.classList.remove('balance-sheet-open');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showAccountBalanceSheet]);
 
 
     function moveToLastPage() {
@@ -782,6 +796,10 @@ const PostingIndex = forwardRef((props, ref) => {
     const DividentUpdateFormRef = useRef();
     const QuotationUpdateFormRef = useRef();
     const EmployeeSalaryPaymentUpdateFormRef = useRef();
+    const CustomerUpdateFormRef = useRef();
+    const VendorUpdateFormRef = useRef();
+    const EmployeeUpdateFormRef = useRef();
+    const UserUpdateFormRef = useRef();
 
     let [showUpdateForm, setShowUpdateForm] = useState(false);
     const timerRef = useRef(null);
@@ -819,6 +837,14 @@ const PostingIndex = forwardRef((props, ref) => {
                 QuotationSalesReturnUpdateFormRef.current.open(id);
             } else if (referenceModel === "employee_salary_payment") {
                 openEmployeeSalaryPaymentForm(id);
+            } else if (referenceModel === "customer_opening_balance") {
+                CustomerUpdateFormRef.current.open(id);
+            } else if (referenceModel === "vendor_opening_balance") {
+                VendorUpdateFormRef.current.open(id);
+            } else if (referenceModel === "employee_opening_balance") {
+                EmployeeUpdateFormRef.current.open(id);
+            } else if (referenceModel === "user_opening_balance") {
+                UserUpdateFormRef.current.open(id);
             }
         }, 50);
 
@@ -866,7 +892,11 @@ const PostingIndex = forwardRef((props, ref) => {
                 <CustomerWithdrawalCreate ref={CustomerPayableUpdateFormRef} onUpdated={handleUpdated} />
                 <ExpenseCreate ref={ExpenseUpdateFormRef} onUpdated={handleUpdated} />
                 <CapitalCreate ref={CapitalUpdateFormRef} onUpdated={handleUpdated} />
-                <DividentCreate ref={DividentUpdateFormRef} onUpdated={handleUpdated} /></>}
+                <DividentCreate ref={DividentUpdateFormRef} onUpdated={handleUpdated} />
+                <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={handleUpdated} />
+                <VendorCreate ref={VendorUpdateFormRef} onUpdated={handleUpdated} />
+                <EmployeeCreate ref={EmployeeUpdateFormRef} refreshList={handleUpdated} />
+                <UserCreate ref={UserUpdateFormRef} refreshList={handleUpdated} /></>}
 
             <BalanceSheetPrintPreview ref={PreviewRef} />
             <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true} className="above-sales-modal">
@@ -874,6 +904,11 @@ const PostingIndex = forwardRef((props, ref) => {
                     <Modal.Title>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
 
                     <div className="col align-self-end text-end">
+                        &nbsp;&nbsp;
+                        <Button variant="outline-secondary" onClick={() => list()}>
+                            <i className="bi bi-arrow-clockwise"></i> Refresh
+                        </Button>
+
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={() => {
                             openPreview(selectedAccount);

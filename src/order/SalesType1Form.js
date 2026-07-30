@@ -66,6 +66,8 @@ export function SalesType1Header({
     handleClose,
     openSalesFromDnInForm,
     dismissDnNotification,
+    openJobCard,
+    repairJobInfos,
 }) {
     const { t } = useTranslation('common');
     return (
@@ -150,6 +152,28 @@ export function SalesType1Header({
                                 </Dropdown>
                             )}
                             &nbsp;&nbsp;
+                            {openJobCard && (formData.repair_job_ids?.length > 0 ? (
+                                <><Dropdown style={{ display: 'inline-flex' }}>
+                                    <Dropdown.Toggle as="button" id="jc-drop-t1" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                        <i className="bi bi-tools" style={{ fontSize: '13px' }}></i>&nbsp;{formData.repair_job_ids.length}&nbsp;{t('Jobs')}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu>
+                                        {formData.repair_job_ids.map((id, idx) => {
+                                            const info = (repairJobInfos || []).find(j => j.id === id);
+                                            return (
+                                                <Dropdown.Item key={id} onClick={() => openJobCard(id)}>
+                                                    <i className="bi bi-tools me-2 text-primary"></i>
+                                                    {info ? `${info.job_number || ('Job ' + (idx + 1))}${info.customer_name ? ' · ' + info.customer_name : ''}` : `Job ${idx + 1}`}
+                                                </Dropdown.Item>
+                                            );
+                                        })}
+                                    </Dropdown.Menu>
+                                </Dropdown>&nbsp;&nbsp;</>
+                            ) : (isUpdateForm && formData.repair_job_id) ? (
+                                <><button type="button" onClick={() => openJobCard(formData.repair_job_id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #004ac6', backgroundColor: '#f0f4ff', color: '#004ac6', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                                    <i className="bi bi-tools" style={{ fontSize: '13px' }}></i> {t("View Job Card")}
+                                </button>&nbsp;&nbsp;</>
+                            ) : null)}
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
                     </Modal.Header>

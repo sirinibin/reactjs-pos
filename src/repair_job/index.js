@@ -293,7 +293,7 @@ function RepairJobIndex(props) {
     const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' ? 'board' : 'table');
 
     useEffect(() => {
-        if (props.defaultMode === 'board') setViewMode('board');
+        setViewMode(props.defaultMode === 'board' ? 'board' : 'table');
     }, [props.defaultMode]);
 
     function switchView(mode) {
@@ -369,6 +369,7 @@ function RepairJobIndex(props) {
         return {
             type,
             repair_job_id: job.id,
+            repair_job_infos: [{ id: job.id, job_number: job.job_number, customer_name: job.customer_name }],
             customer_id: job.customer_id || null,
             customer_name: job.customer_name || '',
             customer: job.customer_id ? { id: job.customer_id, name: job.customer_name } : null,
@@ -394,13 +395,33 @@ function RepairJobIndex(props) {
         if (!jobsArr || jobsArr.length === 0) return;
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+
+        // Fetch full job details (kanban listing omits parts & labour_charge)
+        const fullJobs = await Promise.all(
+            jobsArr.map(j =>
+                fetch(`/v1/repair-job/${j.id}?search[store_id]=${storeId}`, { headers })
+                    .then(r => r.json()).then(d => d.result || j).catch(() => j)
+            )
+        );
+
+        let vatPercent = 15;
+        try {
+            const sr = await fetch(`/v1/store/${storeId}?select=vat_percent`, { headers });
+            const sd = await sr.json();
+            if (sd.result?.vat_percent != null) vatPercent = parseFloat(sd.result.vat_percent) || 0;
+        } catch (e) {}
+        const vatMultiplier = 1 + (vatPercent / 100);
+
         const products = [];
         let totalLabour = 0;
         let firstJobWithVehicle = null;
-        for (const job of jobsArr) {
+        for (const job of fullJobs) {
             if (job.vehicle_id && !firstJobWithVehicle) firstJobWithVehicle = job;
             for (const p of (job.parts || [])) {
-                products.push({ product_id: p.product_id || null, name: p.name || '', quantity: parseFloat(p.qty) || 1, unit_price: parseFloat(p.unit_price) || 0, unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, purchase_unit_price: parseFloat(p.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false });
+                const excl = parseFloat(p.unit_price) || 0;
+                const storedIncl = parseFloat(p.unit_price_with_vat) || 0;
+                const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMultiplier).toFixed(2));
+                products.push({ product_id: p.product_id || null, item_code: p.item_code || '', part_number: p.part_number || '', name: p.name || '', quantity: parseFloat(p.qty) || 1, unit_price: excl, unit_price_with_vat: incl, purchase_unit_price: parseFloat(p.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false });
             }
             totalLabour += parseFloat(job.labour_charge) || 0;
         }
@@ -411,11 +432,12 @@ function RepairJobIndex(props) {
                 if (r?.result?.[0]) labourProductId = r.result[0].id;
                 else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
             } catch (e) { }
-            const vatFactor = 1.15;
-            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatFactor).toFixed(4)), unit_price_with_vat: totalLabour, purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
+            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatMultiplier).toFixed(4)), unit_price_with_vat: parseFloat(totalLabour.toFixed(2)), purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
         }
         const prefill = {
             type,
+            repair_job_ids: fullJobs.map(j => j.id),
+            repair_job_infos: fullJobs.map(j => ({ id: j.id, job_number: j.job_number, customer_name: j.customer_name })),
             customer_id: customer?.id || null,
             customer_name: customer?.name || '',
             customer: customer ? { id: customer.id, name: customer.name } : null,
@@ -424,7 +446,11 @@ function RepairJobIndex(props) {
             km_driven: firstJobWithVehicle ? parseFloat(firstJobWithVehicle.km) || null : null,
             products,
         };
-        qt3FormRef.current?.open(null, prefill);
+        if (type === 'invoice') {
+            orderCreateRef.current?.openWithPrefill(prefill);
+        } else {
+            qt3FormRef.current?.open(null, prefill);
+        }
     }
 
     function handleJobCreated(jobId, listId) {
@@ -490,8 +516,12 @@ function RepairJobIndex(props) {
         <>
             <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
             <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
-            <RepairJobCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onCreated={handleJobCreated} />
-            <RepairJobView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
+            <RepairJobCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} onCreated={handleJobCreated}
+                onOpenSalesInvoice={(orderId) => orderCreateRef.current?.open(orderId)}
+                onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)} />
+            <RepairJobView ref={DetailsViewRef} openUpdateForm={openUpdateForm}
+                onOpenSalesInvoice={(orderId) => orderCreateRef.current?.open(orderId)}
+                onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)} />
             <QuotationView ref={quotationViewRef} openUpdateForm={(id) => qt3FormRef.current?.open(id)} />
             <QuotationType3Form ref={qt3FormRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
             <OrderCreate ref={orderCreateRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={() => {}} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
@@ -521,6 +551,7 @@ function RepairJobIndex(props) {
             {viewMode === 'board' && (
                 <RepairJobKanban
                     ref={kanbanRef}
+                    embedded={props.defaultMode === 'board'}
                     onOpenCard={(id) => { if (cardViewRef.current) cardViewRef.current.open(id); }}
                     onCreate={openCreateForm}
                     onClose={props.defaultMode === 'board' ? undefined : () => { setKanbanLists(loadKanbanLists()); switchView('table'); }}
@@ -538,13 +569,6 @@ function RepairJobIndex(props) {
                         <h5 style={{ fontWeight: 700, marginBottom: 0, color: "#172b4d" }}>{t('Repair Jobs')}</h5>
                     </div>
                     <div className="col-auto d-flex align-items-center gap-2">
-                        <button
-                            className={`btn btn-sm${viewMode === 'board' ? ' btn-primary' : ' btn-outline-secondary'}`}
-                            style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: 13 }}
-                            onClick={() => switchView(viewMode === 'board' ? 'table' : 'board')}
-                        >
-                            <i className="bi bi-kanban"></i> {t('Kanban Board')}
-                        </button>
                         <Button variant="primary" className="btn btn-primary btn-sm" onClick={openCreateForm}>
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>

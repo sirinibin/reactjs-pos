@@ -1,4 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { enUS } from "date-fns/locale";
 import { Modal, Button, Dropdown } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -1321,6 +1324,57 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         )}
                                     </div>
                                 )}
+
+                                {/* ── Opening Balance ── */}
+                                <div style={CARD} className="pw-card">
+                                    <SectionTitle icon="bi-arrow-left-right">Opening Balance</SectionTitle>
+                                    <p style={{ fontSize: '12px', color: '#5c6470', fontFamily: '"Inter", sans-serif', marginBottom: '12px' }}>
+                                        If this customer has an outstanding balance from your previous system, enter the amount and date. Leave as 0 if fully settled.
+                                        {formData.opening_balance_posted && ' (An opening balance entry has already been posted — changing values below will update it.)'}
+                                    </p>
+                                    <div className="row g-3">
+                                        <div className="col-12">
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Balance Direction</label>
+                                            <div style={{ display: 'flex', gap: '24px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                                                    <input type="radio" name="cust_ob_type" value="receivable"
+                                                        checked={(formData.opening_balance_type || 'receivable') === 'receivable'}
+                                                        onChange={() => { formData.opening_balance_type = 'receivable'; setFormData({ ...formData }); }} />
+                                                    Customer owes Store
+                                                </label>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                                                    <input type="radio" name="cust_ob_type" value="payable"
+                                                        checked={formData.opening_balance_type === 'payable'}
+                                                        onChange={() => { formData.opening_balance_type = 'payable'; setFormData({ ...formData }); }} />
+                                                    Store owes Customer
+                                                </label>
+                                            </div>
+                                            {errors.opening_balance_type && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance_type}</div>}
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Opening Balance Amount</label>
+                                            <input type="number" step="0.01" min="0" style={INPUT}
+                                                value={formData.opening_balance ?? ''}
+                                                onChange={e => { formData.opening_balance = e.target.value === '' ? '' : parseFloat(e.target.value); setFormData({ ...formData }); }} />
+                                            {errors.opening_balance && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance}</div>}
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>As Of Date</label>
+                                            <DatePicker
+                                                selected={formData.opening_balance_date ? new Date(formData.opening_balance_date) : null}
+                                                onChange={(value) => { formData.opening_balance_date = value; setFormData({ ...formData }); }}
+                                                showTimeSelect
+                                                timeIntervals={1}
+                                                dateFormat="MMMM d, yyyy h:mm aa"
+                                                locale={enUS}
+                                                placeholderText="Select date & time"
+                                                isClearable
+                                                className={`form-control form-control-sm${errors.opening_balance_date ? " is-invalid" : ""}`}
+                                            />
+                                            {errors.opening_balance_date && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance_date}</div>}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* ── Photos ── */}
                                 <>

@@ -480,7 +480,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
             {/* Backdrop */}
             <div
                 onClick={handleClose}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1060, overflowY: 'auto', padding: isMobile ? '0' : '24px 12px' }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1200, overflowY: 'auto', padding: isMobile ? '0' : '24px 12px' }}
             >
                 {/* Card */}
                 <div
@@ -1023,7 +1023,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                         </div>
                                                     ) : (
                                                         <button type="button"
-                                                            onClick={() => onCreateSalesInvoice(job)}
+                                                            onClick={() => { setShow(false); onCreateSalesInvoice(job); }}
                                                             style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                             <i className="bi bi-receipt"></i>{t('Create Sales Invoice')}
                                                         </button>
@@ -1046,7 +1046,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                         </div>
                                                     ) : (
                                                         <button type="button"
-                                                            onClick={() => onCreateQuotation(job)}
+                                                            onClick={() => { setShow(false); onCreateQuotation(job); }}
                                                             style={{ background: '#fff', color: '#004ac6', border: '2px solid #004ac6', borderRadius: 5, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                             <i className="bi bi-file-earmark-text"></i>{t('Create Quotation')}
                                                         </button>

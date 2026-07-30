@@ -79,6 +79,12 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     const [newCardTitle, setNewCardTitle] = useState('');
     const [isCreatingCard, setIsCreatingCard] = useState(false);
 
+    // Job selection modal (for Create Sales Invoice / Create Quotation)
+    const [showJobSelectModal, setShowJobSelectModal] = useState(false);
+    const [jobSelectMode, setJobSelectMode] = useState('invoice');
+    const [selectedJobIds, setSelectedJobIds] = useState(new Set());
+    const [showCustomerRequired, setShowCustomerRequired] = useState(false);
+
     // Auto-scroll: holds DOM refs to each column's scrollable cards container
     const columnCardsRef = useRef({});
     const pendingScrollListId = useRef(null);
@@ -650,6 +656,18 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         if (ok) { setShowNewJobModal(false); setNewJobTitle(''); }
     }
 
+    function handleJobSelectConfirm() {
+        const selectedJobs = jobs.filter(j => selectedJobIds.has(j.id));
+        if (selectedJobs.length === 0) return;
+        const commonCustomer = selectedJobs.length === 1 && selectedJobs[0].customer_id
+            ? { id: selectedJobs[0].customer_id, name: selectedJobs[0].customer_name }
+            : (selectedCustomer || null);
+        setShowJobSelectModal(false);
+        setSelectedJobIds(new Set());
+        if (jobSelectMode === 'invoice') onCreateSalesInvoice?.(selectedJobs, commonCustomer);
+        else onCreateQuotation?.(selectedJobs, commonCustomer);
+    }
+
     function fmtCurrency(val) { return val && parseFloat(val) > 0 ? parseFloat(val).toFixed(2) : null; }
     function fmtDate(iso) { if (!iso) return null; try { return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return null; } }
 
@@ -665,7 +683,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
     return (
         <div style={embedded
-            ? { display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden', width: '100%', height: '100%' }
+            ? { display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden', width: '100%', minHeight: 'calc(100vh - 130px)' }
             : { position: 'fixed', inset: 0, zIndex: 900, display: 'flex', flexDirection: 'column', background: '#1a2744', overflow: 'hidden' }
         }>
 
@@ -687,14 +705,20 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                     <i className={showArchived ? 'bi bi-archive-fill' : 'bi bi-archive'}></i>
                     <span>{showArchived ? t('Hide Archived') : t('Show Archived')}</span>
                 </button>
-                {selectedCustomer && onCreateSalesInvoice && (
-                    <button type="button" onClick={() => onCreateSalesInvoice(jobs, selectedCustomer)}
+                {onCreateSalesInvoice && (
+                    <button type="button" onClick={() => {
+                        if (!selectedCustomer) { setShowCustomerRequired(true); return; }
+                        setJobSelectMode('invoice'); setSelectedJobIds(new Set()); setShowJobSelectModal(true);
+                    }}
                         style={{ background: '#1a7fe8', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                         <i className="bi bi-receipt"></i><span>{t('Create Sales Invoice')}</span>
                     </button>
                 )}
-                {selectedCustomer && onCreateQuotation && (
-                    <button type="button" onClick={() => onCreateQuotation(jobs, selectedCustomer)}
+                {onCreateQuotation && (
+                    <button type="button" onClick={() => {
+                        if (!selectedCustomer) { setShowCustomerRequired(true); return; }
+                        setJobSelectMode('quotation'); setSelectedJobIds(new Set()); setShowJobSelectModal(true);
+                    }}
                         style={{ background: '#fff', border: '1.5px solid #1a7fe8', color: '#1a7fe8', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
                         <i className="bi bi-file-earmark-text"></i><span>{t('Create Quotation')}</span>
                     </button>
@@ -1186,6 +1210,115 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                     </div>
                 </div>
             )}
+
+            {/* Customer required alert modal */}
+            {showCustomerRequired && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
+                    <div style={{ background: '#fff', borderRadius: 10, padding: 28, maxWidth: 360, width: '90%', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+                        <div style={{ fontSize: 40, marginBottom: 12 }}>
+                            <i className="bi bi-person-exclamation" style={{ color: '#f59e0b' }}></i>
+                        </div>
+                        <h5 style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, color: '#1a2744' }}>{t('Customer Required')}</h5>
+                        <p style={{ fontSize: 13, color: '#555', marginBottom: 20 }}>{t('Please select a customer from the filter bar before creating a sales invoice or quotation.')}</p>
+                        <button type="button" onClick={() => setShowCustomerRequired(false)}
+                            style={{ background: '#0052cc', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                            {t('OK')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Job card selection modal for Create Sales Invoice / Create Quotation */}
+            {showJobSelectModal && (() => {
+                const availableJobs = jobs.filter(j =>
+                    jobSelectMode === 'invoice' ? !j.order_id : !j.quotation_id
+                );
+                return (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
+                    <div style={{ background: '#fff', borderRadius: 10, padding: 24, maxWidth: 640, width: '95%', maxHeight: '80vh', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h5 style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>
+                                {jobSelectMode === 'invoice' ? t('Select Job Cards for Sales Invoice') : t('Select Job Cards for Quotation')}
+                            </h5>
+                            <button type="button" onClick={() => setShowJobSelectModal(false)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#666', lineHeight: 1 }}>×</button>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 13, color: '#666' }}>{t('Select one or more job cards to include.')}</p>
+                        <div style={{ overflowY: 'auto', flex: 1, border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                            {availableJobs.length === 0 ? (
+                                <div style={{ padding: 20, textAlign: 'center', color: '#888', fontSize: 13 }}>
+                                    {jobs.length === 0
+                                        ? t('No jobs visible on this board.')
+                                        : jobSelectMode === 'invoice'
+                                            ? t('All job cards on this board already have a sales invoice.')
+                                            : t('All job cards on this board already have a quotation.')}
+                                </div>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead>
+                                        <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #e5e7eb' }}>
+                                            <th style={{ width: 40, padding: '8px 12px' }}>
+                                                <input type="checkbox"
+                                                    checked={availableJobs.length > 0 && availableJobs.every(j => selectedJobIds.has(j.id))}
+                                                    onChange={e => setSelectedJobIds(e.target.checked ? new Set(availableJobs.map(j => j.id)) : new Set())}
+                                                />
+                                            </th>
+                                            <th style={{ padding: '8px 12px', textAlign: 'left' }}>{t('Job')}</th>
+                                            <th style={{ padding: '8px 12px', textAlign: 'left' }}>{t('Vehicle')}</th>
+                                            <th style={{ padding: '8px 12px', textAlign: 'right' }}>{t('Amount')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {availableJobs.map(job => (
+                                            <tr key={job.id}
+                                                style={{ borderBottom: '1px solid #f0f0f0', cursor: 'pointer', background: selectedJobIds.has(job.id) ? '#f0f4ff' : undefined }}
+                                                onClick={() => {
+                                                    const next = new Set(selectedJobIds);
+                                                    if (next.has(job.id)) next.delete(job.id); else next.add(job.id);
+                                                    setSelectedJobIds(next);
+                                                }}>
+                                                <td style={{ padding: '8px 12px' }} onClick={e => e.stopPropagation()}>
+                                                    <input type="checkbox" checked={selectedJobIds.has(job.id)} onChange={() => {
+                                                        const next = new Set(selectedJobIds);
+                                                        if (next.has(job.id)) next.delete(job.id); else next.add(job.id);
+                                                        setSelectedJobIds(next);
+                                                    }} />
+                                                </td>
+                                                <td style={{ padding: '8px 12px', fontWeight: 600 }}>{job.job_number || job.title || '-'}</td>
+                                                <td style={{ padding: '8px 12px' }}>{[job.vehicle_number, job.brand, job.model].filter(Boolean).join(' ') || '-'}</td>
+                                                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: '#374151' }}>{job.total_with_vat ? parseFloat(job.total_with_vat).toFixed(2) : '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        {selectedJobIds.size > 0 && (() => {
+                            const selectedTotal = availableJobs
+                                .filter(j => selectedJobIds.has(j.id))
+                                .reduce((sum, j) => sum + (parseFloat(j.total_with_vat) || 0), 0);
+                            return (
+                                <div style={{ background: '#f0f4ff', border: '1px solid #c7d7fa', borderRadius: 6, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: 13, color: '#374151' }}>
+                                        {t('Net Amount')} <span style={{ color: '#6b7280' }}>({selectedJobIds.size} {selectedJobIds.size === 1 ? t('job') : t('jobs')})</span>
+                                    </span>
+                                    <span style={{ fontSize: 16, fontWeight: 700, color: '#004ac6' }}>
+                                        {selectedTotal.toFixed(2)}
+                                    </span>
+                                </div>
+                            );
+                        })()}
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                            <button type="button" onClick={() => setShowJobSelectModal(false)}
+                                style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13 }}>{t('Cancel')}</button>
+                            <button type="button" disabled={selectedJobIds.size === 0} onClick={handleJobSelectConfirm}
+                                style={{ padding: '8px 20px', borderRadius: 6, border: 'none', background: selectedJobIds.size > 0 ? '#0052cc' : '#ccc', color: '#fff', cursor: selectedJobIds.size > 0 ? 'pointer' : 'not-allowed', fontSize: 13, fontWeight: 600 }}>
+                                {jobSelectMode === 'invoice' ? t('Create Sales Invoice') : t('Create Quotation')}{selectedJobIds.size > 0 ? ` (${selectedJobIds.size})` : ''}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                );
+            })()}
         </div>
     );
 });

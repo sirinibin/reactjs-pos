@@ -1,5 +1,5 @@
 import React, { useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { Modal, Button, Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -83,6 +83,7 @@ export function SalesType5Header({
     openSalesFromDnInForm,
     dismissDnNotification,
     openJobCard,
+    repairJobInfos,
 }) {
     const { t } = useTranslation("common");
 
@@ -113,11 +114,28 @@ export function SalesType5Header({
                 <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                     <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
                 </button>
-                {isUpdateForm && openJobCard && formData.repair_job_id && (
-                    <button type="button" onClick={() => openJobCard(formData.repair_job_id)} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid #004ac6`, backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                {openJobCard && (formData.repair_job_ids?.length > 0 ? (
+                    <><Dropdown style={{ display: 'inline-flex' }}>
+                        <Dropdown.Toggle as="button" id="jc-drop-t5" style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid #004ac6`, backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                            <i className="bi bi-tools" style={{ fontSize: '13px' }}></i>&nbsp;{formData.repair_job_ids.length}&nbsp;{t('Jobs')}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                            {formData.repair_job_ids.map((id, idx) => {
+                                const info = (repairJobInfos || []).find(j => j.id === id);
+                                return (
+                                    <Dropdown.Item key={id} onClick={() => openJobCard(id)}>
+                                        <i className="bi bi-tools me-2 text-primary"></i>
+                                        {info ? `${info.job_number || ('Job ' + (idx + 1))}` : `Job ${idx + 1}`}
+                                    </Dropdown.Item>
+                                );
+                            })}
+                        </Dropdown.Menu>
+                    </Dropdown>&nbsp;&nbsp;</>
+                ) : (isUpdateForm && formData.repair_job_id) ? (
+                    <><button type="button" onClick={() => openJobCard(formData.repair_job_id)} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid #004ac6`, backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                         <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
-                    </button>
-                )}
+                    </button>&nbsp;&nbsp;</>
+                ) : null)}
                 <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#ffffff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer", minWidth: "70px", justifyContent: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
                     {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: "14px" }}></i> {isUpdateForm ? t("Update") : t("Create")}</>}
                 </button>

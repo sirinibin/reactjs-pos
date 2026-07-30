@@ -2,6 +2,9 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from "rea
 import { useTranslation } from 'react-i18next';
 import { Modal, Spinner, Button } from "react-bootstrap";
 import { format } from "date-fns";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { enUS } from "date-fns/locale";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { getEmployeeBalanceInfo } from '../utils/employeeBalance.js';
@@ -26,6 +29,7 @@ function loadPositions() {
 function savePositions(list) {
     localStorage.setItem('workshop_positions', JSON.stringify(list));
 }
+
 
 const EmployeeCreate = forwardRef((props, ref) => {
 
@@ -554,12 +558,38 @@ const EmployeeCreate = forwardRef((props, ref) => {
                             <div style={CARD}>
                                 <SectionTitle icon="bi-arrow-left-right">{t('Opening Balance')}</SectionTitle>
                                 <p style={{ fontSize: '12px', color: '#5c6470', fontFamily: '"Inter", sans-serif', marginBottom: '12px' }}>
-                                    {t('If this employee is already owed unpaid salary from your previous system, enter that amount and the date as of which it applies. Leave the amount as 0 if fully settled. This system will only track salary due from that date onward.')}
+                                    {t('If this employee has an outstanding balance from your previous system, enter the amount and date. Leave as 0 if fully settled.')}
                                     {formData.opening_balance_posted && (' ' + t('(An opening balance entry has already been posted for this employee — changing the values below will update it.)'))}
                                 </p>
                                 <div className="row g-3">
+                                    <div className="col-12">
+                                        <Label>{t('Balance Direction')}</Label>
+                                        <div style={{ display: 'flex', gap: '24px', marginTop: '6px' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="opening_balance_type"
+                                                    value="payable"
+                                                    checked={(formData.opening_balance_type || 'payable') === 'payable'}
+                                                    onChange={() => setField('opening_balance_type', 'payable')}
+                                                />
+                                                {t('Store owes Employee')}
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="opening_balance_type"
+                                                    value="receivable"
+                                                    checked={formData.opening_balance_type === 'receivable'}
+                                                    onChange={() => setField('opening_balance_type', 'receivable')}
+                                                />
+                                                {t('Employee owes Store')}
+                                            </label>
+                                        </div>
+                                        <ErrMsg>{errors.opening_balance_type}</ErrMsg>
+                                    </div>
                                     <div className="col-md-6">
-                                        <Label>{t('Opening Balance (Amount Already Owed)')}</Label>
+                                        <Label>{t('Opening Balance Amount')}</Label>
                                         <input
                                             value={formData.opening_balance === '' || formData.opening_balance === undefined || formData.opening_balance === null ? '' : formData.opening_balance}
                                             type="number" step="0.01" min="0"
@@ -572,11 +602,17 @@ const EmployeeCreate = forwardRef((props, ref) => {
                                     </div>
                                     <div className="col-md-6">
                                         <Label>{t('As Of Date')}</Label>
-                                        <input
-                                            value={formData.opening_balance_date ? new Date(formData.opening_balance_date).toISOString().slice(0, 10) : ''}
-                                            type="date"
-                                            onChange={(e) => setField("opening_balance_date", e.target.value ? new Date(e.target.value).toISOString() : '')}
-                                            style={INPUT} />
+                                        <DatePicker
+                                            selected={formData.opening_balance_date ? new Date(formData.opening_balance_date) : null}
+                                            onChange={(value) => setField('opening_balance_date', value)}
+                                            showTimeSelect
+                                            timeIntervals={1}
+                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                            locale={enUS}
+                                            placeholderText={t('Select date & time')}
+                                            isClearable
+                                            className={`form-control form-control-sm${errors.opening_balance_date ? " is-invalid" : ""}`}
+                                        />
                                         <ErrMsg>{errors.opening_balance_date}</ErrMsg>
                                         <small className="text-muted">{t('This system starts tracking salary due from this date')}</small>
                                     </div>

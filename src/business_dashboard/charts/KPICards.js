@@ -317,6 +317,7 @@ export default function KPICards({
     const totalQtnSales          = quotationStats?.invoice_total_sales || 0;
     const totalQtnSalesReturn    = qtnSalesReturnStats?.total_quotation_sales_return || 0;
     const totalExpense            = expenseStats?.total || 0;
+    const totalSalaryPaid         = store?.settings?.enable_employee_module ? (expenseStats?.salary_paid || 0) : 0;
     const totalPurchase           = purchaseStats?.total_purchase || 0;
     const totalPurchaseReturn     = purchaseReturnStats?.total_purchase_return || 0;
     const totalDepositPurchaseFund    = depositStats?.purchase_fund || 0;
@@ -350,7 +351,7 @@ export default function KPICards({
     const expenseTotal = (disablePurchasesOnAccounts
         ? (totalExpense - totalDepositPurchaseFund + totalAccountedPurchase - totalAccountedPurchaseReturn)
         : (totalExpense + totalPurchase - totalPurchaseReturn))
-        + cashDiscountAdj + commissionAdj;
+        + cashDiscountAdj + commissionAdj + totalSalaryPaid;
 
     const revenueVat        = revenue * vatPercent / (100 + vatPercent);
     const revenueWithoutVAT = revenue - revenueVat;
@@ -381,6 +382,7 @@ export default function KPICards({
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
         { label: "Expenses", value: `${fmt(totalExpense)}` },
+        ...(store?.settings?.enable_employee_module ? [{ label: "Salary Paid", value: `+ ${fmt(totalSalaryPaid)}` }] : []),
         { label: "Purchase Return Fund Rcvd", value: `− ${fmt(totalDepositPurchaseFund)}` },
         { label: "Accounted Purchases", value: `+ ${fmt(totalAccountedPurchase)}` },
         { label: "Accounted Pur. Returns", value: `− ${fmt(totalAccountedPurchaseReturn)}` },
@@ -399,6 +401,7 @@ export default function KPICards({
         { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
     ] : [
         { label: "Expenses", value: `${fmt(totalExpense)}` },
+        ...(store?.settings?.enable_employee_module ? [{ label: "Salary Paid", value: `+ ${fmt(totalSalaryPaid)}` }] : []),
         { label: "Purchases", value: `+ ${fmt(totalPurchase)}` },
         { label: "Purchase Returns", value: `− ${fmt(totalPurchaseReturn)}` },
         { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },

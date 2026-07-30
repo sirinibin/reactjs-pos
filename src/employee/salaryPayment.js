@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from 'react-i18next';
 import { Modal, Spinner } from "react-bootstrap";
 import DatePicker from "react-datepicker";
@@ -38,18 +38,57 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(employeeId, paymentId) {
-            formData = getDefaultFormData(employeeId, storeCountryCode);
+            formData = getDefaultFormData(employeeId || "", storeCountryCode);
             setFormData({ ...formData });
             setErrors({});
             setEmployee({});
             setProcessing(false);
-            getEmployee(employeeId, !paymentId);
-            if (paymentId) {
-                getSalaryPayment(paymentId, employeeId);
-            }
+            setEmpSearchQuery("");
+            setEmpSearchResults([]);
+            // Show the search input when no employee is pre-selected and this is a new payment
+            setShowEmpSearch(!employeeId && !paymentId);
+
+            if (employeeId) getEmployee(employeeId, !paymentId);
+            if (paymentId) getSalaryPayment(paymentId, employeeId);
             SetShow(true);
         },
     }));
+
+    function searchEmployees(query) {
+        clearTimeout(empSearchTimer.current);
+        setEmpSearchQuery(query);
+        if (!query.trim()) { setEmpSearchResults([]); return; }
+        empSearchTimer.current = setTimeout(() => {
+            setIsSearchingEmps(true);
+            const searchFilters = { search: query };
+            if (localStorage.getItem("store_id")) searchFilters.store_id = localStorage.getItem("store_id");
+            fetch("/v1/employee?" + ObjectToSearchQueryParams(searchFilters) + "&select=id,name,salary,salary_day,account&limit=10&page=1", {
+                headers: { Authorization: localStorage.getItem("access_token") },
+            })
+                .then(async r => { const d = r.ok && await r.json(); return d && d.result; })
+                .then(results => { setIsSearchingEmps(false); setEmpSearchResults(results || []); })
+                .catch(() => setIsSearchingEmps(false));
+        }, 300);
+    }
+
+    function onSelectEmployee(emp) {
+        const isNewPayment = !formData.id;
+        formData.employee_id = emp.id;
+        setFormData({ ...formData });
+        setShowEmpSearch(false);
+        setEmpSearchQuery("");
+        setEmpSearchResults([]);
+        getEmployee(emp.id, isNewPayment);
+    }
+
+    function clearEmployee() {
+        setEmployee({});
+        setEmpSearchQuery("");
+        setEmpSearchResults([]);
+        setShowEmpSearch(true);
+        formData.employee_id = "";
+        setFormData({ ...formData });
+    }
 
     const { t } = useTranslation('common');
     let [errors, setErrors] = useState({});
@@ -61,6 +100,13 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
     // picked in this form reflects the store's timezone rather than
     // whatever timezone the browser happens to be in.
     const [storeCountryCode, setStoreCountryCode] = useState("");
+
+    // Employee search state
+    const [showEmpSearch, setShowEmpSearch] = useState(false);
+    const [empSearchQuery, setEmpSearchQuery] = useState("");
+    const [empSearchResults, setEmpSearchResults] = useState([]);
+    const [isSearchingEmps, setIsSearchingEmps] = useState(false);
+    const empSearchTimer = useRef(null);
 
     useEffect(() => {
         const storeId = localStorage.getItem("store_id");
@@ -132,6 +178,7 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
                 };
                 setFormData({ ...formData });
                 setErrors({});
+                setShowEmpSearch(false);
                 getEmployee(formData.employee_id, false);
             })
             .catch(error => {
@@ -144,6 +191,9 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
         event.preventDefault();
 
         let validationErrors = {};
+        if (!formData.employee_id) {
+            validationErrors.employee_id = t("Please select an employee");
+        }
         const amount = Number(formData.amount);
         if (formData.amount === '' || formData.amount === undefined || formData.amount === null || !Number.isFinite(amount) || amount <= 0) {
             validationErrors.amount = t("Amount must be greater than 0");
@@ -240,31 +290,6 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
                 </Modal.Header>
 
                 <Modal.Body style={{ padding: '24px' }}>
-                    {/* Employee summary */}
-                    {employee.name && (
-                        <div style={{ background: '#f0f2f4', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <strong style={{ fontSize: '14px', fontFamily: '"Inter", sans-serif' }}>{employee.name}</strong>
-                                    <div style={{ fontSize: '12px', color: '#54647a' }}>
-                                        {t('Salary')}: {fmtCurrency(employee.salary)} | {t('Salary Day')}: {employee.salary_day}
-                                    </div>
-                                </div>
-                                {employee.account && (
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '11px', color: '#54647a', textTransform: 'uppercase' }}>{getEmployeeBalanceInfo(employee.account, t).label}</div>
-                                        <div style={{ fontSize: '16px', fontWeight: 700, color: getEmployeeBalanceInfo(employee.account, t).colorHex }}>
-                                            {fmtCurrency(getEmployeeBalanceInfo(employee.account, t).amount)}
-                                        </div>
-                                        {getEmployeeBalanceInfo(employee.account, t).suffix && (
-                                            <div style={{ fontSize: '11px', color: '#54647a' }}>{getEmployeeBalanceInfo(employee.account, t).suffix}</div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
                     {totalErrors > 0 && (
                         <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px' }}>
                             <ul style={{ margin: 0, paddingLeft: '18px' }}>
@@ -277,6 +302,81 @@ const EmployeeSalaryPaymentCreate = forwardRef((props, ref) => {
 
                     <form onSubmit={handleSave}>
                         <div className="row g-3">
+                            {/* Employee selector — always at top, always editable */}
+                            <div className="col-12">
+                                <Label required>{t('Employee')}</Label>
+                                {!showEmpSearch && employee.name ? (
+                                    // Employee selected — show summary chip with "Change" button
+                                    <div style={{ background: '#f0f2f4', borderRadius: '8px', padding: '12px 16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <strong style={{ fontSize: '14px', fontFamily: '"Inter", sans-serif' }}>{employee.name}</strong>
+                                                <div style={{ fontSize: '12px', color: '#54647a' }}>
+                                                    {t('Salary')}: {fmtCurrency(employee.salary)} | {t('Salary Day')}: {employee.salary_day}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                {employee.account && (
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '11px', color: '#54647a', textTransform: 'uppercase' }}>{getEmployeeBalanceInfo(employee.account, t).label}</div>
+                                                        <div style={{ fontSize: '16px', fontWeight: 700, color: getEmployeeBalanceInfo(employee.account, t).colorHex }}>
+                                                            {fmtCurrency(getEmployeeBalanceInfo(employee.account, t).amount)}
+                                                        </div>
+                                                        {getEmployeeBalanceInfo(employee.account, t).suffix && (
+                                                            <div style={{ fontSize: '11px', color: '#54647a' }}>{getEmployeeBalanceInfo(employee.account, t).suffix}</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={clearEmployee}
+                                                    style={{ background: 'none', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '4px 10px', fontSize: '12px', color: '#54647a', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                >
+                                                    <i className="bi bi-arrow-repeat me-1"></i>{t('Change')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // Employee search input
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            autoFocus={showEmpSearch}
+                                            value={empSearchQuery}
+                                            onChange={e => searchEmployees(e.target.value)}
+                                            placeholder={t('Search by name...')}
+                                            style={{ ...INPUT, paddingRight: '32px' }}
+                                        />
+                                        {isSearchingEmps && (
+                                            <Spinner as="span" animation="border" size="sm" style={{ position: 'absolute', right: '10px', top: '9px', color: '#004ac6' }} />
+                                        )}
+                                        {empSearchResults.length > 0 && (
+                                            <div style={{ border: '1px solid #c3c6d7', borderRadius: '4px', marginTop: '4px', maxHeight: '200px', overflowY: 'auto', background: '#fff', position: 'absolute', width: '100%', zIndex: 1050 }}>
+                                                {empSearchResults.map(emp => (
+                                                    <div
+                                                        key={emp.id}
+                                                        onClick={() => onSelectEmployee(emp)}
+                                                        style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #e8eaed', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                                    >
+                                                        <div>
+                                                            <div style={{ fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', color: '#191c1e' }}>{emp.name}</div>
+                                                            {emp.salary > 0 && <div style={{ fontSize: '12px', color: '#54647a' }}>{t('Salary')}: {fmtCurrency(emp.salary)}</div>}
+                                                        </div>
+                                                        <i className="bi bi-chevron-right" style={{ color: '#54647a' }}></i>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {empSearchQuery.trim() && !isSearchingEmps && empSearchResults.length === 0 && (
+                                            <div style={{ padding: '6px 0', fontSize: '12px', color: '#54647a', fontFamily: '"Inter", sans-serif' }}>{t('No employees found')}</div>
+                                        )}
+                                    </div>
+                                )}
+                                <ErrMsg>{errors.employee_id}</ErrMsg>
+                            </div>
+
                             <div className="col-md-6">
                                 <Label required>{t('Amount')}</Label>
                                 <input

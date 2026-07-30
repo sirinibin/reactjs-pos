@@ -112,6 +112,16 @@ function Sidebar(props) {
         return true;
     });
 
+    // Build child-item map so children render inline beneath their parent
+    const childrenByParent = {};
+    visibleItems.forEach(item => {
+        if (item.parentId) {
+            if (!childrenByParent[item.parentId]) childrenByParent[item.parentId] = [];
+            childrenByParent[item.parentId].push(item);
+        }
+    });
+    const topLevelItems = visibleItems.filter(item => !item.parentId);
+
     return (
         <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'} style={{ overflowY: 'scroll' }}>
             <div className="sidebar-content js-simplebar">
@@ -120,17 +130,31 @@ function Sidebar(props) {
                 </div>
 
                 <ul className="sidebar-nav">
-                    {visibleItems.map(item => (
-                        <li
-                            key={item.id}
-                            onClick={() => toggleActive(item.path)}
-                            className={activeTab === item.path ? "sidebar-item active" : "sidebar-item"}
-                        >
-                            <Link to={item.path} className="sidebar-link">
-                                <i className={`bi ${item.icon}`} />
-                                <span className="align-middle">{t(item.label)}</span>
-                            </Link>
-                        </li>
+                    {topLevelItems.map(item => (
+                        <React.Fragment key={item.id}>
+                            <li
+                                onClick={() => toggleActive(item.path)}
+                                className={activeTab === item.path ? "sidebar-item active" : "sidebar-item"}
+                            >
+                                <Link to={item.path} className="sidebar-link">
+                                    <i className={`bi ${item.icon}`} />
+                                    <span className="align-middle">{t(item.label)}</span>
+                                </Link>
+                            </li>
+                            {childrenByParent[item.id] && childrenByParent[item.id].map(child => (
+                                <li
+                                    key={child.id}
+                                    onClick={() => toggleActive(child.path)}
+                                    className={activeTab === child.path ? "sidebar-item active" : "sidebar-item"}
+                                    style={{ paddingLeft: '16px' }}
+                                >
+                                    <Link to={child.path} className="sidebar-link" style={{ fontSize: '0.9em' }}>
+                                        <i className={`bi ${child.icon}`} style={{ opacity: 0.75 }} />
+                                        <span className="align-middle">{t(child.label)}</span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </React.Fragment>
                     ))}
 
                     {/* Settings link — always at the bottom */}

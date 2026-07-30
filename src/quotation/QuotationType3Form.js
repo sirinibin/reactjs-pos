@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Spinner, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -66,7 +66,9 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const timerRef = useRef();
     const reCalculateRef = useRef(null);
     const previewRef = useRef();
+    const repairJobIdsRef = useRef(null);
     const [store, setStore] = useState({});
+    const [repairJobInfos, setRepairJobInfos] = useState([]);
     const storeId = localStorage.getItem("store_id");
     const headers = useMemo(() => ({ "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") }), []);
 
@@ -75,12 +77,16 @@ const QuotationType3Form = forwardRef((props, ref) => {
             const fd = makeFormData();
             fd.store_id = storeId;
             fd.store_name = localStorage.getItem("store_name") || "";
+            setRepairJobInfos([]);
+            repairJobIdsRef.current = null;
             if (prefill) {
                 if (prefill.type) fd.type = prefill.type;
                 if (prefill.customer_id) { fd.customer_id = prefill.customer_id; fd.customer_name = prefill.customer_name || ""; }
                 if (prefill.vehicle_id) { fd.vehicle_id = prefill.vehicle_id; fd.vehicle_snapshot = prefill.vehicle_snapshot || undefined; }
                 if (prefill.km_driven != null) fd.km_driven = prefill.km_driven;
                 if (prefill.repair_job_id) fd.repair_job_id = prefill.repair_job_id;
+                if (prefill.repair_job_ids?.length) { fd.repair_job_ids = prefill.repair_job_ids; repairJobIdsRef.current = prefill.repair_job_ids; }
+                if (prefill.repair_job_infos?.length) setRepairJobInfos(prefill.repair_job_infos);
             }
             setFormData({ ...fd });
             setSelectedProducts(prefill?.products || []);
@@ -191,6 +197,12 @@ const QuotationType3Form = forwardRef((props, ref) => {
                     .catch(() => setSelectedCustomers([{ id: q.customer_id, name: q.customer_name }]));
             }
             if (q.vehicle_id) setSelectedVehicle({ id: q.vehicle_id, ...q.vehicle_snapshot });
+            if (q.repair_job_ids?.length) {
+                Promise.all(q.repair_job_ids.map(jid =>
+                    fetch(`/v1/repair-job/${jid}?search[store_id]=${storeId}`, { headers })
+                        .then(r => r.json()).then(d => d.result ? { id: jid, job_number: d.result.job_number, customer_name: d.result.customer_name } : null).catch(() => null)
+                )).then(infos => setRepairJobInfos(infos.filter(Boolean)));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -372,6 +384,10 @@ const QuotationType3Form = forwardRef((props, ref) => {
             formData.payments_input = [];
         }
 
+        if (repairJobIdsRef.current?.length) {
+            formData.repair_job_ids = repairJobIdsRef.current;
+        }
+
         const endpoint = formData.id ? `/v1/quotation/${formData.id}` : "/v1/quotation";
         const method = formData.id ? "PUT" : "POST";
         setIsSubmitting(true);
@@ -438,7 +454,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     return (
         <>
-        <style>{`.qt3-modal-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: 1080 !important; } .order-preview-wrap { z-index: 1100 !important; }`}</style>
+        <style>{`.qt3-modal-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: 1080 !important; } .order-preview-wrap { z-index: 1300 !important; }`}</style>
         <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="qt3-modal" className="qt3-modal-wrap">
             <Modal.Header style={{ backgroundColor: "#fff", borderBottom: `1px solid ${borderColor}`, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                 <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 700, fontFamily: "'Hanken Grotesk', sans-serif", color: "#191c1e" }}>
@@ -457,11 +473,28 @@ const QuotationType3Form = forwardRef((props, ref) => {
                     <button type="button" disabled={!isUpdateForm} onClick={() => previewRef.current?.open(formData, undefined, "quotation")} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                         <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
                     </button>
-                    {isUpdateForm && props.openJobCard && formData.repair_job_id && (
+                    {props.openJobCard && (formData.repair_job_ids?.length > 0 ? (
+                        <Dropdown>
+                            <Dropdown.Toggle as="button" id="jc-drop-qt3" style={{ display: "flex", alignItems: "center", gap: "4px", border: "1px solid #004ac6", backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                                <i className="bi bi-tools" style={{ fontSize: "13px" }}></i>&nbsp;{formData.repair_job_ids.length}&nbsp;{t("Jobs")}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                                {formData.repair_job_ids.map((id, idx) => {
+                                    const info = repairJobInfos.find(j => j.id === id);
+                                    return (
+                                        <Dropdown.Item key={id} onClick={() => props.openJobCard(id)}>
+                                            <i className="bi bi-tools me-2 text-primary"></i>
+                                            {info ? `${info.job_number || ('Job ' + (idx + 1))}${info.customer_name ? ' · ' + info.customer_name : ''}` : `Job ${idx + 1}`}
+                                        </Dropdown.Item>
+                                    );
+                                })}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    ) : (isUpdateForm && formData.repair_job_id) ? (
                         <button type="button" onClick={() => props.openJobCard(formData.repair_job_id)} style={{ display: "flex", alignItems: "center", gap: "4px", border: "1px solid #004ac6", backgroundColor: "#f0f4ff", color: "#004ac6", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                             <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
                         </button>
-                    )}
+                    ) : null)}
                     <button type="button" onClick={(e) => handleCreate(e)} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                         {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {isUpdateForm ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation"))}</>}
                     </button>

@@ -68,6 +68,7 @@ import BusinessDashboard from './business_dashboard/index.js';
 import SidebarSettings from './sidebar_settings/index.js';
 import AutoMobileDashboard from './automobile_dashboard/index.js';
 import EmployeeIndex from './employee/index.js';
+import SalaryIndex from './employee/salaryIndex.js';
 import VehicleIndex from './vehicle/index.js';
 import RepairJobIndex from './repair_job/index.js';
 
@@ -932,6 +933,19 @@ function Dashboard() {
                 </div>
             </Route>
 
+            <Route path="/dashboard/salaries">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SalaryIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
             <Route path="/dashboard/vehicles">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
@@ -950,7 +964,7 @@ function Dashboard() {
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
-                        <main className="content">
+                        <main className="content" style={{ padding: 0 }}>
                             <RepairJobIndex showToastMessage={showToastMessage} defaultMode="board" />
                         </main>
                         <Footer />

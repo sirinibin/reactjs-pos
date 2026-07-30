@@ -7,7 +7,27 @@ import Resizer from "react-image-file-resizer";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { toStoreLocalDate, fromStoreLocalDate } from '../utils/timezone.js';
 //import { DebounceInput } from 'react-debounce-input';
+
+// Formats a UTC ISO string as a datetime-local input value (YYYY-MM-DDTHH:mm)
+// in the store's country timezone.
+function toDatetimeLocalValue(isoString, countryCode) {
+    const local = toStoreLocalDate(isoString, countryCode);
+    if (!local) return "";
+    const pad = n => String(n).padStart(2, '0');
+    return `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}`;
+}
+
+// Converts a datetime-local input value (YYYY-MM-DDTHH:mm) to a UTC ISO
+// string using the store's country timezone.
+function fromDatetimeLocalValue(datetimeLocal, countryCode) {
+    if (!datetimeLocal) return null;
+    const [datePart, timePart = '00:00'] = datetimeLocal.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    return fromStoreLocalDate(new Date(year, month - 1, day, hours, minutes, 0), countryCode);
+}
 
 const StoreCreate = forwardRef((props, ref) => {
 
@@ -785,6 +805,7 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
         { id: 'designs', label: 'Designs', icon: 'bi-palette' },
+        { id: 'opening_balances', label: 'Opening Balances', icon: 'bi-wallet2' },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
     const ERROR_TAB_MAP = {
@@ -801,6 +822,7 @@ const StoreCreate = forwardRef((props, ref) => {
         if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
         if (key.startsWith('national_address_')) return 'address';
         if (key.startsWith('bank_')) return 'bank_account';
+        if (key.startsWith('settings.cash_opening_balance') || key.startsWith('settings.bank_opening_balance')) return 'opening_balances';
         return 'general';
     };
     const allErrors = Object.entries(errors).filter(([, v]) => v);
@@ -5980,6 +6002,91 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                </div>)}
+
+                                {activeTab === 'opening_balances' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-wallet2" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Opening Balances</h3></div>
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div style={{ color: '#6c757d', fontSize: '12px', marginBottom: '16px' }}>
+                                            Enter the cash and bank balances already held when you joined this system. These are posted as the starting point in the Cash and Bank ledgers.
+                                        </div>
+                                        <div className="row">
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Cash A/C Opening Balance</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="form-control form-control-sm"
+                                                    value={formData.settings.cash_opening_balance || ""}
+                                                    onChange={e => {
+                                                        errors["settings.cash_opening_balance"] = "";
+                                                        errors["settings.cash_opening_balance_date"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.settings.cash_opening_balance = parseFloat(e.target.value) || 0;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                {errors["settings.cash_opening_balance"] && (
+                                                    <div style={{ color: "red", fontSize: '12px' }}>{errors["settings.cash_opening_balance"]}</div>
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>As of Date &amp; Time (Cash)</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    className="form-control form-control-sm"
+                                                    value={toDatetimeLocalValue(formData.settings.cash_opening_balance_date, formData.country_code)}
+                                                    onChange={e => {
+                                                        errors["settings.cash_opening_balance_date"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.settings.cash_opening_balance_date = fromDatetimeLocalValue(e.target.value, formData.country_code);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                {errors["settings.cash_opening_balance_date"] && (
+                                                    <div style={{ color: "red", fontSize: '12px' }}>{errors["settings.cash_opening_balance_date"]}</div>
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Bank A/C Opening Balance</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="form-control form-control-sm"
+                                                    value={formData.settings.bank_opening_balance || ""}
+                                                    onChange={e => {
+                                                        errors["settings.bank_opening_balance"] = "";
+                                                        errors["settings.bank_opening_balance_date"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.settings.bank_opening_balance = parseFloat(e.target.value) || 0;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                {errors["settings.bank_opening_balance"] && (
+                                                    <div style={{ color: "red", fontSize: '12px' }}>{errors["settings.bank_opening_balance"]}</div>
+                                                )}
+                                            </div>
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>As of Date &amp; Time (Bank)</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    className="form-control form-control-sm"
+                                                    value={toDatetimeLocalValue(formData.settings.bank_opening_balance_date, formData.country_code)}
+                                                    onChange={e => {
+                                                        errors["settings.bank_opening_balance_date"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.settings.bank_opening_balance_date = fromDatetimeLocalValue(e.target.value, formData.country_code);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                {errors["settings.bank_opening_balance_date"] && (
+                                                    <div style={{ color: "red", fontSize: '12px' }}>{errors["settings.bank_opening_balance_date"]}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>)}
 
                                 {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">

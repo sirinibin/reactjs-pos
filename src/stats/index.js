@@ -42,6 +42,46 @@ const StatsIndex = forwardRef((props, ref) => {
     const [searchParams, setSearchParams] = useState({});
     let [store, setStore] = useState({});
 
+    // ── Section visibility (localStorage-persisted) ────────────────────────
+    const defaultSections = useMemo(() => [
+        { key: "profit_loss", label: "Profit / Loss Statement", visible: true },
+        { key: "overall_summary", label: "Overall Summary", visible: false },
+        { key: "sales", label: "Sales Summary", visible: true },
+        { key: "sales_return", label: "Sales Return Summary", visible: true },
+        { key: "purchase", label: "Purchase Summary", visible: true },
+        { key: "purchase_return", label: "Purchase Return Summary", visible: true },
+        { key: "expense", label: "Expense Summary", visible: true },
+        { key: "quotation", label: "Quotation Summary", visible: true },
+        { key: "qtn_sales", label: "Qtn. Sales Summary", visible: true },
+        { key: "qtn_sales_return", label: "Qtn. Sales Return Summary", visible: true },
+        { key: "receivables", label: "Receivables Summary", visible: true },
+        { key: "payables", label: "Payables Summary", visible: true },
+        { key: "revenue_forecast", label: "Revenue Forecast (Next 6 Months)", visible: true },
+        { key: "expense_forecast", label: "Expense Forecast (Next 6 Months)", visible: true },
+        { key: "profit_forecast", label: "Profit / Loss Forecast (Next 6 Months)", visible: true },
+    ], []);
+    const [sections, setSections] = useState(defaultSections);
+    const [showSectionSettings, setShowSectionSettings] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem("stats_section_settings");
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                const allPresent = defaultSections.every(s => parsed.find(p => p.key === s.key));
+                if (allPresent) {
+                    setSections(parsed);
+                }
+            } catch (e) {
+                localStorage.removeItem("stats_section_settings");
+            }
+        }
+    }, [defaultSections]);
+
+    useEffect(() => {
+        localStorage.setItem("stats_section_settings", JSON.stringify(sections));
+    }, [sections]);
+
 
 
 
@@ -587,6 +627,7 @@ const StatsIndex = forwardRef((props, ref) => {
     let [totalExpenseBank, setTotalExpenseBank] = useState(0.00);
     let [totalExpensePurchaseFund, setTotalExpensePurchaseFund] = useState(0.00);
     let [totalExpenseVat, setTotalExpenseVat] = useState(0.00);
+    let [totalSalaryPaid, setTotalSalaryPaid] = useState(0.00);
     const [expenseStatsOpen, setExpenseStatsOpen] = useState(true);
 
     const listExpense = useCallback(() => {
@@ -629,6 +670,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 setTotalExpenseBank(data.meta.bank || 0);
                 setTotalExpensePurchaseFund(data.meta.purchase_fund || 0);
                 setTotalExpenseVat(data.meta.vat || 0);
+                setTotalSalaryPaid(data.meta.salary_paid || 0);
             })
             .catch((error) => {
                 console.log(error);
@@ -1013,7 +1055,8 @@ const StatsIndex = forwardRef((props, ref) => {
     const profitLossExpenseNum = (disablePurchasesOnAccounts
         ? (totalExpense || 0) - (totalDepositPurchaseFund || 0) + (totalAccountedPurchase || 0) - (totalAccountedPurchaseReturn || 0)
         : (totalExpense || 0) + (totalPurchase || 0) - (totalPurchaseReturn || 0))
-        + cashDiscountExpenseAdj + commissionExpenseAdj;
+        + cashDiscountExpenseAdj + commissionExpenseAdj
+        + (store.settings?.enable_employee_module ? (totalSalaryPaid || 0) : 0);
     const profitLossNum = profitLossRevenueNum - profitLossExpenseNum;
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
@@ -1028,45 +1071,6 @@ const StatsIndex = forwardRef((props, ref) => {
         ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
         ...(toDateValue ? { 'To Date': toDateValue } : {}),
     };
-
-    const defaultSections = useMemo(() => [
-        { key: "profit_loss", label: "Profit / Loss Statement", visible: true },
-        { key: "overall_summary", label: "Overall Summary", visible: false },
-        { key: "sales", label: "Sales Summary", visible: true },
-        { key: "sales_return", label: "Sales Return Summary", visible: true },
-        { key: "purchase", label: "Purchase Summary", visible: true },
-        { key: "purchase_return", label: "Purchase Return Summary", visible: true },
-        { key: "expense", label: "Expense Summary", visible: true },
-        { key: "quotation", label: "Quotation Summary", visible: true },
-        { key: "qtn_sales", label: "Qtn. Sales Summary", visible: true },
-        { key: "qtn_sales_return", label: "Qtn. Sales Return Summary", visible: true },
-        { key: "receivables", label: "Receivables Summary", visible: true },
-        { key: "payables", label: "Payables Summary", visible: true },
-        { key: "revenue_forecast", label: "Revenue Forecast (Next 6 Months)", visible: true },
-        { key: "expense_forecast", label: "Expense Forecast (Next 6 Months)", visible: true },
-        { key: "profit_forecast", label: "Profit / Loss Forecast (Next 6 Months)", visible: true },
-    ], []);
-    const [sections, setSections] = useState(defaultSections);
-    const [showSectionSettings, setShowSectionSettings] = useState(false);
-
-    useEffect(() => {
-        const saved = localStorage.getItem("stats_section_settings");
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                const allPresent = defaultSections.every(s => parsed.find(p => p.key === s.key));
-                if (allPresent) {
-                    setSections(parsed);
-                }
-            } catch (e) {
-                localStorage.removeItem("stats_section_settings");
-            }
-        }
-    }, [defaultSections]);
-
-    useEffect(() => {
-        localStorage.setItem("stats_section_settings", JSON.stringify(sections));
-    }, [sections]);
 
     const handleToggleSection = (index) => {
         setSections(prev => {
@@ -1297,6 +1301,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                                 ] : []),
                                                 { label: "Sales Commission", value: `+ ${trimTo2Decimals(totalSalesCommission)}` },
                                                 { label: "Sales Return Commission", value: `− ${trimTo2Decimals(totalSalesReturnCommission)}` },
+                                                ...(store.settings?.enable_employee_module ? [{ label: "Salary Paid", value: `+ ${trimTo2Decimals(totalSalaryPaid)}` }] : []),
                                                 { divider: true, label: "= Expense (with VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseNum)}`, bold: true, color: "#ffa8a8" },
                                                 { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossExpenseVatNum)}` },
                                                 { divider: true, label: "= Expense (without VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseWithoutVATNum)}`, bold: true, color: "#ffa8a8" },

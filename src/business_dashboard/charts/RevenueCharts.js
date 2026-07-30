@@ -31,6 +31,7 @@ function buildMap(arr, dateFn, valueFn) {
 //   Expense = disablePurchasesOnAccounts
 //             ? Expenses − DepositPurchaseFund + AccountedPurchases − AccountedPurchaseReturns
 //             : Expenses + Purchases − PurchaseReturns
+//           + (enableEmployeeModule ? SalaryPaid : 0)
 //   Profit  = Revenue − Expense
 function fmtT(n) {
     if (!n && n !== 0) return "0.00";
@@ -40,11 +41,13 @@ function fmtT(n) {
 
 export function MonthlyRevenueTrendChart({
     store, filters, orders, returns, purchases, purchaseReturns, expenses,
+    salaryPaid = [],
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
     const qtnInvoiceAccounting       = store?.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
+    const enableEmployeeModule       = store?.settings?.enable_employee_module === true;
     const vatPercent                 = store?.vat_percent || 15;
 
     const data = useMemo(() => {
@@ -53,6 +56,7 @@ export function MonthlyRevenueTrendChart({
         const purchaseMap     = buildMap(purchases,                p => p.date, p => p.net_total || 0);
         const purRetMap       = buildMap(purchaseReturns,          p => p.date, p => p.net_total || 0);
         const expenseMap      = buildMap(expenses,                 e => e.date, e => e.amount    || 0);
+        const salaryPaidMap   = buildMap(salaryPaid,              e => e.date, e => e.amount    || 0);
         // Filter for type="invoice" client-side — mirrors GetQuotationInvoiceStats logic exactly
         const quotationInvoices = (quotations || []).filter(q => q.type === "invoice");
         const qtnInvMap       = buildMap(quotationInvoices,        q => q.date, q => q.net_total || 0);
@@ -86,6 +90,7 @@ export function MonthlyRevenueTrendChart({
             ...Object.keys(purchaseMap),
             ...Object.keys(purRetMap),
             ...Object.keys(expenseMap),
+            ...(enableEmployeeModule ? Object.keys(salaryPaidMap) : []),
             ...(qtnInvoiceAccounting ? [...Object.keys(qtnInvMap), ...Object.keys(qtnRetMap)] : []),
             ...(disablePurchasesOnAccounts ? [...Object.keys(acctPurMap), ...Object.keys(acctPurRetMap), ...Object.keys(depositPurchaseFundMap)] : []),
         ])).sort();
@@ -105,9 +110,10 @@ export function MonthlyRevenueTrendChart({
             const ret        = returnMap[k]   || 0;
             const qtnInv     = qtnInvMap[k]   || 0;
             const qtnRet     = qtnRetMap[k]   || 0;
-            const exp        = expenseMap[k]  || 0;
-            const pur        = purchaseMap[k] || 0;
-            const purRet     = purRetMap[k]   || 0;
+            const exp        = expenseMap[k]    || 0;
+            const sal        = enableEmployeeModule ? (salaryPaidMap[k] || 0) : 0;
+            const pur        = purchaseMap[k]   || 0;
+            const purRet     = purRetMap[k]     || 0;
             const depFund    = depositPurchaseFundMap[k] || 0;
             const acctPur    = acctPurMap[k]    || 0;
             const acctPurRet = acctPurRetMap[k] || 0;
@@ -131,7 +137,7 @@ export function MonthlyRevenueTrendChart({
             const expense = (disablePurchasesOnAccounts
                 ? exp - depFund + acctPur - acctPurRet
                 : exp + pur - purRet)
-                + cashDiscountAdj;
+                + cashDiscountAdj + sal;
 
             const profit           = revenue - expense;
             const profitVat        = profit * vatPercent / (100 + vatPercent);
@@ -168,6 +174,7 @@ export function MonthlyRevenueTrendChart({
                     { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
                     { label: "Qtn. Sales Ret. C.D.",     value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
+                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
                 { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
                 { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
@@ -183,6 +190,7 @@ export function MonthlyRevenueTrendChart({
                     { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
                     { label: "Qtn. Sales Ret. C.D.",     value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
+                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
                 { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
                 { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
@@ -211,9 +219,9 @@ export function MonthlyRevenueTrendChart({
         });
 
         return [header, ...rows];
-    }, [orders, returns, purchases, purchaseReturns, expenses,
+    }, [orders, returns, purchases, purchaseReturns, expenses, salaryPaid,
         quotations, quotationSalesReturns, accountedPurchases, accountedPurchaseReturns,
-        customerDeposits, qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent, store, filters]);
+        customerDeposits, qtnInvoiceAccounting, disablePurchasesOnAccounts, enableEmployeeModule, vatPercent, store, filters]);
         // Note: cash discount fields (cash_discount on each record) are derived from the same
         // arrays above, so no additional deps needed.
 
