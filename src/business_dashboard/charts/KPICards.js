@@ -261,7 +261,7 @@ function ValueTooltip({ exact, children }) {
     );
 }
 
-function KPICard({ title, tooltip, fieldValue, value, exact, sub2, icon, color, filters, store }) {
+function KPICard({ title, tooltip, fieldValue, value, exact, sub2, sub2Color, valueColor, icon, color, filters, store }) {
     return (
         <div className="col-xl-2 col-lg-4 col-md-4 col-sm-6 mb-3">
             <div className="card h-100" style={{ borderLeft: `4px solid ${color}` }}>
@@ -278,11 +278,11 @@ function KPICard({ title, tooltip, fieldValue, value, exact, sub2, icon, color, 
                             </span>
                             {tooltip && <InfoTooltip lines={tooltip} cardTitle={title} fieldValue={fieldValue} filters={filters} store={store} />}
                         </div>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: "0.95rem", fontWeight: 700, whiteSpace: "nowrap", ...(valueColor ? { color: valueColor } : {}) }}>
                             {exact ? <ValueTooltip exact={exact}>{value}</ValueTooltip> : value}
                         </div>
                         {sub2 && (
-                            <div style={{ fontSize: "0.7rem", color: "#6c757d", whiteSpace: "nowrap", marginTop: "2px" }}>
+                            <div style={{ fontSize: "0.7rem", color: sub2Color || "#6c757d", whiteSpace: "nowrap", marginTop: "2px" }}>
                                 {sub2}
                             </div>
                         )}
@@ -305,6 +305,7 @@ export default function KPICards({
     qtnSalesReturnStats,
     orders,
     filters,
+    employeeStats,
 }) {
     // ── Store flags — identical to stats/index.js ──────────────────────────
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
@@ -318,6 +319,7 @@ export default function KPICards({
     const totalQtnSalesReturn    = qtnSalesReturnStats?.total_quotation_sales_return || 0;
     const totalExpense            = expenseStats?.total || 0;
     const totalSalaryPaid         = store?.settings?.enable_employee_module ? (expenseStats?.salary_paid || 0) : 0;
+    const salaryBalance           = employeeStats?.salary_balance ?? 0;
     const totalPurchase           = purchaseStats?.total_purchase || 0;
     const totalPurchaseReturn     = purchaseReturnStats?.total_purchase_return || 0;
     const totalDepositPurchaseFund    = depositStats?.purchase_fund || 0;
@@ -506,6 +508,20 @@ export default function KPICards({
                 icon="bi bi-arrow-return-left"
                 color="#858796"
             />
+            {store?.settings?.enable_employee_module && (
+                <KPICard filters={filters} store={store}
+                    title="Salary Balance"
+                    tooltip={[{ label: "SAR", value: fmt(Math.abs(salaryBalance)), bold: true }]}
+                    fieldValue={salaryBalance}
+                    value={fmtCompact(Math.abs(salaryBalance))}
+                    exact={fmt(Math.abs(salaryBalance))}
+                    valueColor={salaryBalance < 0 ? '#ba1a1a' : (salaryBalance > 0 ? '#0a58ca' : undefined)}
+                    sub2={salaryBalance < 0 ? "Owed to Employees" : (salaryBalance > 0 ? "Employees Owe Us" : "Settled")}
+                    sub2Color={salaryBalance < 0 ? '#ba1a1a' : (salaryBalance > 0 ? '#0a58ca' : '#6c757d')}
+                    icon="bi bi-person-badge"
+                    color="#ba1a1a"
+                />
+            )}
         </div>
     );
 }

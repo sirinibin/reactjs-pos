@@ -287,6 +287,7 @@ export default function BusinessDashboard() {
     const [vendorSummaries, setVendorSummaries]     = useState([]);
     const [accountSummaries, setAccountSummaries]   = useState([]);
     const [stockSummary, setStockSummary]           = useState({});
+    const [employeeStats, setEmployeeStats]         = useState(null);
 
     // Month / Year filter (YYYY-MM strings)
     const [filterMode, setFilterMode]       = useState("range"); // "single" | "range" | "year"
@@ -349,6 +350,7 @@ export default function BusinessDashboard() {
                 vendors,
                 accounts,
                 stock,
+                employee,
             ] = await Promise.all([
                 fetchOne(`/v1/store/${storeId}?select=id,name,branch_name,vat_no,registration_number,address,settings,vat_percent`),
                 fetchDashboard(`/v1/dashboard/monthly?${base}`),
@@ -359,6 +361,7 @@ export default function BusinessDashboard() {
                 fetchDashboard(`/v1/dashboard/vendors?${base}`),
                 fetchDashboard(`/v1/dashboard/accounts?store_id=${storeId}`),
                 fetchDashboard(`/v1/dashboard/stock?store_id=${storeId}`),
+                fetchDashboard(`/v1/dashboard/employee?store_id=${storeId}`),
             ]);
 
             setStore(storeData);
@@ -388,6 +391,7 @@ export default function BusinessDashboard() {
             setVendorSummaries(vendors      || []);
             setAccountSummaries(accounts    || []);
             setStockSummary(stock           || {});
+            setEmployeeStats(employee       || null);
             setLoading(false);
         }
 
@@ -702,6 +706,7 @@ export default function BusinessDashboard() {
                                 quotationStats={kpiStats.quotationStats}
                                 qtnSalesReturnStats={kpiStats.qtnSalesReturnStats}
                                 orders={{ length: kpiStats.orderCount }}
+                                employeeStats={employeeStats}
                                 filters={{
                                     ...(appliedFrom ? { 'From': appliedFrom } : {}),
                                     ...(appliedTo   ? { 'To':   appliedTo   } : {}),
