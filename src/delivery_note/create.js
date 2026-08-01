@@ -400,6 +400,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const [show, SetShow] = useState(false);
 
+  useEffect(() => {
+    if (!show || props.fromHistory) return;
+    document.body.classList.add('delivery-note-form-open');
+    return () => document.body.classList.remove('delivery-note-form-open');
+  }, [show, props.fromHistory]);
+
   function handleClose() {
     selectedProducts = [];
     setSelectedProducts([]);
@@ -2232,7 +2238,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="above-sales-modal">
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className={`above-sales-modal delivery-note-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
         <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '5px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button type="button" onClick={handleClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}

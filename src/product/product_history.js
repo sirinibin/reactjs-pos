@@ -852,13 +852,13 @@ const ProductHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
-            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
-            {showDeliveryNoteForm && <DeliveryNoteCreate ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
+            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
+            {showDeliveryNoteForm && <DeliveryNoteCreate fromHistory={true} ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
             {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowStockTransferForm(false)} />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />

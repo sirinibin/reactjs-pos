@@ -12021,3 +12021,34 @@ body.form-over-history .above-sales-modal { z-index: 1072 !important; }
 .vendor-create-wrap { z-index: 1088 !important; }
 /* Tooltips must always appear above all modals (sales form injects z-index 1082 on .above-sales-modal) */
 .tooltip { z-index: 1090 !important; }
+
+/* Sub-forms that can be opened from history modals — must appear above history (1072 with form-over-history active) */
+.sales-return-create-wrap { z-index: 1080 !important; }
+.quotation-create-wrap { z-index: 1080 !important; }
+.quotation-sales-return-create-wrap { z-index: 1080 !important; }
+/* Delivery Note form modal — one step above above-sales-modal (1065) */
+.delivery-note-create-wrap { z-index: 1066 !important; }
+/* Product Create form — must appear above all parent forms (purchase 1088, quotation/delivery-note ~1066-1080) */
+.pw-modal-wrap { z-index: 1095 !important; }
+/* Raise history modals above their standalone parent form.
+   These rules intentionally win over body.form-over-history (1072) via CSS source-order.
+   fromHistory={true} on sub-forms prevents them from adding these body classes, so there is
+   no reference-counting conflict when a sub-form mounts/unmounts. */
+body.purchase-form-open .above-sales-modal { z-index: 1089 !important; }
+body.purchase-return-form-open .above-sales-modal { z-index: 1089 !important; }
+body.sales-return-form-open .above-sales-modal { z-index: 1081 !important; }
+body.quotation-form-open .above-sales-modal { z-index: 1081 !important; }
+body.quotation-sales-return-form-open .above-sales-modal { z-index: 1081 !important; }
+body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
+/* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both
+   a parent-form class AND form-over-history are active simultaneously — beats any (0-2-1) rule. */
+body.purchase-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }
+body.purchase-return-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }
+body.sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.quotation-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.quotation-sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.delivery-note-form-open.form-over-history .above-sales-modal { z-index: 1067 !important; }
+/* Sub-forms opened FROM a history modal carry the .from-history-form class (added when fromHistory prop is true).
+   This targets only the sub-form, not the parent form that shares the same base class, so the parent
+   never gets incorrectly elevated and the stacking order is: sub-form (1093) > history (≤1089) > parent (≤1088). */
+body.form-over-history .from-history-form { z-index: 1093 !important; }

@@ -601,6 +601,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
 
+    useEffect(() => {
+        if (!show || props.fromHistory) return;
+        document.body.classList.add('quotation-sales-return-form-open');
+        return () => document.body.classList.remove('quotation-sales-return-form-open');
+    }, [show, props.fromHistory]);
+
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
@@ -2250,7 +2256,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`quotation-sales-return-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Qtn. Sales Return #" + formData.code + " for sale #" + formData.quotation_code : "Create Qtn. Sales Return for Qtn Sale #" + formData.quotation_code}

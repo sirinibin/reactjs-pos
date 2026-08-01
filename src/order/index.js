@@ -2271,7 +2271,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {order.code}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
+                                                                    {order[col.key] && !isNaN(new Date(order[col.key])) ? format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale }) : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

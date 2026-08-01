@@ -2140,7 +2140,7 @@ function PurchaseIndex(props) {
                                                                     {purchase.vendor_invoice_no}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
+                                                                    {purchase[col.key] ? format(new Date(purchase[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale }) : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

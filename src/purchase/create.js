@@ -248,6 +248,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
 
+    useEffect(() => {
+        if (!show || props.fromHistory) return;
+        document.body.classList.add('purchase-form-open');
+        return () => document.body.classList.remove('purchase-form-open');
+    }, [show, props.fromHistory]);
+
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
@@ -3349,7 +3355,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} onUpdated={handleVendorUpdated} />
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className="purchase-create-wrap">
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`purchase-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
                 {formType === 'type2' && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                         {/* Left: title + ZATCA */}

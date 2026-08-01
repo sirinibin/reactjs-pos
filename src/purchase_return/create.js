@@ -208,6 +208,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
 
+    useEffect(() => {
+        if (!show || props.fromHistory) return;
+        document.body.classList.add('purchase-return-form-open');
+        return () => document.body.classList.remove('purchase-return-form-open');
+    }, [show, props.fromHistory]);
+
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
@@ -2424,7 +2430,7 @@ async function reCalculate(productIndex) {
                 onRestoreDefaults={restoreVendorColDefaults}
             />
             <PurchaseView ref={PurchaseDetailsViewRef} />
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className="purchase-return-create-wrap">
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`purchase-return-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return for purchase #" + formData.purchase_code}

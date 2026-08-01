@@ -663,6 +663,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
 
+    useEffect(() => {
+        if (!show || props.fromHistory) return;
+        document.body.classList.add('sales-return-form-open');
+        return () => document.body.classList.remove('sales-return-form-open');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [show, props.fromHistory]);
+
     function handleClose() {
         selectedProducts = [];
         setSelectedProducts([]);
@@ -2222,6 +2229,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
     }, [store?.settings?.sales_return_create_form_design]);
     const SC_COL_DEFAULTS_SR = { select: 50, si_no: 40, part_number: 100, name: 200, info: 50, purchase_unit_price: 130, stock: 60, qty: 137, warehouse: 130, unit_price: 130, unit_price_with_vat: 130, unit_discount: 120, unit_discount_with_vat: 120, unit_discount_percent: 90, price: 120, price_with_vat: 120 };
+    /* eslint-disable react-hooks/rules-of-hooks */
     const [scColWidths, setScColWidths] = useState(() => { try { return JSON.parse(localStorage.getItem('sr_sc_col_widths')) || {}; } catch { return {}; } });
     useEffect(() => { localStorage.setItem('sr_sc_col_widths', JSON.stringify(scColWidths)); }, [scColWidths]);
     function startScColResize(e, colKey, startWidth) {
@@ -2316,6 +2324,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
 
     }, [loadWarehouses, show]);
+    /* eslint-enable react-hooks/rules-of-hooks */
 
     return (
         <>
@@ -2350,7 +2359,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
             {srFormType === "type2" && (
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} id="sales_return_create_form">
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} id="sales_return_create_form" className={`sales-return-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
                 <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                     <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
                         <h1 style={{ margin: 0, fontSize: '20px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.01em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e', whiteSpace: 'nowrap' }}>
@@ -5490,7 +5499,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             </Modal >
             )}
             {srFormType === "type1" && (
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`sales-return-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? t("Update Sales Return") + "  #" + formData.code + " for sales #" : t("Create Sales Return for Sale") + " #"}

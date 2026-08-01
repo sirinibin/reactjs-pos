@@ -477,8 +477,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

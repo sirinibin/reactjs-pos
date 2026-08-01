@@ -283,6 +283,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const [show, SetShow] = useState(false);
 
+  useEffect(() => {
+    if (!show || props.fromHistory) return;
+    document.body.classList.add('quotation-form-open');
+    return () => document.body.classList.remove('quotation-form-open');
+  }, [show, props.fromHistory]);
+
   function handleClose() {
     selectedProducts = [];
     setSelectedProducts([]);
@@ -3247,7 +3253,7 @@ async function checkWarning(i) {
         animation={false}
         backdrop="static"
         scrollable={true}
-        className={enableProductSelection ? "above-sales-modal" : ""}
+        className={`${enableProductSelection ? "above-sales-modal " : ""}quotation-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}
         {...(enableProductSelection ? {
           backdrop: false,
           keyboard: false,

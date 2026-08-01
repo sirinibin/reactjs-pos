@@ -5694,7 +5694,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen id="sales_create_form" className="order-create-wrap"
+            <Modal show={show} size="xl" fullscreen id="sales_create_form" className={`order-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 {formType === "type1" && <SalesType1Header
                     formData={formData} setFormData={setFormData}
