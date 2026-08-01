@@ -2305,15 +2305,15 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {showDrafts ? (<>
-                                                                        <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(order.id)}>
+                                                                        {!order.code && <><Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(order.id)}>
                                                                             <i className="bi bi-pencil"></i> Resume
-                                                                        </Button>&nbsp;
-                                                                        <Button className="btn btn-success btn-sm" onClick={() => undraftOrder(order.id)}>
+                                                                        </Button>&nbsp;</>}
+                                                                        {order.code && <><Button className="btn btn-success btn-sm" onClick={() => undraftOrder(order.id)}>
                                                                             <i className="bi bi-check-circle"></i> Undraft
-                                                                        </Button>&nbsp;
-                                                                        <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftOrder(order.id)}>
+                                                                        </Button>&nbsp;</>}
+                                                                        {!order.code && <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftOrder(order.id)}>
                                                                             <i className="bi bi-trash"></i>
-                                                                        </Button>
+                                                                        </Button>}
                                                                     </>) : (<>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(order.id);

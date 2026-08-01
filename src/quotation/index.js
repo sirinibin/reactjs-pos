@@ -2277,15 +2277,15 @@ function QuotationIndex(props) {
                               return (<React.Fragment key={col.key}>
                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {showDrafts ? (<>
-                                    <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
+                                    {!quotation.code && <><Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
                                       <i className="bi bi-pencil"></i> Resume
-                                    </Button>&nbsp;
-                                    <Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
+                                    </Button>&nbsp;</>}
+                                    {quotation.code && <><Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
                                       <i className="bi bi-check-circle"></i> Undraft
-                                    </Button>&nbsp;
-                                    <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
+                                    </Button>&nbsp;</>}
+                                    {!quotation.code && <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
                                       <i className="bi bi-trash"></i>
-                                    </Button>
+                                    </Button>}
                                   </>) : (<>
                                   <Button className="btn btn-light btn-sm" onClick={() => {
                                     openUpdateForm(quotation.id);
