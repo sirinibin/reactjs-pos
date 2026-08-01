@@ -12015,3 +12015,5 @@ body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
 /* Lower history/picker modals when a create-form is opened on top of them */
 body.form-over-history .above-sales-modal { z-index: 1072 !important; }
+/* Tooltips must always appear above all modals (sales form injects z-index 1082 on .above-sales-modal) */
+.tooltip { z-index: 1090 !important; }
