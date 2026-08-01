@@ -4247,7 +4247,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             //if (model.id === salesID) {
-            if (!isSubmitting && formData.id && formData.code && formData.date) {
+            if (!isSubmitting && formData && formData.id && formData.code && formData.date) {
                 PreviewRef.current?.open(formData, undefined, "sales");
             }
             //  handleClose();
