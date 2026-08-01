@@ -1354,17 +1354,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 }
 
                 if (formData.id) {
-                    setToastMessage(`Updated Successfully✅`);
-                    setShowToast(true);
-                    if (props.showToastMessage) {
-                        if (props.showToastMessage) props.showToastMessage("StockTransfer updated successfully!", "success");
-                    }
+                    if (props.showToastMessage) props.showToastMessage("StockTransfer updated successfully!", "success");
                 } else {
-                    setToastMessage(`Created Successfully✅`);
-                    setShowToast(true);
-                    if (props.showToastMessage) {
-                        if (props.showToastMessage) props.showToastMessage("StockTransfer created successfully!", "success");
-                    }
+                    if (props.showToastMessage) props.showToastMessage("StockTransfer created successfully!", "success");
                 }
 
                 setTimeout(() => {
@@ -3052,7 +3044,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
             <Modal show={show} size="xl" fullscreen id="stocktransfer_create_form"
-                onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+                onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
                 <Modal.Header>
                     <Modal.Title>
                         {isUpdateForm ? "Update Stock Transfer #" + formData.code : "Create New Stock Transfer"}

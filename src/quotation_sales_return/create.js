@@ -2249,7 +2249,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Qtn. Sales Return #" + formData.code + " for sale #" + formData.quotation_code : "Create Qtn. Sales Return for Qtn Sale #" + formData.quotation_code}

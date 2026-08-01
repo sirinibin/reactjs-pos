@@ -2189,17 +2189,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
                 if (formData.id) {
-                    setToastMessage(t(`Updated Successfully`) + "✅");
-                    setShowToast(true);
-                    if (props.showToastMessage) {
-                        if (props.showToastMessage) props.showToastMessage("Sale updated successfully!", "success");
-                    }
+                    if (props.showToastMessage) props.showToastMessage("Sale updated successfully!", "success");
                 } else {
-                    setToastMessage(t(`Created Successfully`) + "✅");
-                    setShowToast(true);
-                    if (props.showToastMessage) {
-                        if (props.showToastMessage) props.showToastMessage("Sale created successfully!", "success");
-                    }
+                    if (props.showToastMessage) props.showToastMessage("Sale created successfully!", "success");
                 }
 
                 setTimeout(() => {
@@ -5514,7 +5506,7 @@ const OrderCreate = forwardRef((props, ref) => {
     return (
         <>
             {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
-            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; } .order-create-wrap.above-history-modal { z-index: 1090 !important; } .order-print-wrap { z-index: 1090 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5790,7 +5782,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen id="sales_create_form" className="order-create-wrap"
+            <Modal show={show} size="xl" fullscreen id="sales_create_form" className={`order-create-wrap${props.modalClass ? ' ' + props.modalClass : ''}`}
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 {formType === "type1" && <SalesType1Header
                     formData={formData} setFormData={setFormData}

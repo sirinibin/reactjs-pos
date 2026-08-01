@@ -477,8 +477,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
+            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
             {/*<Modal
                 show={show}
                 size="xl"

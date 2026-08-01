@@ -3446,7 +3446,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} onUpdated={handleVendorUpdated} />
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
                 {formType === 'type2' && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                         {/* Left: title + ZATCA */}

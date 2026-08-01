@@ -2423,7 +2423,7 @@ async function reCalculate(productIndex) {
                 onRestoreDefaults={restoreVendorColDefaults}
             />
             <PurchaseView ref={PurchaseDetailsViewRef} />
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return for purchase #" + formData.purchase_code}

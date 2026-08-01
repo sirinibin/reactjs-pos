@@ -632,6 +632,26 @@ function QuotationIndex(props) {
     }).then(() => list());
   }
 
+  function undraftQuotation(id) {
+    if (!window.confirm('Move this draft to the main quotations list?')) return;
+    const storeId = localStorage.getItem('store_id');
+    fetch('/v1/quotation/' + id + '?search[store_id]=' + storeId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: localStorage.getItem('access_token'),
+      },
+      body: JSON.stringify({ status: 'created' }),
+    }).then(async (res) => {
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        alert('Failed to undraft: ' + (data?.errors ? JSON.stringify(data.errors) : res.statusText));
+        return;
+      }
+      list();
+    });
+  }
+
   const CreateFormRef = useRef();
   function openCreateForm() {
     setShowQuotationCreate(true);
@@ -965,7 +985,17 @@ function QuotationIndex(props) {
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
-            <div className="d-flex gap-3 flex-wrap justify-content-end">
+            <div className="d-flex gap-3 flex-wrap justify-content-end align-items-center">
+              {store.settings?.enable_drafts && (
+                <Button
+                  variant={showDrafts ? "warning" : "outline-secondary"}
+                  className="btn"
+                  style={{ whiteSpace: 'nowrap' }}
+                  onClick={() => setShowDrafts(d => !d)}
+                >
+                  <i className="bi bi-file-earmark-text"></i> {(showDrafts ? 'Hide Drafts' : 'Drafts') + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                </Button>
+              )}
               <StatsSummary
                 title="Quotation Summary"
                 filters={{
@@ -1043,16 +1073,6 @@ function QuotationIndex(props) {
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
                     <i className="bi bi-plus-lg"></i> Create
                   </Button>
-                  {store.settings?.enable_drafts && (
-                    <Button
-                      variant={showDrafts ? "warning" : "outline-secondary"}
-                      className="btn mb-1 ms-2"
-                      style={{ whiteSpace: 'nowrap' }}
-                      onClick={() => setShowDrafts(d => !d)}
-                    >
-                      <i className="bi bi-file-earmark-text"></i> {(showDrafts ? 'Hide Drafts' : 'Drafts') + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
-                    </Button>
-                  )}
                 </div>
               </div>
               <div className="card-body p-2">
@@ -2259,6 +2279,9 @@ function QuotationIndex(props) {
                                   {showDrafts ? (<>
                                     <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
                                       <i className="bi bi-pencil"></i> Resume
+                                    </Button>&nbsp;
+                                    <Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
+                                      <i className="bi bi-check-circle"></i> Undraft
                                     </Button>&nbsp;
                                     <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
                                       <i className="bi bi-trash"></i>

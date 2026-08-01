@@ -944,6 +944,26 @@ function PurchaseIndex(props) {
         }).then(() => list());
     }
 
+    function undraftPurchase(id) {
+        if (!window.confirm('Move this draft to the main purchases list?')) return;
+        const storeId = localStorage.getItem('store_id');
+        fetch('/v1/purchase/' + id + '?search[store_id]=' + storeId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: localStorage.getItem('access_token'),
+            },
+            body: JSON.stringify({ status: 'delivered' }),
+        }).then(async (res) => {
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                alert('Failed to undraft: ' + (data?.errors ? JSON.stringify(data.errors) : res.statusText));
+                return;
+            }
+            list();
+        });
+    }
+
     const CreateFormRef = useRef();
     function openCreateForm() {
         setShowPurchaseCreate(true);
@@ -1208,7 +1228,17 @@ function PurchaseIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <span className="text-end">
+                        <span className="text-end d-flex justify-content-end align-items-center gap-2">
+                            {store.settings?.enable_drafts && (
+                                <Button
+                                    variant={showDrafts ? "warning" : "outline-secondary"}
+                                    className="btn"
+                                    style={{ whiteSpace: 'nowrap' }}
+                                    onClick={() => setShowDrafts(d => !d)}
+                                >
+                                    <i className="bi bi-file-earmark-text"></i> {(showDrafts ? t('Hide Drafts') : t('Drafts')) + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                                </Button>
+                            )}
                             <StatsSummary
                                 title="Purchase Summary"
                                 filters={{
@@ -1279,16 +1309,6 @@ function PurchaseIndex(props) {
                         >
                             <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
-                        {store.settings?.enable_drafts && (
-                            <Button
-                                variant={showDrafts ? "warning" : "outline-secondary"}
-                                className="btn mb-1"
-                                style={{ whiteSpace: 'nowrap' }}
-                                onClick={() => setShowDrafts(d => !d)}
-                            >
-                                <i className="bi bi-file-earmark-text"></i> {(showDrafts ? t('Hide Drafts') : t('Drafts')) + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
-                            </Button>
-                        )}
                         </div>
                     </div>
                 </div>
@@ -2149,6 +2169,9 @@ function PurchaseIndex(props) {
                                                                     {showDrafts ? (<>
                                                                         <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(purchase.id)}>
                                                                             <i className="bi bi-pencil"></i> Resume
+                                                                        </Button>&nbsp;
+                                                                        <Button className="btn btn-success btn-sm" onClick={() => undraftPurchase(purchase.id)}>
+                                                                            <i className="bi bi-check-circle"></i> Undraft
                                                                         </Button>&nbsp;
                                                                         <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftPurchase(purchase.id)}>
                                                                             <i className="bi bi-trash"></i>

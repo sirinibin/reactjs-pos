@@ -476,7 +476,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />}
+            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
             {/*<Modal
                 show={show}
                 size="xl"

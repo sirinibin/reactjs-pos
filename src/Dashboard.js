@@ -219,6 +219,7 @@ function Dashboard() {
     }, []);
 
     function showToastMessage(message, variant) {
+        if (variant === 'success') return;
         toastMessages.push({
             text: message,
             variant: variant,

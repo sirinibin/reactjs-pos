@@ -843,14 +843,14 @@ const ProductHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} />}
-            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />}
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />}
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
-            {showDeliveryNoteForm && <DeliveryNoteCreate ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} />}
-            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} />}
+            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showDeliveryNoteForm && <DeliveryNoteCreate ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />
             <VendorCreate ref={VendorUpdateFormRef} />

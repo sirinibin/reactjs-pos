@@ -3344,7 +3344,7 @@ async function checkWarning(i) {
         animation={false}
         backdrop="static"
         scrollable={true}
-        className={enableProductSelection ? "above-sales-modal" : ""}
+        className={[enableProductSelection ? "above-sales-modal" : "", props.modalClass || ""].filter(Boolean).join(" ")}
         {...(enableProductSelection ? {
           backdrop: false,
           keyboard: false,

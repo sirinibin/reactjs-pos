@@ -477,7 +477,7 @@ const SalesHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} />}
+            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
             <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={handleUpdated} />
             {/*<Modal
                 show={show}

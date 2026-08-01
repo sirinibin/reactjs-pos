@@ -488,7 +488,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
+            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
             {/*<Modal
                 show={show}
                 size="xl"
