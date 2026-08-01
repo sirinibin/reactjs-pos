@@ -302,7 +302,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     let [selectedProducts, setSelectedProducts] = useState([]);
 
     const { draftId: purchaseDraftId, clearDraft: clearPurchaseDraft } = useDraft({
-        enabled: !!store?.settings?.enable_drafts && formData.status !== 'draft' && !isResumingDraft,
+        enabled: !!store?.settings?.enable_drafts && !isResumingDraft && !formData.id,
         entityType: 'purchase',
         getFormData: () => ({ ...formData, products: selectedProducts }),
         productsCount: selectedProducts.length,

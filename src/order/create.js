@@ -1384,7 +1384,7 @@ const OrderCreate = forwardRef((props, ref) => {
     // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     const { draftId: orderDraftId, clearDraft: clearOrderDraft } = useDraft({
-        enabled: !!store?.settings?.enable_drafts && !isResumingDraft,
+        enabled: !!store?.settings?.enable_drafts && !isResumingDraft && !isUpdateForm,
         entityType: 'order',
         getFormData: () => ({ ...formData, products: selectedProducts }),
         productsCount: selectedProducts.length,
