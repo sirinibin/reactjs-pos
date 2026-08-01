@@ -12013,3 +12013,5 @@ span.flatpickr-weekday {
 .above-preview-modal { z-index: 1092 !important; }
 body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
+/* Lower history/picker modals when a create-form is opened on top of them */
+body.form-over-history .above-sales-modal { z-index: 1072 !important; }

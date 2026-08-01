@@ -252,6 +252,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         setShow(false);
+        props.onClose?.();
     }
 
     useEffect(() => {

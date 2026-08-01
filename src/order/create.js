@@ -1337,6 +1337,7 @@ const OrderCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         setShow(false);
+        props.onClose?.();
     }
 
     useEffect(() => {

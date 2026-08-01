@@ -404,6 +404,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     selectedProducts = [];
     setSelectedProducts([]);
     SetShow(false);
+    props.onClose?.();
   }
 
 

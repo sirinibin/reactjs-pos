@@ -358,7 +358,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
     function changePage(newPage) {
@@ -415,6 +416,11 @@ const SalesReturnHistory = forwardRef((props, ref) => {
 
     let [showOrderForm, setShowOrderForm] = useState(false);
     let [showSalesReturnForm, setShowSalesReturnForm] = useState(false);
+
+    useEffect(() => {
+        if (showOrderForm || showSalesReturnForm) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showOrderForm, showSalesReturnForm]);
 
     const handleUpdated = () => {
         list();
@@ -508,8 +514,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} />}
-            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
+            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

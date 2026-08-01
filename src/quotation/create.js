@@ -287,6 +287,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     selectedProducts = [];
     setSelectedProducts([]);
     SetShow(false);
+    props.onClose?.();
   }
 
   useEffect(() => {
