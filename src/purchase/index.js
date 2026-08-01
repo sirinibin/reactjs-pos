@@ -1228,7 +1228,7 @@ function PurchaseIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <span className="text-end d-flex justify-content-end align-items-center gap-2">
+                        <span className="text-end d-flex justify-content-end align-items-start gap-2">
                             {store.settings?.enable_drafts && (
                                 <Button
                                     variant={showDrafts ? "warning" : "outline-secondary"}

@@ -1694,7 +1694,7 @@ const OrderIndex = forwardRef((props, ref) => {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <span className="text-end d-flex justify-content-end align-items-center gap-2">
+                        <span className="text-end d-flex justify-content-end align-items-start gap-2">
                             {store.settings?.enable_drafts && (
                                 <Button
                                     variant={showDrafts ? "warning" : "outline-secondary"}
@@ -2384,7 +2384,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {(col.fieldName === "balance_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(order.balance_amount)} />
                                                                 </td>}
-                                                                {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>{!showDrafts && <>
                                                                     {!order.zatca?.compliance_passed && !order.zatca?.reporting_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
                                                                         {t("Compliance check failed")}
                                                                         {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
@@ -2439,7 +2439,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         }}><i className="bi bi-filetype-xml"></i> XML
                                                                         </Button>
                                                                     </span> : ""}
-                                                                </td>}
+                                                                </>}</td>}
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_status === "paid" ?
                                                                         <span className="badge bg-success">

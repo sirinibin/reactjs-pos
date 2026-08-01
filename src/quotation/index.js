@@ -985,7 +985,7 @@ function QuotationIndex(props) {
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
-            <div className="d-flex gap-3 flex-wrap justify-content-end align-items-center">
+            <div className="d-flex gap-3 flex-wrap justify-content-end align-items-start">
               {store.settings?.enable_drafts && (
                 <Button
                   variant={showDrafts ? "warning" : "outline-secondary"}
