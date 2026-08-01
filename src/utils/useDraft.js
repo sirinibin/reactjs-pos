@@ -15,10 +15,11 @@ export function useDraft({ enabled, entityType, getFormData, productsCount, onNe
 
     const saveDraft = useCallback(async () => {
         if (savingRef.current) return;
+        const formData = getFormData();
+        if (formData.code) return;
         savingRef.current = true;
         setIsSaving(true);
         try {
-            const formData = getFormData();
             const storeId = localStorage.getItem('store_id');
             const queryParams = storeId ? `search[store_id]=${encodeURIComponent(storeId)}` : '';
             const currentDraftId = draftIdRef.current;

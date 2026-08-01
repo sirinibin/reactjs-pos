@@ -1384,7 +1384,7 @@ const OrderCreate = forwardRef((props, ref) => {
     // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     const { draftId: orderDraftId, clearDraft: clearOrderDraft } = useDraft({
-        enabled: !!store?.settings?.enable_drafts && !isResumingDraft,
+        enabled: !!store?.settings?.enable_drafts && !isResumingDraft && !isUpdateForm,
         entityType: 'order',
         getFormData: () => ({ ...formData, products: selectedProducts }),
         productsCount: selectedProducts.length,
@@ -4247,7 +4247,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             //if (model.id === salesID) {
-            if (!isSubmitting && formData && formData.id && formData.code && formData.date) {
+            if (!isSubmitting && formData != null && formData.id && formData.code && formData.date) {
                 PreviewRef.current?.open(formData, undefined, "sales");
             }
             //  handleClose();
@@ -5506,7 +5506,7 @@ const OrderCreate = forwardRef((props, ref) => {
     return (
         <>
             {draftSavedFlash && <span style={{ position: "fixed", top: "14px", left: "50%", transform: "translateX(-50%)", fontSize: "12px", color: "#059669", fontWeight: 600, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "3px 14px", zIndex: 999999, pointerEvents: "none", whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(0,0,0,0.08)" }}>✓ Draft saved</span>}
-            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; } .order-create-wrap.above-history-modal { z-index: 1090 !important; } .order-print-wrap { z-index: 1090 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; } .order-create-wrap.above-history-modal { z-index: 1090 !important; } .above-history-modal { z-index: 1090 !important; } .order-print-wrap { z-index: 1095 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5695,7 +5695,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
-            }} centered className="above-sales-modal">
+            }} centered animation={false} className="above-sales-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>{t('Select Print Type')}</Modal.Title>
                 </Modal.Header>

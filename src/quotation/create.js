@@ -318,7 +318,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
 
   const { draftId: quotationDraftId, clearDraft: clearQuotationDraft } = useDraft({
-    enabled: !!store?.settings?.enable_drafts && formData.status !== 'draft' && !isResumingDraft,
+    enabled: !!store?.settings?.enable_drafts && !isResumingDraft && !formData.id,
     entityType: 'quotation',
     getFormData: () => ({ ...formData, products: selectedProducts }),
     productsCount: selectedProducts.length,
