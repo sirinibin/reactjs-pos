@@ -985,7 +985,7 @@ function QuotationIndex(props) {
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
-            <div className="d-flex gap-3 flex-wrap justify-content-end align-items-center">
+            <div className="d-flex gap-3 flex-wrap justify-content-end align-items-start">
               {store.settings?.enable_drafts && (
                 <Button
                   variant={showDrafts ? "warning" : "outline-secondary"}
@@ -2280,9 +2280,11 @@ function QuotationIndex(props) {
                                     <Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
                                       <i className="bi bi-pencil"></i> Resume
                                     </Button>&nbsp;
-                                    <Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
+                                    {quotation.code && (
+                                    <><Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
                                       <i className="bi bi-check-circle"></i> Undraft
-                                    </Button>&nbsp;
+                                    </Button>&nbsp;</>
+                                    )}
                                     <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
                                       <i className="bi bi-trash"></i>
                                     </Button>
