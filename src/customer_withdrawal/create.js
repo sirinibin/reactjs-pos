@@ -549,7 +549,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
         };
 
-        let result = await fetch("/v1/employee?limit=50&select=id,name,code,phone&" + queryString, requestOptions);
+        let result = await fetch("/v1/employee?limit=50&select=id,name,code,mob1&" + queryString, requestOptions);
         let data = await result.json();
 
         if (!data.result || data.result.length === 0) {
@@ -565,7 +565,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     function fetchAndSetEmployee(employeeId, fallbackData) {
         if (!employeeId) return;
         const storeId = localStorage.getItem("store_id");
-        fetch(`/v1/employee/${employeeId}?search[store_id]=${storeId}&select=id,name,code,phone`, {
+        fetch(`/v1/employee/${employeeId}?search[store_id]=${storeId}&select=id,name,code,mob1`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
         })
@@ -1921,7 +1921,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                                                     <div style={{ ...columnStyle, width: '20%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
                                                                                                     <div style={{ ...columnStyle, width: '60%' }}>{highlightWords(option.name, searchWords, isActive)}</div>
-                                                                                                    <div style={{ ...columnStyle, width: '20%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
+                                                                                                    <div style={{ ...columnStyle, width: '20%' }}>{highlightWords(option.mob1, searchWords, isActive)}</div>
                                                                                                 </div>
                                                                                             </MenuItem>
                                                                                         );
