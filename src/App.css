@@ -12052,3 +12052,11 @@ body.delivery-note-form-open.form-over-history .above-sales-modal { z-index: 106
    This targets only the sub-form, not the parent form that shares the same base class, so the parent
    never gets incorrectly elevated and the stacking order is: sub-form (1093) > history (≤1089) > parent (≤1088). */
 body.form-over-history .from-history-form { z-index: 1093 !important; }
+/* When a form is opened FROM the account balance sheet (balance-sheet-open), the body-class rules
+   above would accidentally raise the balance sheet above the form. These higher-specificity rules
+   (spec 31 > spec 21) ensure the form stays above the balance sheet in that scenario. */
+body.balance-sheet-open.purchase-form-open .purchase-create-wrap { z-index: 1090 !important; }
+body.balance-sheet-open.purchase-return-form-open .purchase-return-create-wrap { z-index: 1090 !important; }
+body.balance-sheet-open.sales-return-form-open .sales-return-create-wrap { z-index: 1082 !important; }
+body.balance-sheet-open.quotation-form-open .quotation-create-wrap { z-index: 1082 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return-create-wrap { z-index: 1082 !important; }
