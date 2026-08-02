@@ -2167,8 +2167,20 @@ const OrderCreate = forwardRef((props, ref) => {
                     timerRef.current = setTimeout(() => {
                         PreviewRef.current?.open(formData, undefined, "sales", { autoPrint: true });
                     }, 150);
+                } else if (store.settings?.enable_invoice_print_type_selection) {
+                    setShowOrderPreview(true);
+                    setShowPrintTypeSelection(true);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        printButtonRef.current?.focus();
+                    }, 100);
                 } else {
-                    openPrintTypeSelection();
+                    setShowOrderPreview(true);
+                    setShowPrintTypeSelection(false);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        PreviewRef.current?.open(formData, undefined, "sales");
+                    }, 150);
                 }
 
                 if (props.onUpdated) {
@@ -4171,28 +4183,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }, 100);
 
     }, [formData, isSubmitting]);
-
-    const openPrintTypeSelection = useCallback(() => {
-        if (store.settings?.enable_invoice_print_type_selection) {
-            // showPrintTypeSelection = true;
-            setShowOrderPreview(true);
-            setShowPrintTypeSelection(true);
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => {
-                printButtonRef.current?.focus();
-            }, 100);
-
-        } else {
-            //openPreview();
-
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => {
-                if (!isSubmitting) {
-                    openPreview();
-                }
-            }, 100);
-        }
-    }, [openPreview, store, isSubmitting]);
 
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
