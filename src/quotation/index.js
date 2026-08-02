@@ -2259,7 +2259,7 @@ function QuotationIndex(props) {
                                   }}>{quotation.order_code}</span>}
                                 </td>}
                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {format(new Date(quotation[col.key]), "MMM dd yyyy h:mma")}
+                                  {quotation[col.key] && !isNaN(new Date(quotation[col.key]).getTime()) ? format(new Date(quotation[col.key]), "MMM dd yyyy h:mma") : ""}
                                 </td>}
                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -2382,7 +2382,7 @@ function QuotationIndex(props) {
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.code}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
+                              {quotation.date && !isNaN(new Date(quotation.date).getTime()) ? format(new Date(quotation.date), "MMM dd yyyy h:mma") : ""}
                             </td>
                             <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <OverflowTooltip value={quotation.customer_name} />
@@ -2442,10 +2442,7 @@ function QuotationIndex(props) {
                               </span>
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              {format(
-                                new Date(quotation.created_at),
-                                "MMM dd yyyy h:mma"
-                              )}
+                              {quotation.created_at && !isNaN(new Date(quotation.created_at).getTime()) ? format(new Date(quotation.created_at), "MMM dd yyyy h:mma") : ""}
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <Button className="btn btn-light btn-sm" onClick={() => {
