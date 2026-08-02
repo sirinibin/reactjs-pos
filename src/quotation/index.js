@@ -323,12 +323,12 @@ function QuotationIndex(props) {
     } else if (field === "from_date") {
       setFromDateValue(value);
       setDateValue("");
-      searchParams["date"] = "";
+      searchParams["date_str"] = "";
       searchParams[field] = value;
     } else if (field === "to_date") {
       setToDateValue(value);
       setDateValue("");
-      searchParams["date"] = "";
+      searchParams["date_str"] = "";
       searchParams[field] = value;
     } else if (field === "created_at") {
       setCreatedAtValue(value);
