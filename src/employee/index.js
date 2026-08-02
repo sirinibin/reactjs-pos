@@ -70,7 +70,16 @@ function EmployeeIndex(props) {
     const [createdAtToValue, setCreatedAtToValue] = useState("");
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
 
+    let [enableSelection, setEnableSelection] = useState(false);
+
+    const handleSelected = (employee) => {
+        if (props.onSelectEmployee) {
+            props.onSelectEmployee(employee);
+        }
+    };
+
     useEffect(() => {
+        setEnableSelection(props.enableSelection ? true : false);
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -432,6 +441,7 @@ function EmployeeIndex(props) {
                                                     {t('Created At')}
                                                 </b></th>}
                                                 {colVisible('actions') && <th>{t('Actions')}</th>}
+                                                {enableSelection && <th>{t('Select')}</th>}
                                             </tr>
                                         </thead>
                                         <thead>
@@ -512,6 +522,7 @@ function EmployeeIndex(props) {
                                                     </div>
                                                 </th>}
                                                 {colVisible('actions') && <th></th>}
+                                                {enableSelection && <th></th>}
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
@@ -546,6 +557,11 @@ function EmployeeIndex(props) {
                                                     </td>}
                                                     {colVisible('created_at') && <td style={{ whiteSpace: "nowrap" }}>
                                                         {employee.created_at ? format(new Date(employee.created_at), "MMM dd yyyy H:mma") : ""}
+                                                    </td>}
+                                                    {enableSelection && <td style={{ whiteSpace: "nowrap" }}>
+                                                        <Button className="btn btn-success btn-sm" onClick={() => handleSelected(employee)}>
+                                                            {t('Select')}
+                                                        </Button>
                                                     </td>}
                                                     {colVisible('actions') && <td style={{ whiteSpace: "nowrap" }}>
                                                         <Button className="btn btn-success btn-sm me-1" title={t('Pay Salary')} onClick={() => openPaySalary(employee.id)}>

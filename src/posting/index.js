@@ -825,6 +825,10 @@ const PostingIndex = forwardRef((props, ref) => {
                 CustomerReceivableUpdateFormRef.current.open(id);
             } else if (referenceModel === "vendor_withdrawal") {
                 CustomerPayableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "employee_deposit") {
+                CustomerReceivableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "employee_withdrawal") {
+                CustomerPayableUpdateFormRef.current.open(id);
             } else if (referenceModel === "expense") {
                 ExpenseUpdateFormRef.current.open(id);
             } else if (referenceModel === "capital") {
@@ -1473,7 +1477,11 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <option value="drawing">Drawing</option>
                                                                 <option value="expense">Expense</option>
                                                                 <option value="customer_deposit">Customer Receivable</option>
+                                                                <option value="vendor_deposit">Vendor Receivable</option>
                                                                 <option value="customer_withdrawal">Customer Payable</option>
+                                                                <option value="vendor_withdrawal">Vendor Payable</option>
+                                                                <option value="employee_deposit">Employee Receivable</option>
+                                                                <option value="employee_withdrawal">Employee Payable</option>
                                                             </select>
                                                         </th>}
 

@@ -7,11 +7,13 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import VendorCreate from "./../vendor/create.js";
+import EmployeeCreate from "./../employee/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
 import VendorPending from "./../utils/vendor_pending.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
 import Vendors from "./../utils/vendors.js";
+import Employees from "./../utils/employees.js";
 import Sales from "./../utils/sales.js";
 import PurchaseReturns from "./../utils/purchase-returns.js";
 import Quotations from "./../utils/quotations.js";
@@ -59,6 +61,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
             setSelectedCustomers([]);
             setSelectedVendors([]);
+            setSelectedEmployees([]);
             setPendingAttachments([]);
             findTotalPayments();
 
@@ -159,6 +162,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     fetchAndSetVendor(formData.vendor_id, fallback);
                 }
 
+                if (formData.type === "employee" && formData.employee_id) {
+                    const fallback = { ...(formData.employee || {}), id: formData.employee_id };
+                    fetchAndSetEmployee(formData.employee_id, fallback);
+                }
+
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -183,6 +191,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
     const [vendorOptions, setVendorOptions] = useState([]);
     const [selectedVendors, setSelectedVendors] = useState([]);
+
+    const [employeeOptions, setEmployeeOptions] = useState([]);
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
+    let [openEmployeeSearchResult, setOpenEmployeeSearchResult] = useState(false);
+    const employeeSearchRef = useRef();
     // const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
     const customFilter = useCallback((option, query) => {
@@ -515,6 +528,58 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         //setIsCustomersLoading(false);
     }
 
+    async function suggestEmployees(searchTerm) {
+        setEmployeeOptions([]);
+        if (!searchTerm) {
+            setTimeout(() => { setOpenEmployeeSearchResult(false); }, 300);
+            return;
+        }
+
+        var params = { search: searchTerm };
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") { queryString = "&" + queryString; }
+
+        const requestOptions = {
+            method: "GET",
+            headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
+        };
+
+        let result = await fetch("/v1/employee?limit=50&select=id,name,code,phone&" + queryString, requestOptions);
+        let data = await result.json();
+
+        if (!data.result || data.result.length === 0) {
+            setOpenEmployeeSearchResult(false);
+            return;
+        }
+
+        const opts = data.result.map(e => ({ ...e, search_label: e.name + (e.code ? " - " + e.code : "") }));
+        setEmployeeOptions(opts);
+        setOpenEmployeeSearchResult(opts.length > 0);
+    }
+
+    function fetchAndSetEmployee(employeeId, fallbackData) {
+        if (!employeeId) return;
+        const storeId = localStorage.getItem("store_id");
+        fetch(`/v1/employee/${employeeId}?search[store_id]=${storeId}&select=id,name,code,phone`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (data?.result) {
+                    const e = data.result;
+                    setSelectedEmployees([{ ...e, search_label: e.name + (e.code ? " - " + e.code : "") }]);
+                } else {
+                    setSelectedEmployees([fallbackData]);
+                }
+            })
+            .catch(() => setSelectedEmployees([fallbackData]));
+    }
+
     function handleCreate(event) {
         if (isProcessing) {
             return;
@@ -538,8 +603,13 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
         if (formData.type === "customer") {
             formData.vendor_id = "";
+            formData.employee_id = "";
         } else if (formData.type === "vendor") {
             formData.customer_id = "";
+            formData.employee_id = "";
+        } else if (formData.type === "employee") {
+            formData.customer_id = "";
+            formData.vendor_id = "";
         }
 
         formData.images_content = pendingAttachments.map(a => a.dataUrl.split(",")[1] || a.dataUrl);
@@ -782,6 +852,23 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         VendorsRef.current.open();
     }
 
+    const EmployeeCreateFormRef = useRef();
+    function openEmployeeCreateForm() {
+        EmployeeCreateFormRef.current.open();
+    }
+
+    const EmployeesRef = useRef();
+    function openEmployees() {
+        EmployeesRef.current.open();
+    }
+
+    const handleSelectedEmployee = (selectedEmployee) => {
+        const emp = { ...selectedEmployee, search_label: selectedEmployee.name + (selectedEmployee.code ? " - " + selectedEmployee.code : "") };
+        setSelectedEmployees([emp]);
+        formData.employee_id = selectedEmployee.id;
+        setFormData({ ...formData });
+    };
+
 
     const handleSelectedCustomer = (selectedCustomer) => {
         console.log("selectedCustomer:", selectedCustomer);
@@ -827,6 +914,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     setErrors({ ...errors });
                     return false;
                 }
+            } else if (newType === "employee" && formData.payments[i].invoice_type) {
+                errors["type"] = "Please remove all linked invoices from payments before switching to Employee type";
+                errors["customer_receivable_payment_invoice_" + i] = "Remove this invoice and try again"
+                setErrors({ ...errors });
+                return false;
             }
         }
         return true;
@@ -1288,6 +1380,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             <Quotations ref={QuotationSalesRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
+            <Employees ref={EmployeesRef} onSelectEmployee={handleSelectedEmployee} showToastMessage={props.showToastMessage} />
+            <EmployeeCreate ref={EmployeeCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
 
             <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
@@ -1429,6 +1523,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             >
                                                                 <option value="customer">Customer</option>
                                                                 <option value="vendor">Vendor</option>
+                                                                {store?.settings?.enable_employee_module && (
+                                                                    <option value="employee">Employee</option>
+                                                                )}
                                                             </select>
                                                             {errors?.type && <ErrMsg>{errors.type}</ErrMsg>}
                                                         </div>
@@ -1730,6 +1827,97 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             {errors.vendor_id && <ErrMsg>{errors.vendor_id}</ErrMsg>}
                                                         </div>
                                                     )}
+
+                                                    {/* Employee Typeahead */}
+                                                    {formData.type === "employee" && (
+                                                        <div style={{ marginTop: '12px' }}>
+                                                            <Label required>Employee</Label>
+                                                            <div className="d-flex gap-1 align-items-start">
+                                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                                    <Typeahead
+                                                                        id="employee_id"
+                                                                        positionFixed={true}
+                                                                        labelKey="search_label"
+                                                                        isLoading={false}
+                                                                        filterBy={() => true}
+                                                                        isInvalid={errors.employee_id ? true : false}
+                                                                        open={openEmployeeSearchResult}
+                                                                        onChange={(selectedItems) => {
+                                                                            delete errors.employee_id;
+                                                                            setErrors(errors);
+                                                                            if (selectedItems.length === 0) {
+                                                                                formData.employee_id = "";
+                                                                                setFormData({ ...formData });
+                                                                                setSelectedEmployees([]);
+                                                                                return;
+                                                                            }
+                                                                            formData.employee_id = selectedItems[0].id;
+                                                                            setFormData({ ...formData });
+                                                                            setSelectedEmployees(selectedItems);
+                                                                            setOpenEmployeeSearchResult(false);
+                                                                        }}
+                                                                        options={employeeOptions}
+                                                                        placeholder="Employee Name / Code"
+                                                                        selected={selectedEmployees}
+                                                                        highlightOnlyResult={true}
+                                                                        ref={employeeSearchRef}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === "Escape") {
+                                                                                delete errors.employee_id;
+                                                                                formData.employee_id = "";
+                                                                                setFormData({ ...formData });
+                                                                                setSelectedEmployees([]);
+                                                                                setEmployeeOptions([]);
+                                                                                setOpenEmployeeSearchResult(false);
+                                                                                employeeSearchRef.current?.clear();
+                                                                            }
+                                                                        }}
+                                                                        onInputChange={(searchTerm) => {
+                                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                suggestEmployees(searchTerm);
+                                                                            }, 350);
+                                                                        }}
+                                                                        renderMenu={(results, menuProps, state) => {
+                                                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                                                            return (
+                                                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '60vw', maxWidth: '60vw', minWidth: '300px', zIndex: 9999 }}>
+                                                                                    <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                                                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                                            <div style={{ width: '20%' }}>ID</div>
+                                                                                            <div style={{ width: '60%' }}>Name</div>
+                                                                                            <div style={{ width: '20%' }}>Phone</div>
+                                                                                        </div>
+                                                                                    </MenuItem>
+                                                                                    {results.map((option, index) => {
+                                                                                        const onlyOneResult = results.length === 1;
+                                                                                        const isActive = state.activeIndex === index || onlyOneResult;
+                                                                                        return (
+                                                                                            <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
+                                                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                                                    <div style={{ ...columnStyle, width: '20%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
+                                                                                                    <div style={{ ...columnStyle, width: '60%' }}>{highlightWords(option.name, searchWords, isActive)}</div>
+                                                                                                    <div style={{ ...columnStyle, width: '20%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
+                                                                                                </div>
+                                                                                            </MenuItem>
+                                                                                        );
+                                                                                    })}
+                                                                                </Menu>
+                                                                            );
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <Button onClick={openEmployeeCreateForm} className="btn btn-primary btn-sm" type="button" title="New Employee">
+                                                                    <i className="bi bi-plus-lg"></i>
+                                                                </Button>
+                                                                {selectedEmployees.length > 0 && formData.employee_id && <Button onClick={() => EmployeeCreateFormRef.current.open(formData.employee_id)} className="btn btn-primary btn-sm" type="button" title="Edit Employee"><i className="bi bi-pencil"></i></Button>}
+                                                                <Button className="btn btn-primary btn-sm" onClick={openEmployees} title="List Employees">
+                                                                    <i className="bi bi-list"></i>
+                                                                </Button>
+                                                            </div>
+                                                            {errors.employee_id && <ErrMsg>{errors.employee_id}</ErrMsg>}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {/* RIGHT: entity detail panel — customer OR vendor, whichever is selected */}
@@ -1829,9 +2017,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         <th style={{ minWidth: "130px" }}>
                                                             Discount
                                                         </th>
+                                                        {formData.type !== "employee" && (
                                                         <th style={{ minWidth: "180px" }}>
                                                             Invoice
                                                         </th>
+                                                        )}
                                                         <th style={{ minWidth: "130px" }}>
                                                             Payment method
                                                         </th>
@@ -1979,6 +2169,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         <ErrMsg>{errors["customer_receivable_payment_discount_" + key]}</ErrMsg>
                                                                     )}
                                                                 </td>
+                                                                {formData.type !== "employee" && (
                                                                 <td>
                                                                     <div className="row" style={{ border: "solid 0px" }}>
                                                                         <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
@@ -2021,6 +2212,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         <ErrMsg>{errors["customer_receivable_payment_invoice_" + key]}</ErrMsg>
                                                                     )}
                                                                 </td>
+                                                                )}
                                                                 <td style={{ position: 'relative' }}>
                                                                     <select
                                                                         id={`${"customer_receivable_payment_method_" + key}`} name={`${"customer_receivable_payment_method_" + key}`}
