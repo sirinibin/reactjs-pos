@@ -155,6 +155,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
         setShowCustomerPending(true);
         setTimeout(() => { CustomerPendingRef.current?.open(false, customer); }, 50);
     }
+    const clearDraftRef = useRef(null);
+    const draftFlashShownRef = useRef(false);
     const [store, setStore] = useState({});
     const [repairJobInfos, setRepairJobInfos] = useState([]);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
@@ -608,7 +610,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                     if (props.openDetailsView) props.openDetailsView(r.result.id);
                 }
                 if (createdRepairJobId && props.openJobCard) props.openJobCard(createdRepairJobId);
-            } else if (formData.id && !wasResumingDraft) {
+            } else if (formData.id && !isResumingDraft) {
                 setShow(false);
                 if (props.openDetailsView) props.openDetailsView(formData.id);
             }
