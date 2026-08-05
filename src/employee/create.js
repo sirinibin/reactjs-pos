@@ -34,8 +34,8 @@ function savePositions(list) {
 const EmployeeCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(id) {
-            formData = { salary_day: 1, salary: 0, is_active: true, joining_date: new Date().toISOString(), opening_balance: 0 };
+        open(id, prefillData = {}) {
+            formData = { salary_day: 1, salary: 0, is_active: true, joining_date: new Date().toISOString(), opening_balance: 0, ...prefillData };
             setFormData({ ...formData });
             setErrors({});
             setSalaryPayments([]);

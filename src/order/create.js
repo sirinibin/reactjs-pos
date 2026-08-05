@@ -34,6 +34,8 @@ import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js
 import QuotationHistory from "./../utils/product_quotation_history.js";
 import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
 import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
+import ProductNonVATSalesHistory from "./../utils/product_non_vat_sales_history.js";
+import ProductNonVATSalesReturnHistory from "./../utils/product_non_vat_sales_return_history.js";
 import Products from "../utils/products.js";
 import Quotations from "./../utils/quotations.js";
 import Quotation from "./../quotation/create.js";
@@ -236,6 +238,11 @@ const OrderCreate = forwardRef((props, ref) => {
             reCalculate();
             setShow(true);
         },
+        async openAsType5(id) {
+            forcedFormTypeRef.current = 'type5';
+            setFormType('type5');
+            await this.open(id);
+        },
         async openForDeliveryNote(dnId) {
             // Open in create mode, then auto-import the delivery note products
             await this.open();
@@ -249,9 +256,7 @@ const OrderCreate = forwardRef((props, ref) => {
             await this.open();
             if (!prefill) return;
             setTimeout(() => {
-                if (prefill.vehicle_id) {
-                    setFormType('type5');
-                }
+                setFormType('type5');
                 if (prefill.customer_id) {
                     formData.customer_id = prefill.customer_id;
                     formData.customer_name = prefill.customer_name || '';
@@ -1330,6 +1335,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(false);
     const fromJobCardRef = useRef(false);
+    const forcedFormTypeRef = useRef(null);
     const repairJobIdsRef = useRef(null);
     const [repairJobInfos, setRepairJobInfos] = useState([]);
 
@@ -3420,6 +3426,16 @@ const OrderCreate = forwardRef((props, ref) => {
         QuotationSalesReturnHistoryRef.current.open(model, selectedCustomers);
     }
 
+    const NonVATSalesHistoryRef = useRef();
+    function openNonVATSalesHistory(model) {
+        NonVATSalesHistoryRef.current.open(model);
+    }
+
+    const NonVATSalesReturnHistoryRef = useRef();
+    function openNonVATSalesReturnHistory(model) {
+        NonVATSalesReturnHistoryRef.current.open(model);
+    }
+
     const CustomersRef = useRef();
     function openCustomers(model) {
         CustomersRef.current.open();
@@ -4010,21 +4026,27 @@ const OrderCreate = forwardRef((props, ref) => {
         const product = await getProduct(id, `id,item_code,part_number,name,name_in_arabic,unit,product_stores.${localStorage.getItem("store_id")}`);
         if (!product) return;
         const productStore = product.product_stores?.[localStorage.getItem("store_id")] || {};
-        setSelectedProducts(prev => prev.map(item => {
-            if (item.product_id !== id) return item;
-            return {
-                ...item,
+        let updatedIndices = [];
+        for (let i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].product_id !== id) continue;
+            updatedIndices.push(i);
+            selectedProducts[i] = {
+                ...selectedProducts[i],
                 code: product.item_code,
                 part_number: product.part_number,
                 name: product.name,
                 name_in_arabic: product.name_in_arabic || "",
                 unit: product.unit,
-                unit_price: productStore.retail_unit_price ?? item.unit_price,
-                unit_price_with_vat: productStore.retail_unit_price_with_vat ?? item.unit_price_with_vat,
-                purchase_unit_price: productStore.purchase_unit_price ?? item.purchase_unit_price,
-                purchase_unit_price_with_vat: productStore.purchase_unit_price_with_vat ?? item.purchase_unit_price_with_vat,
+                unit_price: productStore.retail_unit_price ?? selectedProducts[i].unit_price,
+                unit_price_with_vat: productStore.retail_unit_price_with_vat ?? selectedProducts[i].unit_price_with_vat,
+                purchase_unit_price: productStore.purchase_unit_price ?? selectedProducts[i].purchase_unit_price,
+                purchase_unit_price_with_vat: productStore.purchase_unit_price_with_vat ?? selectedProducts[i].purchase_unit_price_with_vat,
             };
-        }));
+        }
+        setSelectedProducts([...selectedProducts]);
+        for (const i of updatedIndices) {
+            checkError(i);
+        }
     }
 
     const ProductDetailsViewRef = useRef();
@@ -4969,7 +4991,7 @@ const OrderCreate = forwardRef((props, ref) => {
         { key: "unit_price", label: "Unit Price(without VAT)", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", visible: true },
         { key: "unit_discount", label: "Unit Disc.(without VAT)", visible: true },
-        { key: "unit_discount_with_vat", label: "Unit Disc.(with VAT)", visible: true },
+        { key: "unit_discount_with_vat", label: "L. Disc. (incl. VAT)", visible: true },
         { key: "unit_discount_percent", label: "Unit Disc. %(with VAT)", visible: true },
         { key: "price", label: "Price(without VAT)", visible: true },
         { key: "price_with_vat", label: "Price(with VAT)", visible: true },
@@ -5144,6 +5166,12 @@ const OrderCreate = forwardRef((props, ref) => {
     // Always apply store's design setting; selection flag only controls the in-header switcher
     useEffect(() => {
         if (!store.settings) return;
+        if (forcedFormTypeRef.current) {
+            const forced = forcedFormTypeRef.current;
+            forcedFormTypeRef.current = null;
+            setFormType(forced);
+            return;
+        }
         setFormType((prevFormType) => {
             if (store.settings.sales_create_form_design) {
                 return sanitizeSalesFormType(store.settings.sales_create_form_design, store.settings);
@@ -5246,7 +5274,7 @@ const OrderCreate = forwardRef((props, ref) => {
      }, []);*/
     // ─────────────────────────────────────────────────────────────────────────
 
-    const _defaultBillSummaryOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_without_vat', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding_amount', 'net_total'];
+    const _defaultBillSummaryOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding_amount', 'net_total'];
     const _billSummaryFieldLabels = { total_without_vat: 'Total(without VAT)', total_with_vat: 'Total(with VAT)', shipping: 'Shipping & Handling Fees', discount_without_vat: 'Sales Discount(without VAT)', discount_with_vat: 'Sales Discount(with VAT)', taxable_amount: 'Total Taxable Amount(without VAT)', vat: 'VAT', net_before_rounding: 'Net Total(with VAT) Before Rounding', rounding_amount: 'Rounding Amount', net_total: 'Net Total(with VAT)' };
     const [billSummaryVisible, setBillSummaryVisible] = useState(() => {
         try { const s = localStorage.getItem('bill_summary_visible_t1'); if (s) return JSON.parse(s); } catch { }
@@ -5408,7 +5436,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.order-create-wrap { z-index: 1080 !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .products-modal-wrap { z-index: 1095 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1092 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5672,6 +5700,8 @@ const OrderCreate = forwardRef((props, ref) => {
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
             <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+            <ProductNonVATSalesHistory ref={NonVATSalesHistoryRef} />
+            <ProductNonVATSalesReturnHistory ref={NonVATSalesReturnHistoryRef} />
 
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
@@ -5684,7 +5714,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen id="sales_create_form" className={`order-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}
+            <Modal show={show} size="xl" fullscreen id="sales_create_form" className={`order-create-wrap${props.fromHistory ? ' from-history-form' : ''}${props.modalClass ? ' ' + props.modalClass : ''}`}
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 {formType === "type1" && <SalesType1Header
                     formData={formData} setFormData={setFormData}
@@ -6756,7 +6786,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             if (col.key === 'unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (ex. VAT)')}{resizeHandle('unit_price')}</th>;
                                                             if (col.key === 'unit_price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (inc. VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
                                                             if (col.key === 'unit_discount') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (ex. VAT)')}{resizeHandle('unit_discount')}</th>;
-                                                            if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (inc. VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
+                                                            if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('L. Disc. (incl. VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
                                                             if (col.key === 'unit_discount_percent') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. %')}{resizeHandle('unit_discount_percent')}</th>;
                                                             if (col.key === 'price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (ex. VAT)')}{resizeHandle('price')}</th>;
                                                             if (col.key === 'price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (inc. VAT)')}{resizeHandle('price_with_vat')}</th>;
@@ -7192,8 +7222,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }
 
 
+                                                                                const _oldLineDisc1 = selectedProducts[index].line_discount_with_vat != null
+                                                                                    ? selectedProducts[index].line_discount_with_vat
+                                                                                    : (selectedProducts[index].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[index].quantity) || 1);
                                                                                 product.quantity = parseFloat(e.target.value);
                                                                                 selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                                                if (_oldLineDisc1 && parseFloat(e.target.value)) {
+                                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_oldLineDisc1 / parseFloat(e.target.value)));
+                                                                                    selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))));
+                                                                                    selectedProducts[index].line_discount_with_vat = _oldLineDisc1;
+                                                                                }
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     checkErrors(index);
@@ -7546,7 +7584,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             onWheel={(e) => e.target.blur()}
                                                                             disabled={isZatcaReported}
                                                                             className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning' : ''}`}
-                                                                            value={selectedProducts[index].unit_discount_with_vat}
+                                                                            value={selectedProducts[index].line_discount_with_vat != null ? selectedProducts[index].line_discount_with_vat : (selectedProducts[index].unit_discount_with_vat ? parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount_with_vat || 0) * (selectedProducts[index].quantity || 1))) : selectedProducts[index].unit_discount_with_vat)}
                                                                             ref={(el) => {
                                                                                 if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                                 inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`] = el;
@@ -7647,8 +7685,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     setErrors({ ...errors });
                                                                                 }
 
-                                                                                selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value); //input
-
+                                                                                const _lineDiscVAT1 = parseFloat(e.target.value);
+                                                                                const _qty1 = parseFloat(selectedProducts[index].quantity) || 1;
+                                                                                selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_lineDiscVAT1 / _qty1)); //back-calc unit from line
+                                                                                selectedProducts[index].line_discount_with_vat = _lineDiscVAT1;
 
                                                                                 setFormData({ ...formData });
                                                                                 timerRef.current = setTimeout(() => {
@@ -7838,7 +7878,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             name={`${"sales_product_line_total_" + index}`}
                                                                             onWheel={(e) => e.target.blur()}
                                                                             disabled={isZatcaReported}
-                                                                            value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
+                                                                            value={selectedProducts[index].line_total ?? ""}
                                                                             className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning' : ''}`}
                                                                             placeholder="Line total"
                                                                             ref={(el) => {
@@ -7915,12 +7955,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     setErrors({ ...errors });
                                                                                 }
 
-                                                                                selectedProducts[index].line_total = parseFloat(e.target.value);
+                                                                                selectedProducts[index].line_total = e.target.value;
                                                                                 setSelectedProducts([...selectedProducts]);
 
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     if (selectedProducts[index].quantity > 0) {
-                                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals((selectedProducts[index].line_total / selectedProducts[index].quantity) + selectedProducts[index].unit_discount));
+                                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals((parseFloat(selectedProducts[index].line_total) / selectedProducts[index].quantity) + selectedProducts[index].unit_discount));
 
                                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                                         selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
@@ -8619,6 +8659,8 @@ const OrderCreate = forwardRef((props, ref) => {
                         selectedCustomers={selectedCustomers} setSelectedCustomers={setSelectedCustomers}
                         isZatcaReported={isZatcaReported}
                         store={store}
+                        openNonVATSalesHistory={openNonVATSalesHistory}
+                        openNonVATSalesReturnHistory={openNonVATSalesReturnHistory}
                         warehouseList={warehouseList}
                         openCustomerSearchResult={openCustomerSearchResult} setOpenCustomerSearchResult={setOpenCustomerSearchResult}
                         openProductSearchResult={openProductSearchResult} setOpenProductSearchResult={setOpenProductSearchResult}
@@ -9168,7 +9210,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         if (col.key === 'unit_price') label = t('Unit Price(without VAT)');
                                                         if (col.key === 'unit_price_with_vat') label = t('Unit Price(with VAT)');
                                                         if (col.key === 'unit_discount') label = t('Unit Disc.(without VAT)');
-                                                        if (col.key === 'unit_discount_with_vat') label = t('Unit Disc.(with VAT)');
+                                                        if (col.key === 'unit_discount_with_vat') label = t('L. Disc. (incl. VAT)');
                                                         if (col.key === 'unit_discount_percent') label = t('Unit Disc. %(with VAT)');
                                                         if (col.key === 'price') label = t('Price(without VAT)');
                                                         if (col.key === 'price_with_vat') label = t('Price(with VAT)');
@@ -9627,8 +9669,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     }
 
 
+                                                                                    const _oldLineDisc2 = selectedProducts[index].line_discount_with_vat != null
+                                                                                        ? selectedProducts[index].line_discount_with_vat
+                                                                                        : (selectedProducts[index].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[index].quantity) || 1);
                                                                                     product.quantity = parseFloat(e.target.value);
                                                                                     selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                                                    if (_oldLineDisc2 && parseFloat(e.target.value)) {
+                                                                                        selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_oldLineDisc2 / parseFloat(e.target.value)));
+                                                                                        selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))));
+                                                                                        selectedProducts[index].line_discount_with_vat = _oldLineDisc2;
+                                                                                    }
                                                                                     timerRef.current = setTimeout(() => {
                                                                                         CalCulateLineTotals(index);
                                                                                         checkErrors(index);
@@ -9978,7 +10028,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning' : ''}`}
-                                                                                value={selectedProducts[index].unit_discount_with_vat}
+                                                                                value={selectedProducts[index].line_discount_with_vat != null ? selectedProducts[index].line_discount_with_vat : (selectedProducts[index].unit_discount_with_vat ? parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount_with_vat || 0) * (selectedProducts[index].quantity || 1))) : selectedProducts[index].unit_discount_with_vat)}
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                                     inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`] = el;
@@ -10079,8 +10129,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                         setErrors({ ...errors });
                                                                                     }
 
-                                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value); //input
-
+                                                                                    const _lineDiscVAT2 = parseFloat(e.target.value);
+                                                                                    const _qty2 = parseFloat(selectedProducts[index].quantity) || 1;
+                                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_lineDiscVAT2 / _qty2)); //back-calc unit from line
+                                                                                    selectedProducts[index].line_discount_with_vat = _lineDiscVAT2;
 
                                                                                     setFormData({ ...formData });
                                                                                     timerRef.current = setTimeout(() => {
@@ -10984,7 +11036,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     ? new Date(dep.date).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                     : "";
                 return (
-                    <Modal show={true} onHide={advanceToNextDeposit} centered backdrop="static" keyboard={false}>
+                    <Modal show={true} onHide={advanceToNextDeposit} centered backdrop="static" keyboard={false} className="advance-payment-modal-wrap" backdropClassName="advance-payment-backdrop">
                         <Modal.Header style={{ background: '#fff8e1', borderBottom: '1px solid #ffc107', padding: '14px 20px' }}>
                             <Modal.Title style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <i className="bi bi-wallet2" style={{ color: '#856404', fontSize: '18px' }}></i>

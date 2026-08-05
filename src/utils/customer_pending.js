@@ -6,6 +6,8 @@ import OrderIndex from "../order/index.js";
 import SalesReturnIndex from "../sales_return/index.js";
 import QuotationIndex from "../quotation/index.js";
 import QuotationSalesReturnIndex from "../quotation_sales_return/index.js";
+import NonVATSalesIndex from "../non_vat_sales/index.js";
+import NonVATSalesReturnIndex from "../non_vat_sales_return/index.js";
 import PurchaseIndex from "../purchase/index.js";
 import PurchaseReturnIndex from "../purchase_return/index.js";
 import Tab from 'react-bootstrap/Tab';
@@ -16,6 +18,8 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import PostingIndex from "./../posting/index.js";
 import { ObjectToSearchQueryParams } from './queryUtils.js';
+
+const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
 //import { set } from "date-fns";
 
 const CustomerPending = forwardRef((props, ref) => {
@@ -230,18 +234,18 @@ const CustomerPending = forwardRef((props, ref) => {
     return (
         <>
             {showBalanceSheet && <PostingIndex ref={AccountBalanceSheetRef} />}
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}
-                backdrop={false}                // ✅ Allow editing background
+            <Modal show={show} {...(props.size ? { size: props.size } : { fullscreen: true })} onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}
                 keyboard={false}
-                centered={false}                // ❌ disable auto-centering
-                enforceFocus={false}            // ✅ allow focus outside
+                centered={false}
+                enforceFocus={false}
                 className="above-sales-modal"
-                dialogAs={({ children, ...props }) => (
+                dialogAs={props.size ? undefined : ({ children, ...dlgProps }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
                             ref={dragRef}
                             className="modal-dialog modal-fullscreen"
-                            {...props}
+                            {...dlgProps}
                             style={{
                                 position: "fixed",
                                 top: "0",
@@ -321,7 +325,7 @@ const CustomerPending = forwardRef((props, ref) => {
                                     pendingView={true}
                                 />
                             </Tab>
-                            <Tab eventKey="quotation_sales" title={
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales" title={
                                 <>
                                     Qtn. Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
                                         <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"]) : 0} />
@@ -338,8 +342,8 @@ const CustomerPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
-                            <Tab eventKey="quotation_sales_return" title={
+                            </Tab>}
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales_return" title={
                                 <>
                                     Qtn. Sales Return <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
                                         <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_return_balance_amount"]) : 0} />
@@ -356,16 +360,42 @@ const CustomerPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
-                            <Tab eventKey="purchase" title={
+                            </Tab>}
+                            {storeSettings?.non_vat_sales && <Tab eventKey="non_vat_sales" title={
+                                <>
+                                    Non VAT Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["non_vat_sales_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                        <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["non_vat_sales_balance_amount"]) : 0} />
+                                    </Badge>
+                                </>
+                            }>
+                                <NonVATSalesIndex
+                                    handleUpdated={handleUpdated}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>}
+                            {storeSettings?.non_vat_sales && <Tab eventKey="non_vat_sales_return" title={
+                                <>
+                                    Non VAT Sales Return <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["non_vat_sales_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                        <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["non_vat_sales_return_balance_amount"]) : 0} />
+                                    </Badge>
+                                </>
+                            }>
+                                <NonVATSalesReturnIndex
+                                    handleUpdated={handleUpdated}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>}
+                            {selectedVendors?.length > 0 && <Tab eventKey="purchase" title={
                                 <>
                                     Purchases <Badge bg={vendor?.stores ? vendor?.stores[localStorage.getItem("store_id")]?.["purchase_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
                                         <Amount amount={vendor?.stores ? trimTo2Decimals(vendor?.stores[localStorage.getItem("store_id")]?.["purchase_balance_amount"]) : 0} />
                                     </Badge>
                                 </>
-                            }
-
-                                disabled={!selectedVendors?.length}>
+                            }>
                                 <PurchaseIndex
                                     handleUpdated={handleUpdated}
                                     enableSelection={enableSelection}
@@ -373,16 +403,14 @@ const CustomerPending = forwardRef((props, ref) => {
                                     selectedPaymentStatusList={selectedPaymentStatusList}
                                     pendingView={true}
                                 />
-                            </Tab>
-                            <Tab eventKey="purchase_return"
-                                title={
-                                    <>
-                                        Purchases Returns <Badge bg={vendor?.stores ? vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
-                                            <Amount amount={vendor?.stores ? trimTo2Decimals(vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"]) : 0} />
-                                        </Badge>
-                                    </>
-                                }
-                                disabled={!selectedVendors?.length}>
+                            </Tab>}
+                            {selectedVendors?.length > 0 && <Tab eventKey="purchase_return" title={
+                                <>
+                                    Purchases Returns <Badge bg={vendor?.stores ? vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                        <Amount amount={vendor?.stores ? trimTo2Decimals(vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"]) : 0} />
+                                    </Badge>
+                                </>
+                            }>
                                 <PurchaseReturnIndex
                                     handleUpdated={handleUpdated}
                                     enableSelection={enableSelection}
@@ -390,7 +418,7 @@ const CustomerPending = forwardRef((props, ref) => {
                                     selectedPaymentStatusList={selectedPaymentStatusList}
                                     pendingView={true}
                                 />
-                            </Tab>
+                            </Tab>}
                         </Tabs>
 
                     </>

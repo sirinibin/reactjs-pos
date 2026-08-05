@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -416,6 +416,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
             PurchaseUpdateFormRef.current.open(id);
         }, 100);
     }
+
+    useImperativeHandle(ref, () => ({
+        openPurchaseById(id) { openPurchaseUpdateForm(id); },
+    }));
 
     const handleUpdated = () => {
         list();

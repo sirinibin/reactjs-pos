@@ -8,6 +8,7 @@ import RepairJobCardView, { loadKanbanLists, loadCardMap, saveCardMap, statusToD
 import QuotationType3Form from "../quotation/QuotationType3Form.js";
 import QuotationView from "../quotation/view.js";
 import OrderCreate from "../order/create.js";
+import OrderPreview from "../order/preview.js";
 import ProductCreate from "../product/create.js";
 import ServiceCreate from "../service/create.js";
 
@@ -184,7 +185,7 @@ function RepairJobIndex(props) {
             method: "GET",
             headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
         };
-        let Select = "select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total";
+        let Select = "select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total,non_vat_sales_id,non_vat_sales_code,non_vat_sales_net_total";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -227,7 +228,7 @@ function RepairJobIndex(props) {
         const qp = storeId ? `search[store_id]=${storeId}&` : '';
         try {
             const res = await fetch(
-                `/v1/repair-job?select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total&${qp}limit=1000&sort=-created_at`,
+                `/v1/repair-job?select=id,job_number,title,date,customer_id,customer_name,vehicle_id,vehicle_number,brand,model,km,technician_name,labour_charge,parts_total,total,total_with_vat,status,estimated_delivery,created_at,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total,non_vat_sales_id,non_vat_sales_code,non_vat_sales_net_total&${qp}limit=1000&sort=-created_at`,
                 { method: 'GET', headers: { 'Content-Type': 'application/json', Authorization: token } }
             );
             const data = await res.json();
@@ -285,10 +286,13 @@ function RepairJobIndex(props) {
     const kanbanRef = useRef();
     const cardViewRef = useRef();
     const qt3FormRef = useRef();
+    const nonVatSalesFormRef = useRef();
+    const nonVatSalesPreviewRef = useRef();
     const orderCreateRef = useRef();
     const productCreateRef = useRef();
     const serviceCreateRef = useRef();
     const lastEditedProductIdRef = useRef(null);
+    const [showNonVatSalesPreview, setShowNonVatSalesPreview] = useState(false);
 
     const [viewMode, setViewMode] = useState(() => props.defaultMode === 'board' ? 'board' : 'table');
 
@@ -310,9 +314,21 @@ function RepairJobIndex(props) {
     function openCreateForm() { CreateFormRef.current.open(); }
     function openQuotationDetailsView(id) { quotationViewRef.current?.open(id); }
 
+    function openNonVatSalesDetailsView(id) {
+        const storeId = localStorage.getItem('store_id');
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        fetch(`/v1/non-vat-sales/${id}?search[store_id]=${storeId}`, { headers })
+            .then(r => r.json()).then(r => {
+                if (!r.result) return;
+                setShowNonVatSalesPreview(true);
+                setTimeout(() => nonVatSalesPreviewRef.current?.open({ ...r.result, hideVAT: true, type: 'non_vat_invoice' }, undefined, "non_vat_invoice"), 100);
+            });
+    }
+
     async function buildJobPrefill(job, type) {
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        const excludeServiceVat = type === 'non_vat_invoice';
 
         let vatPercent = 15;
         try {
@@ -326,23 +342,29 @@ function RepairJobIndex(props) {
             const excl = parseFloat(p.unit_price) || 0;
             const storedIncl = parseFloat(p.unit_price_with_vat) || 0;
             const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMultiplier).toFixed(2));
+            const unitDisc = parseFloat(p.unit_discount) || 0;
+            const unitDiscVat = parseFloat(p.unit_discount_with_vat) || 0;
+            const qty = parseFloat(p.qty) || 1;
             return {
                 product_id: p.product_id || null,
                 item_code: p.item_code || '',
                 part_number: p.part_number || '',
                 name: p.name || '',
-                quantity: parseFloat(p.qty) || 1,
+                quantity: qty,
                 unit_price: excl,
                 unit_price_with_vat: incl,
                 purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
                 purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
-                unit_discount: 0, unit_discount_with_vat: 0,
+                unit_discount: unitDisc,
+                unit_discount_with_vat: unitDiscVat,
+                line_discount_with_vat: parseFloat((unitDiscVat * qty).toFixed(2)) || 0,
                 unit: p.unit || '', is_service: false,
             };
         });
 
         const labour = parseFloat(job.labour_charge) || 0;
-        if (labour > 0) {
+        const alreadyHasLabour = products.some(p => (p.name || '').toLowerCase() === 'labour charge');
+        if (labour > 0 && !alreadyHasLabour) {
             let labourProductId = null;
             try {
                 const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
@@ -358,7 +380,7 @@ function RepairJobIndex(props) {
                 name: 'Labour Charge',
                 quantity: 1,
                 unit_price: parseFloat((labour / vatMultiplier).toFixed(4)),
-                unit_price_with_vat: labour,
+                unit_price_with_vat: excludeServiceVat ? parseFloat((labour / vatMultiplier).toFixed(4)) : labour,
                 purchase_unit_price: 0,
                 purchase_unit_price_with_vat: 0,
                 unit_discount: 0, unit_discount_with_vat: 0,
@@ -391,10 +413,16 @@ function RepairJobIndex(props) {
         qt3FormRef.current?.open(null, prefill);
     }
 
+    async function handleCreateNonVatInvoice(job) {
+        const prefill = await buildJobPrefill(job, 'non_vat_invoice');
+        nonVatSalesFormRef.current?.open(null, prefill);
+    }
+
     async function handleCreateFromJobs(jobsArr, customer, type) {
         if (!jobsArr || jobsArr.length === 0) return;
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+        const excludeServiceVat = type === 'non_vat_invoice';
 
         // Fetch full job details (kanban listing omits parts & labour_charge)
         const fullJobs = await Promise.all(
@@ -421,18 +449,22 @@ function RepairJobIndex(props) {
                 const excl = parseFloat(p.unit_price) || 0;
                 const storedIncl = parseFloat(p.unit_price_with_vat) || 0;
                 const incl = storedIncl > excl ? storedIncl : parseFloat((excl * vatMultiplier).toFixed(2));
-                products.push({ product_id: p.product_id || null, item_code: p.item_code || '', part_number: p.part_number || '', name: p.name || '', quantity: parseFloat(p.qty) || 1, unit_price: excl, unit_price_with_vat: incl, purchase_unit_price: parseFloat(p.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false });
+                const pQty = parseFloat(p.qty) || 1;
+                const pUnitDisc = parseFloat(p.unit_discount) || 0;
+                const pUnitDiscVat = parseFloat(p.unit_discount_with_vat) || 0;
+                products.push({ product_id: p.product_id || null, item_code: p.item_code || '', part_number: p.part_number || '', name: p.name || '', quantity: pQty, unit_price: excl, unit_price_with_vat: incl, purchase_unit_price: parseFloat(p.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0, unit_discount: pUnitDisc, unit_discount_with_vat: pUnitDiscVat, line_discount_with_vat: parseFloat((pUnitDiscVat * pQty).toFixed(2)) || 0, unit: p.unit || '', is_service: false });
             }
             totalLabour += parseFloat(job.labour_charge) || 0;
         }
-        if (totalLabour > 0) {
+        const alreadyHasLabour = products.some(p => (p.name || '').toLowerCase() === 'labour charge');
+        if (totalLabour > 0 && !alreadyHasLabour) {
             let labourProductId = null;
             try {
                 const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
                 if (r?.result?.[0]) labourProductId = r.result[0].id;
                 else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
             } catch (e) { }
-            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatMultiplier).toFixed(4)), unit_price_with_vat: parseFloat(totalLabour.toFixed(2)), purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
+            products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((totalLabour / vatMultiplier).toFixed(4)), unit_price_with_vat: excludeServiceVat ? parseFloat((totalLabour / vatMultiplier).toFixed(4)) : parseFloat(totalLabour.toFixed(2)), purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
         }
         const prefill = {
             type,
@@ -448,6 +480,8 @@ function RepairJobIndex(props) {
         };
         if (type === 'invoice') {
             orderCreateRef.current?.openWithPrefill(prefill);
+        } else if (type === 'non_vat_invoice') {
+            nonVatSalesFormRef.current?.open(null, prefill);
         } else {
             qt3FormRef.current?.open(null, prefill);
         }
@@ -523,8 +557,10 @@ function RepairJobIndex(props) {
                 onOpenSalesInvoice={(orderId) => orderCreateRef.current?.open(orderId)}
                 onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)} />
             <QuotationView ref={quotationViewRef} openUpdateForm={(id) => qt3FormRef.current?.open(id)} />
-            <QuotationType3Form ref={qt3FormRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
-            <OrderCreate ref={orderCreateRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={() => {}} openJobCard={(jobId) => cardViewRef.current?.open(jobId)} />
+            <QuotationType3Form ref={qt3FormRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={openQuotationDetailsView} openJobCard={(jobId) => cardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} />
+            <QuotationType3Form ref={nonVatSalesFormRef} apiBase="/v1/non-vat-sales" refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={openNonVatSalesDetailsView} openJobCard={(jobId) => cardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} />
+            {showNonVatSalesPreview && <OrderPreview ref={nonVatSalesPreviewRef} onHide={() => setShowNonVatSalesPreview(false)} />}
+            <OrderCreate ref={orderCreateRef} refreshList={refreshAllViews} showToastMessage={props.showToastMessage} openDetailsView={() => {}} openJobCard={(jobId) => cardViewRef.current?.open(jobId, 1200)} />
             <RepairJobCardView
                 ref={cardViewRef}
                 onFullEdit={openUpdateForm}
@@ -533,8 +569,10 @@ function RepairJobIndex(props) {
                 showToastMessage={props.showToastMessage}
                 onCreateSalesInvoice={handleCreateSalesInvoice}
                 onCreateQuotation={handleCreateQuotation}
-                onOpenSalesInvoice={(orderId) => orderCreateRef.current?.open(orderId)}
+                onCreateNonVatInvoice={handleCreateNonVatInvoice}
+                onOpenSalesInvoice={(orderId) => orderCreateRef.current?.openAsType5(orderId)}
                 onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)}
+                onOpenNonVatInvoice={(id) => nonVatSalesFormRef.current?.open(id, null)}
                 openUpdateProductForm={openUpdateProductForm}
             />
 
@@ -559,11 +597,12 @@ function RepairJobIndex(props) {
                     onListsChange={handleKanbanListsChange}
                     onCreateSalesInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'invoice')}
                     onCreateQuotation={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'quotation')}
+                    onCreateNonVatInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'non_vat_invoice')}
                     showToastMessage={props.showToastMessage}
                 />
             )}
 
-            <div className="container-fluid p-0">
+            <div className="container-fluid p-0" style={{ display: viewMode === 'board' ? 'none' : undefined }}>
                 <div className="row align-items-center mb-2">
                     <div className="col">
                         <h5 style={{ fontWeight: 700, marginBottom: 0, color: "#172b4d" }}>{t('Repair Jobs')}</h5>
@@ -574,12 +613,6 @@ function RepairJobIndex(props) {
                         </Button>
                     </div>
                 </div>
-
-                {viewMode === 'board' && (
-                    <div className="text-muted text-center py-4" style={{ fontSize: 13 }}>
-                        <i className="bi bi-kanban me-2"></i>{t('Use the Kanban Board above to manage jobs.')}
-                    </div>
-                )}
                 <div className="row" style={{ display: viewMode === 'board' ? 'none' : undefined }}>
                     <div className="col-12">
                         <div className="card">
@@ -807,6 +840,23 @@ function RepairJobIndex(props) {
                                                         <td style={{ whiteSpace: "nowrap", textAlign: 'left' }}>
                                                             <div style={{ fontWeight: 600 }}>{job.job_number}</div>
                                                             {job.title && <small className="text-muted">{job.title}</small>}
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 3 }}>
+                                                                {job.order_id && (
+                                                                    <span style={{ fontSize: 10, background: '#e3fcef', color: '#006644', borderRadius: 3, padding: '1px 5px', fontWeight: 600, border: '1px solid #abf5d1' }}>
+                                                                        <i className="bi bi-receipt" style={{ marginRight: 2 }}></i>{job.order_code}
+                                                                    </span>
+                                                                )}
+                                                                {job.quotation_id && job.quotation_type !== 'non_vat_invoice' && (
+                                                                    <span style={{ fontSize: 10, background: '#fffae6', color: '#974f0c', borderRadius: 3, padding: '1px 5px', fontWeight: 600, border: '1px solid #ffe380' }}>
+                                                                        <i className="bi bi-file-earmark-text" style={{ marginRight: 2 }}></i>{job.quotation_code}
+                                                                    </span>
+                                                                )}
+                                                                {job.non_vat_sales_id && (
+                                                                    <span style={{ fontSize: 10, background: '#f3e8ff', color: '#6b21a8', borderRadius: 3, padding: '1px 5px', fontWeight: 600, border: '1px solid #d8b4fe' }}>
+                                                                        <i className="bi bi-receipt-cutoff" style={{ marginRight: 2 }}></i>{job.non_vat_sales_code}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     )}
                                                     {colVisible('date') && (

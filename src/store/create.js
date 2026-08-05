@@ -94,6 +94,16 @@ const StoreCreate = forwardRef((props, ref) => {
                     start_from_count: 1,
                     padding_count: 3
                 },
+                non_vat_sales_serial_number: {
+                    prefix: "NVS",
+                    start_from_count: 1,
+                    padding_count: 3
+                },
+                non_vat_sales_return_serial_number: {
+                    prefix: "NVS-R",
+                    start_from_count: 1,
+                    padding_count: 3
+                },
                 customer_serial_number: {
                     prefix: "C",
                     start_from_count: 1,
@@ -192,6 +202,16 @@ const StoreCreate = forwardRef((props, ref) => {
             paid: "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة",
             credit: "SALES RETURN CREDIT TAX INVOICE | إقرار مبيعات فاتورة ضريبة الائتمان",
             cash: "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية",
+        },
+        non_vat_sales_titles: {
+            paid: "TAX INVOICE | الفاتورة الضريبية",
+            credit: "CREDIT INVOICE | فاتورة ائتمانية",
+            cash: "CASH INVOICE | فاتورة نقدية",
+        },
+        non_vat_sales_return_titles: {
+            paid: "SALES RETURN INVOICE | فاتورة مبيعات مرتجعة",
+            credit: "SALES RETURN CREDIT INVOICE | فاتورة ائتمان مبيعات مرتجعة",
+            cash: "SALES RETURN CASH INVOICE | فاتورة نقدية مبيعات مرتجعة",
         },
         quotation_title: "QUOTATION | اقتباس",
         delivery_note_title: "DELIVERY NOTE | مذكرة التسليم",
@@ -338,6 +358,16 @@ const StoreCreate = forwardRef((props, ref) => {
         },
         quotation_sales_return_serial_number: {
             prefix: "QTN-SR-INV",
+            start_from_count: 1,
+            padding_count: 3
+        },
+        non_vat_sales_serial_number: {
+            prefix: "NVS",
+            start_from_count: 1,
+            padding_count: 3
+        },
+        non_vat_sales_return_serial_number: {
+            prefix: "NVS-R",
             start_from_count: 1,
             padding_count: 3
         },
@@ -625,12 +655,6 @@ const StoreCreate = forwardRef((props, ref) => {
             errors["address_in_arabic"] = "Address in arabic is required";
             haveErrors = true;
         }
-
-        if (!formData.logo && !formData.id) {
-            errors["logo_content"] = "Logo is required";
-            haveErrors = true;
-        }
-
 
 
 
@@ -1690,7 +1714,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Logo*</label>
+                                            <label className="form-label">Logo</label>
 
                                             {formData.logo && !formData.logo_content && (
                                                 <div className="mb-2">
@@ -3155,6 +3179,110 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                    <h6><b>Non VAT Sales</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6><b>Non VAT Sales Return</b></h6>
+                                    <div className="row">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Paid*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_return_titles?.paid}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_return_titles.paid = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_return_titles.paid"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Credit*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_return_titles?.credit}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_return_titles.credit = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_return_titles.credit"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Cash*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.invoice?.non_vat_sales_return_titles?.cash}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.settings.invoice.non_vat_sales_return_titles.cash = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.invoice.non_vat_sales_return_titles.cash"
+                                                    placeholder="Invoice title"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <h6><b>Qtn. Sales Return</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
@@ -3913,6 +4041,122 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
+
+                                        <h5><b>Non VAT Sales ID's:</b> {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_serial_number?.prefix || ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["formData.non_vat_sales_serial_number.prefix"] = "";
+                                                        formData.non_vat_sales_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_serial_number.prefix"
+                                                    placeholder="eg: NVS"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding Count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_serial_number?.padding_count || 3}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["formData.non_vat_sales_serial_number.padding_count"] = "";
+                                                        formData.non_vat_sales_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_serial_number?.start_from_count || 1}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.non_vat_sales_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        errors["formData.non_vat_sales_serial_number.start_from_count"] = "";
+                                                        formData.non_vat_sales_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <h5><b>Non VAT Sales Return ID's:</b> {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_return_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_return_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_return_serial_number?.prefix || ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["formData.non_vat_sales_return_serial_number.prefix"] = "";
+                                                        formData.non_vat_sales_return_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_return_serial_number.prefix"
+                                                    placeholder="eg: NVS-R"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding Count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_return_serial_number?.padding_count || 3}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["formData.non_vat_sales_return_serial_number.padding_count"] = "";
+                                                        formData.non_vat_sales_return_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_return_serial_number.padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.non_vat_sales_return_serial_number?.start_from_count || 1}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.non_vat_sales_return_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        errors["formData.non_vat_sales_return_serial_number.start_from_count"] = "";
+                                                        formData.non_vat_sales_return_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="formData.non_vat_sales_return_serial_number.start_from_count"
+                                                    placeholder="eg: Start counting from 1"
+                                                />
+                                            </div>
+                                        </div>
 
                                         <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
@@ -4942,6 +5186,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_customer_po_no" checked={!!formData.settings.enable_customer_po_no} value={formData.settings.enable_customer_po_no} onChange={() => { formData.settings.enable_customer_po_no = !formData.settings.enable_customer_po_no; setFormData({ ...formData }); }} />
                                                 <span>Enable Customer P.O No. Field</span>
                                             </label>
+                                            <label className="pw-check" htmlFor="non_vat_sales">
+                                                <input type="checkbox" id="non_vat_sales" checked={!!formData.settings.non_vat_sales} value={formData.settings.non_vat_sales} onChange={() => { formData.settings.non_vat_sales = !formData.settings.non_vat_sales; setFormData({ ...formData }); }} />
+                                                <span>Enable Non VAT Sales</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="enable_automobile_module">
                                                 <input type="checkbox" id="enable_automobile_module" checked={!!formData.settings.enable_automobile_module} value={formData.settings.enable_automobile_module} onChange={() => { const nextEnabled = !formData.settings.enable_automobile_module; formData.settings.enable_automobile_module = nextEnabled; const currentDesign = formData.settings.sales_create_form_design || "type1"; if (nextEnabled) { if (!formData.settings.sales_create_form_design || currentDesign === "type1") { formData.settings.sales_create_form_design = "type5"; } applyAutomobileMenuOrder(); } else if (currentDesign === "type5") { formData.settings.sales_create_form_design = "type1"; } setFormData({ ...formData }); }} />
                                                 <span>Enable AutoMobile Workshop Module</span>
@@ -4953,6 +5201,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <label className="pw-check" htmlFor="enable_purchase_unit_price_validation">
                                                 <input type="checkbox" id="enable_purchase_unit_price_validation" checked={!!formData.settings.enable_purchase_unit_price_validation} value={formData.settings.enable_purchase_unit_price_validation} onChange={() => { formData.settings.enable_purchase_unit_price_validation = !formData.settings.enable_purchase_unit_price_validation; setFormData({ ...formData }); }} />
                                                 <span>Enable Purchase Unit Price Validation</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_auto_update_prices_from_last_purchase">
+                                                <input type="checkbox" id="enable_auto_update_prices_from_last_purchase" checked={!!formData.settings.enable_auto_update_prices_from_last_purchase} value={formData.settings.enable_auto_update_prices_from_last_purchase} onChange={() => { formData.settings.enable_auto_update_prices_from_last_purchase = !formData.settings.enable_auto_update_prices_from_last_purchase; setFormData({ ...formData }); }} />
+                                                <span>Enable Auto Update Wholesale &amp; Retail Prices from Last Purchase (using Margin %)</span>
                                             </label>
                                         </div>
                                     </div>
@@ -4972,6 +5224,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <label className="pw-check" htmlFor="quotation_invoice_accounting">
                                                 <input type="checkbox" id="quotation_invoice_accounting" checked={!!formData.settings.quotation_invoice_accounting} value={formData.settings.quotation_invoice_accounting} onChange={() => { errors["formData.quotation_invoice_accounting"] = ""; formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting; setFormData({ ...formData }); }} />
                                                 <span>Enable Quotation Invoice Accounting</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_sales_in_quotation">
+                                                <input type="checkbox" id="enable_sales_in_quotation" checked={!!formData.settings.enable_sales_in_quotation} value={formData.settings.enable_sales_in_quotation} onChange={() => { formData.settings.enable_sales_in_quotation = !formData.settings.enable_sales_in_quotation; setFormData({ ...formData }); }} />
+                                                <span>Enable Sales in Quotation</span>
                                             </label>
                                         </div>
                                     </div>
@@ -4998,10 +5254,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <label className="pw-check" htmlFor="update_product_stock_on_quotation_sales">
                                                 <input type="checkbox" id="update_product_stock_on_quotation_sales" checked={!!formData.settings.update_product_stock_on_quotation_sales} value={formData.settings.update_product_stock_on_quotation_sales} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales; setFormData({ ...formData }); }} />
                                                 <span>Update Product Stock on Quotation Sales</span>
-                                            </label>
-                                            <label className="pw-check" htmlFor="hide_quotation_invoice_vat">
-                                                <input type="checkbox" id="hide_quotation_invoice_vat" checked={!!formData.settings.hide_quotation_invoice_vat} value={formData.settings.hide_quotation_invoice_vat} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat; setFormData({ ...formData }); }} />
-                                                <span>Hide Quotation Invoice VAT</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_monthly_serial_number">
                                                 <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
@@ -5920,6 +6172,113 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Designs</h3></div>
 
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-bar-graph" style={{ color: '#004ac6' }}></i> Balance Sheet</div>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet Design</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.balance_sheet_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.balance_sheet_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default — Classic Ledger)</option>
+                                                    <option value="type2">Type 2 (Modern Professional)</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the Balance Sheet UI layout</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet A4 Preview</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.balance_sheet_a4_preview_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.balance_sheet_a4_preview_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2 (Modern Professional)</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the Balance Sheet A4 / PDF preview layout</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Invoice A4 Preview</div>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Invoice A4 Preview Design</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.invoice_a4_preview_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.invoice_a4_preview_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2 (Classic Professional)</option>
+                                                    <option value="type3">Type 3 (Sales Return — Compact)</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the A4 invoice layout for Sales, Purchase, Quotation and all related document types</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-pdf" style={{ color: '#004ac6' }}></i> Print / Preview Designs</div>
+                                        <div className="row g-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>A4/PDF/WhatsApp Preview Header</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.invoice_header_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.invoice_header_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2 (Modern Dark Toolbar)</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls toolbar style for the preview modal</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet / Receivable / Payable Preview Header</label>
+                                                <select
+                                                    className="form-select"
+                                                    value={formData.settings?.balance_sheet_header_design || 'type1'}
+                                                    onChange={(e) => { formData.settings.balance_sheet_header_design = e.target.value; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="type1">Type 1 (Default)</option>
+                                                    <option value="type2">Type 2 (Modern Dark Toolbar)</option>
+                                                </select>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls toolbar style for the balance sheet preview modal</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Auto Refresh on New Version</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="enable_auto_refresh"
+                                                        checked={!!formData.settings?.enable_auto_refresh}
+                                                        onChange={() => { formData.settings.enable_auto_refresh = !formData.settings.enable_auto_refresh; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="enable_auto_refresh">Enable</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Polls every 10 min; prompts user to reload when a new build is deployed</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>VAT on Dashboards</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="enable_vat_box"
+                                                        checked={!!formData.settings?.enable_vat_box}
+                                                        onChange={() => { formData.settings.enable_vat_box = !formData.settings.enable_vat_box; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="enable_vat_box">Enable</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Shows a VAT KPI card on both dashboards (Sales VAT − Returns VAT − Purchase VAT + Purchase Return VAT + Expense VAT)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> Form Designs</div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
@@ -5946,6 +6305,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 >
                                                     <option value="type1">Type 1 (Default)</option>
                                                     <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
                                                 </select>
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
                                             </div>
@@ -5958,6 +6318,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 >
                                                     <option value="type1">Type 1 (Default)</option>
                                                     <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
                                                 </select>
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase creation and update form</div>
                                             </div>
@@ -5970,6 +6331,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 >
                                                     <option value="type1">Type 1 (Default)</option>
                                                     <option value="type2">Type 2</option>
+                                                    <option value="type3">Type 3</option>
                                                 </select>
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase return creation and update form</div>
                                             </div>

@@ -1329,8 +1329,8 @@ function QuotationSalesReturnIndex(props) {
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             {showQuotations && <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />}
-            {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} />}
-            {showQuotationSalesReturnView && <QuotationSalesReturnView ref={DetailsViewRef} />}
+            {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showQuotationSalesReturnView && <QuotationSalesReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {showQuotationSalesReturnPaymentCreate && <QuotationSalesReturnPaymentCreate ref={QuotationSalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openQuotationSalesReturnPaymentDetailsView} />}
             {showQuotationSalesReturnPaymentDetailsView && <QuotationSalesReturnPaymentDetailsView ref={QuotationSalesReturnPaymentDetailsViewRef} openUpdateForm={openQuotationSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}

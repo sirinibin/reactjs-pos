@@ -470,8 +470,21 @@ export default function BusinessDashboard() {
             expenseStats:        { total: sum("expense_amount"), salary_paid: sum("salary_paid") },
             purchaseStats:       { total_purchase: sum("purchase_amount"), accounted_purchase: sum("accounted_purchase_amount"), cash_discount: sum("purchase_cash_discount"), accounted_purchase_cash_discount: sum("accounted_purchase_cash_discount") },
             purchaseReturnStats: { total_purchase_return: sum("purchase_return_amount"), accounted_purchase_return: sum("accounted_purchase_return_amount"), cash_discount: sum("purchase_return_cash_discount"), accounted_purchase_return_cash_discount: sum("accounted_purchase_return_cash_discount") },
-            depositStats:        { purchase_fund:                sum("deposit_purchase_fund") },
+            depositStats:        { purchase_fund: sum("deposit_purchase_fund") },
             orderCount:          monthlyData.reduce((s, d) => s + (d.sales_count || 0), 0),
+            nonVatStats: {
+                sales:       sum("non_vat_sales_amount"),
+                salesReturn: sum("non_vat_sales_return_amount"),
+            },
+            vatBoxStats: {
+                salesVAT:          sum("sales_vat"),
+                salesReturnVAT:    sum("sales_return_vat"),
+                purchaseVAT:       sum("purchase_vat"),
+                purchaseReturnVAT: sum("purchase_return_vat"),
+                acctPurchaseVAT:       sum("accounted_purchase_vat"),
+                acctPurchaseReturnVAT: sum("accounted_purchase_return_vat"),
+                expenseVendorVAT:  sum("expense_vendor_vat"),
+            },
         };
     }, [monthlyData]);
 
@@ -707,6 +720,8 @@ export default function BusinessDashboard() {
                                 qtnSalesReturnStats={kpiStats.qtnSalesReturnStats}
                                 orders={{ length: kpiStats.orderCount }}
                                 employeeStats={employeeStats}
+                                nonVatStats={kpiStats.nonVatStats}
+                                vatBoxStats={kpiStats.vatBoxStats}
                                 filters={{
                                     ...(appliedFrom ? { 'From': appliedFrom } : {}),
                                     ...(appliedTo   ? { 'To':   appliedTo   } : {}),

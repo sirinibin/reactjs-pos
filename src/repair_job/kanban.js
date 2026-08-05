@@ -4,6 +4,8 @@ import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from 'react-bootstrap-typeahead';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
+const PAGE_SIZE = 5;
+
 const DEFAULT_LISTS = [
     { id: 'todo', name: 'ToDo', color: '#0052cc' },
     { id: 'in_progress', name: 'In Progress', color: '#ff8b00' },
@@ -34,16 +36,17 @@ function statusToListId(status) {
     return 'todo';
 }
 
-const STATUS_COLORS = {
-    open: { bg: '#e3f2fd', color: '#1565c0' },
-    in_progress: { bg: '#fff3e0', color: '#e65100' },
-    completed: { bg: '#e8f5e9', color: '#2e7d32' },
-    delivered: { bg: '#f3e5f5', color: '#6a1b9a' },
-    cancelled: { bg: '#ffebee', color: '#c62828' },
-    closed: { bg: '#f0f4f8', color: '#455a64' },
+
+const STATUS_ACCENT = {
+    open: '#3b82f6',
+    in_progress: '#f97316',
+    completed: '#22c55e',
+    delivered: '#a855f7',
+    cancelled: '#ef4444',
+    closed: '#64748b',
 };
 
-const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToTable, onListsChange, onCreateSalesInvoice, onCreateQuotation, presetVehicleId, presetVehicleLabel, presetCustomerId, presetCustomerName, embedded }, ref) => {
+const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToTable, onListsChange, onCreateSalesInvoice, onCreateQuotation, onCreateNonVatInvoice, presetVehicleId, presetVehicleLabel, presetCustomerId, presetCustomerName, embedded }, ref) => {
     const { t } = useTranslation('common');
     const [lists, setLists] = useState(loadLists);
     const [cardMap, setCardMap] = useState(loadCardMap);
@@ -76,6 +79,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
     // Inline card creation
     const [addingCardToListId, setAddingCardToListId] = useState(null);
+    const [addingCardToListIdTop, setAddingCardToListIdTop] = useState(null);
     const [newCardTitle, setNewCardTitle] = useState('');
     const [isCreatingCard, setIsCreatingCard] = useState(false);
 
@@ -88,6 +92,9 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     // Auto-scroll: holds DOM refs to each column's scrollable cards container
     const columnCardsRef = useRef({});
     const pendingScrollListId = useRef(null);
+
+    // Infinite scroll: how many PAGE_SIZE batches are visible per column
+    const [columnPages, setColumnPages] = useState({});
 
     // New Job modal (header button)
     const [showNewJobModal, setShowNewJobModal] = useState(false);
@@ -102,6 +109,9 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     );
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const customerDebounceRef = useRef();
+    const [dueDateFilter, setDueDateFilter] = useState(null); // null | 'overdue' | 'due_today'
+    const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+    const createDropdownRef = useRef();
 
     // Vehicle filter (Typeahead — scoped to selected customer)
     const _presetVehicleOption = presetVehicleId
@@ -133,7 +143,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         const opts = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
         const qp = ObjectToSearchQueryParams({ store_id: localStorage.getItem("store_id") || '', ...activeFiltersRef.current });
         const archivedParam = showArchivedRef.current ? '&search[archived]=1' : '';
-        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,total,total_with_vat,status,customer_id,archived,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total,date,estimated_delivery&limit=500&${qp}${archivedParam}`;
+        const url = `/v1/repair-job?select=id,job_number,title,vehicle_number,brand,model,technician_name,technician_names,customer_name,total,total_with_vat,status,customer_id,archived,order_id,order_code,order_net_total,quotation_id,quotation_code,quotation_net_total,quotation_type,non_vat_sales_id,non_vat_sales_code,non_vat_sales_net_total,date,estimated_delivery&limit=500&${qp}${archivedParam}`;
         console.log('[Kanban] fetchJobs:', url, 'filters:', activeFiltersRef.current);
         setIsLoading(true);
         fetch(url, opts)
@@ -145,6 +155,8 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                 if (pendingScrollListId.current) {
                     const targetListId = pendingScrollListId.current;
                     pendingScrollListId.current = null;
+                    // Expand that column so the newly created card is visible
+                    setColumnPages(prev => ({ ...prev, [targetListId]: 9999 }));
                     setTimeout(() => {
                         const el = columnCardsRef.current[targetListId];
                         if (el) el.scrollTop = el.scrollHeight;
@@ -157,6 +169,26 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             })
             .catch(e => { console.error('[Kanban] fetchJobs error:', e); setIsLoading(false); });
     }
+
+    // Infinite scroll: attach scroll listeners to each column's card container.
+    // Fires only on actual user scroll — avoids the IntersectionObserver false-positive
+    // that fires immediately when a short column's sentinel is already in view.
+    useEffect(() => {
+        const cleanups = [];
+        lists.forEach(list => {
+            const el = columnCardsRef.current[list.id];
+            if (!el) return;
+            const handler = () => {
+                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 60) {
+                    setColumnPages(prev => ({ ...prev, [list.id]: (prev[list.id] || 1) + 1 }));
+                }
+            };
+            el.addEventListener('scroll', handler, { passive: true });
+            cleanups.push(() => el.removeEventListener('scroll', handler));
+        });
+        return () => cleanups.forEach(fn => fn());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lists, jobs]);
 
     // Vehicle filter Typeahead — suggests vehicles (scoped to selected customer)
     async function suggestVehiclesForKanban(term) {
@@ -331,8 +363,27 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
     function getJobListId(job) { return cardMap[job.id] || statusToListId(job.status); }
 
+    const DONE_STATUSES = ['completed', 'delivered', 'cancelled', 'closed'];
+    function isOverdue(job) {
+        if (!job.estimated_delivery) return false;
+        if (DONE_STATUSES.includes(job.status)) return false;
+        const due = new Date(job.estimated_delivery);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        return due < today;
+    }
+    function isDueToday(job) {
+        if (!job.estimated_delivery) return false;
+        const due = new Date(job.estimated_delivery);
+        const today = new Date();
+        return due.getFullYear() === today.getFullYear() && due.getMonth() === today.getMonth() && due.getDate() === today.getDate();
+    }
+    const overdueCount = jobs.filter(isOverdue).length;
+    const dueTodayCount = jobs.filter(isDueToday).length;
+
     function getListJobs(listId) {
-        const filtered = jobs.filter(j => getJobListId(j) === listId);
+        let filtered = jobs.filter(j => getJobListId(j) === listId);
+        if (dueDateFilter === 'overdue') filtered = filtered.filter(isOverdue);
+        else if (dueDateFilter === 'due_today') filtered = filtered.filter(isDueToday);
         const order = cardOrder[listId];
         if (!order || order.length === 0) return filtered;
         const idxMap = {};
@@ -575,7 +626,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         if (onListsChange) onListsChange(updated);
     }
 
-    async function createJob(title, listId) {
+    async function createJob(title, listId, position = 'bottom') {
         if (!title.trim()) return false;
         setIsCreatingCard(true);
         const token = localStorage.getItem('access_token');
@@ -600,7 +651,14 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                 const newMap = { ...cardMap, [data.result.id]: listId };
                 setCardMap(newMap);
                 saveCardMap(newMap);
-                pendingScrollListId.current = listId;
+                if (position === 'top') {
+                    const existingIds = getListJobs(listId).map(j => j.id);
+                    const newOrder = { ...cardOrder, [listId]: [data.result.id, ...existingIds] };
+                    setCardOrder(newOrder);
+                    saveCardOrder(newOrder);
+                } else {
+                    pendingScrollListId.current = listId;
+                }
                 fetchJobs();
                 setIsCreatingCard(false);
                 return true;
@@ -641,11 +699,18 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         fetchJobs();
     }
 
-    async function createCardInline(listId) {
+    async function createCardInline(listId, position = 'bottom') {
         const title = newCardTitle.trim();
-        if (!title) { setAddingCardToListId(null); setNewCardTitle(''); return; }
-        const ok = await createJob(title, listId);
-        if (ok) { setNewCardTitle(''); setAddingCardToListId(null); }
+        if (!title) {
+            if (position === 'top') { setAddingCardToListIdTop(null); } else { setAddingCardToListId(null); }
+            setNewCardTitle('');
+            return;
+        }
+        const ok = await createJob(title, listId, position);
+        if (ok) {
+            setNewCardTitle('');
+            if (position === 'top') { setAddingCardToListIdTop(null); } else { setAddingCardToListId(null); }
+        }
     }
 
     async function handleCreateNewJob() {
@@ -665,18 +730,14 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         setShowJobSelectModal(false);
         setSelectedJobIds(new Set());
         if (jobSelectMode === 'invoice') onCreateSalesInvoice?.(selectedJobs, commonCustomer);
-        else onCreateQuotation?.(selectedJobs, commonCustomer);
+        else if (jobSelectMode === 'quotation') onCreateQuotation?.(selectedJobs, commonCustomer);
+        else if (jobSelectMode === 'non_vat_invoice') onCreateNonVatInvoice?.(selectedJobs, commonCustomer);
     }
 
     function fmtCurrency(val) { return val && parseFloat(val) > 0 ? parseFloat(val).toFixed(2) : null; }
     function fmtDate(iso) { if (!iso) return null; try { return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return null; } }
 
-    function StatusBadge({ status }) {
-        const c = STATUS_COLORS[status] || STATUS_COLORS.open;
-        return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: c.bg, color: c.color, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-            {status === 'in_progress' ? 'In Progress' : (status || 'open')}
-        </span>;
-    }
+
 
     const filterInputStyle = { background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 12, width: 150 };
     const filterBoxStyle = { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.13)', borderRadius: 5, padding: '5px 10px', gap: 6, position: 'relative' };
@@ -696,33 +757,67 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                     {isLoading ? <Spinner as="span" animation="border" size="sm" /> : <i className="fa fa-refresh"></i>}
                     <span>{t('Refresh')}</span>
                 </button>
-                <button type="button" onClick={() => { setNewJobTitle(''); setNewJobListId(lists[0]?.id || 'todo'); setShowNewJobModal(true); }}
-                    style={{ background: '#0052cc', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                    <i className="bi bi-plus-lg me-1"></i>{t('New Job')}
+                <button type="button" onClick={() => setDueDateFilter(f => f === 'overdue' ? null : 'overdue')}
+                    style={{ background: dueDateFilter === 'overdue' ? '#c62828' : 'rgba(255,255,255,0.15)', border: dueDateFilter === 'overdue' ? '1.5px solid #ef9a9a' : 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="bi bi-exclamation-triangle-fill" style={{ color: dueDateFilter === 'overdue' ? '#fff' : '#f44336' }}></i>
+                    <span>{t('Overdue')}</span>
+                    {overdueCount > 0 && <span style={{ background: '#f44336', color: '#fff', borderRadius: 10, fontSize: 10, fontWeight: 700, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{overdueCount}</span>}
                 </button>
+                <button type="button" onClick={() => setDueDateFilter(f => f === 'due_today' ? null : 'due_today')}
+                    style={{ background: dueDateFilter === 'due_today' ? '#e65100' : 'rgba(255,255,255,0.15)', border: dueDateFilter === 'due_today' ? '1.5px solid #ffb74d' : 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <i className="bi bi-calendar-event-fill" style={{ color: dueDateFilter === 'due_today' ? '#fff' : '#ff8b00' }}></i>
+                    <span>{t('Due Today')}</span>
+                    <span style={{ background: '#ff8b00', color: '#fff', borderRadius: 10, fontSize: 10, fontWeight: 700, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{dueTodayCount}</span>
+                </button>
+                {/* Create dropdown */}
+                <div ref={createDropdownRef} style={{ position: 'relative' }}>
+                    <button type="button" onClick={() => setShowCreateDropdown(v => !v)}
+                        style={{ background: '#0052cc', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <i className="bi bi-plus-lg"></i>
+                        <span>{t('Create')}</span>
+                        <i className="bi bi-chevron-down" style={{ fontSize: 10 }}></i>
+                    </button>
+                    {showCreateDropdown && (
+                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#fff', borderRadius: 6, boxShadow: '0 4px 16px rgba(0,0,0,0.18)', zIndex: 2000, minWidth: 180, overflow: 'hidden' }}
+                            onMouseLeave={() => setShowCreateDropdown(false)}>
+                            <button type="button" onClick={() => { setShowCreateDropdown(false); setNewJobTitle(''); setNewJobListId(lists[0]?.id || 'todo'); setShowNewJobModal(true); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#172b4d', textAlign: 'left' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                <i className="bi bi-kanban" style={{ color: '#0052cc', width: 16 }}></i>{t('New Job')}
+                            </button>
+                            {onCreateSalesInvoice && (
+                                <button type="button" onClick={() => { setShowCreateDropdown(false); if (!selectedCustomer) { setShowCustomerRequired(true); return; } setJobSelectMode('invoice'); setSelectedJobIds(new Set()); setShowJobSelectModal(true); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#172b4d', textAlign: 'left' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                    <i className="bi bi-receipt" style={{ color: '#1a7fe8', width: 16 }}></i>{t('Sales Invoice')}
+                                </button>
+                            )}
+                            {onCreateQuotation && (
+                                <button type="button" onClick={() => { setShowCreateDropdown(false); if (!selectedCustomer) { setShowCustomerRequired(true); return; } setJobSelectMode('quotation'); setSelectedJobIds(new Set()); setShowJobSelectModal(true); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#172b4d', textAlign: 'left' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                    <i className="bi bi-file-earmark-text" style={{ color: '#6554c0', width: 16 }}></i>{t('Quotation')}
+                                </button>
+                            )}
+                            {onCreateNonVatInvoice && (
+                                <button type="button" onClick={() => { setShowCreateDropdown(false); if (!selectedCustomer) { setShowCustomerRequired(true); return; } setJobSelectMode('non_vat_invoice'); setSelectedJobIds(new Set()); setShowJobSelectModal(true); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#172b4d', textAlign: 'left' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                    <i className="bi bi-file-earmark-minus" style={{ color: '#00875a', width: 16 }}></i>{t('Non VAT Invoice')}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
                 <button type="button" onClick={toggleShowArchived}
                     style={{ background: showArchived ? '#455a64' : 'rgba(255,255,255,0.15)', border: showArchived ? '1.5px solid #90a4ae' : 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <i className={showArchived ? 'bi bi-archive-fill' : 'bi bi-archive'}></i>
                     <span>{showArchived ? t('Hide Archived') : t('Show Archived')}</span>
                 </button>
-                {onCreateSalesInvoice && (
-                    <button type="button" onClick={() => {
-                        if (!selectedCustomer) { setShowCustomerRequired(true); return; }
-                        setJobSelectMode('invoice'); setSelectedJobIds(new Set()); setShowJobSelectModal(true);
-                    }}
-                        style={{ background: '#1a7fe8', border: 'none', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <i className="bi bi-receipt"></i><span>{t('Create Sales Invoice')}</span>
-                    </button>
-                )}
-                {onCreateQuotation && (
-                    <button type="button" onClick={() => {
-                        if (!selectedCustomer) { setShowCustomerRequired(true); return; }
-                        setJobSelectMode('quotation'); setSelectedJobIds(new Set()); setShowJobSelectModal(true);
-                    }}
-                        style={{ background: '#fff', border: '1.5px solid #1a7fe8', color: '#1a7fe8', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <i className="bi bi-file-earmark-text"></i><span>{t('Create Quotation')}</span>
-                    </button>
-                )}
                 {!embedded && (onSwitchToTable ? (
                     <button type="button" onClick={onSwitchToTable}
                         style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.35)', color: '#fff', borderRadius: 5, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -881,9 +976,11 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             </div>
 
             {/* Columns area */}
-            <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 12, padding: '14px 18px', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 12, padding: '14px 18px', alignItems: 'stretch' }}>
                 {lists.map(list => {
                     const listJobs = getListJobs(list.id);
+                    const visibleJobs = listJobs.slice(0, (columnPages[list.id] || 1) * PAGE_SIZE);
+                    const hasMoreJobs = listJobs.length > visibleJobs.length;
                     const isCardTarget = dragOverListId === list.id && draggingJobId && !dragOverJobId;
                     const isListTarget = dragOverListId === list.id && draggingListId && draggingListId !== list.id;
                     const isBeingDragged = draggingListId === list.id;
@@ -940,8 +1037,47 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
                             {/* Cards */}
                             <div ref={el => { columnCardsRef.current[list.id] = el; }} style={{ flex: 1, overflowY: 'auto', padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 60 }}>
+                                {/* Inline add card at top */}
+                                {addingCardToListIdTop === list.id ? (
+                                    <div style={{ marginBottom: 2 }}>
+                                        <textarea
+                                            autoFocus
+                                            value={newCardTitle}
+                                            onChange={(e) => setNewCardTitle(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); createCardInline(list.id, 'top'); }
+                                                if (e.key === 'Escape') { setAddingCardToListIdTop(null); setNewCardTitle(''); }
+                                            }}
+                                            placeholder={t('Enter a title for this card...')}
+                                            rows={3}
+                                            style={{ width: '100%', border: '2px solid #0052cc', borderRadius: 4, padding: '8px 10px', fontSize: 13, outline: 'none', resize: 'none', marginBottom: 6, fontFamily: 'inherit', background: '#fff' }}
+                                        />
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <button type="button"
+                                                onClick={() => createCardInline(list.id, 'top')}
+                                                disabled={isCreatingCard || !newCardTitle.trim()}
+                                                style={{ background: '#0052cc', border: 'none', color: '#fff', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                {isCreatingCard ? <Spinner as="span" animation="border" size="sm" /> : null}
+                                                {t('Add card')}
+                                            </button>
+                                            <button type="button"
+                                                onClick={() => { setAddingCardToListIdTop(null); setNewCardTitle(''); }}
+                                                style={{ background: 'none', border: 'none', color: '#5e6c84', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 2px' }}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button type="button"
+                                        onClick={() => { setAddingCardToListIdTop(list.id); setAddingCardToListId(null); setNewCardTitle(''); }}
+                                        style={{ width: '100%', background: 'none', border: 'none', borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontSize: 12, color: '#5e6c84', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 5 }}
+                                        onMouseOver={e => e.currentTarget.style.background = '#cdd2da'}
+                                        onMouseOut={e => e.currentTarget.style.background = 'none'}>
+                                        <i className="bi bi-plus"></i> {t('Add a card')}
+                                    </button>
+                                )}
                                 {(() => {
-                                    const firstDroppable = listJobs.find(j => j.id !== draggingJobId);
+                                    const firstDroppable = visibleJobs.find(j => j.id !== draggingJobId);
                                     return draggingJobId && firstDroppable ? (
                                         <div
                                             style={{ height: 6, flexShrink: 0 }}
@@ -949,7 +1085,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                         />
                                     ) : null;
                                 })()}
-                                {listJobs.map(job => {
+                                {visibleJobs.map(job => {
                                     const isHovered = hoveredJobId === job.id;
                                     const isDragging = draggingJobId === job.id;
                                     const showAbove = dragOverJobId === job.id && dragOverPosition === 'above' && !isDragging;
@@ -974,104 +1110,160 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                                 onClick={() => { if (!isDragging && onOpenCard) onOpenCard(job.id); }}
                                                 style={{
                                                     position: 'relative',
-                                                    background: isDragging ? '#f0f4ff' : isHovered ? '#e8edf9' : '#fff',
-                                                    borderRadius: 6,
-                                                    padding: '10px 12px',
+                                                    background: isDragging ? '#eef2ff' : 'linear-gradient(160deg, #ffffff 0%, #f9fbfe 100%)',
+                                                    borderRadius: 10,
+                                                    padding: '12px 13px 11px 15px',
+                                                    border: '1px solid #e8ecf2',
+                                                    borderLeftWidth: 3,
+                                                    borderLeftColor: STATUS_ACCENT[job.status] || '#94a3b8',
                                                     boxShadow: isHovered && !isDragging
-                                                        ? '0 4px 12px rgba(9,30,66,0.22), 0 1px 3px rgba(9,30,66,0.1)'
-                                                        : '0 1px 3px rgba(9,30,66,0.15)',
+                                                        ? '0 8px 24px rgba(15,23,42,0.14), 0 2px 6px rgba(15,23,42,0.06)'
+                                                        : '0 1px 3px rgba(15,23,42,0.07)',
                                                     cursor: isDragging ? 'grabbing' : 'pointer',
-                                                    opacity: isDragging ? 0.4 : 1,
+                                                    opacity: isDragging ? 0.45 : 1,
                                                     userSelect: 'none',
-                                                    transform: isHovered && !isDragging ? 'translateY(-1px)' : 'none',
-                                                    transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
+                                                    transform: isHovered && !isDragging ? 'translateY(-2px)' : 'none',
+                                                    transition: 'box-shadow 0.18s ease, transform 0.18s ease',
                                                 }}
                                             >
                                             {/* Action buttons on hover */}
                                             {isHovered && !isDragging && (
-                                                <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 3, zIndex: 1 }}>
+                                                <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 3, zIndex: 1 }}>
                                                     {showArchived ? (
-                                                        <div
-                                                            onMouseDown={e => e.stopPropagation()}
+                                                        <div onMouseDown={e => e.stopPropagation()}
                                                             onClick={e => { e.stopPropagation(); unarchiveJob(job.id); }}
-                                                            style={{ background: '#fff3cd', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                                            title={t('Unarchive')}
-                                                        >
-                                                            <i className="bi bi-arrow-counterclockwise" style={{ fontSize: 11, color: '#856404' }}></i>
+                                                            style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 5, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                            title={t('Unarchive')}>
+                                                            <i className="bi bi-arrow-counterclockwise" style={{ fontSize: 11, color: '#92400e' }}></i>
                                                         </div>
                                                     ) : (
-                                                        <div
-                                                            onMouseDown={e => e.stopPropagation()}
-                                                            onClick={e => { e.stopPropagation(); archiveJob(job.id); }}
-                                                            style={{ background: '#dfe1e6', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                                            title={t('Archive')}
-                                                        >
-                                                            <i className="bi bi-archive" style={{ fontSize: 11, color: '#42526e' }}></i>
+                                                        <div onMouseDown={e => e.stopPropagation()}
+                                                            onClick={e => { e.stopPropagation(); if (window.confirm(t('Archive this repair job?'))) archiveJob(job.id); }}
+                                                            style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 5, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                            title={t('Archive')}>
+                                                            <i className="bi bi-archive" style={{ fontSize: 11, color: '#64748b' }}></i>
                                                         </div>
                                                     )}
-                                                    <div
-                                                        onMouseDown={e => e.stopPropagation()}
+                                                    <div onMouseDown={e => e.stopPropagation()}
                                                         onClick={e => { e.stopPropagation(); if (onOpenCard) onOpenCard(job.id); }}
-                                                        style={{ background: '#dfe1e6', borderRadius: 4, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                                        title={t('Open Card')}
-                                                    >
-                                                        <i className="bi bi-pencil" style={{ fontSize: 11, color: '#42526e' }}></i>
+                                                        style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 5, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                        title={t('Open Card')}>
+                                                        <i className="bi bi-arrow-up-right-square" style={{ fontSize: 11, color: '#2563eb' }}></i>
                                                     </div>
                                                 </div>
                                             )}
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4, gap: 4, paddingRight: isHovered ? 54 : 0 }}>
-                                                <span style={{ fontSize: 10, color: '#97a0af', fontWeight: 600, fontFamily: 'monospace', flexShrink: 0 }}>{job.job_number}</span>
-                                                <StatusBadge status={job.status} />
-                                            </div>
-                                            {job.title
-                                                ? <div style={{ fontWeight: 600, fontSize: 13, color: '#172b4d', marginBottom: 5, lineHeight: 1.35 }}>{job.title}</div>
-                                                : <div style={{ fontStyle: 'italic', fontSize: 12, color: '#b3bac5', marginBottom: 5 }}>{t('No title')}</div>
-                                            }
-                                            {(job.vehicle_number || job.brand) && (
-                                                <div style={{ fontSize: 11, color: '#42526e', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <i className="bi bi-car-front" style={{ fontSize: 10, flexShrink: 0 }}></i>
-                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        {[job.vehicle_number, job.brand, job.model].filter(Boolean).join(' ')}
+
+                                            {/* Header row: job number + status */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7, paddingRight: isHovered ? 60 : 0 }}>
+                                                <span style={{ fontSize: 10, color: '#b0bbc8', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+                                                    {job.job_number || '—'}
+                                                </span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_ACCENT[job.status] || '#94a3b8', display: 'inline-block', flexShrink: 0 }}></span>
+                                                    <span style={{ fontSize: 10, color: STATUS_ACCENT[job.status] || '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+                                                        {job.status === 'in_progress' ? 'In Progress' : (job.status || 'open')}
                                                     </span>
                                                 </div>
-                                            )}
-                                            {job.technician_name && (
-                                                <div style={{ fontSize: 11, color: '#42526e', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <i className="bi bi-person" style={{ fontSize: 10, flexShrink: 0 }}></i>
-                                                    <span>{job.technician_name}</span>
+                                            </div>
+
+                                            {/* Title */}
+                                            {job.title
+                                                ? <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', marginBottom: 9, lineHeight: 1.45, letterSpacing: '-0.01em' }}>{job.title}</div>
+                                                : <div style={{ fontStyle: 'italic', fontSize: 12, color: '#cbd5e1', marginBottom: 9 }}>{t('No title')}</div>
+                                            }
+
+                                            {/* Info chips */}
+                                            {(job.vehicle_number || job.brand || job.customer_name) && (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+                                                    {(job.vehicle_number || job.brand) && (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: 20, padding: '3px 9px', alignSelf: 'flex-start', maxWidth: '100%' }}>
+                                                            <i className="bi bi-car-front-fill" style={{ fontSize: 10, color: '#2563eb', flexShrink: 0 }}></i>
+                                                            <span style={{ fontSize: 11, color: '#1e40af', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {[job.vehicle_number, job.brand, job.model].filter(Boolean).join(' · ')}
+                                                            </span>
+                                                        </span>
+                                                    )}
+                                                    {job.customer_name && (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '3px 9px', alignSelf: 'flex-start', maxWidth: '100%' }}>
+                                                            <i className="bi bi-person-fill" style={{ fontSize: 10, color: '#16a34a', flexShrink: 0 }}></i>
+                                                            <span style={{ fontSize: 11, color: '#15803d', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {job.customer_name}
+                                                            </span>
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
-                                            {(fmtDate(job.date) || fmtDate(job.estimated_delivery)) && (
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 3 }}>
+
+                                            {/* Technicians as avatar circles */}
+                                            {(() => {
+                                                const names = (job.technician_names && job.technician_names.length > 0)
+                                                    ? job.technician_names
+                                                    : (job.technician_name ? [job.technician_name] : []);
+                                                if (!names.length) return null;
+                                                const AV_COLORS = ['#6366f1', '#f97316', '#0ea5e9', '#8b5cf6', '#10b981'];
+                                                return (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                                                        <i className="bi bi-tools" style={{ fontSize: 10, color: '#94a3b8', flexShrink: 0 }}></i>
+                                                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                                            {names.map((name, i) => {
+                                                                const initials = name.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+                                                                return (
+                                                                    <div key={i} title={name}
+                                                                        style={{ width: 22, height: 22, borderRadius: '50%', background: AV_COLORS[i % AV_COLORS.length], color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, marginLeft: i > 0 ? -7 : 0, border: '2px solid #fff', position: 'relative', zIndex: names.length - i, cursor: 'default' }}>
+                                                                        {initials}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {names.length === 1 && (
+                                                            <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{names[0]}</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Footer: dates + total */}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid #edf0f5', gap: 6 }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                                     {fmtDate(job.date) && (
-                                                        <div style={{ fontSize: 11, color: '#42526e', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                                            <i className="bi bi-calendar" style={{ fontSize: 10 }}></i>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#64748b' }}>
+                                                            <i className="bi bi-calendar3" style={{ fontSize: 9, color: '#94a3b8' }}></i>
                                                             <span>{fmtDate(job.date)}</span>
                                                         </div>
                                                     )}
                                                     {fmtDate(job.estimated_delivery) && (
-                                                        <div style={{ fontSize: 11, color: '#974f0c', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                                            <i className="bi bi-calendar-check" style={{ fontSize: 10 }}></i>
-                                                            <span>{fmtDate(job.estimated_delivery)}</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#b45309' }}>
+                                                            <i className="bi bi-hourglass-split" style={{ fontSize: 9 }}></i>
+                                                            <span>Due {fmtDate(job.estimated_delivery)}</span>
                                                         </div>
                                                     )}
                                                 </div>
-                                            )}
-                                            {(job.total_with_vat || job.total) ? (
-                                                <div style={{ fontSize: 12, fontWeight: 600, color: '#0052cc', marginTop: 4 }}>{fmtCurrency(job.total_with_vat || job.total)}</div>
-                                            ) : null}
-                                            {(job.order_id || job.quotation_id) && (
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
+                                                {fmtCurrency(job.total_with_vat || job.total) && (
+                                                    <div style={{ fontSize: 14, fontWeight: 900, color: '#111827', whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '-0.02em' }}>
+                                                        {fmtCurrency(job.total_with_vat || job.total)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Linked documents */}
+                                            {(job.order_id || job.quotation_id || job.non_vat_sales_id) && (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
                                                     {job.order_id && (
-                                                        <span style={{ fontSize: 10, background: '#e3fcef', color: '#006644', borderRadius: 3, padding: '2px 6px', fontWeight: 600, border: '1px solid #abf5d1' }}>
-                                                            <i className="bi bi-receipt" style={{ marginRight: 3 }}></i>
-                                                            {job.order_code}{job.order_net_total ? ` · ${fmtCurrency(job.order_net_total)}` : ''}
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, background: '#dcfce7', color: '#15803d', borderRadius: 20, padding: '2px 8px', fontWeight: 700, border: '1px solid #bbf7d0' }}>
+                                                            <i className="bi bi-receipt" style={{ fontSize: 9 }}></i>
+                                                            INV{job.order_net_total ? ` · ${fmtCurrency(job.order_net_total)}` : ''}
                                                         </span>
                                                     )}
                                                     {job.quotation_id && (
-                                                        <span style={{ fontSize: 10, background: '#fffae6', color: '#974f0c', borderRadius: 3, padding: '2px 6px', fontWeight: 600, border: '1px solid #ffe380' }}>
-                                                            <i className="bi bi-file-earmark-text" style={{ marginRight: 3 }}></i>
-                                                            {job.quotation_code}{job.quotation_net_total ? ` · ${fmtCurrency(job.quotation_net_total)}` : ''}
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, background: '#fef9c3', color: '#a16207', borderRadius: 20, padding: '2px 8px', fontWeight: 700, border: '1px solid #fde68a' }}>
+                                                            <i className="bi bi-file-earmark-text" style={{ fontSize: 9 }}></i>
+                                                            QTN{job.quotation_net_total ? ` · ${fmtCurrency(job.quotation_net_total)}` : ''}
+                                                        </span>
+                                                    )}
+                                                    {job.non_vat_sales_id && (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, background: '#faf5ff', color: '#7e22ce', borderRadius: 20, padding: '2px 8px', fontWeight: 700, border: '1px solid #e9d5ff' }}>
+                                                            <i className="bi bi-receipt-cutoff" style={{ fontSize: 9 }}></i>
+                                                            N-VAT{job.non_vat_sales_net_total ? ` · ${fmtCurrency(job.non_vat_sales_net_total)}` : ''}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1082,12 +1274,26 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                     );
                                 })}
 
+
                                 {isCardTarget && (
                                     <div style={{ height: 56, border: '2px dashed #0052cc', borderRadius: 6, background: 'rgba(0,82,204,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#0052cc', fontWeight: 600 }}>
                                         {t('Drop here')}
                                     </div>
                                 )}
                             </div>
+
+                            {/* Always-visible "N more" strip — click or scroll to load next batch */}
+                            {hasMoreJobs && (
+                                <div
+                                    onClick={() => setColumnPages(prev => ({ ...prev, [list.id]: (prev[list.id] || 1) + 1 }))}
+                                    style={{ flexShrink: 0, background: '#dfe1e6', borderTop: '1px solid #c1c7d0', padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontSize: 11, color: '#5e6c84', userSelect: 'none', cursor: 'pointer' }}
+                                    onMouseOver={e => e.currentTarget.style.background = '#c8cdd6'}
+                                    onMouseOut={e => e.currentTarget.style.background = '#dfe1e6'}
+                                >
+                                    <i className="bi bi-arrow-down-circle" style={{ fontSize: 12 }}></i>
+                                    {listJobs.length - visibleJobs.length} {t('more')} — {t('scroll or click to load')}
+                                </div>
+                            )}
 
                             {/* Inline add card */}
                             <div style={{ padding: '6px 8px 10px', flexShrink: 0 }}>
@@ -1122,7 +1328,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                     </div>
                                 ) : (
                                     <button type="button"
-                                        onClick={() => { setAddingCardToListId(list.id); setNewCardTitle(''); }}
+                                        onClick={() => { setAddingCardToListId(list.id); setAddingCardToListIdTop(null); setNewCardTitle(''); }}
                                         style={{ width: '100%', background: 'none', border: 'none', borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontSize: 12, color: '#5e6c84', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 5 }}
                                         onMouseOver={e => e.currentTarget.style.background = '#cdd2da'}
                                         onMouseOut={e => e.currentTarget.style.background = 'none'}>
@@ -1231,14 +1437,15 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             {/* Job card selection modal for Create Sales Invoice / Create Quotation */}
             {showJobSelectModal && (() => {
                 const availableJobs = jobs.filter(j =>
-                    jobSelectMode === 'invoice' ? !j.order_id : !j.quotation_id
+                    jobSelectMode === 'non_vat_invoice' ? !j.non_vat_sales_id
+                    : jobSelectMode === 'quotation' ? !j.quotation_id : !j.order_id
                 );
                 return (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
                     <div style={{ background: '#fff', borderRadius: 10, padding: 24, maxWidth: 640, width: '95%', maxHeight: '80vh', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <h5 style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>
-                                {jobSelectMode === 'invoice' ? t('Select Job Cards for Sales Invoice') : t('Select Job Cards for Quotation')}
+                                {jobSelectMode === 'quotation' ? t('Select Job Cards for Quotation') : jobSelectMode === 'non_vat_invoice' ? t('Select Job Cards for Non-VAT Invoice') : t('Select Job Cards for Sales Invoice')}
                             </h5>
                             <button type="button" onClick={() => setShowJobSelectModal(false)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#666', lineHeight: 1 }}>×</button>
                         </div>
@@ -1248,9 +1455,11 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                 <div style={{ padding: 20, textAlign: 'center', color: '#888', fontSize: 13 }}>
                                     {jobs.length === 0
                                         ? t('No jobs visible on this board.')
-                                        : jobSelectMode === 'invoice'
-                                            ? t('All job cards on this board already have a sales invoice.')
-                                            : t('All job cards on this board already have a quotation.')}
+                                        : jobSelectMode === 'quotation'
+                                            ? t('All job cards on this board already have a quotation.')
+                                            : jobSelectMode === 'non_vat_invoice'
+                                                ? t('All job cards on this board already have a non-VAT invoice.')
+                                                : t('All job cards on this board already have a sales invoice.')}
                                 </div>
                             ) : (
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -1312,7 +1521,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                 style={{ padding: '8px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 13 }}>{t('Cancel')}</button>
                             <button type="button" disabled={selectedJobIds.size === 0} onClick={handleJobSelectConfirm}
                                 style={{ padding: '8px 20px', borderRadius: 6, border: 'none', background: selectedJobIds.size > 0 ? '#0052cc' : '#ccc', color: '#fff', cursor: selectedJobIds.size > 0 ? 'pointer' : 'not-allowed', fontSize: 13, fontWeight: 600 }}>
-                                {jobSelectMode === 'invoice' ? t('Create Sales Invoice') : t('Create Quotation')}{selectedJobIds.size > 0 ? ` (${selectedJobIds.size})` : ''}
+                                {jobSelectMode === 'quotation' ? t('Create Quotation') : jobSelectMode === 'non_vat_invoice' ? t('Create Non-VAT Invoice') : t('Create Sales Invoice')}{selectedJobIds.size > 0 ? ` (${selectedJobIds.size})` : ''}
                             </button>
                         </div>
                     </div>

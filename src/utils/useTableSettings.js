@@ -4,8 +4,8 @@ export function useTableSettings({ storageKey, selectStorageKey, pendingStorageK
     const resolvedKey = enableSelection
         ? (selectStorageKey || storageKey)
         : pendingView
-        ? (pendingStorageKey || storageKey)
-        : storageKey;
+            ? (pendingStorageKey || storageKey)
+            : storageKey;
 
     const [columns, setColumns] = useState(defaultColumns);
     const [showSettings, setShowSettings] = useState(false);
@@ -29,8 +29,7 @@ export function useTableSettings({ storageKey, selectStorageKey, pendingStorageK
 
     const handleToggleColumn = useCallback((index) => {
         setColumns(prev => {
-            const updated = [...prev];
-            updated[index].visible = !updated[index].visible;
+            const updated = prev.map((col, i) => i === index ? { ...col, visible: !col.visible } : col);
             localStorage.setItem(resolvedKey, JSON.stringify(updated));
             return updated;
         });

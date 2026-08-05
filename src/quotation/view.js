@@ -12,6 +12,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 
 const QuotationView = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
+    const isNonVAT = props.apiBase && props.apiBase !== '/v1/quotation';
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -57,7 +58,7 @@ const QuotationView = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/quotation/' + id + "?" + queryParams, requestOptions)
+        fetch((props.apiBase || '/v1/quotation') + '/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -115,20 +116,22 @@ const QuotationView = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(model, undefined, "quotation");
+            const mn = props.apiBase && props.apiBase !== '/v1/quotation' ? "non_vat_invoice" : "quotation";
+            PreviewRef.current?.open({ ...model, type: mn === "non_vat_invoice" ? "non_vat_invoice" : model.type }, undefined, mn);
             handleClose();
         }, 100);
 
-    }, [model]);
+    }, [model, props.apiBase]);
 
     const PrintRef = useRef();
     const openPrint = useCallback(() => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
 
-        PrintRef.current?.open(model, "quotation");
+        const mn = props.apiBase && props.apiBase !== '/v1/quotation' ? "non_vat_invoice" : "quotation";
+        PrintRef.current?.open({ ...model, type: mn === "non_vat_invoice" ? "non_vat_invoice" : model.type }, mn);
         handleClose();
-    }, [model]);
+    }, [model, props.apiBase]);
 
 
 
@@ -219,7 +222,7 @@ const QuotationView = forwardRef((props, ref) => {
         {showOrderPreview && <OrderPreview ref={PreviewRef} />}
         <OrderPrint ref={PrintRef} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className="quotation-view-overlay">
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className={["quotation-view-overlay", props.modalClass || ""].filter(Boolean).join(" ")}>
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button - always top right */}
@@ -240,9 +243,9 @@ const QuotationView = forwardRef((props, ref) => {
                                 Back
                             </button>
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                                {t("Details of Quotation")} #{model.code}
+                                {isNonVAT ? t("Details of Invoice") : t("Details of Quotation")} #{model.code}
                             </h1>
-                            {model.status && model.type === 'invoice' && (
+                            {model.status && (model.type === 'invoice' || model.type === 'non_vat_invoice') && (
                                 <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
                                     {formatPaymentMethod(model.status)}
                                 </span>
@@ -255,7 +258,7 @@ const QuotationView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                {t("Quotation created on")} {formatInStoreTimezone(model.date, store?.country_code)}
+                                {isNonVAT ? t("Invoice created on") : t("Quotation created on")} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -268,9 +271,9 @@ const QuotationView = forwardRef((props, ref) => {
                             <i className="bi bi-file-earmark-pdf" style={{ fontSize: '18px' }}></i>
                             {t("Download PDF")}
                         </button>
-                        <button onClick={openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                        <button onClick={isNonVAT ? openPreview : openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                             <i className="bi bi-printer" style={{ fontSize: '18px' }}></i>
-                            {t("Print Quotation")}
+                            {isNonVAT ? t("Print Invoice") : t("Print Quotation")}
                         </button>
                         {props.openCreateForm && (
                             <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
@@ -319,8 +322,8 @@ const QuotationView = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        {model.type === 'invoice' ? (
-                            /* Payment Methods — shown when type=invoice */
+                        {(model.type === 'invoice' || model.type === 'non_vat_invoice') ? (
+                            /* Payment Methods — shown when type=invoice or non_vat_invoice */
                             <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Payment Methods")}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
@@ -360,7 +363,7 @@ const QuotationView = forwardRef((props, ref) => {
                     {/* Full-width Products Section — outside the grid, above it */}
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '0' }}>
                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Quoted Items")}</h3>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{isNonVAT ? t("Items") : t("Quoted Items")}</h3>
                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} {t("Item(s)")}</span>
                         </div>
                         <div style={{ overflowX: 'auto' }}>
@@ -575,8 +578,8 @@ const QuotationView = forwardRef((props, ref) => {
                 <button onClick={openPreview} style={{ backgroundColor: '#fff', color: '#004ac6', border: '1px solid #004ac6', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
                     <i className="bi bi-file-earmark-pdf me-1"></i>{t("Print A4")}
                 </button>
-                <button onClick={openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                    {t("Print Quotation")}
+                <button onClick={isNonVAT ? openPreview : openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                    {isNonVAT ? t("Print Invoice") : t("Print Quotation")}
                 </button>
             </Modal.Footer>
         </Modal>

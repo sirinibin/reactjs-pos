@@ -6,7 +6,9 @@ import React, { useState, useEffect, useCallback } from 'react';
  *   images  – string[]  array of image URLs
  *   title   – string    optional section header (default "Attachments")
  */
-const AttachmentsViewer = ({ images = [], title = "Attachments" }) => {
+const AttachmentsViewer = ({ images: rawImages = [], title = "Attachments" }) => {
+    // Destructuring default `= []` only covers `undefined`; normalise `null` too.
+    const images = rawImages || [];
     const [open, setOpen] = useState(false);
     const [index, setIndex] = useState(0);
 

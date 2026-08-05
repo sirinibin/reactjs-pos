@@ -110,6 +110,13 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/non-vat-sales-returns">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/non-vat-sales">
+            <Dashboard />
+          </Route>
 
           <Route path="/dashboard/stats">
             <Dashboard />

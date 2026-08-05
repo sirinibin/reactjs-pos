@@ -146,6 +146,11 @@ const VehicleCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+        if (!formData.vehicle_number) {
+            errors.vehicle_number = t("Vehicle number is required");
+            setErrors({ ...errors });
+            return;
+        }
         let endPoint = "/v1/vehicle";
         let method = "POST";
         if (formData.id) {
@@ -292,6 +297,10 @@ const VehicleCreate = forwardRef((props, ref) => {
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => { handleClose(); props.openDetailsView && props.openDetailsView(formData.id, 'quotations'); }}>
                                         <i className="bi bi-file-earmark-text me-2 text-info"></i>{t('Quotation History')}
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => { handleClose(); props.openDetailsView && props.openDetailsView(formData.id, 'trello'); }}>
+                                        <i className="bi bi-kanban me-2" style={{ color: '#0052cc' }}></i>{t('Repair Job Board')}
                                     </Dropdown.Item>
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -558,8 +567,9 @@ const VehicleCreate = forwardRef((props, ref) => {
                                 <FloatLabel><i className="bi bi-file-earmark-text me-1"></i>{t('Registration & Technical')}</FloatLabel>
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <Label>{t('Vehicle Number (Plate)')}</Label>
-                                        <input value={formData.vehicle_number || ''} type="text" onChange={(e) => setField("vehicle_number", e.target.value)} style={INPUT} placeholder={t('Plate number')} />
+                                        <Label required>{t('Vehicle Number (Plate)')}</Label>
+                                        <input value={formData.vehicle_number || ''} type="text" onChange={(e) => setField("vehicle_number", e.target.value)} style={{ ...INPUT, outline: errors.vehicle_number ? '2px solid #dc3545' : 'none' }} placeholder={t('Plate number')} />
+                                        <ErrMsg>{errors.vehicle_number}</ErrMsg>
                                     </div>
                                     <div className="col-md-6">
                                         <Label>{t('Istimara No.')}</Label>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import QuotationCreate from "./create.js";
 import QuotationType3Form from "./QuotationType3Form.js";
+import ProductCreate from "../product/create.js";
+import ServiceCreate from "../service/create.js";
 import QuotationView from "./view.js";
 import RepairJobCardView from "../repair_job/card_view.js";
 
@@ -166,6 +168,7 @@ function QuotationIndex(props) {
   }, []);
 
   let [store, setStore] = useState({});
+  const enableSalesInQuotation = store?.settings?.enable_sales_in_quotation === true;
   async function getStore(id) {
       try {
           const data = await fetchStore(id);
@@ -700,7 +703,7 @@ function QuotationIndex(props) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      PreviewRef.current?.open(quotation, undefined, "quotation");
+      PreviewRef.current?.open({ ...quotation, hideVAT: quotation.type === 'non_vat_invoice' }, undefined, "quotation");
     }, 100);
 
   }, []);
@@ -733,7 +736,7 @@ function QuotationIndex(props) {
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      PrintRef.current?.open(quotation, "quotation");
+      PrintRef.current?.open({ ...quotation, hideVAT: quotation.type === 'non_vat_invoice' }, "quotation");
     }, 50);
 
   }, []);
@@ -774,6 +777,27 @@ function QuotationIndex(props) {
 
   const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "quotation_table_settings", selectStorageKey: "select_quotation_table_settings", pendingStorageKey: "pending_quotation_table_settings", defaultColumns, enableSelection, pendingView });
 
+  const QTN_SALES_GATED_KEYS = ['type', 'payment_status', 'payment_methods', 'return_count', 'return_paid_amount'];
+  const displayColumns = enableSalesInQuotation
+      ? columns
+      : columns.filter(c => !QTN_SALES_GATED_KEYS.includes(c.key));
+  const handleToggleDisplayColumn = (displayIdx) => {
+      const col = displayColumns[displayIdx];
+      const realIdx = columns.findIndex(c => c.key === col.key);
+      if (realIdx !== -1) handleToggleColumn(realIdx);
+  };
+  const handleDisplayDragEnd = (result) => {
+      if (!result.destination) return;
+      if (enableSalesInQuotation) { onDragEnd(result); return; }
+      const srcCol = displayColumns[result.source.index];
+      const dstCol = displayColumns[result.destination.index];
+      if (!srcCol || !dstCol) return;
+      const srcReal = columns.findIndex(c => c.key === srcCol.key);
+      const dstReal = columns.findIndex(c => c.key === dstCol.key);
+      if (srcReal === -1 || dstReal === -1) return;
+      onDragEnd({ ...result, source: { ...result.source, index: srcReal }, destination: { ...result.destination, index: dstReal } });
+  };
+
   function RestoreDefaultSettings() {
       restoreDefaults();
       setShowSuccess(true);
@@ -809,6 +833,12 @@ function QuotationIndex(props) {
 
   let [showCustomerCreate, setShowCustomerCreate] = useState(false);
   const CustomerUpdateFormRef = useRef();
+  const productCreateRef = useRef();
+  const serviceCreateRef = useRef();
+  function openUpdateProductForm(id, isService) {
+    if (isService) { serviceCreateRef.current?.open(id); }
+    else { productCreateRef.current?.open(id); }
+  }
   function openCustomerUpdateForm(id) {
     setShowCustomerCreate(true);
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -832,7 +862,7 @@ function QuotationIndex(props) {
   return (
     <>
       {showCustomerCreate && <CustomerCreate ref={CustomerUpdateFormRef} />}
-      <Modal show={showQuotationSalesReturns} size="lg" onHide={handleQuotationSalesReturnsClose} animation={false} scrollable={true}>
+      {enableSalesInQuotation && <Modal show={showQuotationSalesReturns} size="lg" onHide={handleQuotationSalesReturnsClose} animation={false} scrollable={true}>
         <Modal.Header>
           <Modal.Title>Qtn. Sales Returns of Qtn. Sale Order #{selectedQuotation?.code}</Modal.Title>
 
@@ -849,18 +879,18 @@ function QuotationIndex(props) {
         <Modal.Body>
           {showQuotationSalesReturns && <QuotationSalesReturnIndex ref={QuotationSalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedQuotation} refreshSalesList={list} />}
         </Modal.Body>
-      </Modal>
+      </Modal>}
 
-      {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} />}
+      {enableSalesInQuotation && showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
       {/* ⚙️ Settings Modal */}
       <TableSettingsModal
           show={showSettings}
           onHide={() => setShowSettings(false)}
           title="Quotation Settings"
-          columns={columns}
-          onToggleColumn={handleToggleColumn}
-          onDragEnd={onDragEnd}
+          columns={displayColumns}
+          onToggleColumn={handleToggleDisplayColumn}
+          onDragEnd={handleDisplayDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
           enableSelection={enableSelection}
       />
@@ -908,14 +938,16 @@ function QuotationIndex(props) {
           </Button>
         </Modal.Body>
       </Modal>
-      {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
+      {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
       {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+      <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
+      <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       {showQuotationCreate && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId)} />
-        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} />
+        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
-      {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
+      {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
@@ -946,7 +978,7 @@ function QuotationIndex(props) {
                 }}
                 onToggle={handleSummaryToggle}
               />
-              <StatsSummary
+              {enableSalesInQuotation && <StatsSummary
                 title="Qtn. Sales Summary"
                 filters={{
                   ...(dateValue ? { 'Date': dateValue } : {}),
@@ -978,7 +1010,7 @@ function QuotationIndex(props) {
                   "Net Loss": invoiceLoss,
                 }}
                 onToggle={handleSummaryToggle}
-              />
+              />}
             </div>
           </div>
         </div>
@@ -1063,7 +1095,7 @@ function QuotationIndex(props) {
                   <table className="table table-striped table-sm table-bordered">
                     <thead>
                       <tr className="text-center">
-                        {columns.filter(c => c.visible).map((col) => {
+                        {displayColumns.filter(c => c.visible).map((col) => {
                           return (<React.Fragment key={col.key}>
                             {col.key === "actions" && <th>{col.label}</th>}
                             {col.key === "select" && enableSelection && <th>{col.label}</th>}
@@ -1130,7 +1162,7 @@ function QuotationIndex(props) {
                         })}
                       </tr>
                       <tr className="text-center sub-header">
-                        {columns.filter(c => c.visible).map((col) => {
+                        {displayColumns.filter(c => c.visible).map((col) => {
                           return (<React.Fragment key={col.key}>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                             {col.key === "select" && enableSelection && <th></th>}
@@ -1185,7 +1217,7 @@ function QuotationIndex(props) {
                                 multiple
                               />
                             </th>}
-                            {col.key === "type" && <th>
+                            {col.key === "type" && enableSalesInQuotation && <th>
                               <select
                                 value={type}
                                 onChange={(e) => {
@@ -2197,7 +2229,7 @@ function QuotationIndex(props) {
                       {quotationList &&
                         quotationList.map((quotation) => (
                           <tr key={quotation.code}>
-                            {columns.filter(c => c.visible).map((col) => {
+                            {displayColumns.filter(c => c.visible).map((col) => {
                               return (<React.Fragment key={col.key}>
                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button className="btn btn-light btn-sm" onClick={() => {
@@ -2223,7 +2255,7 @@ function QuotationIndex(props) {
                                       <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
                                     </svg>
                                   </Button>
-                                  &nbsp;
+                                  {enableSalesInQuotation && <>&nbsp;
                                   <Button
                                     disabled={quotation.type === "quotation"}
                                     className="btn btn-dark btn-sm"
@@ -2235,7 +2267,7 @@ function QuotationIndex(props) {
                                     }}
                                   >
                                     <i className="bi bi-arrow-left"></i> Return
-                                  </Button>
+                                  </Button></>}
                                 </td>}
                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button className="btn btn-success btn-sm" onClick={() => {
@@ -2312,7 +2344,7 @@ function QuotationIndex(props) {
                                     {quotation.status}
                                   </span>
                                 </td>}
-                                {(col.fieldName === "type") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                {(col.fieldName === "type") && enableSalesInQuotation && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.type}
                                 </td>}
 
@@ -2328,14 +2360,14 @@ function QuotationIndex(props) {
                                 {(col.fieldName === "net_loss") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Amount amount={trimTo2Decimals(quotation.net_loss)} />
                                 </td>}
-                                {(col.fieldName === "return_count") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                {(col.fieldName === "return_count") && enableSalesInQuotation && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button variant="link" onClick={() => {
                                     openQuotationSalesReturnsDialogue(quotation);
                                   }}>
                                     {quotation.return_count}
                                   </Button>
                                 </td>}
-                                {(col.fieldName === "return_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                {(col.fieldName === "return_amount") && enableSalesInQuotation && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button variant="link" onClick={() => {
                                     openQuotationSalesReturnsDialogue(quotation);
                                   }}>

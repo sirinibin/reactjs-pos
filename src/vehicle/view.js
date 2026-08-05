@@ -13,6 +13,37 @@ function fmtDate(val) {
 }
 function fmtAmt(val) { return val != null ? parseFloat(val).toFixed(2) : '-'; }
 
+const PER_PAGE = 10;
+function Pagination({ page, total, perPage, onChange }) {
+    const totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return null;
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - page) <= 1) pages.push(i);
+        else if (pages[pages.length - 1] !== '…') pages.push('…');
+    }
+    const btn = (disabled, label, onClick) => (
+        <button type="button" disabled={disabled} onClick={onClick}
+            style={{ border: '1px solid #d1d5db', borderRadius: 4, background: disabled ? '#f9fafb' : '#fff', color: disabled ? '#9ca3af' : '#374151', padding: '3px 9px', fontSize: 12, cursor: disabled ? 'default' : 'pointer' }}>
+            {label}
+        </button>
+    );
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4, padding: '8px 4px 2px' }}>
+            <span style={{ fontSize: 12, color: '#6b7280', marginRight: 6 }}>
+                {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} / {total}
+            </span>
+            {btn(page === 1, '‹', () => onChange(page - 1))}
+            {pages.map((p, i) => p === '…'
+                ? <span key={`e${i}`} style={{ fontSize: 12, color: '#9ca3af', padding: '0 2px' }}>…</span>
+                : <button key={p} type="button" onClick={() => onChange(p)}
+                    style={{ border: '1px solid ' + (p === page ? '#0052cc' : '#d1d5db'), borderRadius: 4, background: p === page ? '#0052cc' : '#fff', color: p === page ? '#fff' : '#374151', padding: '3px 9px', fontSize: 12, fontWeight: p === page ? 700 : 400, cursor: 'pointer', minWidth: 30 }}>{p}</button>
+            )}
+            {btn(page === totalPages, '›', () => onChange(page + 1))}
+        </div>
+    );
+}
+
 const HIST_TABS = [
     { key: 'repairs',    label: 'Repair Jobs',        icon: 'bi-tools',             color: '#e65100' },
     { key: 'sales',      label: 'Sales History',      icon: 'bi-receipt',           color: '#2e7d32' },
@@ -34,24 +65,38 @@ const VehicleView = forwardRef((props, ref) => {
     // null = not fetched yet; [] / [...] = fetched
     const [histData, setHistData] = useState({ sales: null, quotations: null, repairs: null });
     const [histLoading, setHistLoading] = useState(null); // tab key currently loading
+    const [histPage, setHistPage] = useState(1);
 
     const vehicleIdRef = useRef(null);
     const cardViewRef = useRef();
     const qt3FormRef = useRef();
     const orderCreateRef = useRef();
 
+    // Edit form refs for history tabs
+    const histSalesCreateRef = useRef();
+    const histQuotationFormRef = useRef();
+
+    function refreshCurrentTab() { fetchHistTab(histTab); }
+
     async function buildJobPrefill(job, type) {
         const storeId = localStorage.getItem('store_id');
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
-        const products = (job.parts || []).map(p => ({
-            product_id: p.product_id || null, name: p.name || '',
-            quantity: parseFloat(p.qty) || 1,
-            unit_price: parseFloat(p.unit_price) || 0,
-            unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0,
-            purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
-            purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
-            unit_discount: 0, unit_discount_with_vat: 0, unit: p.unit || '', is_service: false,
-        }));
+        const products = (job.parts || []).map(p => {
+            const pQty = parseFloat(p.qty) || 1;
+            const pUnitDisc = parseFloat(p.unit_discount) || 0;
+            const pUnitDiscVat = parseFloat(p.unit_discount_with_vat) || 0;
+            return {
+                product_id: p.product_id || null, name: p.name || '',
+                quantity: pQty,
+                unit_price: parseFloat(p.unit_price) || 0,
+                unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0,
+                purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+                purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+                unit_discount: pUnitDisc, unit_discount_with_vat: pUnitDiscVat,
+                line_discount_with_vat: parseFloat((pUnitDiscVat * pQty).toFixed(2)) || 0,
+                unit: p.unit || '', is_service: false,
+            };
+        });
         const labour = parseFloat(job.labour_charge) || 0;
         if (labour > 0) {
             let labourProductId = null;
@@ -84,6 +129,7 @@ const VehicleView = forwardRef((props, ref) => {
                 setHistVehicle({});
                 setHistData({ sales: null, quotations: null, repairs: null });
                 setHistTab(tab);
+                setHistPage(1);
                 setHistShow(true);
                 fetchVehicleBasic(id);
                 if (tab !== 'trello') fetchHistTab(tab, id);
@@ -105,6 +151,7 @@ const VehicleView = forwardRef((props, ref) => {
         let at = localStorage.getItem("access_token");
         if (!at) { window.location = "/"; }
     });
+
 
     async function fetchVehicleBasic(id) {
         try {
@@ -158,6 +205,7 @@ const VehicleView = forwardRef((props, ref) => {
 
     function handleHistTabClick(tab) {
         setHistTab(tab);
+        setHistPage(1);
         if (tab !== 'trello' && !histData[tab]) {
             fetchHistTab(tab);
         }
@@ -170,6 +218,7 @@ const VehicleView = forwardRef((props, ref) => {
         setHistVehicle(formData);
         setHistData({ sales: null, quotations: null, repairs: null });
         setHistTab(tab);
+        setHistPage(1);
         setHistShow(true);
         if (tab !== 'trello') fetchHistTab(tab, vid);
     }
@@ -199,6 +248,7 @@ const VehicleView = forwardRef((props, ref) => {
         || histVehicle.vehicle_number || '';
 
     const rows = histData[histTab];
+    const pageRows = rows ? rows.slice((histPage - 1) * PER_PAGE, histPage * PER_PAGE) : null;
     const isLoading = histLoading === histTab;
 
     return (
@@ -347,30 +397,19 @@ const VehicleView = forwardRef((props, ref) => {
                     })}
                 </div>
 
-                <Modal.Body style={histTab === 'trello' ? { padding: 0, height: '65vh', overflow: 'hidden' } : { padding: 0, minHeight: 300 }}>
+                <Modal.Body style={histTab === 'trello' ? { padding: 0, height: '65vh', overflowY: 'auto' } : { padding: 0, minHeight: 300 }}>
 
                     {/* REPAIR JOB BOARD — full-height embedded kanban */}
                     {histTab === 'trello' && (
                         histVehicle.id ? (
-                            <>
-                                <RepairJobKanban
-                                    embedded
-                                    presetVehicleId={histVehicle.id}
-                                    presetVehicleLabel={[histVehicle.vehicle_number, histVehicle.brand, histVehicle.model].filter(Boolean).join(' — ')}
-                                    presetCustomerId={histVehicle.customer_id}
-                                    presetCustomerName={histVehicle.customer_name}
-                                    onOpenCard={(jobId) => cardViewRef.current?.open(jobId)}
-                                />
-                                <RepairJobCardView
-                                    ref={cardViewRef}
-                                    showToastMessage={props.showToastMessage}
-                                    onFullEdit={props.onOpenRepairJobUpdate}
-                                    onCreateSalesInvoice={async (job) => { const p = await buildJobPrefill(job, 'invoice'); orderCreateRef.current?.openWithPrefill(p); }}
-                                    onCreateQuotation={async (job) => { const p = await buildJobPrefill(job, 'quotation'); qt3FormRef.current?.open(null, p); }}
-                                />
-                                <QuotationType3Form ref={qt3FormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-                                <OrderCreate ref={orderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-                            </>
+                            <RepairJobKanban
+                                embedded
+                                presetVehicleId={histVehicle.id}
+                                presetVehicleLabel={[histVehicle.vehicle_number, histVehicle.brand, histVehicle.model].filter(Boolean).join(' — ')}
+                                presetCustomerId={histVehicle.customer_id}
+                                presetCustomerName={histVehicle.customer_name}
+                                onOpenCard={(jobId) => cardViewRef.current?.open(jobId, 1300)}
+                            />
                         ) : (
                             <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
                         )
@@ -397,7 +436,7 @@ const VehicleView = forwardRef((props, ref) => {
                                     <tbody>
                                         {!rows || rows.length === 0 ? (
                                             <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No repair jobs found')}</td></tr>
-                                        ) : rows.map(r => (
+                                        ) : (pageRows || []).map(r => (
                                             <tr key={r.id}>
                                                 <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.job_number || '-'}</span></td>
                                                 <td style={tdStyle}>{r.title || '-'}</td>
@@ -407,12 +446,10 @@ const VehicleView = forwardRef((props, ref) => {
                                                 <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtAmt(r.labour_charge)}</td>
                                                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.total)}</td>
                                                 <td style={tdStyle}>
-                                                    {props.onOpenRepairJobUpdate && (
-                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenRepairJobUpdate(r.id); }}
-                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                        </button>
-                                                    )}
+                                                    <button type="button" onClick={() => props.onOpenJobCard ? props.onOpenJobCard(r.id) : cardViewRef.current?.open(r.id, 1300)}
+                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                        <i className="bi bi-pencil me-1"></i>{t('Edit')}
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -435,7 +472,7 @@ const VehicleView = forwardRef((props, ref) => {
                                     <tbody>
                                         {!rows || rows.length === 0 ? (
                                             <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No sales found')}</td></tr>
-                                        ) : rows.map(r => (
+                                        ) : (pageRows || []).map(r => (
                                             <tr key={r.id}>
                                                 <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
                                                 <td style={tdStyle}>{fmtDate(r.date)}</td>
@@ -444,12 +481,10 @@ const VehicleView = forwardRef((props, ref) => {
                                                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
                                                 <td style={tdStyle}>{payBadge(r.payment_status)}</td>
                                                 <td style={tdStyle}>
-                                                    {props.onOpenSalesUpdate && (
-                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenSalesUpdate(r.id); }}
-                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                        </button>
-                                                    )}
+                                                    <button type="button" onClick={() => histSalesCreateRef.current?.openAsType5(r.id)}
+                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                        <i className="bi bi-pencil me-1"></i>{t('Edit')}
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -472,7 +507,7 @@ const VehicleView = forwardRef((props, ref) => {
                                     <tbody>
                                         {!rows || rows.length === 0 ? (
                                             <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>{t('No quotations found')}</td></tr>
-                                        ) : rows.map(r => (
+                                        ) : (pageRows || []).map(r => (
                                             <tr key={r.id}>
                                                 <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{r.code || '-'}</span></td>
                                                 <td style={tdStyle}>{fmtDate(r.date)}</td>
@@ -481,12 +516,10 @@ const VehicleView = forwardRef((props, ref) => {
                                                 <td style={tdStyle}>{r.km_driven != null ? parseFloat(r.km_driven).toLocaleString() + ' km' : '-'}</td>
                                                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtAmt(r.net_total)}</td>
                                                 <td style={tdStyle}>
-                                                    {props.onOpenQuotationUpdate && (
-                                                        <button type="button" onClick={() => { handleHistClose(); props.onOpenQuotationUpdate(r.id); }}
-                                                            style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                                            <i className="bi bi-pencil me-1"></i>{t('Update')}
-                                                        </button>
-                                                    )}
+                                                    <button type="button" onClick={() => histQuotationFormRef.current?.open(r.id, null)}
+                                                        style={{ background: '#d0e1fb', color: '#1e40af', border: 'none', borderRadius: 4, padding: '3px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                        <i className="bi bi-pencil me-1"></i>{t('Edit')}
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -494,11 +527,29 @@ const VehicleView = forwardRef((props, ref) => {
                                 </table>
                             )}
 
+                            {rows && rows.length > PER_PAGE && (
+                                <Pagination page={histPage} total={rows.length} perPage={PER_PAGE} onChange={setHistPage} />
+                            )}
                         </div>
                     )}
                 </Modal.Body>
             </Modal>
+        <>
+            {!props.noRepairJobBoard && <>
+                <RepairJobCardView
+                    ref={cardViewRef}
+                    showToastMessage={props.showToastMessage}
+                    onFullEdit={props.onOpenRepairJobUpdate}
+                    onCreateSalesInvoice={async (job) => { const p = await buildJobPrefill(job, 'invoice'); orderCreateRef.current?.openWithPrefill(p); }}
+                    onCreateQuotation={async (job) => { const p = await buildJobPrefill(job, 'quotation'); qt3FormRef.current?.open(null, p); }}
+                />
+                <QuotationType3Form ref={qt3FormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+                <OrderCreate ref={orderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            </>}
+            <OrderCreate ref={histSalesCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            <QuotationType3Form ref={histQuotationFormRef} apiBase="/v1/quotation" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
         </>
+</>
     );
 });
 

@@ -4,7 +4,8 @@ import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
-import { loadKanbanLists, loadCardMap, saveCardMap } from './card_view.js';
+import { loadKanbanLists, loadCardMap, saveCardMap } from './kanban_utils.js';
+import EmployeeCreate from '../employee/create.js';
 
 const RepairJobCreate = forwardRef((props, ref) => {
 
@@ -65,10 +66,14 @@ const RepairJobCreate = forwardRef((props, ref) => {
     let [selectedVehicles, setSelectedVehicles] = useState([]);
     const vehicleSearchRef = useRef();
 
-    // Technician
+    // Technician (multi)
     const [technicianOptions, setTechnicianOptions] = useState([]);
     let [selectedTechnicians, setSelectedTechnicians] = useState([]);
     const technicianSearchRef = useRef();
+    const EmployeeCreateRef = useRef();
+    const [showTechList, setShowTechList] = useState(false);
+    const [techListItems, setTechListItems] = useState([]);
+    const [techListSearch, setTechListSearch] = useState('');
 
     const [kanbanLists] = useState(loadKanbanLists);
 
@@ -107,8 +112,11 @@ const RepairJobCreate = forwardRef((props, ref) => {
                     selectedVehicles = [{ id: formData.vehicle_id, vehicle_number: formData.vehicle_number, brand: formData.brand, model: formData.model, customer_name: '', label: `${formData.vehicle_number || ''} - ${formData.brand || ''} ${formData.model || ''}` }];
                     setSelectedVehicles([...selectedVehicles]);
                 }
-                if (formData.technician_id) {
-                    selectedTechnicians = [{ id: formData.technician_id, name: formData.technician_name }];
+                if (formData.technician_ids?.length) {
+                    selectedTechnicians = formData.technician_ids.map((id, i) => ({ id, name: (formData.technician_names || [])[i] || '' }));
+                    setSelectedTechnicians([...selectedTechnicians]);
+                } else if (formData.technician_id) {
+                    selectedTechnicians = [{ id: formData.technician_id, name: formData.technician_name || '' }];
                     setSelectedTechnicians([...selectedTechnicians]);
                 }
                 if (formData.customer_id) {
@@ -298,6 +306,43 @@ const RepairJobCreate = forwardRef((props, ref) => {
         let result = await fetch("/v1/employee?select=id,name,position" + queryString, requestOptions);
         let data = await result.json();
         setTechnicianOptions(data.result || []);
+    }
+
+    async function openTechList() {
+        const storeId = localStorage.getItem('store_id') || '';
+        const qp = storeId ? `search[store_id]=${storeId}&` : '';
+        try {
+            const res = await fetch(`/v1/employee?${qp}select=id,name,position&limit=200`, {
+                headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json();
+            setTechListItems(data?.result || []);
+        } catch (_) { setTechListItems([]); }
+        setTechListSearch('');
+        setShowTechList(true);
+    }
+
+    function addTechnician(emp) {
+        if (selectedTechnicians.some(t => t.id === emp.id)) return;
+        const updated = [...selectedTechnicians, { id: emp.id, name: emp.name }];
+        selectedTechnicians = updated;
+        setSelectedTechnicians(updated);
+        formData.technician_id = updated[0]?.id || '';
+        formData.technician_name = updated[0]?.name || '';
+        formData.technician_ids = updated.map(t => t.id);
+        formData.technician_names = updated.map(t => t.name);
+        setFormData({ ...formData });
+    }
+
+    function removeTechnicianFromForm(id) {
+        const updated = selectedTechnicians.filter(t => t.id !== id);
+        selectedTechnicians = updated;
+        setSelectedTechnicians(updated);
+        formData.technician_id = updated[0]?.id || '';
+        formData.technician_name = updated[0]?.name || '';
+        formData.technician_ids = updated.map(t => t.id);
+        formData.technician_names = updated.map(t => t.name);
+        setFormData({ ...formData });
     }
 
     async function suggestProducts(searchTerm) {
@@ -715,28 +760,34 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                             style={INPUT} placeholder="0" />
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <Label>{t('Technician')}</Label>
+                                        <Label>{t('Technicians')}</Label>
+                                        {selectedTechnicians.length > 0 && (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                                                {selectedTechnicians.map(tech => {
+                                                    const initials = (tech.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                                                    return (
+                                                        <div key={tech.id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#e0e7ff', borderRadius: 14, padding: '2px 8px 2px 4px', fontSize: 12 }}>
+                                                            <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#6366f1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+                                                            <span style={{ color: '#3730a3', fontWeight: 500 }}>{tech.name}</span>
+                                                            <button type="button" onClick={() => removeTechnicianFromForm(tech.id)}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', padding: 0, lineHeight: 1, fontSize: 14 }}>×</button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                         <Typeahead
                                             id="technician_id"
                                             labelKey="name"
                                             onChange={(selectedItems) => {
-                                                errors.technician_id = "";
-                                                setErrors({ ...errors });
-                                                if (selectedItems.length === 0) {
-                                                    formData.technician_id = "";
-                                                    formData.technician_name = "";
-                                                    setFormData({ ...formData });
-                                                    setSelectedTechnicians([]);
-                                                    return;
-                                                }
-                                                formData.technician_id = selectedItems[0].id;
-                                                formData.technician_name = selectedItems[0].name;
-                                                setFormData({ ...formData });
-                                                setSelectedTechnicians([...selectedItems]);
+                                                if (!selectedItems.length) return;
+                                                addTechnician(selectedItems[0]);
+                                                technicianSearchRef.current?.clear();
+                                                setTechnicianOptions([]);
                                             }}
                                             options={technicianOptions}
-                                            placeholder={t('Search employee by name...')}
-                                            selected={selectedTechnicians}
+                                            placeholder={t('Search & add technician...')}
+                                            selected={[]}
                                             highlightOnlyResult={true}
                                             onInputChange={(searchTerm) => { suggestTechnicians(searchTerm); }}
                                             ref={technicianSearchRef}
@@ -752,6 +803,16 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         />
+                                        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                                            <button type="button" onClick={() => EmployeeCreateRef.current?.open(null, { position: 'Technician' })}
+                                                style={{ flex: 1, fontSize: 11, padding: '4px 8px', border: '1px solid #c3c6d7', borderRadius: 4, background: '#f7f9fb', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                                <i className="bi bi-person-plus"></i> {t('Add New Technician')}
+                                            </button>
+                                            <button type="button" onClick={openTechList}
+                                                style={{ flex: 1, fontSize: 11, padding: '4px 8px', border: '1px solid #c3c6d7', borderRadius: 4, background: '#f7f9fb', cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                                <i className="bi bi-people"></i> {t('All Technicians')}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 </div>{/* end left column */}
@@ -1021,6 +1082,55 @@ const RepairJobCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
             </Modal>
+
+            <EmployeeCreate ref={EmployeeCreateRef} showToastMessage={props.showToastMessage} refreshList={() => {}} />
+
+            {showTechList && (
+                <div onClick={() => setShowTechList(false)}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 12px', overflowY: 'auto' }}>
+                    <div onClick={e => e.stopPropagation()}
+                        style={{ background: '#fff', borderRadius: 10, width: '100%', maxWidth: 520, maxHeight: '75vh', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}>
+                        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                            <i className="bi bi-people" style={{ fontSize: 16, color: '#0052cc' }}></i>
+                            <span style={{ fontWeight: 700, fontSize: 15, flex: 1 }}>{t('All Technicians')}</span>
+                            <button type="button" onClick={() => setShowTechList(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#6b7280', lineHeight: 1, padding: '0 4px' }}>
+                                <i className="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <div style={{ padding: '10px 18px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
+                            <input autoFocus value={techListSearch} onChange={e => setTechListSearch(e.target.value)}
+                                placeholder={t('Search by name or position...')}
+                                style={{ width: '100%', border: '1px solid #c3c6d7', borderRadius: 6, padding: '7px 12px', fontSize: 13 }} />
+                        </div>
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {techListItems.filter(e => {
+                                const q = techListSearch.toLowerCase();
+                                return !q || e.name?.toLowerCase().includes(q) || e.position?.toLowerCase().includes(q);
+                            }).map(emp => (
+                                <div key={emp.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid #f3f4f6', gap: 10 }}>
+                                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#6366f1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                                        {(emp.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 13 }}>{emp.name}</div>
+                                        {emp.position && <div style={{ fontSize: 11, color: '#6b7280' }}>{emp.position}</div>}
+                                    </div>
+                                    {selectedTechnicians.some(t => t.id === emp.id)
+                                        ? <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}><i className="bi bi-check2"></i> {t('Added')}</span>
+                                        : <button type="button" onClick={() => addTechnician(emp)}
+                                            style={{ fontSize: 12, padding: '4px 12px', border: '1px solid #0052cc', borderRadius: 4, background: '#fff', color: '#0052cc', cursor: 'pointer', fontWeight: 600 }}>
+                                            + {t('Add')}
+                                          </button>
+                                    }
+                                </div>
+                            ))}
+                            {techListItems.length === 0 && (
+                                <div style={{ padding: 24, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>{t('No employees found')}</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 });

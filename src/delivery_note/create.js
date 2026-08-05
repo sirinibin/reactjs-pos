@@ -2804,7 +2804,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price" style={{ ...thStyle, textAlign: 'right' }}>P. U.Price{resizeHandle}</th>;
                       if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>P. U.Price (inc. VAT){resizeHandle}</th>;
                       if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount" style={{ ...thStyle, textAlign: 'right' }}>U. Dsc. (ex. VAT){resizeHandle}</th>;
-                      if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>U. Dsc. (inc. VAT){resizeHandle}</th>;
+                      if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>L. Disc. (incl. VAT){resizeHandle}</th>;
                       if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return <th key="price" style={{ ...thStyle, textAlign: 'right' }}>Total (ex. VAT){resizeHandle}</th>;
                       if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>Total (inc. VAT){resizeHandle}</th>;
                       return null;
@@ -3060,10 +3060,20 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   }
 
 
+                                  const _oldLineDisc = selectedProducts[index].line_discount_with_vat != null
+                                    ? selectedProducts[index].line_discount_with_vat
+                                    : (selectedProducts[index].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[index].quantity) || 1);
+
                                   product.quantity = parseFloat(e.target.value);
 
-
                                   selectedProducts[index].quantity = parseFloat(e.target.value);
+
+                                  if (_oldLineDisc && parseFloat(e.target.value)) {
+                                    const _newQty = parseFloat(e.target.value);
+                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(_oldLineDisc / _newQty));
+                                    selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + ((formData.vat_percent || 0) / 100))));
+                                    selectedProducts[index].line_discount_with_vat = _oldLineDisc;
+                                  }
 
                                   setSelectedProducts([...selectedProducts]);
 
@@ -3242,9 +3252,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "100px" }}
-                            value={product.unit_discount_with_vat}
+                            value={product.line_discount_with_vat != null ? product.line_discount_with_vat : (product.unit_discount_with_vat ? parseFloat(trimTo2Decimals((product.unit_discount_with_vat || 0) * (product.quantity || 1))) : product.unit_discount_with_vat)}
                             className="form-control"
-                            placeholder="Disc.(with VAT)"
+                            placeholder="L. Disc.(incl. VAT)"
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3262,7 +3272,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                 setSelectedProducts([...selectedProducts]);
                                 return;
                               }
-                              selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value);
+                              const _qty = parseFloat(selectedProducts[index].quantity) || 1;
+                              selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(parseFloat(e.target.value) / _qty));
                               selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + ((formData.vat_percent || 0) / 100))));
                               CalCulateLineTotals(index);
                               reCalculate();

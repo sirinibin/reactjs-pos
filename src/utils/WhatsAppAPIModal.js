@@ -43,6 +43,8 @@ function needsCountryCode(raw) {
     return true;
 }
 
+export { normalisePhone, isSaudiLocal, needsCountryCode };
+
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function WhatsAppAPIModal({

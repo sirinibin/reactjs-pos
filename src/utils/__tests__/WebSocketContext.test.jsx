@@ -5,14 +5,15 @@
  * to an IP-lookup endpoint. All are mocked here so the tests run offline.
  */
 import React, { useContext } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // ── react-use-websocket mock ──────────────────────────────────────────────────
+const mockSendMessage = jest.fn();
 jest.mock('react-use-websocket', () => ({
     __esModule: true,
     default: () => ({
-        sendMessage: jest.fn(),
+        sendMessage: mockSendMessage,
         lastMessage: null,
         readyState: 0,
         getWebSocket: jest.fn(),
@@ -86,5 +87,91 @@ describe('WebSocketProvider', () => {
             </WebSocketProvider>
         );
         expect(screen.getByTestId('ctx')).toBeInTheDocument();
+    });
+
+    test('provides sendMessage/lastMessage/readyState/getWebSocket via context value', () => {
+        let captured;
+        function Consumer() {
+            captured = useContext(WebSocketContext);
+            return null;
+        }
+        render(
+            <WebSocketProvider userId="guest">
+                <Consumer />
+            </WebSocketProvider>
+        );
+        expect(captured.sendMessage).toBe(mockSendMessage);
+        expect(captured.readyState).toBe(0);
+        expect(captured.lastMessage).toBeNull();
+        expect(typeof captured.getWebSocket).toBe('function');
+    });
+
+    describe('periodic ping effect', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+            mockSendMessage.mockClear();
+        });
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test('sends a ping immediately on mount when userId is truthy', () => {
+            render(
+                <WebSocketProvider userId="user-123">
+                    <div />
+                </WebSocketProvider>
+            );
+            expect(mockSendMessage).toHaveBeenCalledWith(
+                JSON.stringify({ event: 'ping', data: { message: 'ping' } })
+            );
+        });
+
+        test('does not send a ping when userId is falsy (empty string)', () => {
+            render(
+                <WebSocketProvider userId="">
+                    <div />
+                </WebSocketProvider>
+            );
+            expect(mockSendMessage).not.toHaveBeenCalled();
+        });
+
+        test('sends another ping after the 5-minute interval elapses', () => {
+            render(
+                <WebSocketProvider userId="user-123">
+                    <div />
+                </WebSocketProvider>
+            );
+            const callsAfterMount = mockSendMessage.mock.calls.length;
+            expect(callsAfterMount).toBeGreaterThanOrEqual(1);
+            act(() => {
+                jest.advanceTimersByTime(60000 * 5);
+            });
+            expect(mockSendMessage.mock.calls.length).toBeGreaterThan(callsAfterMount);
+        });
+
+        test('swallows errors thrown by sendMessage during ping (catch block)', () => {
+            mockSendMessage.mockImplementationOnce(() => {
+                throw new Error('send failed');
+            });
+            expect(() => {
+                render(
+                    <WebSocketProvider userId="user-123">
+                        <div />
+                    </WebSocketProvider>
+                );
+            }).not.toThrow();
+        });
+
+        test('clears the ping interval on unmount', () => {
+            const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+            const { unmount } = render(
+                <WebSocketProvider userId="user-123">
+                    <div />
+                </WebSocketProvider>
+            );
+            unmount();
+            expect(clearIntervalSpy).toHaveBeenCalled();
+            clearIntervalSpy.mockRestore();
+        });
     });
 });

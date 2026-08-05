@@ -170,6 +170,8 @@ const OrderPrint = forwardRef((props, ref) => {
             apiPath = "quotation-sales-return"
         } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
             apiPath = "delivery-note"
+        } else if (modelName && modelName === "non_vat_invoice") {
+            apiPath = "non-vat-sales"
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -439,6 +441,13 @@ const OrderPrint = forwardRef((props, ref) => {
                     }
                 }
             }
+        } else if (model.modelName === "non_vat_invoice") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles?.credit;
+            } else {
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles?.paid;
+            }
+            model.hideVAT = true;
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store?.settings?.invoice?.quotation_title;

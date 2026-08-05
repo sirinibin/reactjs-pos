@@ -104,7 +104,7 @@ export function PurchaseVsSalesChart({
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
-    const qtnInvoiceAccounting       = store?.settings?.quotation_invoice_accounting === true;
+    const qtnInvoiceAccounting       = store?.settings?.enable_sales_in_quotation === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
     const enableEmployeeModule       = store?.settings?.enable_employee_module === true;
     const vatPercent                 = store?.vat_percent || 15;

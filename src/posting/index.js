@@ -344,6 +344,7 @@ const PostingIndex = forwardRef((props, ref) => {
         fettingAllRecordsInProgress = false;
         setFettingAllRecordsInProgress(false);
 
+        return postings;
     }
 
     function RemoveOpeningBalance(posting) {
@@ -688,8 +689,10 @@ const PostingIndex = forwardRef((props, ref) => {
     const PreviewRef = useRef();
     async function openPreview(account) {
         console.log("Opening account: ", account);
-        await GetAllPostings();
-        account.posts = allPostings;
+        const fetchedPosts = await GetAllPostings();
+        account.posts = fetchedPosts;
+        account.balanceSheetDesign = store?.settings?.balance_sheet_design || 'type1';
+        account.balanceSheetA4PreviewDesign = store?.settings?.balance_sheet_a4_preview_design || 'type1';
         account.debitBalance = debitBalance;
         account.creditBalance = creditBalance;
         account.debitBalanceBoughtDown = debitBalanceBoughtDown;
@@ -705,7 +708,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
         if (ignoreOpeningBalance) {
             list();
-            account.posts = RemoveOpeningBalance(allPostings);
+            account.posts = RemoveOpeningBalance(fetchedPosts);
         }
 
         if (ignoreDiscountAllowed) {
@@ -734,8 +737,10 @@ const PostingIndex = forwardRef((props, ref) => {
 
     async function sendWhatsAppMessage(account) {
         console.log("Opening account: ", account);
-        await GetAllPostings();
-        account.posts = allPostings;
+        const fetchedPosts = await GetAllPostings();
+        account.posts = fetchedPosts;
+        account.balanceSheetDesign = store?.settings?.balance_sheet_design || 'type1';
+        account.balanceSheetA4PreviewDesign = store?.settings?.balance_sheet_a4_preview_design || 'type1';
         account.debitBalance = debitBalance;
         account.creditBalance = creditBalance;
         account.debitBalanceBoughtDown = debitBalanceBoughtDown;
@@ -754,7 +759,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
         if (ignoreOpeningBalance) {
             list();
-            account.posts = RemoveOpeningBalance(allPostings);
+            account.posts = RemoveOpeningBalance(fetchedPosts);
         }
 
         if (ignoreDiscountAllowed) {
@@ -882,6 +887,8 @@ const PostingIndex = forwardRef((props, ref) => {
     let [ignoreOpeningBalance, setIgnoreOpeningBalance] = useState(false)
     let [ignoreDiscountAllowed, setIgnoreDiscountAllowed] = useState(false)
 
+    const isType2 = store?.settings?.balance_sheet_design === 'type2';
+
     return (
         <>
             {showUpdateForm && <>
@@ -903,18 +910,95 @@ const PostingIndex = forwardRef((props, ref) => {
                 <UserCreate ref={UserUpdateFormRef} refreshList={handleUpdated} /></>}
 
             <BalanceSheetPrintPreview ref={PreviewRef} />
+            {isType2 && <style>{`
+                .bs-t2 thead:first-child th {
+                    background-color: #1a3557 !important;
+                    color: white !important;
+                    border-color: #1e4a7a !important;
+                    padding: 8px 10px !important;
+                    font-weight: 700 !important;
+                }
+                .bs-t2 thead:first-child th b,
+                .bs-t2 thead:first-child th i,
+                .bs-t2 thead:first-child th * { color: white !important; }
+                .bs-t2 thead:last-of-type th { background-color: #f1f5f9 !important; }
+                .bs-t2 tbody .bs-debit-row { background-color: #fff5f5 !important; }
+                .bs-t2 tbody .bs-credit-row { background-color: #f0fdf4 !important; }
+                .bs-t2 tbody tr { border-bottom: 1px solid #e2e8f0 !important; }
+                .bs-t2 tbody .bs-total-row { background-color: #dbeafe !important; border-top: 2px solid #2563eb !important; font-weight: 700; }
+                .bs-t2 tbody .bs-balance-row { background-color: #fff7ed !important; }
+                .bs-t2 tbody .bs-grand-row { background-color: #f1f5f9 !important; font-weight: 700; }
+                .bs-t2 tbody .bs-opening-row { background-color: #fef3c7 !important; border-bottom: 1px solid #fcd34d !important; }
+                .bs-t2 { border: 1px solid #e2e8f0 !important; border-radius: 8px; overflow: hidden; }
+
+                /* Pagination */
+                .bs-pg-t2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+                .bs-pg-t2 .pagination { margin-bottom: 0 !important; gap: 3px; }
+                .bs-pg-t2 .pagination .page-link {
+                    border: 1px solid #e2e8f0;
+                    color: #1a3557;
+                    border-radius: 6px !important;
+                    font-size: 13px;
+                    padding: 4px 10px;
+                    font-weight: 500;
+                    min-width: 34px;
+                    text-align: center;
+                }
+                .bs-pg-t2 .pagination .page-item.active .page-link {
+                    background-color: #1a3557 !important;
+                    border-color: #1a3557 !important;
+                    color: white !important;
+                }
+                .bs-pg-t2 .pagination .page-link:hover {
+                    background-color: #dbeafe;
+                    border-color: #bfdbfe;
+                    color: #1a3557;
+                }
+                .bs-pg-t2 .pagination .page-link:focus { box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+                .bs-pg-t2 .text-muted.small {
+                    color: #475569 !important;
+                    font-size: 12px !important;
+                    font-weight: 500;
+                    background: white;
+                    border: 1px solid #e2e8f0;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                }
+            `}</style>}
             <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true} className="above-sales-modal">
-                <Modal.Header>
-                    <Modal.Title>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
+                <Modal.Header style={isType2 ? {
+                    background: 'linear-gradient(135deg, #112440 0%, #1e4a7a 100%)',
+                    borderBottom: '1px solid #1e4a7a',
+                    padding: '10px 20px',
+                } : {}}>
+                    <Modal.Title style={isType2 ? {color: 'white', fontSize: '15px', fontWeight: 700} : {}}>
+                        {isType2 ? (
+                            <div>
+                                <div style={{fontSize: '16px', fontWeight: 800}}>
+                                    {selectedAccount?.name}{selectedAccount?.name_arabic ? ' | ' + selectedAccount.name_arabic : ''}
+                                </div>
+                                <div style={{color: '#93c5fd', fontSize: '12px', fontWeight: 400, marginTop: '2px'}}>
+                                    A/c #{selectedAccount?.number}{selectedAccount?.vat_no ? '  ·  VAT ' + selectedAccount.vat_no : ''}
+                                </div>
+                            </div>
+                        ) : (
+                            <>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""}</>
+                        )}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         &nbsp;&nbsp;
-                        <Button variant="outline-secondary" onClick={() => list()}>
-                            <i className="bi bi-arrow-clockwise"></i> Refresh
+                        <Button variant={isType2 ? "outline-light" : "outline-secondary"}
+                            disabled={isRefreshInProcess}
+                            onClick={() => { setIsRefreshInProcess(true); list(); }}>
+                            {isRefreshInProcess
+                                ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                : <i className="bi bi-arrow-clockwise"></i>}
+                            {" "}Refresh
                         </Button>
 
                         &nbsp;&nbsp;
-                        <Button variant="primary" onClick={() => {
+                        <Button variant={isType2 ? "light" : "primary"} onClick={() => {
                             openPreview(selectedAccount);
                         }} >
                             <i className="bi bi-display"></i>
@@ -933,13 +1017,42 @@ const PostingIndex = forwardRef((props, ref) => {
                         <button
                             type="button"
                             className="btn-close"
+                            style={isType2 ? {filter: 'brightness(0) invert(1)'} : {}}
                             onClick={handleAccountBalanceSheetClose}
                             aria-label="Close"
                         ></button>
 
                     </div>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={isType2 ? {backgroundColor: '#f8fafc', padding: 0} : {}}>
+
+                    {/* Type 2 summary metric cards */}
+                    {isType2 && (
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '12px',
+                            padding: '14px 20px 10px',
+                            backgroundColor: '#f8fafc',
+                            borderBottom: '1px solid #e2e8f0',
+                        }}>
+                            <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Debit Total</div>
+                                <div style={{color: '#dc2626', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}><Amount amount={debitTotal} /></div>
+                            </div>
+                            <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Credit Total</div>
+                                <div style={{color: '#16a34a', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}><Amount amount={creditTotal} /></div>
+                            </div>
+                            <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Net Balance</div>
+                                <div style={{color: debitBalance > 0 ? '#dc2626' : '#16a34a', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}>
+                                    <Amount amount={debitBalance > 0 ? debitBalance : creditBalance} />
+                                    <span style={{fontSize: '11px', color: '#64748b', marginLeft: '6px'}}>{debitBalance > 0 ? 'DR' : creditBalance > 0 ? 'CR' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
 
                     {/*
@@ -964,111 +1077,119 @@ const PostingIndex = forwardRef((props, ref) => {
             </div>
            */}
 
-                    <div className="container-fluid p-0">
-                        <div className="row">
+                    <div className={isType2 ? "p-3" : "container-fluid p-0"}>
+                        {!isType2 && <div className="row">
                             <div className="col">
                                 <h1 className="h3">{/*Postings*/}</h1>
                             </div>
-                        </div>
+                        </div>}
 
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="card">
-                                    {/*
-  <div   className="card-header">
-                        <h5   className="card-title mb-0"></h5>
-                    </div>
-                    */}
-                                    <div className="card-body">
-                                        <div className="row">
+                        <div className={isType2 ? "" : "row"}>
+                            <div className={isType2 ? "" : "col-12"}>
+                                <div className={isType2 ? "" : "card"}>
+                                    <div className={isType2 ? "" : "card-body"}>
+                                        {!isType2 && <div className="row">
                                             {totalItems === 0 && (
                                                 <div className="col">
                                                     <p className="text-start">No postings to display</p>
                                                 </div>
                                             )}
-                                        </div>
-                                        <div className="row" style={{ bexpense: "solid 0px" }}>
-                                            <div className="col text-start" style={{ border: "solid 0px" }}>
-                                                <Button
-                                                    onClick={() => {
-                                                        setIsRefreshInProcess(true);
-                                                        list();
-                                                    }}
-                                                    variant="primary"
-                                                    disabled={isRefreshInProcess}
-                                                >
-                                                    {isRefreshInProcess ? (
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="bexpense"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden={true}
-                                                        />
-                                                    ) : (
-                                                        <i className="fa fa-refresh"></i>
-                                                    )}
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </Button>
-                                            </div>
-                                            <div className="col text-center">
-                                                {isListLoading && (
-                                                    <Spinner animation="grow" variant="primary" />
-                                                )}
-                                            </div>
-                                            <div className="col text-end">
+                                        </div>}
+                                        {isType2 && totalItems === 0 && (
+                                            <div style={{textAlign: 'center', color: '#64748b', padding: '24px'}}>No postings to display</div>
+                                        )}
+                                        {isType2 ? (
+                                            /* Type 2: no body refresh (header has it), just styled size picker */
+                                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px'}}>
+                                                <div>
+                                                    {isListLoading && <Spinner animation="border" size="sm" variant="primary" />}
+                                                </div>
                                                 {totalItems > 0 && (
-                                                    <>
-                                                        <label className="form-label">Size:&nbsp;</label>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                        <span style={{fontSize: '12px', color: '#64748b', fontWeight: 500}}>Rows per page</span>
                                                         <select
                                                             value={pageSize}
-                                                            onChange={(e) => {
-                                                                changePageSize(e.target.value);
-                                                            }}
-                                                            className="form-control pull-right"
+                                                            onChange={(e) => changePageSize(e.target.value)}
                                                             style={{
-                                                                bexpense: "solid 1px",
-                                                                bexpenseColor: "silver",
-                                                                width: "55px",
+                                                                border: '1px solid #e2e8f0', borderRadius: '6px',
+                                                                padding: '4px 28px 4px 10px', fontSize: '13px',
+                                                                color: '#1a3557', fontWeight: 600, background: 'white',
+                                                                cursor: 'pointer', outline: 'none',
+                                                                WebkitAppearance: 'auto',
                                                             }}
                                                         >
-                                                            <option value="5">
-                                                                5
-                                                            </option>
-                                                            <option value="10" >
-                                                                10
-                                                            </option>
-                                                            <option value="20">20</option>
-                                                            <option value="40">40</option>
-                                                            <option value="50">50</option>
-                                                            <option value="100">100</option>
-                                                            <option value="200">200</option>
-                                                            <option value="300">300</option>
-                                                            <option value="500">500</option>
-                                                            <option value="1000">1000</option>
-                                                            <option value="1500">1500</option>
+                                                            {[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500].map(s => (
+                                                                <option key={s} value={String(s)}>{s}</option>
+                                                            ))}
                                                         </select>
-                                                    </>
+                                                    </div>
                                                 )}
                                             </div>
-                                        </div>
+                                        ) : (
+                                            /* Type 1 original controls */
+                                            <div className="row" style={{ bexpense: "solid 0px" }}>
+                                                <div className="col text-start" style={{ border: "solid 0px" }}>
+                                                    <Button
+                                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                                        variant="primary"
+                                                        disabled={isRefreshInProcess}
+                                                    >
+                                                        {isRefreshInProcess ? (
+                                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                                        ) : (
+                                                            <i className="fa fa-refresh"></i>
+                                                        )}
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </Button>
+                                                </div>
+                                                <div className="col text-center">
+                                                    {isListLoading && <Spinner animation="grow" variant="primary" />}
+                                                </div>
+                                                <div className="col text-end">
+                                                    {totalItems > 0 && (
+                                                        <>
+                                                            <label className="form-label">Size:&nbsp;</label>
+                                                            <select
+                                                                value={pageSize}
+                                                                onChange={(e) => changePageSize(e.target.value)}
+                                                                className="form-control pull-right"
+                                                                style={{ width: "55px" }}
+                                                            >
+                                                                {[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500].map(s => (
+                                                                    <option key={s} value={String(s)}>{s}</option>
+                                                                ))}
+                                                            </select>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
 
-                                        <PaginationControls
-                                            showSizePicker={false}
-                                            totalPages={totalPages}
-                                            page={page}
-                                            totalItems={totalItems}
-                                            offset={offset}
-                                            currentPageItemsCount={currentPageItemsCount}
-                                            pageSize={pageSize}
-                                            onPageChange={changePage}
-                                            onPageSizeChange={changePageSize}
-                                            pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
-                                        />
-                                        <div className="row">
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    <span style={{ marginLeft: "10px" }}>
+                                        <div className={isType2 ? "bs-pg-t2" : ""}>
+                                            <PaginationControls
+                                                showSizePicker={false}
+                                                totalPages={totalPages}
+                                                page={page}
+                                                totalItems={totalItems}
+                                                offset={offset}
+                                                currentPageItemsCount={currentPageItemsCount}
+                                                pageSize={pageSize}
+                                                onPageChange={changePage}
+                                                onPageSizeChange={changePageSize}
+                                                pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                            />
+                                        </div>
+                                        <div className={isType2 ? "" : "row"} style={isType2 ? {display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap'} : {}}>
+                                            <div className={isType2 ? "" : "col text-start"}>
+                                                <p className={isType2 ? "" : "text-start"} style={isType2 ? {margin: 0} : {}}>
+                                                    <label style={isType2 ? {
+                                                        display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+                                                        padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500,
+                                                        backgroundColor: ignoreOpeningBalance ? '#1a3557' : '#f1f5f9',
+                                                        color: ignoreOpeningBalance ? 'white' : '#475569',
+                                                        border: '1px solid ' + (ignoreOpeningBalance ? '#1a3557' : '#e2e8f0'),
+                                                        transition: 'all 0.15s',
+                                                    } : { marginLeft: "10px" }}>
                                                         <input type="checkbox"
                                                             value={ignoreOpeningBalance}
                                                             checked={ignoreOpeningBalance}
@@ -1077,31 +1198,38 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 setIgnoreOpeningBalance(ignoreOpeningBalance);
                                                                 list();
                                                             }}
-                                                            className=""
                                                             id="ignoreOpeningBalance"
-
-                                                        /> &nbsp;Ignore Opening Balance
-                                                    </span>
-                                                    {selectedAccount?.reference_model === "customer" && <span style={{ marginLeft: "10px" }}>
-                                                        <input type="checkbox"
-                                                            value={ignoreDiscountAllowed}
-                                                            checked={ignoreDiscountAllowed}
-                                                            onChange={(e) => {
-                                                                ignoreDiscountAllowed = !ignoreDiscountAllowed;
-                                                                setIgnoreDiscountAllowed(ignoreDiscountAllowed);
-                                                                list();
-                                                            }}
-                                                            className=""
-                                                            id="ignoreOpeningBalance"
-
-                                                        /> &nbsp;Ignore Discount Allowed A/c
-                                                    </span>}
+                                                            style={isType2 ? {marginRight: '2px'} : {}}
+                                                        /> Ignore Opening Balance
+                                                    </label>
+                                                    {selectedAccount?.reference_model === "customer" && (
+                                                        <label style={isType2 ? {
+                                                            display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+                                                            padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500,
+                                                            backgroundColor: ignoreDiscountAllowed ? '#1a3557' : '#f1f5f9',
+                                                            color: ignoreDiscountAllowed ? 'white' : '#475569',
+                                                            border: '1px solid ' + (ignoreDiscountAllowed ? '#1a3557' : '#e2e8f0'),
+                                                            marginLeft: '8px', transition: 'all 0.15s',
+                                                        } : { marginLeft: "10px" }}>
+                                                            <input type="checkbox"
+                                                                value={ignoreDiscountAllowed}
+                                                                checked={ignoreDiscountAllowed}
+                                                                onChange={(e) => {
+                                                                    ignoreDiscountAllowed = !ignoreDiscountAllowed;
+                                                                    setIgnoreDiscountAllowed(ignoreDiscountAllowed);
+                                                                    list();
+                                                                }}
+                                                                id="ignoreDiscountAllowed"
+                                                                style={isType2 ? {marginRight: '2px'} : {}}
+                                                            /> Ignore Discount Allowed A/c
+                                                        </label>
+                                                    )}
                                                 </p>
                                             </div>
 
                                         </div>
                                         <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                            <table className="table table-striped table-sm table-bordered">
+                                            <table className={isType2 ? "table table-sm bs-t2" : "table table-striped table-sm table-bordered"}>
                                                 <thead>
                                                     <tr className="text-center">
                                                         {/*
@@ -1558,7 +1686,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 </thead>
 
                                                 <tbody className="text-center">
-                                                    {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
+                                                    {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr className={isType2 ? "bs-opening-row" : ""}>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td></td>
                                                         <td></td>
@@ -1569,7 +1697,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {postingList &&
                                                         postingList?.map((posting, index1) => (
                                                             posting.posts?.map((post, index2) => (
-                                                                <tr key={`${posting.id}-${index1}-${index2}`}>
+                                                                <tr key={`${posting.id}-${index1}-${index2}`} className={isType2 ? (post.debit_or_credit === 'debit' ? 'bs-debit-row' : 'bs-credit-row') : ''}>
                                                                     {/* Date column */}
                                                                     {localStorage.getItem("user_role") === "Admin" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {/*((page - 1) * pageSize) + (index1 + 1)*/}
@@ -1743,7 +1871,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                     {/*  </tr>
                                                         ))}*/}
-                                                    {selectedAccount ? <tr>
+                                                    {selectedAccount ? <tr className={isType2 ? "bs-total-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Amount</td>
@@ -1751,7 +1879,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={creditTotal} />}</b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
-                                                    {selectedAccount && <tr>
+                                                    {selectedAccount && <tr className={isType2 ? "bs-balance-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Due Amount</td>
@@ -1759,7 +1887,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By Closing Balance  " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr>}
-                                                    {selectedAccount && !store?.settings?.hide_total_amount_row_in_balance_sheet && < tr >
+                                                    {selectedAccount && !store?.settings?.hide_total_amount_row_in_balance_sheet && <tr className={isType2 ? "bs-grand-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Total Amount</td>
@@ -1771,18 +1899,20 @@ const PostingIndex = forwardRef((props, ref) => {
                                             </table>
                                         </div>
 
-                                        <PaginationControls
-                                            showSizePicker={false}
-                                            totalPages={totalPages}
-                                            page={page}
-                                            totalItems={totalItems}
-                                            offset={offset}
-                                            currentPageItemsCount={currentPageItemsCount}
-                                            pageSize={pageSize}
-                                            onPageChange={changePage}
-                                            onPageSizeChange={changePageSize}
-                                            pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
-                                        />
+                                        <div className={isType2 ? "bs-pg-t2" : ""}>
+                                            <PaginationControls
+                                                showSizePicker={false}
+                                                totalPages={totalPages}
+                                                page={page}
+                                                totalItems={totalItems}
+                                                offset={offset}
+                                                currentPageItemsCount={currentPageItemsCount}
+                                                pageSize={pageSize}
+                                                onPageChange={changePage}
+                                                onPageSizeChange={changePageSize}
+                                                pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
