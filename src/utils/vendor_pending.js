@@ -18,6 +18,8 @@ import PostingIndex from "./../posting/index.js";
 import { ObjectToSearchQueryParams } from './queryUtils.js';
 //import { set } from "date-fns";
 
+const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+
 const VendorPending = forwardRef((props, ref) => {
     const dragRef = useRef(null);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -353,7 +355,7 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
                                 />
                             </Tab>
-                            <Tab eventKey="quotation_sales"
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales"
                                 disabled={!selectedCustomers?.length}
                                 title={
                                     <>
@@ -372,8 +374,8 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
-                            <Tab eventKey="quotation_sales_return"
+                            </Tab>}
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales_return"
                                 disabled={!selectedCustomers?.length}
                                 title={
                                     <>
@@ -392,7 +394,7 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
+                            </Tab>}
 
                         </Tabs>
 

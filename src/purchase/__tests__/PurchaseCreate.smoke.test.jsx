@@ -115,4 +115,16 @@ describe('PurchaseCreate smoke test', () => {
             )
         ).not.toThrow();
     });
+
+    test('renders without crashing in type3 form mode (info column Dropdown + stock OverlayTrigger)', () => {
+        localStorage.setItem('purchase_form_type', 'type3');
+        expect(() =>
+            render(
+                <MemoryRouter>
+                    <PurchaseCreate />
+                </MemoryRouter>
+            )
+        ).not.toThrow();
+        localStorage.removeItem('purchase_form_type');
+    });
 });

@@ -5537,19 +5537,96 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             />
                                         </td>);
                                         if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '4px 6px', textAlign: 'center' }}>
-                                          <span
-                                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#6b7280' }}
-                                            onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#191c1e'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
-                                            onClick={e => {
-                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                setInfoMenu(m => m?.product === product ? null : { bottom: window.innerHeight - rect.top + 4, left: rect.left, product });
-                                            }}
-                                          >
-                                            <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
-                                          </span>
+                                          <Dropdown drop="down">
+                                            <Dropdown.Toggle as="span" id={`info-dd-t3-${index}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
+                                              onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#191c1e'; }}
+                                              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
+                                              <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductHistory(product)}>
+                                                <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>{t('Product History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesHistory(product)}>
+                                                <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t('Sales History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesReturnHistory(product)}>
+                                                <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>{t('Sales Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
+                                                <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>{t('Purchase History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
+                                                <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>{t('Purchase Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
+                                                <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t('Delivery Note History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
+                                                <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>{t('Quotation History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
+                                              </Dropdown.Item>
+                                              {store?.settings?.enable_sales_in_quotation && (
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
+                                                <i className="bi bi-file-earmark-check me-2" style={{ color: '#0284c7' }}></i>{t('Qtn. Sales History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
+                                              </Dropdown.Item>
+                                              )}
+                                              {store?.settings?.enable_sales_in_quotation && (
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t('Qtn. Sales Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
+                                              </Dropdown.Item>
+                                              )}
+                                              {store?.settings?.non_vat_sales && (
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openNonVATSalesHistory(product)}>
+                                                <i className="bi bi-receipt-cutoff me-2" style={{ color: '#059669' }}></i>{t('Non VAT Sales History')}
+                                              </Dropdown.Item>
+                                              )}
+                                              {store?.settings?.non_vat_sales && (
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openNonVATSalesReturnHistory(product)}>
+                                                <i className="bi bi-arrow-return-left me-2" style={{ color: '#9d174d' }}></i>{t('Non VAT Sales Return History')}
+                                              </Dropdown.Item>
+                                              )}
+                                              <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
+                                                <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t('Linked Products')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
+                                              </Dropdown.Item>
+                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
+                                                <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>{t('Images')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
+                                              </Dropdown.Item>
+                                            </Dropdown.Menu>
+                                          </Dropdown>
                                         </td>);
-                                        if (col.key === 'stock') return (<td key="stock" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{product.stock}</td>);
+                                        if (col.key === 'stock') return (<td key="stock" style={{ verticalAlign: 'middle', padding: '0.25rem', whiteSpace: 'nowrap', position: 'relative' }}>
+                                            <OverlayTrigger
+                                                placement="top"
+                                                overlay={
+                                                    <Tooltip id={`stock-tooltip-t3-${index}`}>
+                                                        {(() => {
+                                                            const warehouseStocks = selectedProducts[index].warehouse_stocks || {};
+                                                            const orderedEntries = [];
+                                                            if (warehouseStocks.hasOwnProperty("main_store")) {
+                                                                orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                            }
+                                                            Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                if (key !== "main_store") {
+                                                                    orderedEntries.push([key, value]);
+                                                                }
+                                                            });
+                                                            const details = orderedEntries
+                                                                .map(([key, value]) => {
+                                                                    let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                    return `${name}: ${value}`;
+                                                                })
+                                                                .join(", ");
+                                                            return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                                        })()}
+                                                    </Tooltip>
+                                                }
+                                            >
+                                                <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                    {selectedProducts[index].stock}
+                                                </span>
+                                            </OverlayTrigger>
+                                        </td>);
                                         if (col.key === 'qty') return (<td key="qty" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
@@ -6557,19 +6634,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                   switch (key) {
                                     case 'total_without_vat': return (
                                       <div key="total_without_vat" style={rowStyle}>
-                                        <span style={{ color: '#434655' }}>{t("Total (ex. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'total_ex_vat'} overlay={renderTotalWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'total_ex_vat' ? null : 'total_ex_vat'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span style={{ color: '#434655' }}>{t("Total (ex. VAT)")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderTotalWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
                                       </div>
                                     );
                                     case 'total_with_vat': return (
                                       <div key="total_with_vat" style={rowStyle}>
-                                        <span style={{ color: '#434655' }}>{t("Total (inc. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'total_inc_vat'} overlay={renderTotalWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'total_inc_vat' ? null : 'total_inc_vat'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span style={{ color: '#434655' }}>{t("Total (inc. VAT)")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderTotalWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total_with_vat)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
                                       </div>
                                     );
                                     case 'shipping': return (
                                       <div key="shipping" style={rowStyle}>
-                                        <span style={{ color: '#434655' }}>{t("Shipping & Handling")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'shipping'} overlay={renderShippingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'shipping' ? null : 'shipping'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span style={{ color: '#434655' }}>{t("Shipping & Handling")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderShippingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
                                           <input type="number" id="purchase_shipping_fees_t2" name="purchase_shipping_fees_t2" onWheel={(e) => e.target.blur()} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={shipping} onChange={(e) => {
                                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -6597,7 +6674,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
                                             timerRef.current = setTimeout(() => { reCalculate(); }, 100);
                                           }} />{"% "}
-                                          <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_ex_vat'} overlay={renderDiscountWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_ex_vat' ? null : 'disc_ex_vat'); }}>ℹ️</span></OverlayTrigger>
+                                          <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderDiscountWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger>
                                           {errors.discount_percent && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent}</div>}
                                         </span>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
@@ -6629,7 +6706,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
                                             timerRef.current = setTimeout(() => { reCalculate(); }, 100);
                                           }} />{"% "}
-                                          <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_inc_vat'} overlay={renderDiscountWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_inc_vat' ? null : 'disc_inc_vat'); }}>ℹ️</span></OverlayTrigger>
+                                          <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderDiscountWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger>
                                           {errors.discount_percent_with_vat && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent_with_vat}</div>}
                                         </span>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
@@ -6651,7 +6728,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     );
                                     case 'taxable_amount': return (
                                       <div key="taxable_amount" style={rowStyle}>
-                                        <span style={{ color: '#434655' }}>{t("Taxable Amount (ex. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'taxable'} overlay={renderTaxableAmountTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'taxable' ? null : 'taxable'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span style={{ color: '#434655' }}>{t("Taxable Amount (ex. VAT)")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderTaxableAmountTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total + shipping - discount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
                                       </div>
                                     );
@@ -6667,7 +6744,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             formData.vat_percent = e.target.value; reCalculate(); setFormData({ ...formData });
                                           }} />
                                           %
-                                          <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'vat'} overlay={renderVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'vat' ? null : 'vat'); }}>ℹ️</span></OverlayTrigger>
+                                          <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger>
                                           {errors.vat_percent && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.vat_percent}</div>}
                                         </span>
                                         <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.vat_price)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
@@ -6675,7 +6752,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     );
                                     case 'net_before_rounding': return (
                                       <div key="net_before_rounding" style={rowStyle}>
-                                        <span style={{ color: '#434655' }}>{t("Before Rounding")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'before_rounding'} overlay={renderNetTotalBeforeRoundingTooltip2()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'before_rounding' ? null : 'before_rounding'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span style={{ color: '#434655' }}>{t("Before Rounding")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderNetTotalBeforeRoundingTooltip2()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.net_total - roundingAmount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
                                       </div>
                                     );
@@ -6715,7 +6792,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     );
                                     case 'net_total': return (
                                       <div key="net_total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', fontWeight: 700, paddingTop: '10px', borderTop: '1px solid #c3c6d7', color: '#191c1e', marginTop: '2px' }}>
-                                        <span>{t("Net Total (inc. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'net_total'} overlay={renderNetTotalTooltip2()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', fontSize: '13px', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'net_total' ? null : 'net_total'); }}>ℹ️</span></OverlayTrigger></span>
+                                        <span>{t("Net Total (inc. VAT)")} <OverlayTrigger placement="left" trigger={["hover", "focus"]} overlay={renderNetTotalTooltip2()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', fontSize: '13px', color: '#888' }}>ℹ️</span></OverlayTrigger></span>
                                         <span style={{ color: '#004ac6' }}><NumberFormat value={trimTo2Decimals(formData.net_total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
                                       </div>
                                     );
