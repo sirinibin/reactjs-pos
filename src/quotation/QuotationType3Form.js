@@ -160,6 +160,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const [store, setStore] = useState({});
     const [repairJobInfos, setRepairJobInfos] = useState([]);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const storeId = localStorage.getItem("store_id");
     const headers = useMemo(() => ({ "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") }), []);
@@ -565,6 +566,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 if (unk) { formData.customer_id = unk.id; formData.customer_name = unk.name; formData.customer_name_arabic = unk.name_in_arabic || ""; }
             } catch (_) { }
         }
+        if (!formData.customer_id) formData.customer_id = null;
 
         if (!formData.vehicle_id) formData.vehicle_id = null;
         formData.store_id = storeId;
@@ -766,7 +768,21 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                             <div style={{ outline: errors.customer_id ? "2px solid #dc3545" : "none", borderRadius: "6px" }}>
                                                 <Typeahead id="qt3_customer" filterBy={() => true} labelKey="name" emptyLabel="" clearButton={false} open={customerOptions.length === 0 ? false : undefined} ref={customerSearchRef} positionFixed
                                                     onChange={(items) => {
-                                                        if (!items.length) return;
+                                                        if (!items.length) {
+                                                            formData.customer_id = "";
+                                                            formData.customer_name = "";
+                                                            formData.customerName = "";
+                                                            formData.vehicle_id = null;
+                                                            formData.vehicle_snapshot = undefined;
+                                                            setSelectedVehicle(null);
+                                                            setVehicleOptions([]);
+                                                            delete errors.customer_id;
+                                                            setErrors({ ...errors });
+                                                            setSelectedCustomers([]);
+                                                            setCustomerOptions([]);
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
                                                         const c = items[0];
                                                         formData.customer_id = c.id;
                                                         formData.customer_name = c.name || "";
@@ -780,7 +796,20 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                     }}
                                                     options={customerOptions} selected={selectedCustomers} placeholder={t("Search customer...")} highlightOnlyResult={false}
                                                     onInputChange={(t) => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => suggestCustomers(t), 300); }}
-                                                    onKeyDown={(e) => { if (e.key === "Escape") { setSelectedCustomers([]); setCustomerOptions([]); customerSearchRef.current?.clear(); } }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Escape") {
+                                                            formData.customer_id = "";
+                                                            formData.customer_name = "";
+                                                            formData.vehicle_id = null;
+                                                            formData.vehicle_snapshot = undefined;
+                                                            setSelectedVehicle(null);
+                                                            setVehicleOptions([]);
+                                                            setSelectedCustomers([]);
+                                                            setCustomerOptions([]);
+                                                            customerSearchRef.current?.clear();
+                                                            setFormData({ ...formData });
+                                                        }
+                                                    }}
                                                     renderMenu={(results, menuProps, state) => {
                                                         const words = state.text.toLowerCase().split(" ").filter(Boolean);
                                                         return (

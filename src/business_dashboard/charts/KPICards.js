@@ -351,7 +351,9 @@ export default function KPICards({
     const totalExpense            = expenseStats?.total || 0;
     const totalSalaryPaid         = store?.settings?.enable_employee_module ? (expenseStats?.salary_paid || 0) : 0;
     const salaryBalance           = employeeStats?.salary_balance ?? 0;
+    // eslint-disable-next-line no-unused-vars
     const salaryAccrued           = employeeStats?.salary_accrued ?? 0;
+    // eslint-disable-next-line no-unused-vars
     const salaryPaidEmp           = employeeStats?.salary_paid ?? 0;
     const totalPurchase           = purchaseStats?.total_purchase || 0;
     const totalPurchaseReturn     = purchaseReturnStats?.total_purchase_return || 0;

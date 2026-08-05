@@ -1473,6 +1473,7 @@ function AutoMobileDashboard() {
     const [dashboard, setDashboard] = useState({});
     const [store, setStore] = useState({});
     const [isLoading, setIsLoading] = useState(true);
+    // eslint-disable-next-line no-unused-vars
     const postingRef = useRef();
 
     // ── Filter state ──────────────────────────────────────────────────────────

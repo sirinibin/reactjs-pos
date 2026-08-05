@@ -465,6 +465,7 @@ const OrderCreate = forwardRef((props, ref) => {
     let [isUpdateForm, setIsUpdateForm] = useState(false);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
     const draftFlashShownRef = useRef(false);
+    // eslint-disable-next-line no-unused-vars
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
     const prevIsUpdateFormRef = useRef(false);

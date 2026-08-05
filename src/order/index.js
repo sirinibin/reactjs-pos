@@ -1653,7 +1653,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
-            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
             <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
             {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}

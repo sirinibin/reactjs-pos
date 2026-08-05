@@ -561,25 +561,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setOpenEmployeeSearchResult(opts.length > 0);
     }
 
-    function fetchAndSetEmployee(employeeId, fallbackData) {
-        if (!employeeId) return;
-        const storeId = localStorage.getItem("store_id");
-        fetch(`/v1/employee/${employeeId}?search[store_id]=${storeId}&select=id,name,code,mob1`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
-        })
-            .then(async r => {
-                const data = r.ok && await r.json();
-                if (data?.result) {
-                    const e = data.result;
-                    setSelectedEmployees([{ ...e, search_label: e.name + (e.code ? " - " + e.code : "") }]);
-                } else {
-                    setSelectedEmployees([fallbackData]);
-                }
-            })
-            .catch(() => setSelectedEmployees([fallbackData]));
-    }
-
     function handleCreate(event) {
         if (isProcessing) {
             return;
