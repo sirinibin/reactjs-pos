@@ -131,6 +131,8 @@ function QuotationIndex(props) {
 
   const [selectedStatusList, setSelectedStatusList] = useState([]);
 
+  const [showDrafts, setShowDrafts] = useState(false);
+
   let [type, setType] = useState("");
 
   useEffect(() => {
@@ -2340,6 +2342,7 @@ function QuotationIndex(props) {
                                   >
                                     <i className="bi bi-arrow-left"></i> Return
                                   </Button></>}
+                                </>)}
                                 </td>}
                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button className="btn btn-success btn-sm" onClick={() => {

@@ -138,6 +138,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const NonVATSalesReturnHistoryRef = useRef();
     const [showCustomerPending, setShowCustomerPending] = useState(false);
     const CustomerPendingRef = useRef();
+    const clearDraftRef = useRef(() => {});
+    const draftFlashShownRef = useRef(false);
 
     function openSalesHistory(model) { SalesHistoryRef.current?.open(model); }
     function openSalesReturnHistory(model) { SalesReturnHistoryRef.current?.open(model); }

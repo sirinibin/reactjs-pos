@@ -38,6 +38,26 @@ jest.mock('../charts/FinancialCharts', () => ({
     PurchaseVsSalesChart:  () => null,
 }));
 
+// ── WebSocketContext mock (PostingIndex uses it via useContext) ─────────────────
+jest.mock('../../utils/WebSocketContext', () => {
+    const React = require('react');
+    const WebSocketContext = React.createContext({
+        sendMessage: () => {},
+        lastMessage: null,
+        readyState:  0,
+        getWebSocket: () => null,
+    });
+    return { WebSocketContext };
+});
+
+// Posting renders inside BusinessDashboard and calls useContext(WebSocketContext).
+// Mock the whole PostingIndex to avoid needing a live WebSocket provider.
+jest.mock('../../posting/index.js', () => {
+    const React = require('react');
+    const { forwardRef } = React;
+    return { __esModule: true, default: forwardRef((_props, _ref) => null) };
+});
+
 // ── Timer / fetch setup ───────────────────────────────────────────────────────
 
 beforeAll(() => {

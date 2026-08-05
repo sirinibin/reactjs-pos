@@ -37,6 +37,7 @@ import { highlightWords } from "../utils/search.js";
 import ProductHistory from "../utils/product_history.js";
 //import Resizer from "react-image-file-resizer";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { useDraft } from "../utils/useDraft";
 import PurchaseReturnCreate from "../purchase_return/create.js";
 import VendorWithdrawalCreate from "../customer_withdrawal/create.js";
 import SalesUpdateForm from "../order/create.js";

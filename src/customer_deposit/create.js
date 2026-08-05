@@ -390,7 +390,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
 
     let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
-    let [openEmployeeSearchResult, setOpenEmployeeSearchResult] = useState(false);
 
     // Helper to calculate percentage of occurrence of search words
     const vendorPercentOccurrence = (words, vendor) => {
@@ -1077,7 +1076,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
     const customerSearchRef = useRef();
     const vendorSearchRef = useRef();
-    const employeeSearchRef = useRef();
 
     let [showCustomerPending, setShowCustomerPending] = useState(false);
     const CustomerPendingRef = useRef();
