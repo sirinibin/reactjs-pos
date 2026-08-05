@@ -1140,7 +1140,6 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                                         value={payment.method || ""} onChange={e => { delete errors[`payment_method_${index}`]; formData.payments_input[pi].method = e.target.value; setErrors({ ...errors }); setFormData({ ...formData }); }}>
                                                                         <option value="">{t("Method")}</option>
                                                                         <option value="cash">{t("Cash")}</option>
-                                                                        <option value="mada">Mada</option>
                                                                         <option value="debit_card">{t("Debit Card")}</option>
                                                                         <option value="credit_card">{t("Credit Card")}</option>
                                                                         <option value="bank_transfer">{t("Bank Transfer")}</option>

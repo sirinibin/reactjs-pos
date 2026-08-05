@@ -712,7 +712,6 @@ export function SalesVanStoreBody({
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                         {[
                             { key: "cash",          label: t("Cash"),    arabic: "نقداً",    icon: "bi-cash-coin",           color: C.green },
-                            { key: "mada",          label: "Mada",       arabic: "مدى",      icon: "bi-credit-card-2-front", color: "#0ea5e9" },
                             { key: "credit",        label: t("Credit"),  arabic: "آجل",      icon: "bi-hourglass-split",     color: "#d97706" },
                             { key: "bank_cheque",   label: t("Cheque"),  arabic: "شيك",      icon: "bi-journal-check",       color: "#7c3aed" },
                         ].map(pm => (
@@ -758,7 +757,7 @@ export function SalesVanStoreBody({
                         <div ref={paymentRowsRef} style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
                             {formData.payments_input.map((payment, key) => {
                                 if (payment.deleted) return null;
-                                const methodColors = { cash: C.green, mada: "#0ea5e9", credit: "#d97706", bank_cheque: "#7c3aed" };
+                                const methodColors = { cash: C.green, credit: "#d97706", bank_cheque: "#7c3aed" };
                                 const mc = methodColors[payment.method] || C.muted;
                                 return (
                                     <div key={key} style={{ display: "flex", gap: 6, alignItems: "center", background: "#fafffe", border: `1px solid ${C.borderN}`, borderRadius: 8, padding: "6px 8px" }}>
@@ -774,7 +773,6 @@ export function SalesVanStoreBody({
                                             }}>
                                             <option value="">{t("Method")}</option>
                                             <option value="cash">{t("Cash")} (نقداً)</option>
-                                            <option value="mada">Mada (مدى)</option>
                                             <option value="debit_card">{t("Debit Card")}</option>
                                             <option value="credit_card">{t("Credit Card")}</option>
                                             <option value="bank_transfer">{t("Bank Transfer")}</option>

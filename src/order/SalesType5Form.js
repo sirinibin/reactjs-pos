@@ -1051,7 +1051,6 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                     >
                                                         <option value="">{t("Method")}</option>
                                                         <option value="cash">{t("Cash")}</option>
-                                                        <option value="mada">Mada</option>
                                                         <option value="debit_card">{t("Debit Card")}</option>
                                                         <option value="credit_card">{t("Credit Card")}</option>
                                                         <option value="bank_transfer">{t("Bank Transfer")}</option>
