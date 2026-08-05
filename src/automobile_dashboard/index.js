@@ -1952,7 +1952,7 @@ function AutoMobileDashboard() {
             <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div>
                     <h4 className="mb-1 fw-bold">
-                        <i className="bi bi-speedometer2 me-2 text-primary"></i>{t('Workshop Dashboard')}
+                        <i className="bi bi-speedometer2 me-2 text-primary"></i>{t('Dashboard')}
                     </h4>
                     <p className="text-muted mb-0 small">{t('Real-time overview of your automobile workshop operations')}</p>
                 </div>
