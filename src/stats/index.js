@@ -172,6 +172,8 @@ const StatsIndex = forwardRef((props, ref) => {
         listCustomerWithdrawal();
         listQuotation();
         listQtnSalesReturn();
+        listNonVatSales();
+        listNonVatSalesReturn();
     }
 
 
@@ -983,6 +985,96 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //End Quotation Sales Return
 
+    //Non-VAT Sales
+    let [totalNonVatSales, setTotalNonVatSales] = useState(0.00);
+    let [totalNonVatSalesReturn, setTotalNonVatSalesReturn] = useState(0.00);
+
+    const listNonVatSales = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select = "select=id,code,date,net_total,store_id";
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "1";
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+        fetch(
+            "/v1/non-vat-sales?" + Select + queryParams + "&page=1&limit=5",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+                setTotalNonVatSales(data.meta.net_total || 0);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [searchParams]);
+
+    useEffect(() => {
+        listNonVatSales();
+    }, [listNonVatSales]);
+
+    const listNonVatSalesReturn = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select = "select=id,code,date,net_total,store_id";
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "1";
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+        fetch(
+            "/v1/non-vat-sales-return?" + Select + queryParams + "&page=1&limit=5",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+                setTotalNonVatSalesReturn(data.meta.total_non_vat_sales_return || 0);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [searchParams]);
+
+    useEffect(() => {
+        listNonVatSalesReturn();
+    }, [listNonVatSalesReturn]);
+
+    //End Non-VAT Sales
+
     useEffect(() => {
         list();
         listSalesReturn();
@@ -991,7 +1083,9 @@ const StatsIndex = forwardRef((props, ref) => {
         listExpense();
         listQuotation();
         listQtnSalesReturn();
-    }, [list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn]);
+        listNonVatSales();
+        listNonVatSalesReturn();
+    }, [list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn, listNonVatSales, listNonVatSalesReturn]);
 
 
     useEffect(() => {
@@ -1003,9 +1097,11 @@ const StatsIndex = forwardRef((props, ref) => {
             listExpense();
             listQuotation();
             listQtnSalesReturn();
+            listNonVatSales();
+            listNonVatSalesReturn();
         }
 
-    }, [lastMessage, list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn]);
+    }, [lastMessage, list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn, listNonVatSales, listNonVatSalesReturn]);
 
 
     useEffect(() => {
@@ -1017,6 +1113,8 @@ const StatsIndex = forwardRef((props, ref) => {
             listExpense();
             listQuotation();
             listQtnSalesReturn();
+            listNonVatSales();
+            listNonVatSalesReturn();
         };
 
         eventEmitter.on("socket_connection_open", handleSocketOpen);
@@ -1024,7 +1122,7 @@ const StatsIndex = forwardRef((props, ref) => {
         return () => {
             eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
         };
-    }, [list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn]); // Runs only once when component mounts
+    }, [list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn, listNonVatSales, listNonVatSalesReturn]); // Runs only once when component mounts
 
     // const [overallStatsOpen, setOverallStatsOpen] = useState(true);
 
@@ -1044,9 +1142,12 @@ const StatsIndex = forwardRef((props, ref) => {
     const handleReceivablesSummaryToggle = (isOpen) => { setReceivablesStatsOpen(isOpen); };
     const handlePayablesSummaryToggle = (isOpen) => { setPayablesStatsOpen(isOpen); };
 
-    const qtnInvoiceAccounting = store.settings?.quotation_invoice_accounting === true;
+    const qtnInvoiceAccounting = store.settings?.enable_sales_in_quotation === true;
+    const enableNonVatSales = store.settings?.non_vat_sales === true;
     const disablePurchasesOnAccounts = store.settings?.disable_purchases_on_accounts === true;
-    const profitLossRevenueNum = (totalSales || 0) - (totalSalesReturn || 0) + (qtnInvoiceAccounting ? (totalQtnSales || 0) - (totalQtnSalesReturn || 0) : 0);
+    const nonVatNetRevenue = (totalNonVatSales || 0) - (totalNonVatSalesReturn || 0);
+    const profitLossRevenueBase = (totalSales || 0) - (totalSalesReturn || 0) + (qtnInvoiceAccounting ? (totalQtnSales || 0) - (totalQtnSalesReturn || 0) : 0);
+    const profitLossRevenueNum = enableNonVatSales ? profitLossRevenueBase + nonVatNetRevenue : profitLossRevenueBase;
     const purchaseCashDiscountAdjustment = disablePurchasesOnAccounts ? (totalAccountedPurchaseCashDiscount || 0) : (totalPurchaseCashDiscount || 0);
     const purchaseReturnCashDiscountAdjustment = disablePurchasesOnAccounts ? (totalAccountedPurchaseReturnCashDiscount || 0) : (totalPurchaseReturnCashDiscount || 0);
     const cashDiscountExpenseAdj = (totalCashDiscount || 0) - (totalSalesReturnCashDiscount || 0) + (purchaseReturnCashDiscountAdjustment) - (purchaseCashDiscountAdjustment)
@@ -1061,8 +1162,8 @@ const StatsIndex = forwardRef((props, ref) => {
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
     const profitLossWithoutVATNum = profitLossNum - profitLossVatNum;
-    const profitLossRevenueVatNum = profitLossRevenueNum * vatPercent / (100 + vatPercent);
-    const profitLossRevenueWithoutVATNum = profitLossRevenueNum - profitLossRevenueVatNum;
+    const profitLossRevenueVatNum = profitLossRevenueBase * vatPercent / (100 + vatPercent);
+    const profitLossRevenueWithoutVATNum = profitLossRevenueBase - profitLossRevenueVatNum;
     const profitLossExpenseVatNum = profitLossExpenseNum * vatPercent / (100 + vatPercent);
     const profitLossExpenseWithoutVATNum = profitLossExpenseNum - profitLossExpenseVatNum;
 
@@ -1276,9 +1377,16 @@ const StatsIndex = forwardRef((props, ref) => {
                                                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${trimTo2Decimals(totalQtnSales)}` }] : []),
                                                 { label: "Sales Returns", value: `− ${trimTo2Decimals(totalSalesReturn)}` },
                                                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales Returns", value: `− ${trimTo2Decimals(totalQtnSalesReturn)}` }] : []),
-                                                { divider: true, label: "= Revenue (with VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, bold: true, color: "#74c0fc" },
+                                                { divider: true, label: "= Net Revenue (with VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueBase)}`, bold: true, color: "#74c0fc" },
                                                 { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossRevenueVatNum)}` },
-                                                { divider: true, label: "= Revenue (without VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueWithoutVATNum)}`, bold: true, color: "#74c0fc" },
+                                                { divider: true, label: "= Net Revenue (without VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueWithoutVATNum)}`, bold: true, color: "#74c0fc" },
+                                                ...(enableNonVatSales ? [
+                                                    { divider: true, label: "— Non-VAT Sales —", value: "", bold: true, color: "#a5d6a7" },
+                                                    { label: "Non-VAT Sales", value: `SAR ${trimTo2Decimals(totalNonVatSales)}`, color: "#a5d6a7" },
+                                                    { label: "Non-VAT Sales Returns", value: `− ${trimTo2Decimals(totalNonVatSalesReturn)}`, color: "#ffa8a8" },
+                                                    { divider: true, label: "Non-VAT Net Revenue", value: `SAR ${trimTo2Decimals(nonVatNetRevenue)}`, bold: true, color: "#a5d6a7" },
+                                                    { divider: true, label: "Total Revenue", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, bold: true, color: "#69db7c" },
+                                                ] : []),
                                             ]},
                                             { label: "Expense", value: profitLossExpenseNum, sub: `w/o VAT: ${trimTo2Decimals(profitLossExpenseWithoutVATNum)}`, info: [
                                                 { label: "What it is", value: disablePurchasesOnAccounts ? "Total operating cost — on-account mode (accounted purchases only)" : "Total operating cost including all purchases", bold: true, color: "#ffa8a8" },
