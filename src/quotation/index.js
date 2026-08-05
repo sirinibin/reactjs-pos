@@ -180,9 +180,6 @@ function QuotationIndex(props) {
       } catch (error) { }
   }
 
-  const [showDrafts, setShowDrafts] = useState(false);
-  const [draftCount, setDraftCount] = useState(0);
-
   //Search params
   const [searchParams, setSearchParams] = useState({});
   let [sortField, setSortField] = useState("created_at");

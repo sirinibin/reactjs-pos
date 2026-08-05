@@ -155,8 +155,6 @@ const QuotationType3Form = forwardRef((props, ref) => {
         setShowCustomerPending(true);
         setTimeout(() => { CustomerPendingRef.current?.open(false, customer); }, 50);
     }
-    const clearDraftRef = useRef(null);
-    const draftFlashShownRef = useRef(false);
     const [store, setStore] = useState({});
     const [repairJobInfos, setRepairJobInfos] = useState([]);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
