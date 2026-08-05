@@ -355,7 +355,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
     function changePage(newPage) {
@@ -381,6 +382,11 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
     let [showPurchaseForm, setShowPurchaseForm] = useState(false);
     let [showPurchaseReturnForm, setShowPurchaseReturnForm] = useState(false);
+
+    useEffect(() => {
+        if (showPurchaseForm || showPurchaseReturnForm) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showPurchaseForm, showPurchaseReturnForm]);
 
     const PurchaseReturnUpdateFormRef = useRef();
     function openPurchaseReturnUpdateForm(id) {
@@ -471,8 +477,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

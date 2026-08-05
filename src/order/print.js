@@ -170,6 +170,8 @@ const OrderPrint = forwardRef((props, ref) => {
             apiPath = "quotation-sales-return"
         } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
             apiPath = "delivery-note"
+        } else if (modelName && modelName === "non_vat_invoice") {
+            apiPath = "non-vat-sales"
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -439,6 +441,13 @@ const OrderPrint = forwardRef((props, ref) => {
                     }
                 }
             }
+        } else if (model.modelName === "non_vat_invoice") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles?.credit;
+            } else {
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles?.paid;
+            }
+            model.hideVAT = true;
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store?.settings?.invoice?.quotation_title;
@@ -1140,7 +1149,7 @@ const OrderPrint = forwardRef((props, ref) => {
     }, [handlePrint, show, isPrinting]);
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }} className="order-print-wrap">
+        <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }} className="order-preview-wrap">
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 <Modal.Title>{t("Invoice Preview")}</Modal.Title>
                 <div className="row" style={{ border: "solid 0px" }}>

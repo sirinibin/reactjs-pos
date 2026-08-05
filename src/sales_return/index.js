@@ -1531,8 +1531,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
-            {showSalesReturnCreateForm && <SalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />}
-            {showSalesReturnDetailsView && <SalesReturnView ref={DetailsViewRef} />}
+            {showSalesReturnCreateForm && <SalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showSalesReturnDetailsView && <SalesReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnPaymentCreate && <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />}
             {showSalesReturnPaymentDetailsView && <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 

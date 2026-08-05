@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { fetchStore } from './storeUtils.js';
 
-const POLL_INTERVAL = 2 * 60 * 1000; // check every 2 minutes
+const POLL_INTERVAL = 10 * 60 * 1000; // check every 10 minutes
 const RELOAD_COUNTDOWN = 60;          // seconds before auto-reload
 
 function getVersionFingerprint(html) {
-    // Extract hashed script/css filenames — these change with every production build
     const matches = html.match(/\/static\/(js|css)\/\S+\.(js|css)/g);
     return matches ? matches.join('|') : html.substring(0, 1000);
-    //return Date.now().toString();
 }
 
 export default function AutoRefresh() {
     const storedVersion = useRef(null);
     const snoozeUntilRef = useRef(0);
+    const enabledRef = useRef(false);
     const [updateReady, setUpdateReady] = useState(false);
     const [countdown, setCountdown] = useState(RELOAD_COUNTDOWN);
     const countdownRef = useRef(null);
@@ -48,6 +48,7 @@ export default function AutoRefresh() {
     };
 
     const check = async () => {
+        if (!enabledRef.current) return;
         if (Date.now() < snoozeUntilRef.current) return;
         const version = await fetchVersion();
         if (!version) return;
@@ -62,17 +63,38 @@ export default function AutoRefresh() {
     };
 
     useEffect(() => {
-        check();
-        const interval = setInterval(check, POLL_INTERVAL);
-        const onFocus = () => check();
-        const onVisibility = () => { if (!document.hidden) check(); };
-        window.addEventListener('focus', onFocus);
-        document.addEventListener('visibilitychange', onVisibility);
+        const storeId = localStorage.getItem('store_id');
+        if (!storeId) return;
+
+        let cancelled = false;
+        let cleanup = () => { };
+
+        fetchStore(storeId).then(store => {
+            if (cancelled) return;
+            if (!store?.settings?.enable_auto_refresh) return;
+            enabledRef.current = true;
+
+            check();
+            const interval = setInterval(check, POLL_INTERVAL);
+            const onFocus = () => check();
+            const onVisibility = () => { if (!document.hidden) check(); };
+            window.addEventListener('focus', onFocus);
+            document.addEventListener('visibilitychange', onVisibility);
+
+            cleanup = () => {
+                clearInterval(interval);
+                clearInterval(countdownRef.current);
+                window.removeEventListener('focus', onFocus);
+                document.removeEventListener('visibilitychange', onVisibility);
+            };
+        });
+
+        // NOTE: the effect callback itself (not the .then() callback) must
+        // return the cleanup function, otherwise React never registers it
+        // and the interval/listeners leak on unmount.
         return () => {
-            clearInterval(interval);
-            clearInterval(countdownRef.current);
-            window.removeEventListener('focus', onFocus);
-            document.removeEventListener('visibilitychange', onVisibility);
+            cancelled = true;
+            cleanup();
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

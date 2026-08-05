@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import PostingIndex from '../../posting/index.js';
 import WhatsAppModal from '../../utils/WhatsAppModal';
 import { addCommasToInfoValue, stripSarBreakdown } from '../../utils/numberUtils';
 import { generateInfoPdf, safeName } from '../../utils/pdfGenerator';
@@ -29,9 +30,19 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
     const [showWAModal, setShowWAModal] = useState(false);
     const [waMessage, setWaMessage] = useState("");
     const [error, setError] = useState("");
+    const [offsetX, setOffsetX] = useState(0);
     const autoCloseRef = useRef(null);
     const triggerRef = useRef(null);
     const tooltipRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (!show || !tooltipRef.current) { setOffsetX(0); return; }
+        const rect = tooltipRef.current.getBoundingClientRect();
+        const sidebarRight = (document.getElementById('sidebar')?.getBoundingClientRect().right ?? 0) + 8;
+        if (rect.left < sidebarRight) setOffsetX(sidebarRight - rect.left);
+        else if (rect.right > window.innerWidth - 8) setOffsetX(window.innerWidth - 8 - rect.right);
+        else setOffsetX(0);
+    }, [show]);
 
     const clearAutoClose = useCallback(() => {
         if (autoCloseRef.current) { clearTimeout(autoCloseRef.current); autoCloseRef.current = null; }
@@ -52,7 +63,7 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
         const handleDocClick = (e) => {
             if (triggerRef.current?.contains(e.target)) return;
             if (tooltipRef.current?.contains(e.target)) return;
-            if (e.target.closest('.modal')) return;
+            if (e.target.closest('.modal, .modal-backdrop, .modal-dialog')) return;
             setShow(false);
         };
         document.addEventListener('mousedown', handleDocClick);
@@ -117,10 +128,10 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
                 <div
                     ref={tooltipRef}
                     style={{
-                        position: "absolute", top: "130%", left: "50%", transform: "translateX(-50%)",
+                        position: "absolute", top: "130%", left: "50%", transform: `translateX(calc(-50% + ${offsetX}px))`,
                         backgroundColor: BG, color: "#f8f9fa", borderRadius: "6px",
-                        border: `1px solid ${BORDER}`, fontSize: "0.73rem", zIndex: 9999,
-                        minWidth: "260px", maxWidth: "400px",
+                        border: `1px solid ${BORDER}`, fontSize: "0.73rem", zIndex: 1059,
+                        minWidth: "260px", maxWidth: "min(560px, 92vw)",
                         boxShadow: "0 4px 14px rgba(0,0,0,0.45)", lineHeight: "1.7",
                     }}
                     onMouseEnter={clearAutoClose}
@@ -136,7 +147,7 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         padding: '7px 10px 7px 14px', borderBottom: `1px solid ${BORDER}`,
                         fontWeight: 700, fontSize: '0.8rem' }}>
-                        <span>Dashboard — {cardTitle || ''}</span>
+                        <span>{cardTitle || ''}</span>
                         <button type="button" onClick={(e) => { e.stopPropagation(); setShow(false); }}
                             style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer',
                                 fontSize: '1.1rem', lineHeight: 1, padding: '0 0 0 10px' }} title="Close">×</button>
@@ -186,7 +197,11 @@ function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
                                             textAlign: 'right', fontWeight: line.bold ? 700 : 400,
                                             color: line.color || '#f8f9fa', whiteSpace: 'nowrap',
                                             fontVariantNumeric: 'tabular-nums' }}>
-                                            {stripSarBreakdown(addCommasToInfoValue(line.value), line.bold)}
+                                            {line.onClick
+                                                ? <span onClick={line.onClick} style={{ cursor:'pointer', textDecoration:'underline dotted' }}>
+                                                    {stripSarBreakdown(addCommasToInfoValue(line.value), line.bold)} <i className="bi bi-box-arrow-up-right" style={{ fontSize:'0.65rem' }} />
+                                                  </span>
+                                                : stripSarBreakdown(addCommasToInfoValue(line.value), line.bold)}
                                         </td>
                                     </tr>
                                 ))}
@@ -250,7 +265,7 @@ function ValueTooltip({ exact, children }) {
                     borderRadius: "5px",
                     fontSize: "0.75rem",
                     fontWeight: 400,
-                    zIndex: 9999,
+                    zIndex: 1059,
                     whiteSpace: "nowrap",
                     boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
                     pointerEvents: "none",
@@ -316,11 +331,16 @@ export default function KPICards({
     orders,
     filters,
     employeeStats,
-    openPosting,
+    nonVatStats,
+    vatBoxStats,
 }) {
+    const PostingRef = useRef();
+
     // ── Store flags — identical to stats/index.js ──────────────────────────
-    const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
+    const qtnInvoiceAccounting = store?.settings?.enable_sales_in_quotation === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
+    const enableNonVatSales = store?.settings?.non_vat_sales === true;
+    const enableVATBox = store?.settings?.enable_vat_box === true;
     const vatPercent = store?.vat_percent || 15;
 
     // ── Raw totals ─────────────────────────────────────────────────────────
@@ -339,6 +359,19 @@ export default function KPICards({
     const totalAccountedPurchase      = purchaseStats?.accounted_purchase || 0;
     const totalAccountedPurchaseReturn = purchaseReturnStats?.accounted_purchase_return || 0;
 
+    // ── Non-VAT Sales ─────────────────────────────────────────────────────
+    const nonVatSales       = nonVatStats?.sales       || 0;
+    const nonVatSalesReturn = nonVatStats?.salesReturn || 0;
+    const nonVatNetRevenue  = nonVatSales - nonVatSalesReturn;
+
+    // ── VAT Box ───────────────────────────────────────────────────────────
+    const vatSales          = vatBoxStats?.salesVAT          || 0;
+    const vatSalesReturn    = vatBoxStats?.salesReturnVAT    || 0;
+    const vatPurchase       = disablePurchasesOnAccounts ? (vatBoxStats?.acctPurchaseVAT       || 0) : (vatBoxStats?.purchaseVAT       || 0);
+    const vatPurchaseReturn = disablePurchasesOnAccounts ? (vatBoxStats?.acctPurchaseReturnVAT || 0) : (vatBoxStats?.purchaseReturnVAT || 0);
+    const vatExpense        = vatBoxStats?.expenseVendorVAT  || 0;
+    const vatNet            = vatSales - vatSalesReturn - vatPurchase + vatPurchaseReturn + vatExpense;
+
     // ── Commission totals ─────────────────────────────────────────────────
     const totalSalesCommission       = orderStats?.commission || 0;
     const totalSalesReturnCommission = salesReturnStats?.commission || 0;
@@ -356,6 +389,7 @@ export default function KPICards({
     // ── P&L formula — identical to stats/index.js ─────────────────────────
     const revenue = (totalSales - totalSalesReturn)
         + (qtnInvoiceAccounting ? (totalQtnSales - totalQtnSalesReturn) : 0);
+    const totalRevenue = enableNonVatSales ? revenue + nonVatNetRevenue : revenue;
 
     const purchaseCashDiscountAdj       = disablePurchasesOnAccounts ? totalAccountedPurchaseCashDiscount       : totalPurchaseCashDiscount;
     const purchaseReturnCashDiscountAdj = disablePurchasesOnAccounts ? totalAccountedPurchaseReturnCashDiscount : totalPurchaseReturnCashDiscount;
@@ -372,7 +406,7 @@ export default function KPICards({
     const revenueWithoutVAT = revenue - revenueVat;
     const expenseVat        = expenseTotal * vatPercent / (100 + vatPercent);
     const expenseWithoutVAT = expenseTotal - expenseVat;
-    const profitLoss           = revenue - expenseTotal;
+    const profitLoss           = totalRevenue - expenseTotal;
     const profitLossVat        = profitLoss * vatPercent / (100 + vatPercent);
     const profitLossWithoutVAT = profitLoss - profitLossVat;
     const isProfitable         = profitLoss >= 0;
@@ -393,6 +427,13 @@ export default function KPICards({
         { divider: true, label: "Net Revenue (with VAT)", value: `SAR ${fmt(revenue)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(revenueVat)}` },
         { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmt(revenueWithoutVAT)}`, bold: true },
+        ...(enableNonVatSales ? [
+            { divider: true, label: "— Non-VAT Sales —", value: "", bold: true, color: "#a5d6a7" },
+            { label: "Non-VAT Sales",         value: `SAR ${fmt(nonVatSales)}`,       color: "#a5d6a7" },
+            { label: "Non-VAT Sales Returns", value: `− ${fmt(nonVatSalesReturn)}`,   color: "#ffa8a8" },
+            { divider: true, label: "Non-VAT Net Revenue", value: `SAR ${fmt(nonVatNetRevenue)}`, bold: true, color: "#a5d6a7" },
+            { divider: true, label: "Total Revenue", value: `SAR ${fmt(totalRevenue)}`, bold: true, color: "#69db7c" },
+        ] : []),
     ];
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
@@ -435,7 +476,7 @@ export default function KPICards({
     ];
 
     const profitTooltip = [
-        { label: "Net Revenue", value: `${fmt(revenue)}` },
+        { label: enableNonVatSales ? "Total Revenue" : "Net Revenue", value: `${fmt(totalRevenue)}` },
         { label: "Total Expense", value: `− ${fmt(expenseTotal)}` },
         { divider: true, label: isProfitable ? "Net Profit (with VAT)" : "Net Loss (with VAT)", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(Math.abs(profitLossVat))}` },
@@ -463,14 +504,19 @@ export default function KPICards({
     ];
 
     return (
+        <>
         <div className="row">
             <KPICard filters={filters} store={store}
-                title="Net Revenue"
+                title={enableNonVatSales ? "Total Revenue" : "Net Revenue"}
                 tooltip={revenueTooltip}
-                fieldValue={revenue}
-                value={`${fmtCompact(revenue)}`}
-                exact={`${fmt(revenue)} (w/ VAT) · ${fmt(revenueWithoutVAT)} (w/o VAT)`}
-                sub2={`w/o VAT: ${fmtCompact(revenueWithoutVAT)}`}
+                fieldValue={enableNonVatSales ? totalRevenue : revenue}
+                value={`${fmtCompact(enableNonVatSales ? totalRevenue : revenue)}`}
+                exact={enableNonVatSales
+                    ? `${fmt(totalRevenue)}`
+                    : `${fmt(revenue)} (w/ VAT) · ${fmt(revenueWithoutVAT)} (w/o VAT)`}
+                sub2={enableNonVatSales
+                    ? `w/o VAT: ${fmtCompact(revenueWithoutVAT)}`
+                    : `w/o VAT: ${fmtCompact(revenueWithoutVAT)}`}
                 icon="bi bi-currency-dollar"
                 color="#4e73df"
             />
@@ -521,24 +567,43 @@ export default function KPICards({
                 icon="bi bi-arrow-return-left"
                 color="#858796"
             />
+            {enableVATBox && (
+                <KPICard filters={filters} store={store}
+                    title="VAT"
+                    tooltip={[
+                        { label: "Sales VAT",           value: `SAR ${fmt(vatSales)}`,          color: "#a5d6a7" },
+                        { label: "Sales Return VAT",    value: `− ${fmt(vatSalesReturn)}`,       color: "#ffa8a8" },
+                        { label: "Purchase VAT",        value: `− ${fmt(vatPurchase)}`,          color: "#ffa8a8" },
+                        { label: "Purchase Return VAT", value: `+ ${fmt(vatPurchaseReturn)}`,    color: "#a5d6a7" },
+                        { label: "Expense VAT (w/ Vendor Inv.)", value: `+ ${fmt(vatExpense)}`, color: "#a5d6a7" },
+                        { divider: true, label: "Net VAT Payable", value: `SAR ${fmt(vatNet)}`, bold: true, color: vatNet >= 0 ? "#ffa8a8" : "#a5d6a7" },
+                        ...(disablePurchasesOnAccounts ? [{ label: "(Accounted purchases only)", value: "", color: "#6c757d" }] : []),
+                    ]}
+                    fieldValue={vatNet}
+                    value={`${fmtCompact(Math.abs(vatNet))}`}
+                    exact={fmt(vatNet)}
+                    valueColor={vatNet >= 0 ? "#ba1a1a" : "#1a7a3a"}
+                    sub2={vatNet >= 0 ? "Payable to Authority" : "Refundable"}
+                    sub2Color={vatNet >= 0 ? "#ba1a1a" : "#1a7a3a"}
+                    icon="bi bi-cash-stack"
+                    color="#6610f2"
+                />
+            )}
             {store?.settings?.enable_employee_module && (
                 <KPICard filters={filters} store={store}
                     title="Salary Balance"
                     tooltip={[
-                        { label: "Owed to Employees", value: fmt(salaryAccrued) },
-                        { label: "Salary Paid",        value: fmt(salaryPaidEmp) },
-                        { label: "Net Balance",    value: fmt(Math.abs(salaryBalance)), bold: true },
-                        ...(employeeStats?.employee_accounts?.length ? [
-                            { label: "── Accounts ──", value: "", divider: true },
-                            ...employeeStats.employee_accounts.map(a => ({
-                                label: a.name,
-                                value: a.balance < 0
-                                    ? `-${fmt(Math.abs(a.balance))} (We Owe)`
-                                    : (a.balance > 0 ? `${fmt(a.balance)} (Owe us)` : "Settled"),
-                                color: a.balance < 0 ? '#f8a5a5' : (a.balance > 0 ? '#a3d9a5' : '#adb5bd'),
-                                onClick: openPosting ? () => openPosting({ id: a.id }, { title: `${a.name} — Balance Sheet` }) : undefined,
-                            })),
-                        ] : []),
+                        { label: "SAR", value: fmt(Math.abs(salaryBalance)), bold: true },
+                        ...(employeeStats?.employee_breakdown?.length ? [
+                            { divider: true, label: "By Employee", bold: true },
+                            { label: "(−) Store owes employee  ·  (+) Employee owes store", value: '' },
+                            ...employeeStats.employee_breakdown.map(e => ({
+                                label: e.name,
+                                value: (e.direction === 'owed_to_employee' ? '−' : '+') + 'SAR ' + fmt(e.balance),
+                                color: e.direction === 'owed_to_employee' ? '#ffa8a8' : '#74c0fc',
+                                onClick: e.account_id ? () => PostingRef.current?.open({ id: e.account_id, name: e.name }) : undefined,
+                            }))
+                        ] : [])
                     ]}
                     fieldValue={salaryBalance}
                     value={fmtCompact(Math.abs(salaryBalance))}
@@ -551,5 +616,7 @@ export default function KPICards({
                 />
             )}
         </div>
+        <PostingIndex ref={PostingRef} />
+        </>
     );
 }

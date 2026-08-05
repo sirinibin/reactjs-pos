@@ -1,6 +1,7 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, useEffect } from "react";
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
+import BalanceSheetPrintPreviewContentType2 from './printPreviewContentType2.js';
 import { format } from "date-fns";
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
@@ -32,52 +33,34 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
             if (modelObj) {
                 model = modelObj;
-                setModel({ ...model })
+
+                // Await store fetch before first render so balance_sheet_design is available immediately
+                const storeId = model.store_id || localStorage.getItem("store_id");
+                if (storeId) {
+                    try {
+                        const storeData = await fetchStore(storeId);
+                        if (storeData) {
+                            model.store = storeData;
+                        }
+                    } catch (e) { }
+                }
 
                 if (model.phone) {
                     phone = model.phone;
                 }
                 setPhone(phone);
 
-
-                if (model.store_id) {
-                    getStore(model.store_id);
-                }
-
                 if (model.reference_model === "customer" && model.reference_id) {
                     getCustomer(model.reference_id);
                 }
-
 
                 if (model.reference_model === "vendor" && model.reference_id) {
                     getVendor(model.reference_id);
                 }
 
-                /*
-                if (model.created_by) {
-                    getUser(model.created_by);
-                }
-                */
-
-                /*
-                if (model.reference_model==="customer") {
-                    getCustomer(model.reference_id);
-                }
-                */
-
-                /*
-                if (model.delivered_by) {
-                    getUser(model.delivered_by);
-                }
-                
-
-                if (model.delivered_by_signature_id) {
-                    getSignature(model.delivered_by_signature_id);
-                }
-                */
-
                 preparePages();
 
+                setModel({ ...model })
 
                 setShow(true);
             }
@@ -343,15 +326,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             });
     }
 
-    async function getStore(id) {
-        try {
-            const storeData = await fetchStore(id);
-            if (storeData) {
-                model.store = storeData;
-                setModel({ ...model });
-            }
-        } catch (error) { }
-    }
 
 
 
@@ -472,7 +446,15 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                     margin: 0,
                     filename: `${fileName}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
+                    html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => {
+                                await clonedDoc.fonts.ready;
+                                clonedDoc.querySelectorAll('*').forEach(el => {
+                                    const hasArabic = Array.from(el.childNodes).some(
+                                        n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)
+                                    );
+                                    if (hasArabic) el.style.letterSpacing = '0px';
+                                });
+                            } },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 }).outputPdf('bloburl');
 
@@ -573,7 +555,15 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         margin: 0,
                         filename: `${fileName}.pdf`,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
+                        html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => {
+                                await clonedDoc.fonts.ready;
+                                clonedDoc.querySelectorAll('*').forEach(el => {
+                                    const hasArabic = Array.from(el.childNodes).some(
+                                        n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)
+                                    );
+                                    if (hasArabic) el.style.letterSpacing = '0px';
+                                });
+                            } },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     })
                     .from(element)
@@ -602,7 +592,15 @@ const handlePrint = useCallback(async () => {
         margin: 0,
         filename: `${getFileName()}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: true },
+        html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => {
+                                await clonedDoc.fonts.ready;
+                                clonedDoc.querySelectorAll('*').forEach(el => {
+                                    const hasArabic = Array.from(el.childNodes).some(
+                                        n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)
+                                    );
+                                    if (hasArabic) el.style.letterSpacing = '0px';
+                                });
+                            } },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
@@ -708,7 +706,15 @@ const handlePrint = useCallback(async () => {
                 margin: 0,
                 filename: `${fileName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: true },
+                html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => {
+                                await clonedDoc.fonts.ready;
+                                clonedDoc.querySelectorAll('*').forEach(el => {
+                                    const hasArabic = Array.from(el.childNodes).some(
+                                        n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)
+                                    );
+                                    if (hasArabic) el.style.letterSpacing = '0px';
+                                });
+                            } },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
@@ -1067,194 +1073,209 @@ const handlePrint = useCallback(async () => {
             defaultMessage={defaultMessage}
         />
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
-            <Modal.Header>
-                <Modal.Title>Balance sheet preview</Modal.Title>
-                {/* Right: Fixed control block */}
-                <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
-                    {/* Slider */}
-                    {showSlider && (
-                        <div className="d-flex align-items-center border rounded bg-light p-2">
-                            <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
-                            <button className="btn btn-outline-secondary" onClick={increment}>+</button>
-                            <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
+            {model?.store?.settings?.balance_sheet_header_design === 'type2' ? (
+                /* ── TYPE 2: Modern grouped toolbar ── */
+                <div style={{ background: 'linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%)', borderBottom: '1px solid #15304e', flexShrink: 0 }}>
+                    {/* Top bar: title + action buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <i className="bi bi-journal-text" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px' }}></i>
+                            <span style={{ color: '#fff', fontWeight: '700', fontSize: '15px', letterSpacing: '0.3px' }}>Balance Sheet Preview</span>
                         </div>
-                    )}
-
-                    <label htmlFor="font-select">Select Font: </label>
-                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
-                        {fonts.map((font) => (
-                            <option key={font.value} value={font.value}>
-                                {font.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    {/* Show Store Header - Always fixed here */}
-                    <div className="form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="storeHeaderCheck"
-                            checked={fontSizes[modelName + "_storeHeader"]?.visible}
-                            onChange={() => {
-                                fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
-
-                                setFontSizes({ ...fontSizes });
-
-                                saveToLocalStorage("fontSizes", fontSizes);
-                            }}
-                        />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Button size="sm" variant="light" className="d-flex align-items-center gap-1"
+                                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontWeight: '600' }}
+                                onClick={(e) => { e.preventDefault(); handleDownload(); }}>
+                                {isDownloadProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-file-earmark-arrow-down"></i> PDF</>}
+                            </Button>
+                            <Button size="sm"
+                                style={{ background: whatsAppShare ? '#25d366' : 'rgba(255,255,255,0.15)', border: whatsAppShare ? '1px solid #1ebe5d' : '1px solid rgba(255,255,255,0.3)', color: '#fff', fontWeight: '600' }}
+                                onClick={whatsAppShare ? openWhatsAppShare : handlePrint}
+                                className="d-flex align-items-center gap-1">
+                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : (
+                                    !whatsAppShare ? <><i className="bi bi-printer"></i> Print</> :
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" /></svg>
+                                )}
+                            </Button>
+                            <button className="btn-close btn-close-white" onClick={handleClose} aria-label="Close" style={{ opacity: 0.8 }}></button>
+                        </div>
                     </div>
+                    {/* ── Type 2 Controls: Font + Section Sizes ── */}
+                    <div style={{ background: 'rgba(0,0,0,0.22)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
 
+                        {/* Font Selector */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '3px 8px' }}>
+                            <i className="bi bi-fonts" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}></i>
+                            <select
+                                id="font-select"
+                                value={fontSizes[modelName + "_font"]}
+                                onChange={handleFontChange}
+                                style={{ fontSize: '11px', padding: '1px 4px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#fff', minWidth: '140px', cursor: 'pointer', outline: 'none' }}
+                            >
+                                {fonts.map((font) => (
+                                    <option key={font.value} value={font.value} style={{ background: '#1a3a5c', color: '#fff' }}>{font.label}</option>
+                                ))}
+                            </select>
+                        </div>
 
+                        {/* Divider */}
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }} />
 
-                    {/* Margin Control */}
+                        {/* Section Font Size Steppers */}
+                        {[
+                            { key: 'storeName',     label: 'Store Name' },
+                            { key: 'invoiceTitle',  label: 'Title' },
+                            { key: 'invoiceDetails',label: 'Details' },
+                            { key: 'tableHead',     label: 'Tbl Head' },
+                            { key: 'tableBody',     label: 'Tbl Body' },
+                            { key: 'tableFooter',   label: 'Tbl Footer' },
+                            { key: 'footer',        label: 'Footer' },
+                        ].map(({ key, label }) => {
+                            const fullKey = modelName + "_" + key;
+                            const size = fontSizes[fullKey]?.size || '—';
+                            return (
+                                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '5px', padding: '2px 5px' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '9.5px', whiteSpace: 'nowrap', marginRight: '3px', letterSpacing: '0.2px' }}>{label}</span>
+                                    <button
+                                        className="btn btn-sm"
+                                        style={{ color: '#fff', padding: '0 3px', lineHeight: 1, fontSize: '13px', opacity: 0.85 }}
+                                        onClick={() => decrementSize(fullKey)}
+                                    >−</button>
+                                    <span style={{ color: '#fff', fontSize: '10.5px', minWidth: '30px', textAlign: 'center', fontWeight: 600 }}>{size}</span>
+                                    <button
+                                        className="btn btn-sm"
+                                        style={{ color: '#fff', padding: '0 3px', lineHeight: 1, fontSize: '13px', opacity: 0.85 }}
+                                        onClick={() => incrementSize(fullKey)}
+                                    >+</button>
+                                </div>
+                            );
+                        })}
 
-                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "100px" }}>
-                        <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
-                        <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-                    </div>
+                        {/* Divider */}
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }} />
 
+                        {/* Page Size */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', whiteSpace: 'nowrap' }}>Page</span>
+                            <select value={fontSizes[modelName + "_balanceSheetpPageSize"]} onChange={(e) => changePageSize(e.target.value)}
+                                style={{ fontSize: '11px', padding: '2px 4px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#fff', width: '52px' }}>
+                                {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40].map(n => <option key={n} value={n.toString()} style={{ background: '#1a3a5c', color: '#fff' }}>{n}</option>)}
+                            </select>
+                        </div>
 
-                    <>
-                        <label className="form-label">Page Size:</label>
-                        <select
-                            value={fontSizes[modelName + "_balanceSheetpPageSize"]}
-                            onChange={(e) => {
-                                changePageSize(e.target.value);
-                            }}
-                            className="form-control pull-right"
-                            style={{
-                                border: "solid 1px",
-                                borderColor: "silver",
-                                width: "55px",
-                            }}
-                        >
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="21">21</option>
-                            <option value="22">22</option>
-                            <option value="23">23</option>
-                            <option value="24">24</option>
-                            <option value="25">25</option>
-                            <option value="26">26</option>
-                            <option value="27">27</option>
-                            <option value="28">28</option>
-                            <option value="29">29</option>
-                            <option value="30">30</option>
-                            <option value="31">31</option>
-                            <option value="32">32</option>
-                            <option value="33">33</option>
-                            <option value="34">34</option>
-                            <option value="35">35</option>
-                            <option value="36">36</option>
-                            <option value="37">37</option>
-                            <option value="38">38</option>
-                            <option value="39">39</option>
-                            <option value="40">40</option>
-                        </select>
-                    </>
+                        {/* Max 1st Page Size */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', whiteSpace: 'nowrap' }}>Max 1st</span>
+                            <select value={fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]} onChange={(e) => changeMaxFirstPageSize(e.target.value)}
+                                style={{ fontSize: '11px', padding: '2px 4px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.1)', color: '#fff', width: '52px' }}>
+                                {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35].map(n => <option key={n} value={n.toString()} style={{ background: '#1a3a5c', color: '#fff' }}>{n}</option>)}
+                            </select>
+                        </div>
 
-                    <>
-                        <label className="form-label">Max. 1st Page Size:</label>
-                        <select
-                            value={fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]}
-                            onChange={(e) => {
-                                changeMaxFirstPageSize(e.target.value);
-                            }}
-                            className="form-control pull-right"
-                            style={{
-                                border: "solid 1px",
-                                borderColor: "silver",
-                                width: "55px",
-                            }}
-                        >
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="21">21</option>
-                            <option value="22">22</option>
-                            <option value="23">23</option>
-                            <option value="24">24</option>
-                            <option value="25">25</option>
-                            <option value="26">26</option>
-                            <option value="27">27</option>
-                            <option value="28">28</option>
-                            <option value="29">29</option>
-                            <option value="30">30</option>
-                            <option value="31">31</option>
-                            <option value="32">32</option>
-                            <option value="33">33</option>
-                            <option value="34">34</option>
-                            <option value="35">35</option>
-                        </select>
-                    </>
-
-                    <div className="col  text-end">
-                        <Button variant="primary" className="d-flex align-items-center gap-2" onClick={(e) => {
-                            e.preventDefault();
-                            handleDownload()
-                        }}>
-                            {isDownloadProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
-
-                                : ""
-                            }
-                            {!isDownloadProcessing && <>
-                                <i className="bi bi-file-earmark-arrow-down"></i>PDF
-                            </>}
-                        </Button>
-                    </div>
-
-
-                    <div className="col  text-end">
-                        <Button variant="primary" className={`d-flex align-items-center gap-2 btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
-
-                                : ""
-                            }
-                            {!isProcessing && <>
-                                {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
-                                {whatsAppShare && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>}
-                            </>}
-                        </Button>
-
-
-
-                    </div>
-                    <div className="col  text-end">
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
                     </div>
                 </div>
+            ) : (
+                /* ── TYPE 1: Original modal header ── */
+                <Modal.Header>
+                    <Modal.Title>Balance sheet preview</Modal.Title>
+                    {/* Right: Fixed control block */}
+                    <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
+                        {/* Slider */}
+                        {showSlider && (
+                            <div className="d-flex align-items-center border rounded bg-light p-2">
+                                <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
+                                <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
+                                <button className="btn btn-outline-secondary" onClick={increment}>+</button>
+                                <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
+                            </div>
+                        )}
 
-            </Modal.Header>
+                        <label htmlFor="font-select">Select Font: </label>
+                        <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
+                            {fonts.map((font) => (
+                                <option key={font.value} value={font.value}>
+                                    {font.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Show Store Header - Always fixed here */}
+                        <div className="form-check">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="storeHeaderCheck"
+                                checked={fontSizes[modelName + "_storeHeader"]?.visible}
+                                onChange={() => {
+                                    fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
+                                    setFontSizes({ ...fontSizes });
+                                    saveToLocalStorage("fontSizes", fontSizes);
+                                }}
+                            />
+                            <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        </div>
+
+                        {/* Margin Control */}
+                        <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "100px" }}>
+                            <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
+                            <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                            <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
+                        </div>
+
+                        <>
+                            <label className="form-label">Page Size:</label>
+                            <select
+                                value={fontSizes[modelName + "_balanceSheetpPageSize"]}
+                                onChange={(e) => { changePageSize(e.target.value); }}
+                                className="form-control pull-right"
+                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                            >
+                                {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40].map(n => <option key={n} value={n.toString()}>{n}</option>)}
+                            </select>
+                        </>
+
+                        <>
+                            <label className="form-label">Max. 1st Page Size:</label>
+                            <select
+                                value={fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]}
+                                onChange={(e) => { changeMaxFirstPageSize(e.target.value); }}
+                                className="form-control pull-right"
+                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                            >
+                                {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35].map(n => <option key={n} value={n.toString()}>{n}</option>)}
+                            </select>
+                        </>
+
+                        <div className="col text-end">
+                            <Button variant="primary" className="d-flex align-items-center gap-2" onClick={(e) => { e.preventDefault(); handleDownload(); }}>
+                                {isDownloadProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : ""}
+                                {!isDownloadProcessing && <><i className="bi bi-file-earmark-arrow-down"></i>PDF</>}
+                            </Button>
+                        </div>
+
+                        <div className="col text-end">
+                            <Button variant="primary" className={`d-flex align-items-center gap-2 btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
+                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : ""}
+                                {!isProcessing && <>
+                                    {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
+                                    {whatsAppShare && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                    </svg>}
+                                </>}
+                            </Button>
+                        </div>
+                        <div className="col text-end">
+                            <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
+                        </div>
+                    </div>
+                </Modal.Header>
+            )}
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <BalanceSheetPrintPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                    {(model.balanceSheetA4PreviewDesign === 'type2' || model.store?.settings?.balance_sheet_a4_preview_design === 'type2')
+                        ? <BalanceSheetPrintPreviewContentType2 model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                        : <BalanceSheetPrintPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                    }
                 </div>
             </Modal.Body>
             <Modal.Footer>

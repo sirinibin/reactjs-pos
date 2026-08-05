@@ -429,7 +429,8 @@ const ProductHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
     function changePage(newPage) {
@@ -512,6 +513,14 @@ const ProductHistory = forwardRef((props, ref) => {
     let [showQuotationSalesReturnForm, setShowQuotationSalesReturnForm] = useState(false);
     let [showDeliveryNoteForm, setShowDeliveryNoteForm] = useState(false);
     let [showStockTransferForm, setShowStockTransferForm] = useState(false);
+
+    useEffect(() => {
+        const anyOpen = showOrderForm || showSalesReturnForm || showPurchaseForm || showPurchaseReturnForm ||
+            showQuotationForm || showQuotationSalesReturnForm || showDeliveryNoteForm || showStockTransferForm;
+        if (anyOpen) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showOrderForm, showSalesReturnForm, showPurchaseForm, showPurchaseReturnForm,
+        showQuotationForm, showQuotationSalesReturnForm, showDeliveryNoteForm, showStockTransferForm]);
 
     const OrderUpdateFormRef = useRef();
     const SalesReturnUpdateFormRef = useRef();
@@ -843,14 +852,14 @@ const ProductHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showSalesReturnForm && <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showDeliveryNoteForm && <DeliveryNoteCreate ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
-            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
+            {showDeliveryNoteForm && <DeliveryNoteCreate fromHistory={true} ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
+            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowStockTransferForm(false)} />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />
             <VendorCreate ref={VendorUpdateFormRef} />

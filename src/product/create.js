@@ -364,6 +364,24 @@ const ProductCreate = forwardRef((props, ref) => {
         formData.images_content = [];
         formData.useLaserScanner = false;
         setFormData({ ...formData });
+
+        const storeId = localStorage.getItem('store_id');
+        if (id && storeId) {
+          fetch(`/v1/product/${id}/last-purchase-price?search[store_id]=${storeId}`, {
+            headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') },
+          })
+            .then(r => r.json())
+            .then(lpData => {
+              if (lpData.status) {
+                productStores[storeId] = productStores[storeId] || {};
+                productStores[storeId].last_purchase_id = lpData.result.purchase_id;
+                productStores[storeId].last_purchase_code = lpData.result.purchase_code;
+                productStores[storeId].last_purchase_price_updated_at = lpData.result.created_at;
+                setProductStores({ ...productStores });
+              }
+            })
+            .catch(() => {});
+        }
       })
       .catch((error) => {
         setProcessing(false);
@@ -1111,6 +1129,11 @@ const ProductCreate = forwardRef((props, ref) => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (show) document.body.classList.add('product-form-open');
+    return () => document.body.classList.remove('product-form-open');
+  }, [show]);
 
   useEffect(() => {
     const blurNumberOnWheel = () => {
@@ -2028,8 +2051,16 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['purchase_unit_price_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_0'] = 'Purchase Unit Price should not be < 0'; setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
-                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                                const _sid = localStorage.getItem('store_id');
+                                const _pp = parseFloat(e.target.value);
+                                const _mnow = new Date().toISOString();
+                                productStores[_sid].purchase_unit_price = _pp;
+                                const _wm = parseFloat(productStores[_sid]?.wholesale_margin_percent) || 0;
+                                const _rm = parseFloat(productStores[_sid]?.retail_margin_percent) || 0;
+                                if (_wm > 0) { const _wp = parseFloat(trimTo8Decimals(_pp * (1 + _wm / 100))); productStores[_sid].wholesale_unit_price = _wp; productStores[_sid].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp * (1 + (store.vat_percent / 100)))); productStores[_sid].wholesale_manual_price_updated_at = _mnow; }
+                                if (_rm > 0) { const _rp = parseFloat(trimTo8Decimals(_pp * (1 + _rm / 100))); productStores[_sid].retail_unit_price = _rp; productStores[_sid].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp * (1 + (store.vat_percent / 100)))); productStores[_sid].retail_manual_price_updated_at = _mnow; }
+                                setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[_sid].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[_sid].purchase_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['purchase_unit_price_0'] && <ErrMsg>{errors['purchase_unit_price_0']}</ErrMsg>}
@@ -2048,8 +2079,18 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['purchase_unit_price_with_vat_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_with_vat_0'] = 'Purchase Unit Price with VAT should not be < 0'; setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
-                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                                const _sid2 = localStorage.getItem('store_id');
+                                productStores[_sid2].purchase_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => {
+                                  const _pp2 = parseFloat(trimTo8Decimals(productStores[_sid2].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                  productStores[_sid2].purchase_unit_price = _pp2;
+                                  const _mnow2 = new Date().toISOString();
+                                  const _wm2 = parseFloat(productStores[_sid2]?.wholesale_margin_percent) || 0;
+                                  const _rm2 = parseFloat(productStores[_sid2]?.retail_margin_percent) || 0;
+                                  if (_wm2 > 0) { const _wp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _wm2 / 100))); productStores[_sid2].wholesale_unit_price = _wp2; productStores[_sid2].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].wholesale_manual_price_updated_at = _mnow2; }
+                                  if (_rm2 > 0) { const _rp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _rm2 / 100))); productStores[_sid2].retail_unit_price = _rp2; productStores[_sid2].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].retail_manual_price_updated_at = _mnow2; }
+                                  setProductStores({ ...productStores });
+                                }, 100);
                               }}
                             />
                             {errors['purchase_unit_price_with_vat_0'] && <ErrMsg>{errors['purchase_unit_price_with_vat_0']}</ErrMsg>}
@@ -2060,7 +2101,60 @@ const ProductCreate = forwardRef((props, ref) => {
                       {/* Wholesale Price Card */}
                       <div className="col-md-4">
                         <div style={PRICE_CARD}>
-                          <div style={PRICE_CARD_LABEL}>Wholesale Unit Price</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                            <div style={PRICE_CARD_LABEL}>Wholesale Unit Price</div>
+                            {store?.settings?.enable_auto_update_prices_from_last_purchase && formData.id && (
+                              <button type="button" title="Fetch last purchase price and recalculate using Wholesale Margin %"
+                                style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #004ac6', background: '#eef2ff', color: '#004ac6', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                onClick={async () => {
+                                  const storeId = localStorage.getItem('store_id');
+                                  const margin = parseFloat(productStores[storeId]?.wholesale_margin_percent) || 0;
+                                  if (!margin) { alert('Set Wholesale Margin % first'); return; }
+                                  try {
+                                    const token = localStorage.getItem('access_token');
+                                    const res = await fetch(`/v1/product/${formData.id}/last-purchase-price?search[store_id]=${storeId}`, { headers: { Authorization: 'Bearer ' + token } });
+                                    const data = await res.json();
+                                    if (!data.status) { alert(data.errors?.last_purchase || 'No purchase found for this product'); return; }
+                                    const newPrice = parseFloat((data.result.purchase_unit_price * (1 + margin / 100)).toFixed(2));
+                                    productStores[storeId].purchase_unit_price = data.result.purchase_unit_price;
+                                    productStores[storeId].purchase_unit_price_with_vat = data.result.purchase_unit_price_with_vat;
+                                    productStores[storeId].wholesale_unit_price = newPrice;
+                                    productStores[storeId].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(newPrice * (1 + (store.vat_percent / 100))));
+                                    productStores[storeId].last_purchase_id = data.result.purchase_id;
+                                    productStores[storeId].last_purchase_code = data.result.purchase_code;
+                                    productStores[storeId].last_purchase_price_updated_at = new Date().toISOString();
+                                    productStores[storeId].wholesale_manual_price_updated_at = null;
+                                    setProductStores({ ...productStores });
+                                  } catch (e) { alert('Failed to fetch last purchase price'); }
+                                }}
+                              >Update Now</button>
+                            )}
+                          </div>
+                          {store?.settings?.enable_auto_update_prices_from_last_purchase && (
+                            <div style={{ marginBottom: '12px' }}>
+                              <div style={PRICE_SUB_LABEL}>Wholesale Margin %</div>
+                              <input type="number" placeholder="e.g. 20" min="0"
+                                style={{ ...PRICE_INPUT, background: '#f8f9ff' }}
+                                value={productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent || productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent : ''}
+                                onChange={(e) => {
+                                  const storeId = localStorage.getItem('store_id');
+                                  productStores[storeId].wholesale_margin_percent = e.target.value !== '' ? parseFloat(e.target.value) : '';
+                                  setProductStores({ ...productStores });
+                                }}
+                              />
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#444', cursor: 'pointer' }}>
+                                <input type="checkbox"
+                                  checked={!!productStores[localStorage.getItem('store_id')]?.auto_update_wholesale_price_from_last_purchase}
+                                  onChange={() => {
+                                    const storeId = localStorage.getItem('store_id');
+                                    productStores[storeId].auto_update_wholesale_price_from_last_purchase = !productStores[storeId].auto_update_wholesale_price_from_last_purchase;
+                                    setProductStores({ ...productStores });
+                                  }}
+                                />
+                                Enable Auto Update from Last Purchase
+                              </label>
+                            </div>
+                          )}
                           <div style={{ marginBottom: '16px' }}>
                             <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
                             <input id="product_wholesale_unit_price" name="product_wholesale_unit_price" type="number"
@@ -2074,7 +2168,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['wholesale_unit_price']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price'] = 'Wholesale unit price should not be < 0'; setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].wholesale_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
@@ -2093,11 +2187,34 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['wholesale_unit_price_with_vat']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price_with_vat'] = 'Wholesale unit price with VAT should not be < 0'; setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].wholesale_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['wholesale_unit_price_with_vat'] && <ErrMsg>{errors['wholesale_unit_price_with_vat']}</ErrMsg>}
+                            {(() => {
+                              const _s = productStores[localStorage.getItem('store_id')];
+                              const _lp = _s?.last_purchase_price_updated_at ? new Date(_s.last_purchase_price_updated_at) : null;
+                              const _mu = _s?.wholesale_manual_price_updated_at ? new Date(_s.wholesale_manual_price_updated_at) : null;
+                              const showLastPurchase = _s?.last_purchase_code && (!_mu || _lp >= _mu);
+                              const showManual = _mu && (!_lp || _mu > _lp);
+                              return (<>
+                                {showLastPurchase && (
+                                  <div style={{ marginTop: '6px', fontSize: '11px', color: '#555' }}>
+                                    Last purchase: <span
+                                      style={{ color: '#004ac6', textDecoration: 'underline', cursor: 'pointer' }}
+                                      onClick={() => PurchaseHistoryRef.current.openById(_s?.last_purchase_id)}
+                                    >#{_s?.last_purchase_code}</span>
+                                    {_lp && <span style={{ color: '#888', marginLeft: '4px' }}>on {_lp.toLocaleString()}</span>}
+                                  </div>
+                                )}
+                                {showManual && (
+                                  <div style={{ marginTop: '4px', fontSize: '11px', color: '#888' }}>
+                                    Manually updated: {_mu.toLocaleString()}
+                                  </div>
+                                )}
+                              </>);
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -2105,7 +2222,60 @@ const ProductCreate = forwardRef((props, ref) => {
                       {/* Retail Price Card */}
                       <div className="col-md-4">
                         <div style={PRICE_CARD}>
-                          <div style={PRICE_CARD_LABEL}>Retail Unit Price</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                            <div style={PRICE_CARD_LABEL}>Retail Unit Price</div>
+                            {store?.settings?.enable_auto_update_prices_from_last_purchase && formData.id && (
+                              <button type="button" title="Fetch last purchase price and recalculate using Retail Margin %"
+                                style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #004ac6', background: '#eef2ff', color: '#004ac6', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                onClick={async () => {
+                                  const storeId = localStorage.getItem('store_id');
+                                  const margin = parseFloat(productStores[storeId]?.retail_margin_percent) || 0;
+                                  if (!margin) { alert('Set Retail Margin % first'); return; }
+                                  try {
+                                    const token = localStorage.getItem('access_token');
+                                    const res = await fetch(`/v1/product/${formData.id}/last-purchase-price?search[store_id]=${storeId}`, { headers: { Authorization: 'Bearer ' + token } });
+                                    const data = await res.json();
+                                    if (!data.status) { alert(data.errors?.last_purchase || 'No purchase found for this product'); return; }
+                                    const newPrice = parseFloat((data.result.purchase_unit_price * (1 + margin / 100)).toFixed(2));
+                                    productStores[storeId].purchase_unit_price = data.result.purchase_unit_price;
+                                    productStores[storeId].purchase_unit_price_with_vat = data.result.purchase_unit_price_with_vat;
+                                    productStores[storeId].retail_unit_price = newPrice;
+                                    productStores[storeId].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(newPrice * (1 + (store.vat_percent / 100))));
+                                    productStores[storeId].last_purchase_id = data.result.purchase_id;
+                                    productStores[storeId].last_purchase_code = data.result.purchase_code;
+                                    productStores[storeId].last_purchase_price_updated_at = new Date().toISOString();
+                                    productStores[storeId].retail_manual_price_updated_at = null;
+                                    setProductStores({ ...productStores });
+                                  } catch (e) { alert('Failed to fetch last purchase price'); }
+                                }}
+                              >Update Now</button>
+                            )}
+                          </div>
+                          {store?.settings?.enable_auto_update_prices_from_last_purchase && (
+                            <div style={{ marginBottom: '12px' }}>
+                              <div style={PRICE_SUB_LABEL}>Retail Margin %</div>
+                              <input type="number" placeholder="e.g. 30" min="0"
+                                style={{ ...PRICE_INPUT, background: '#f8f9ff' }}
+                                value={productStores[localStorage.getItem('store_id')]?.retail_margin_percent || productStores[localStorage.getItem('store_id')]?.retail_margin_percent === 0 ? productStores[localStorage.getItem('store_id')]?.retail_margin_percent : ''}
+                                onChange={(e) => {
+                                  const storeId = localStorage.getItem('store_id');
+                                  productStores[storeId].retail_margin_percent = e.target.value !== '' ? parseFloat(e.target.value) : '';
+                                  setProductStores({ ...productStores });
+                                }}
+                              />
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '12px', color: '#444', cursor: 'pointer' }}>
+                                <input type="checkbox"
+                                  checked={!!productStores[localStorage.getItem('store_id')]?.auto_update_retail_price_from_last_purchase}
+                                  onChange={() => {
+                                    const storeId = localStorage.getItem('store_id');
+                                    productStores[storeId].auto_update_retail_price_from_last_purchase = !productStores[storeId].auto_update_retail_price_from_last_purchase;
+                                    setProductStores({ ...productStores });
+                                  }}
+                                />
+                                Enable Auto Update from Last Purchase
+                              </label>
+                            </div>
+                          )}
                           <div style={{ marginBottom: '16px' }}>
                             <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
                             <input id="product_retail_unit_price" name="product_retail_unit_price" type="number"
@@ -2120,7 +2290,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['retail_unit_price']; delete errors['retail_unit_price_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_0'] = 'Retail Unit Price should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].retail_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
@@ -2140,11 +2310,34 @@ const ProductCreate = forwardRef((props, ref) => {
                                 delete errors['retail_unit_price_with_vat']; delete errors['retail_unit_price_with_vat_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_with_vat_0'] = 'Retail Unit Price with VAT should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].retail_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['retail_unit_price_with_vat'] && <ErrMsg>{errors['retail_unit_price_with_vat']}</ErrMsg>}
+                            {(() => {
+                              const _s = productStores[localStorage.getItem('store_id')];
+                              const _lp = _s?.last_purchase_price_updated_at ? new Date(_s.last_purchase_price_updated_at) : null;
+                              const _mu = _s?.retail_manual_price_updated_at ? new Date(_s.retail_manual_price_updated_at) : null;
+                              const showLastPurchase = _s?.last_purchase_code && (!_mu || _lp >= _mu);
+                              const showManual = _mu && (!_lp || _mu > _lp);
+                              return (<>
+                                {showLastPurchase && (
+                                  <div style={{ marginTop: '6px', fontSize: '11px', color: '#555' }}>
+                                    Last purchase: <span
+                                      style={{ color: '#004ac6', textDecoration: 'underline', cursor: 'pointer' }}
+                                      onClick={() => PurchaseHistoryRef.current.openById(_s?.last_purchase_id)}
+                                    >#{_s?.last_purchase_code}</span>
+                                    {_lp && <span style={{ color: '#888', marginLeft: '4px' }}>on {_lp.toLocaleString()}</span>}
+                                  </div>
+                                )}
+                                {showManual && (
+                                  <div style={{ marginTop: '4px', fontSize: '11px', color: '#888' }}>
+                                    Manually updated: {_mu.toLocaleString()}
+                                  </div>
+                                )}
+                              </>);
+                            })()}
                           </div>
                         </div>
                       </div>

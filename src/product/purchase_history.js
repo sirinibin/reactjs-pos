@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -371,7 +371,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
     function changePage(newPage) {
@@ -400,6 +401,11 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
     let [showPurchaseForm, setShowPurchaseForm] = useState(false);
 
+    useEffect(() => {
+        if (showPurchaseForm) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showPurchaseForm]);
+
     const PurchaseUpdateFormRef = useRef();
     async function openPurchaseUpdateForm(id) {
         showPurchaseForm = true;
@@ -410,6 +416,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
             PurchaseUpdateFormRef.current.open(id);
         }, 100);
     }
+
+    useImperativeHandle(ref, () => ({
+        openPurchaseById(id) { openPurchaseUpdateForm(id); },
+    }));
 
     const handleUpdated = () => {
         list();
@@ -476,7 +486,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

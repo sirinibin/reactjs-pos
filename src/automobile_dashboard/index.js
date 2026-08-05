@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Spinner } from "react-bootstrap";
 import { useTranslation } from 'react-i18next';
 import { Chart } from "react-google-charts";
@@ -6,6 +6,15 @@ import { tooltipHtml, onChartSelect } from '../business_dashboard/charts/chartTo
 import { generateInfoPdf, safeName } from '../utils/pdfGenerator';
 import { uploadPdfForShare } from '../utils/pdfShare';
 import PostingIndex from '../posting/index.js';
+import VendorPending from '../utils/vendor_pending.js';
+import CustomerPending from '../utils/customer_pending.js';
+import ExpenseCreate from '../expense/create.js';
+import OrderCreate from '../order/create.js';
+import PurchaseCreate from '../purchase/create.js';
+import PurchaseReturnedCreate from '../purchase_return/create.js';
+import SalesReturnCreate from '../sales_return/create.js';
+import VendorCreate from '../vendor/create.js';
+import CustomerCreate from '../customer/create.js';
 
 function fmt(n) {
     if (n === undefined || n === null || isNaN(Number(n))) return "0.00";
@@ -102,7 +111,7 @@ function WhatsAppFallbackModal({ dataUrl, title, onClose }) {
     }
     return (
         <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-            style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.65)",
+            style={{ position:"fixed", inset:0, zIndex:1059, background:"rgba(0,0,0,0.65)",
                 display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
             <div style={{ background:"#fff", borderRadius:"12px", padding:"20px",
                 maxWidth:"480px", width:"100%", boxShadow:"0 8px 32px rgba(0,0,0,0.3)" }}>
@@ -126,17 +135,974 @@ function WhatsAppFallbackModal({ dataUrl, title, onClose }) {
     );
 }
 
+// ── Expense Category Modal ────────────────────────────────────────────────────
+function ExpenseCategoryModal({ category, appliedFrom, appliedTo, storeId, vatPercent, onClose }) {
+    const [expenses, setExpenses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const expenseCreateRef = useRef();
+
+    const fetchExpenses = useCallback(() => {
+        if (!category?.id) return;
+        setLoading(true); setError(''); setExpenses([]);
+        const token = localStorage.getItem('access_token');
+        const params = new URLSearchParams();
+        params.set('search[store_id]', storeId || '');
+        params.set('search[category_id]', category.id);
+        params.set('limit', '500');
+        if (appliedFrom) {
+            params.set('search[from_date]', appliedFrom.length === 10 ? appliedFrom : `${appliedFrom}-01`);
+        }
+        if (appliedTo) {
+            if (appliedTo.length === 10) {
+                params.set('search[to_date]', appliedTo);
+            } else {
+                const [y, m] = appliedTo.split('-').map(Number);
+                params.set('search[to_date]', `${appliedTo}-${String(new Date(y, m, 0).getDate()).padStart(2,'0')}`);
+            }
+        }
+        fetch(`/v1/expense?${params.toString()}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => { setExpenses(d.result || []); setLoading(false); })
+            .catch(() => { setError('Failed to load expenses'); setLoading(false); });
+    }, [category?.id, appliedFrom, appliedTo, storeId]);
+
+    useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+
+    const total = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+
+    const fmtDate = (d) => { try { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); } catch { return ''; } };
+
+    const dateLabel = appliedFrom || appliedTo
+        ? `${appliedFrom || ''}${appliedFrom && appliedTo && appliedFrom !== appliedTo ? ' – ' + appliedTo : ''}`
+        : 'All time';
+
+    return (
+        <>
+        <style>{`.modal{z-index:1080!important}.modal-backdrop{z-index:1075!important}`}</style>
+        <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+            style={{ position:'fixed', inset:0, zIndex:1070, background:'rgba(15,23,42,0.45)', backdropFilter:'blur(4px)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'32px 16px', overflowY:'auto' }}>
+            <div onClick={e => e.stopPropagation()}
+                style={{ width:'100%', maxWidth:900, borderRadius:16, overflow:'hidden', boxShadow:'0 8px 48px rgba(15,23,42,0.18), 0 1px 3px rgba(15,23,42,0.08)', background:'#fff', display:'flex', flexDirection:'column', border:'1px solid #e8edf3' }}>
+
+                {/* Header */}
+                <div style={{ padding:'20px 28px 18px', borderBottom:'1px solid #f0f4f8', display:'flex', alignItems:'center', gap:14, background:'#fff' }}>
+                    <div style={{ width:44, height:44, borderRadius:12, background:'#fff7ed', border:'1px solid #fed7aa', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <i className="bi bi-wallet2" style={{ color:'#ea580c', fontSize:20 }}></i>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ color:'#0f172a', fontWeight:700, fontSize:'1.05rem', lineHeight:1.2 }}>{category?.name}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:5, flexWrap:'wrap' }}>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                <i className="bi bi-calendar3" style={{ fontSize:'0.65rem' }}></i>{dateLabel}
+                            </span>
+                            {!loading && (
+                                <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                    <i className="bi bi-receipt" style={{ fontSize:'0.65rem' }}></i>{expenses.length} record{expenses.length !== 1 ? 's' : ''}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    {!loading && !error && expenses.length > 0 && (
+                        <div style={{ textAlign:'right', flexShrink:0, marginRight:12 }}>
+                            <div style={{ color:'#dc2626', fontWeight:800, fontSize:'1.4rem', lineHeight:1, letterSpacing:'-0.02em' }}>{fmt(total)}</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.7rem', marginTop:2, fontWeight:500 }}>SAR incl. VAT</div>
+                        </div>
+                    )}
+                    <button onClick={onClose} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', color:'#64748b', borderRadius:8, width:34, height:34, cursor:'pointer', fontSize:17, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.15s' }}
+                        onMouseOver={e => e.currentTarget.style.background='#f1f5f9'} onMouseOut={e => e.currentTarget.style.background='#f8fafc'}>
+                        <i className="bi bi-x"></i>
+                    </button>
+                </div>
+
+
+                {/* Body */}
+                <div style={{ maxHeight:'60vh', overflowY:'auto' }}>
+                    {loading ? (
+                        <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'70px 0', gap:12 }}>
+                            <Spinner animation="border" style={{ color:'#ea580c', width:'2rem', height:'2rem' }} />
+                            <span style={{ color:'#94a3b8', fontSize:'0.85rem' }}>Loading expenses…</span>
+                        </div>
+                    ) : error ? (
+                        <div style={{ padding:48, textAlign:'center' }}>
+                            <div style={{ width:52, height:52, borderRadius:'50%', background:'#fef2f2', border:'1px solid #fecaca', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                                <i className="bi bi-exclamation-triangle" style={{ color:'#dc2626', fontSize:22 }}></i>
+                            </div>
+                            <div style={{ color:'#dc2626', fontWeight:600, fontSize:'0.9rem' }}>{error}</div>
+                        </div>
+                    ) : expenses.length === 0 ? (
+                        <div style={{ padding:'64px 0', textAlign:'center' }}>
+                            <div style={{ width:60, height:60, borderRadius:'50%', background:'#f8fafc', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+                                <i className="bi bi-inbox" style={{ color:'#94a3b8', fontSize:26 }}></i>
+                            </div>
+                            <div style={{ color:'#334155', fontWeight:600, fontSize:'0.95rem' }}>No expenses found</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.82rem', marginTop:4 }}>No records for this category in the selected period</div>
+                        </div>
+                    ) : (
+                        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
+                            <thead>
+                                <tr style={{ background:'#f8fafc', position:'sticky', top:0, zIndex:1 }}>
+                                    {[
+                                        { h:'#', right:false }, { h:'Date', right:false }, { h:'Code', right:false },
+                                        { h:'Amount', right:true }, { h:'', right:false },
+                                    ].map(({ h, right }) => (
+                                        <th key={h} style={{ padding:'10px 14px', fontWeight:700, color:'#475569', fontSize:'0.69rem', textTransform:'uppercase', letterSpacing:'0.05em', textAlign:right?'right':'left', whiteSpace:'nowrap', borderBottom:'2px solid #e2e8f0' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {expenses.map((e, i) => {
+                                    const amt = parseFloat(e.amount) || 0;
+                                    return (
+                                        <tr key={e.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                            onMouseOver={ev => ev.currentTarget.style.background='#f8faff'}
+                                            onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                            <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                            <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(e.date)}</td>
+                                            <td style={{ padding:'10px 14px' }}>
+                                                <span style={{ fontFamily:'monospace', background:'#f1f5f9', borderRadius:5, padding:'2px 7px', color:'#334155', fontSize:'0.73rem', fontWeight:600, border:'1px solid #e2e8f0' }}>{e.code || '—'}</span>
+                                            </td>
+                                            <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(amt)}</td>
+                                            <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                <button title="Edit" onClick={() => expenseCreateRef.current?.open(e.id)}
+                                                    style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s' }}
+                                                    onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                    <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                            <tfoot>
+                                <tr style={{ background:'#f8fafc', borderTop:'2px solid #e2e8f0' }}>
+                                    <td colSpan={3} style={{ padding:'11px 14px', color:'#64748b', fontWeight:700, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                                        Total &mdash; {expenses.length} record{expenses.length!==1?'s':''}
+                                    </td>
+                                    <td style={{ padding:'11px 14px', textAlign:'right', fontWeight:800, color:'#dc2626', fontSize:'0.92rem', fontVariantNumeric:'tabular-nums' }}>{fmt(total)}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    )}
+                </div>
+            </div>
+            <ExpenseCreate ref={expenseCreateRef} refreshList={fetchExpenses} />
+        </div>
+        </>
+    );
+}
+
+// ── Customer Credit Modal ─────────────────────────────────────────────────────
+function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClose }) {
+    const [orders, setOrders] = useState([]);
+    const [salesReturns, setSalesReturns] = useState([]);
+    const [purchases, setPurchases] = useState([]);
+    const [purchaseReturns, setPurchaseReturns] = useState([]);
+    const [entityData, setEntityData] = useState(null);
+    const [freshAccount, setFreshAccount] = useState(null);
+    const [linkedVendor, setLinkedVendor] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const orderCreateRef = useRef();
+    const salesReturnCreateRef = useRef();
+    const purchaseCreateRef = useRef();
+    const purchaseReturnCreateRef = useRef();
+    const linkedVendorCreateRef = useRef();
+    const [showBalanceSheet, setShowBalanceSheet] = useState(false);
+    const postingRef = useRef();
+    const bsTimer = useRef(null);
+
+    const fetchAll = useCallback(async () => {
+        setLoading(true); setError('');
+        setFreshAccount(null);
+        const headers = { Authorization: localStorage.getItem('access_token') };
+        const fromDateStr = appliedFrom ? (appliedFrom.length === 10 ? appliedFrom : `${appliedFrom}-01`) : '';
+        const toDateStr = appliedTo ? (appliedTo.length === 10 ? appliedTo : (() => { const [y,m] = appliedTo.split('-').map(Number); return `${appliedTo}-${String(new Date(y, m, 0).getDate()).padStart(2,'0')}`; })()) : '';
+        const dateFilter = {};
+        if (fromDateStr) dateFilter['search[from_date]'] = fromDateStr;
+        if (toDateStr) dateFilter['search[to_date]'] = toDateStr;
+        const opBase = { 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_received,balance_amount,payment_status,payment_methods', limit: '500' };
+        const srpBase = { 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' };
+        if (customer?.id) { opBase['search[customer_id]'] = customer.id; srpBase['search[customer_id]'] = customer.id; }
+        const op = new URLSearchParams(opBase);
+        const srp = new URLSearchParams(srpBase);
+        try {
+            let cust = null;
+            let fetchPromises = [
+                fetch(`/v1/order?${op}`, { headers }).then(r => r.json()),
+                fetch(`/v1/sales-return?${srp}`, { headers }).then(r => r.json()),
+            ];
+            if (customer?.id) {
+                fetchPromises.unshift(fetch(`/v1/customer/${customer.id}?search[store_id]=${encodeURIComponent(storeId||'')}`, { headers }).then(r => r.json()));
+            }
+            const results = await Promise.all(fetchPromises);
+            if (customer?.id) {
+                cust = results[0].result || null;
+                setEntityData(cust);
+                setOrders(results[1].result || []);
+                setSalesReturns(results[2].result || []);
+            } else {
+                setEntityData(null);
+                setOrders(results[0].result || []);
+                setSalesReturns(results[1].result || []);
+            }
+            let vend = null;
+            const [vData, aData] = await Promise.all([
+                (cust?.vat_no && cust?.name)
+                    ? fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(cust.vat_no)}&name=${encodeURIComponent(cust.name)}&search[store_id]=${encodeURIComponent(storeId || '')}`, { headers }).then(r => r.json()).catch(() => null)
+                    : Promise.resolve(null),
+                cust?.account?.id
+                    ? fetch(`/v1/account/${cust.account.id}?search[store_id]=${encodeURIComponent(storeId||'')}`, { headers }).then(r => r.json()).catch(() => null)
+                    : Promise.resolve(null),
+            ]);
+            if (vData?.result?.id) vend = vData.result;
+            if (aData?.result) setFreshAccount(aData.result);
+            setLinkedVendor(vend);
+            if (vend?.id) {
+                const pp = new URLSearchParams({ 'search[vendor_id]': vend.id, 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' });
+                const prp = new URLSearchParams({ 'search[vendor_id]': vend.id, 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' });
+                const [pData, prData] = await Promise.all([
+                    fetch(`/v1/purchase?${pp}`, { headers }).then(r => r.json()),
+                    fetch(`/v1/purchase-return?${prp}`, { headers }).then(r => r.json()),
+                ]);
+                setPurchases(pData.result || []);
+                setPurchaseReturns(prData.result || []);
+            } else {
+                setPurchases([]); setPurchaseReturns([]);
+            }
+            setLoading(false);
+        } catch { setError('Failed to load data'); setLoading(false); }
+    }, [customer?.id, storeId, appliedFrom, appliedTo]);
+
+    useEffect(() => { fetchAll(); }, [fetchAll]);
+
+    const ordersBalance              = orders.reduce((s, o) => s + (parseFloat(o.balance_amount) || 0), 0);
+    const salesReturnsBalance        = salesReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
+    const purchasesBalance           = purchases.reduce((s, p) => s + (parseFloat(p.balance_amount) || 0), 0);
+    const purchaseReturnsBalance     = purchaseReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
+    const netBalance = ordersBalance - salesReturnsBalance + purchasesBalance - purchaseReturnsBalance;
+    const totalRecords = orders.length + salesReturns.length + purchases.length + purchaseReturns.length;
+    const hasRecords = totalRecords > 0;
+
+    const fmtDate = (d) => { try { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); } catch { return ''; } };
+    const psBadge = (ps) => {
+        const map = { not_paid: { bg:'#fef2f2', color:'#dc2626', label:'Unpaid' }, paid_partially: { bg:'#fff7ed', color:'#ea580c', label:'Partial' } };
+        const s = map[ps] || { bg:'#f3f4f6', color:'#374151', label: ps };
+        return <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 7px', borderRadius:20, background:s.bg, color:s.color, whiteSpace:'nowrap' }}>{s.label}</span>;
+    };
+    const pmColors = { cash:{bg:'#f0fdf4',color:'#15803d',border:'#bbf7d0'}, bank_transfer:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, bank_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, debit_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, credit_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, bank_cheque:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, purchase:{bg:'#fffbeb',color:'#92400e',border:'#fde68a'}, sales:{bg:'#fffbeb',color:'#92400e',border:'#fde68a'}, sales_return:{bg:'#f5f3ff',color:'#6d28d9',border:'#ddd6fe'}, purchase_return:{bg:'#f5f3ff',color:'#6d28d9',border:'#ddd6fe'}, customer_account:{bg:'#fdf4ff',color:'#7e22ce',border:'#e9d5ff'}, vendor_account:{bg:'#fdf4ff',color:'#7e22ce',border:'#e9d5ff'} };
+    const pmLabels = { cash:'Cash', bank_transfer:'Bank', bank_card:'Card', debit_card:'Debit', credit_card:'Credit', bank_cheque:'Cheque', purchase:'Purchase', sales:'Sales', sales_return:'Sls.Rtn', purchase_return:'Pur.Rtn', customer_account:'Cust.Acc', vendor_account:'Vend.Acc' };
+    const pmBadges = (methods) => {
+        if (!methods?.length) return <span style={{ color:'#e2e8f0' }}>—</span>;
+        return <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>{methods.map(m => { const c = pmColors[m]||{bg:'#f3f4f6',color:'#374151',border:'#e5e7eb'}; return <span key={m} style={{ fontSize:'0.62rem', fontWeight:700, padding:'1px 5px', borderRadius:4, background:c.bg, color:c.color, border:`1px solid ${c.border}`, whiteSpace:'nowrap' }}>{pmLabels[m]||m}</span>; })}</div>;
+    };
+    function openBalanceSheet() {
+        if (!entityData?.account) return;
+        setShowBalanceSheet(true);
+        if (bsTimer.current) clearTimeout(bsTimer.current);
+        bsTimer.current = setTimeout(() => postingRef.current?.open(entityData.account), 100);
+    }
+
+    const COL_HEADS = [{ h:'#' }, { h:'Date' }, { h:'Code' }, { h:'Payment Status' }, { h:'Methods' }, { h:'Total', right:true }, { h:'Paid', right:true }, { h:'Balance', right:true }, { h:'' }];
+
+    return (
+        <>
+        <style>{`.modal{z-index:1080!important}.modal-backdrop{z-index:1075!important}`}</style>
+        {showBalanceSheet && <PostingIndex ref={postingRef} />}
+        <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+            style={{ position:'fixed', inset:0, zIndex:1070, background:'rgba(15,23,42,0.45)', backdropFilter:'blur(4px)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'32px 16px', overflowY:'auto' }}>
+            <div onClick={e => e.stopPropagation()}
+                style={{ width:'100%', maxWidth:980, borderRadius:16, overflow:'hidden', boxShadow:'0 8px 48px rgba(15,23,42,0.18)', background:'#fff', display:'flex', flexDirection:'column', border:'1px solid #e8edf3' }}>
+
+                <div style={{ padding:'20px 28px 18px', borderBottom:'1px solid #f0f4f8', display:'flex', alignItems:'center', gap:14, background:'#fff', flexWrap:'wrap' }}>
+                    <div style={{ width:44, height:44, borderRadius:12, background:'#fff7ed', border:'1px solid #fed7aa', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <i className="bi bi-person-lines-fill" style={{ color:'#ea580c', fontSize:20 }}></i>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ color:'#0f172a', fontWeight:700, fontSize:'1.05rem', lineHeight:1.2 }}>{customer?.name || 'All Customers'}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:5, flexWrap:'wrap' }}>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                <i className="bi bi-receipt" style={{ fontSize:'0.65rem' }}></i>Pending Transactions
+                            </span>
+                            {!loading && <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                {totalRecords} record{totalRecords !== 1 ? 's' : ''}
+                            </span>}
+                            {(appliedFrom || appliedTo) && <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#0369a1', background:'#e0f2fe', border:'1px solid #bae6fd', borderRadius:6, padding:'2px 8px' }}>
+                                <i className="bi bi-calendar3" style={{ fontSize:'0.65rem' }}></i>
+                                {appliedFrom === appliedTo ? appliedFrom : `${appliedFrom||'…'} → ${appliedTo||'…'}`}
+                            </span>}
+                            {!loading && linkedVendor && <span onClick={() => linkedVendorCreateRef.current?.open(linkedVendor.id)} style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#7c3aed', background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:6, padding:'2px 8px', cursor:'pointer' }}>
+                                <i className="bi bi-link-45deg" style={{ fontSize:'0.65rem' }}></i>Linked Vendor
+                            </span>}
+                        </div>
+                    </div>
+                    {!loading && !error && hasRecords && (
+                        <div style={{ textAlign:'right', flexShrink:0 }}>
+                            <div style={{ color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontWeight:800, fontSize:'1.3rem', lineHeight:1, letterSpacing:'-0.02em' }}>{netBalance < 0 ? '-' : '+'} SAR {fmt(Math.abs(netBalance))}</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.68rem', marginTop:2, fontWeight:500 }}>net outstanding</div>
+                        </div>
+                    )}
+                    {customer?.id && entityData && (
+                        <button onClick={openBalanceSheet} disabled={!entityData.account}
+                            style={{ flexShrink:0, display:'flex', flexDirection:'row', alignItems:'center', gap:8, background: entityData.account ? '#eff6ff' : '#f8fafc', border:`1px solid ${entityData.account ? '#bfdbfe' : '#e2e8f0'}`, color: entityData.account ? '#2563eb' : '#94a3b8', borderRadius:8, padding:'8px 14px', cursor: entityData.account ? 'pointer' : 'default', lineHeight:1.3, opacity: entityData.account ? 1 : 0.7 }}
+                            onMouseOver={e => { if (entityData.account) e.currentTarget.style.background='#dbeafe'; }} onMouseOut={e => { if (entityData.account) e.currentTarget.style.background='#eff6ff'; }}>
+                            <i className="bi bi-journal-bookmark-fill" style={{ fontSize:16, flexShrink:0 }}></i>
+                            <div style={{ textAlign:'left' }}>
+                                <div style={{ fontSize:'0.72rem', fontWeight:600 }}>Balance Sheet</div>
+                                {(() => { const bsAcc = freshAccount || entityData.account; const bsBal = parseFloat(bsAcc?.balance || 0); const bsDorC = bsAcc?.debit_or_credit_balance; const bsSign = bsDorC === 'credit_balance' ? '-' : '+'; const bsColor = bsDorC === 'debit_balance' ? '#dc2626' : '#16a34a'; return (
+                                <div style={{ fontSize:'0.8rem', fontWeight:800, color: entityData.account ? bsColor : '#94a3b8' }}>
+                                    {entityData.account ? `${bsSign}SAR ${fmt(bsBal)}` : 'No account'}
+                                </div>); })()}
+                            </div>
+                        </button>
+                    )}
+                    <button onClick={onClose} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', color:'#64748b', borderRadius:8, width:34, height:34, cursor:'pointer', fontSize:17, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+                        onMouseOver={e => e.currentTarget.style.background='#f1f5f9'} onMouseOut={e => e.currentTarget.style.background='#f8fafc'}>
+                        <i className="bi bi-x"></i>
+                    </button>
+                </div>
+
+                <div style={{ maxHeight:'60vh', overflowY:'auto' }}>
+                    {loading ? (
+                        <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'70px 0', gap:12 }}>
+                            <Spinner animation="border" style={{ color:'#ea580c', width:'2rem', height:'2rem' }} />
+                            <span style={{ color:'#94a3b8', fontSize:'0.85rem' }}>Loading…</span>
+                        </div>
+                    ) : error ? (
+                        <div style={{ padding:48, textAlign:'center' }}>
+                            <div style={{ width:52, height:52, borderRadius:'50%', background:'#fef2f2', border:'1px solid #fecaca', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                                <i className="bi bi-exclamation-triangle" style={{ color:'#dc2626', fontSize:22 }}></i>
+                            </div>
+                            <div style={{ color:'#dc2626', fontWeight:600, fontSize:'0.9rem' }}>{error}</div>
+                        </div>
+                    ) : !hasRecords ? (
+                        <div style={{ padding:'64px 0', textAlign:'center' }}>
+                            <div style={{ width:60, height:60, borderRadius:'50%', background:'#f8fafc', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+                                <i className="bi bi-inbox" style={{ color:'#94a3b8', fontSize:26 }}></i>
+                            </div>
+                            <div style={{ color:'#334155', fontWeight:600, fontSize:'0.95rem' }}>No pending transactions</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.82rem', marginTop:4 }}>All transactions are settled</div>
+                        </div>
+                    ) : (
+                        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
+                            <thead>
+                                <tr style={{ background:'#f8fafc', position:'sticky', top:0, zIndex:1 }}>
+                                    {COL_HEADS.map(({ h, right }) => (
+                                        <th key={h} style={{ padding:'10px 14px', fontWeight:700, color:'#475569', fontSize:'0.69rem', textTransform:'uppercase', letterSpacing:'0.05em', textAlign:right?'right':'left', whiteSpace:'nowrap', borderBottom:'2px solid #e2e8f0' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {orders.length > 0 && <>
+                                    <tr style={{ background:'#fff7ed' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#c2410c', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fed7aa' }}>
+                                            <i className="bi bi-receipt" style={{ marginRight:5 }}></i>Sales
+                                            <span style={{ float:'right', fontWeight:500 }}>{orders.length} record{orders.length!==1?'s':''} &bull; Balance: SAR {fmt(ordersBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {orders.map((o, i) => {
+                                        const rowTotal = parseFloat(o.net_total) || 0;
+                                        const paid = parseFloat(o.total_payment_received) || 0;
+                                        const balance = parseFloat(o.balance_amount) || 0;
+                                        return (
+                                            <tr key={o.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f8faff'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(o.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f1f5f9', borderRadius:5, padding:'2px 7px', color:'#334155', fontSize:'0.73rem', fontWeight:600, border:'1px solid #e2e8f0' }}>{o.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(o.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(o.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => orderCreateRef.current?.open(o.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {salesReturns.length > 0 && <>
+                                    <tr style={{ background:'#f0fdf4' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#15803d', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #bbf7d0', borderTop: orders.length > 0 ? '2px solid #e2e8f0' : 'none' }}>
+                                            <i className="bi bi-arrow-return-left" style={{ marginRight:5 }}></i>Sales Returns
+                                            <span style={{ float:'right', fontWeight:500 }}>{salesReturns.length} record{salesReturns.length!==1?'s':''} &bull; Balance: SAR {fmt(salesReturnsBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {salesReturns.map((r, i) => {
+                                        const rowTotal = parseFloat(r.net_total) || 0;
+                                        const paid = parseFloat(r.total_payment_paid) || 0;
+                                        const balance = parseFloat(r.balance_amount) || 0;
+                                        return (
+                                            <tr key={r.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f0fff4'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(r.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f0fdf4', borderRadius:5, padding:'2px 7px', color:'#166534', fontSize:'0.73rem', fontWeight:600, border:'1px solid #bbf7d0' }}>{r.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(r.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(r.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => salesReturnCreateRef.current?.open(r.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {purchases.length > 0 && <>
+                                    <tr style={{ background:'#fef2f2' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#b91c1c', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fecaca', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-receipt-cutoff" style={{ marginRight:5 }}></i>Purchases
+                                            <span style={{ float:'right', fontWeight:500 }}>{purchases.length} record{purchases.length!==1?'s':''} &bull; Balance: SAR {fmt(purchasesBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {purchases.map((p, i) => {
+                                        const rowTotal = parseFloat(p.net_total) || 0;
+                                        const paid = parseFloat(p.total_payment_paid) || 0;
+                                        const balance = parseFloat(p.balance_amount) || 0;
+                                        return (
+                                            <tr key={p.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#fff5f5'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(p.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f1f5f9', borderRadius:5, padding:'2px 7px', color:'#334155', fontSize:'0.73rem', fontWeight:600, border:'1px solid #e2e8f0' }}>{p.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(p.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(p.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => purchaseCreateRef.current?.open(p.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {purchaseReturns.length > 0 && <>
+                                    <tr style={{ background:'#f0fdf4' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#15803d', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #bbf7d0', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-arrow-return-left" style={{ marginRight:5 }}></i>Purchase Returns
+                                            <span style={{ float:'right', fontWeight:500 }}>{purchaseReturns.length} record{purchaseReturns.length!==1?'s':''} &bull; Balance: SAR {fmt(purchaseReturnsBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {purchaseReturns.map((r, i) => {
+                                        const rowTotal = parseFloat(r.net_total) || 0;
+                                        const paid = parseFloat(r.total_payment_paid) || 0;
+                                        const balance = parseFloat(r.balance_amount) || 0;
+                                        return (
+                                            <tr key={r.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f0fff4'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(r.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f0fdf4', borderRadius:5, padding:'2px 7px', color:'#166534', fontSize:'0.73rem', fontWeight:600, border:'1px solid #bbf7d0' }}>{r.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(r.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(r.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => purchaseReturnCreateRef.current?.open(r.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+                {!loading && !error && hasRecords && (
+                    <div style={{ borderTop:'2px solid #e2e8f0', background:'#f8fafc', padding:'10px 20px', display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+                        {orders.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#fff7ed', border:'1px solid #fed7aa', borderRadius:8 }}>
+                                <i className="bi bi-receipt" style={{ color:'#c2410c', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#9a3412', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sales ({orders.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(ordersBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {salesReturns.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8 }}>
+                                <i className="bi bi-arrow-return-left" style={{ color:'#15803d', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sales Returns ({salesReturns.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(salesReturnsBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {purchases.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:8 }}>
+                                <i className="bi bi-receipt-cutoff" style={{ color:'#b91c1c', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#991b1b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Purchases ({purchases.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(purchasesBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {purchaseReturns.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8 }}>
+                                <i className="bi bi-arrow-return-left" style={{ color:'#15803d', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Pur. Returns ({purchaseReturns.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(purchaseReturnsBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8, padding:'7px 16px', background: netBalance >= 0 ? '#fef2f2' : '#f0fdf4', border:`1px solid ${netBalance >= 0 ? '#fecaca' : '#bbf7d0'}`, borderRadius:8 }}>
+                            <i className="bi bi-calculator" style={{ color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontSize:14 }}></i>
+                            <div>
+                                <div style={{ fontSize:'0.66rem', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Net Outstanding</div>
+                                <div style={{ fontSize:'0.95rem', fontWeight:800, color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontVariantNumeric:'tabular-nums' }}>{netBalance < 0 ? '-' : '+'} SAR {fmt(Math.abs(netBalance))}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <OrderCreate ref={orderCreateRef} refreshList={fetchAll} />
+            <SalesReturnCreate ref={salesReturnCreateRef} refreshList={fetchAll} />
+            <PurchaseCreate ref={purchaseCreateRef} refreshList={fetchAll} />
+            <PurchaseReturnedCreate ref={purchaseReturnCreateRef} refreshList={fetchAll} />
+            <VendorCreate ref={linkedVendorCreateRef} refreshList={fetchAll} />
+        </div>
+        </>
+    );
+}
+
+// ── Vendor Payables Modal ─────────────────────────────────────────────────────
+function VendorPayablesModal({ vendor, storeId, appliedFrom, appliedTo, onClose }) {
+    const [purchases, setPurchases] = useState([]);
+    const [purchaseReturns, setPurchaseReturns] = useState([]);
+    const [orders, setOrders] = useState([]);
+    const [salesReturns, setSalesReturns] = useState([]);
+    const [entityData, setEntityData] = useState(null);
+    const [freshAccount, setFreshAccount] = useState(null);
+    const [linkedCustomer, setLinkedCustomer] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const purchaseCreateRef = useRef();
+    const purchaseReturnCreateRef = useRef();
+    const orderCreateRef = useRef();
+    const salesReturnCreateRef = useRef();
+    const linkedCustomerCreateRef = useRef();
+    const [showBalanceSheet, setShowBalanceSheet] = useState(false);
+    const postingRef = useRef();
+    const bsTimer = useRef(null);
+
+    const fetchAll = useCallback(async () => {
+        setLoading(true); setError('');
+        setFreshAccount(null);
+        const headers = { Authorization: localStorage.getItem('access_token') };
+        const fromDateStr = appliedFrom ? (appliedFrom.length === 10 ? appliedFrom : `${appliedFrom}-01`) : '';
+        const toDateStr = appliedTo ? (appliedTo.length === 10 ? appliedTo : (() => { const [y,m] = appliedTo.split('-').map(Number); return `${appliedTo}-${String(new Date(y, m, 0).getDate()).padStart(2,'0')}`; })()) : '';
+        const dateFilter = {};
+        if (fromDateStr) dateFilter['search[from_date]'] = fromDateStr;
+        if (toDateStr) dateFilter['search[to_date]'] = toDateStr;
+        const ppBase = { 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' };
+        const prpBase = { 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' };
+        if (vendor?.id) { ppBase['search[vendor_id]'] = vendor.id; prpBase['search[vendor_id]'] = vendor.id; }
+        const pp = new URLSearchParams(ppBase);
+        const prp = new URLSearchParams(prpBase);
+        try {
+            let vend = null;
+            let fetchPromises = [
+                fetch(`/v1/purchase?${pp}`, { headers }).then(r => r.json()),
+                fetch(`/v1/purchase-return?${prp}`, { headers }).then(r => r.json()),
+            ];
+            if (vendor?.id) {
+                fetchPromises.unshift(fetch(`/v1/vendor/${vendor.id}?search[store_id]=${encodeURIComponent(storeId||'')}`, { headers }).then(r => r.json()));
+            }
+            const results = await Promise.all(fetchPromises);
+            if (vendor?.id) {
+                vend = results[0].result || null;
+                setEntityData(vend);
+                setPurchases(results[1].result || []);
+                setPurchaseReturns(results[2].result || []);
+            } else {
+                setEntityData(null);
+                setPurchases(results[0].result || []);
+                setPurchaseReturns(results[1].result || []);
+            }
+            let cust = null;
+            const [cData2, aData2] = await Promise.all([
+                (vend?.vat_no && vend?.name)
+                    ? fetch(`/v1/customer/vat_no/name?vat_no=${encodeURIComponent(vend.vat_no)}&name=${encodeURIComponent(vend.name)}&search[store_id]=${encodeURIComponent(storeId || '')}`, { headers }).then(r => r.json()).catch(() => null)
+                    : Promise.resolve(null),
+                vend?.account?.id
+                    ? fetch(`/v1/account/${vend.account.id}?search[store_id]=${encodeURIComponent(storeId||'')}`, { headers }).then(r => r.json()).catch(() => null)
+                    : Promise.resolve(null),
+            ]);
+            if (cData2?.result?.id) cust = cData2.result;
+            if (aData2?.result) setFreshAccount(aData2.result);
+            setLinkedCustomer(cust);
+            if (cust?.id) {
+                const op = new URLSearchParams({ 'search[customer_id]': cust.id, 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_received,balance_amount,payment_status,payment_methods', limit: '500' });
+                const srp = new URLSearchParams({ 'search[customer_id]': cust.id, 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' });
+                const [oData, srData] = await Promise.all([
+                    fetch(`/v1/order?${op}`, { headers }).then(r => r.json()),
+                    fetch(`/v1/sales-return?${srp}`, { headers }).then(r => r.json()),
+                ]);
+                setOrders(oData.result || []);
+                setSalesReturns(srData.result || []);
+            } else {
+                setOrders([]); setSalesReturns([]);
+            }
+            setLoading(false);
+        } catch { setError('Failed to load data'); setLoading(false); }
+    }, [vendor?.id, storeId, appliedFrom, appliedTo]);
+
+    useEffect(() => { fetchAll(); }, [fetchAll]);
+
+    const purchasesBalance       = purchases.reduce((s, p) => s + (parseFloat(p.balance_amount) || 0), 0);
+    const purchaseReturnsBalance = purchaseReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
+    const ordersBalance          = orders.reduce((s, o) => s + (parseFloat(o.balance_amount) || 0), 0);
+    const salesReturnsBalance    = salesReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
+    const netBalance = purchasesBalance - purchaseReturnsBalance + ordersBalance - salesReturnsBalance;
+    const totalRecords = purchases.length + purchaseReturns.length + orders.length + salesReturns.length;
+    const hasRecords = totalRecords > 0;
+
+    const fmtDate = (d) => { try { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); } catch { return ''; } };
+    const psBadge = (ps) => {
+        const map = { not_paid: { bg:'#fef2f2', color:'#dc2626', label:'Unpaid' }, paid_partially: { bg:'#fff7ed', color:'#ea580c', label:'Partial' } };
+        const s = map[ps] || { bg:'#f3f4f6', color:'#374151', label: ps };
+        return <span style={{ fontSize:'0.68rem', fontWeight:700, padding:'2px 7px', borderRadius:20, background:s.bg, color:s.color, whiteSpace:'nowrap' }}>{s.label}</span>;
+    };
+    const pmColors = { cash:{bg:'#f0fdf4',color:'#15803d',border:'#bbf7d0'}, bank_transfer:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, bank_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, debit_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, credit_card:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, bank_cheque:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'}, purchase:{bg:'#fffbeb',color:'#92400e',border:'#fde68a'}, sales:{bg:'#fffbeb',color:'#92400e',border:'#fde68a'}, sales_return:{bg:'#f5f3ff',color:'#6d28d9',border:'#ddd6fe'}, purchase_return:{bg:'#f5f3ff',color:'#6d28d9',border:'#ddd6fe'}, customer_account:{bg:'#fdf4ff',color:'#7e22ce',border:'#e9d5ff'}, vendor_account:{bg:'#fdf4ff',color:'#7e22ce',border:'#e9d5ff'} };
+    const pmLabels = { cash:'Cash', bank_transfer:'Bank', bank_card:'Card', debit_card:'Debit', credit_card:'Credit', bank_cheque:'Cheque', purchase:'Purchase', sales:'Sales', sales_return:'Sls.Rtn', purchase_return:'Pur.Rtn', customer_account:'Cust.Acc', vendor_account:'Vend.Acc' };
+    const pmBadges = (methods) => {
+        if (!methods?.length) return <span style={{ color:'#e2e8f0' }}>—</span>;
+        return <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>{methods.map(m => { const c = pmColors[m]||{bg:'#f3f4f6',color:'#374151',border:'#e5e7eb'}; return <span key={m} style={{ fontSize:'0.62rem', fontWeight:700, padding:'1px 5px', borderRadius:4, background:c.bg, color:c.color, border:`1px solid ${c.border}`, whiteSpace:'nowrap' }}>{pmLabels[m]||m}</span>; })}</div>;
+    };
+    function openBalanceSheet() {
+        if (!entityData?.account) return;
+        setShowBalanceSheet(true);
+        if (bsTimer.current) clearTimeout(bsTimer.current);
+        bsTimer.current = setTimeout(() => postingRef.current?.open(entityData.account), 100);
+    }
+    const COL_HEADS = [{ h:'#' }, { h:'Date' }, { h:'Code' }, { h:'Payment Status' }, { h:'Methods' }, { h:'Total', right:true }, { h:'Paid', right:true }, { h:'Balance', right:true }, { h:'' }];
+
+    return (
+        <>
+        <style>{`.modal{z-index:1080!important}.modal-backdrop{z-index:1075!important}`}</style>
+        {showBalanceSheet && <PostingIndex ref={postingRef} />}
+        <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+            style={{ position:'fixed', inset:0, zIndex:1070, background:'rgba(15,23,42,0.45)', backdropFilter:'blur(4px)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'32px 16px', overflowY:'auto' }}>
+            <div onClick={e => e.stopPropagation()}
+                style={{ width:'100%', maxWidth:980, borderRadius:16, overflow:'hidden', boxShadow:'0 8px 48px rgba(15,23,42,0.18)', background:'#fff', display:'flex', flexDirection:'column', border:'1px solid #e8edf3' }}>
+
+                <div style={{ padding:'20px 28px 18px', borderBottom:'1px solid #f0f4f8', display:'flex', alignItems:'center', gap:14, background:'#fff', flexWrap:'wrap' }}>
+                    <div style={{ width:44, height:44, borderRadius:12, background:'#fef2f2', border:'1px solid #fecaca', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        <i className="bi bi-building" style={{ color:'#dc2626', fontSize:20 }}></i>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ color:'#0f172a', fontWeight:700, fontSize:'1.05rem', lineHeight:1.2 }}>{vendor?.name || 'All Vendors'}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:5, flexWrap:'wrap' }}>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                <i className="bi bi-receipt-cutoff" style={{ fontSize:'0.65rem' }}></i>Pending Transactions
+                            </span>
+                            {!loading && <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#64748b', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:6, padding:'2px 8px' }}>
+                                {totalRecords} record{totalRecords !== 1 ? 's' : ''}
+                            </span>}
+                            {(appliedFrom || appliedTo) && <span style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#0369a1', background:'#e0f2fe', border:'1px solid #bae6fd', borderRadius:6, padding:'2px 8px' }}>
+                                <i className="bi bi-calendar3" style={{ fontSize:'0.65rem' }}></i>
+                                {appliedFrom === appliedTo ? appliedFrom : `${appliedFrom||'…'} → ${appliedTo||'…'}`}
+                            </span>}
+                            {!loading && linkedCustomer && <span onClick={() => linkedCustomerCreateRef.current?.open(linkedCustomer.id)} style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:'0.72rem', fontWeight:600, color:'#7c3aed', background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:6, padding:'2px 8px', cursor:'pointer' }}>
+                                <i className="bi bi-link-45deg" style={{ fontSize:'0.65rem' }}></i>Linked Customer
+                            </span>}
+                        </div>
+                    </div>
+                    {!loading && !error && hasRecords && (
+                        <div style={{ textAlign:'right', flexShrink:0 }}>
+                            <div style={{ color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontWeight:800, fontSize:'1.3rem', lineHeight:1, letterSpacing:'-0.02em' }}>{netBalance < 0 ? '-' : '+'} SAR {fmt(Math.abs(netBalance))}</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.68rem', marginTop:2, fontWeight:500 }}>net outstanding</div>
+                        </div>
+                    )}
+                    {vendor?.id && entityData && (
+                        <button onClick={openBalanceSheet} disabled={!entityData.account}
+                            style={{ flexShrink:0, display:'flex', flexDirection:'row', alignItems:'center', gap:8, background: entityData.account ? '#eff6ff' : '#f8fafc', border:`1px solid ${entityData.account ? '#bfdbfe' : '#e2e8f0'}`, color: entityData.account ? '#2563eb' : '#94a3b8', borderRadius:8, padding:'8px 14px', cursor: entityData.account ? 'pointer' : 'default', lineHeight:1.3, opacity: entityData.account ? 1 : 0.7 }}
+                            onMouseOver={e => { if (entityData.account) e.currentTarget.style.background='#dbeafe'; }} onMouseOut={e => { if (entityData.account) e.currentTarget.style.background='#eff6ff'; }}>
+                            <i className="bi bi-journal-bookmark-fill" style={{ fontSize:16, flexShrink:0 }}></i>
+                            <div style={{ textAlign:'left' }}>
+                                <div style={{ fontSize:'0.72rem', fontWeight:600 }}>Balance Sheet</div>
+                                {(() => { const bsAcc = freshAccount || entityData.account; const bsBal = parseFloat(bsAcc?.balance || 0); const bsDorC = bsAcc?.debit_or_credit_balance; const bsSign = bsDorC === 'credit_balance' ? '-' : '+'; const bsColor = bsDorC === 'credit_balance' ? '#dc2626' : '#16a34a'; return (
+                                <div style={{ fontSize:'0.8rem', fontWeight:800, color: entityData.account ? bsColor : '#94a3b8' }}>
+                                    {entityData.account ? `${bsSign}SAR ${fmt(bsBal)}` : 'No account'}
+                                </div>); })()}
+                            </div>
+                        </button>
+                    )}
+                    <button onClick={onClose} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', color:'#64748b', borderRadius:8, width:34, height:34, cursor:'pointer', fontSize:17, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+                        onMouseOver={e => e.currentTarget.style.background='#f1f5f9'} onMouseOut={e => e.currentTarget.style.background='#f8fafc'}>
+                        <i className="bi bi-x"></i>
+                    </button>
+                </div>
+
+                <div style={{ maxHeight:'60vh', overflowY:'auto' }}>
+                    {loading ? (
+                        <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'70px 0', gap:12 }}>
+                            <Spinner animation="border" style={{ color:'#dc2626', width:'2rem', height:'2rem' }} />
+                            <span style={{ color:'#94a3b8', fontSize:'0.85rem' }}>Loading…</span>
+                        </div>
+                    ) : error ? (
+                        <div style={{ padding:48, textAlign:'center' }}>
+                            <div style={{ width:52, height:52, borderRadius:'50%', background:'#fef2f2', border:'1px solid #fecaca', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                                <i className="bi bi-exclamation-triangle" style={{ color:'#dc2626', fontSize:22 }}></i>
+                            </div>
+                            <div style={{ color:'#dc2626', fontWeight:600, fontSize:'0.9rem' }}>{error}</div>
+                        </div>
+                    ) : !hasRecords ? (
+                        <div style={{ padding:'64px 0', textAlign:'center' }}>
+                            <div style={{ width:60, height:60, borderRadius:'50%', background:'#f8fafc', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}>
+                                <i className="bi bi-inbox" style={{ color:'#94a3b8', fontSize:26 }}></i>
+                            </div>
+                            <div style={{ color:'#334155', fontWeight:600, fontSize:'0.95rem' }}>No pending transactions</div>
+                            <div style={{ color:'#94a3b8', fontSize:'0.82rem', marginTop:4 }}>All transactions are settled</div>
+                        </div>
+                    ) : (
+                        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
+                            <thead>
+                                <tr style={{ background:'#f8fafc', position:'sticky', top:0, zIndex:1 }}>
+                                    {COL_HEADS.map(({ h, right }) => (
+                                        <th key={h} style={{ padding:'10px 14px', fontWeight:700, color:'#475569', fontSize:'0.69rem', textTransform:'uppercase', letterSpacing:'0.05em', textAlign:right?'right':'left', whiteSpace:'nowrap', borderBottom:'2px solid #e2e8f0' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {purchases.length > 0 && <>
+                                    <tr style={{ background:'#fef2f2' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#b91c1c', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fecaca' }}>
+                                            <i className="bi bi-receipt-cutoff" style={{ marginRight:5 }}></i>Purchases
+                                            <span style={{ float:'right', fontWeight:500 }}>{purchases.length} record{purchases.length!==1?'s':''} &bull; Balance: SAR {fmt(purchasesBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {purchases.map((p, i) => {
+                                        const rowTotal = parseFloat(p.net_total) || 0;
+                                        const paid = parseFloat(p.total_payment_paid) || 0;
+                                        const balance = parseFloat(p.balance_amount) || 0;
+                                        return (
+                                            <tr key={p.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#fff5f5'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(p.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f1f5f9', borderRadius:5, padding:'2px 7px', color:'#334155', fontSize:'0.73rem', fontWeight:600, border:'1px solid #e2e8f0' }}>{p.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(p.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(p.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => purchaseCreateRef.current?.open(p.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {purchaseReturns.length > 0 && <>
+                                    <tr style={{ background:'#f0fdf4' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#15803d', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #bbf7d0', borderTop: purchases.length > 0 ? '2px solid #e2e8f0' : 'none' }}>
+                                            <i className="bi bi-arrow-return-left" style={{ marginRight:5 }}></i>Purchase Returns
+                                            <span style={{ float:'right', fontWeight:500 }}>{purchaseReturns.length} record{purchaseReturns.length!==1?'s':''} &bull; Balance: SAR {fmt(purchaseReturnsBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {purchaseReturns.map((r, i) => {
+                                        const rowTotal = parseFloat(r.net_total) || 0;
+                                        const paid = parseFloat(r.total_payment_paid) || 0;
+                                        const balance = parseFloat(r.balance_amount) || 0;
+                                        return (
+                                            <tr key={r.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f0fff4'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(r.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f0fdf4', borderRadius:5, padding:'2px 7px', color:'#166534', fontSize:'0.73rem', fontWeight:600, border:'1px solid #bbf7d0' }}>{r.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(r.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(r.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => purchaseReturnCreateRef.current?.open(r.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {orders.length > 0 && <>
+                                    <tr style={{ background:'#fff7ed' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#c2410c', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fed7aa', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-receipt" style={{ marginRight:5 }}></i>Sales
+                                            <span style={{ float:'right', fontWeight:500 }}>{orders.length} record{orders.length!==1?'s':''} &bull; Balance: SAR {fmt(ordersBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {orders.map((o, i) => {
+                                        const rowTotal = parseFloat(o.net_total) || 0;
+                                        const paid = parseFloat(o.total_payment_received) || 0;
+                                        const balance = parseFloat(o.balance_amount) || 0;
+                                        return (
+                                            <tr key={o.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f8faff'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(o.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f1f5f9', borderRadius:5, padding:'2px 7px', color:'#334155', fontSize:'0.73rem', fontWeight:600, border:'1px solid #e2e8f0' }}>{o.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(o.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(o.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => orderCreateRef.current?.open(o.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {salesReturns.length > 0 && <>
+                                    <tr style={{ background:'#f0fdf4' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#15803d', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #bbf7d0', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-arrow-return-left" style={{ marginRight:5 }}></i>Sales Returns
+                                            <span style={{ float:'right', fontWeight:500 }}>{salesReturns.length} record{salesReturns.length!==1?'s':''} &bull; Balance: SAR {fmt(salesReturnsBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {salesReturns.map((r, i) => {
+                                        const rowTotal = parseFloat(r.net_total) || 0;
+                                        const paid = parseFloat(r.total_payment_paid) || 0;
+                                        const balance = parseFloat(r.balance_amount) || 0;
+                                        return (
+                                            <tr key={r.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f0fff4'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(r.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#f0fdf4', borderRadius:5, padding:'2px 7px', color:'#166534', fontSize:'0.73rem', fontWeight:600, border:'1px solid #bbf7d0' }}>{r.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(r.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(r.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px', textAlign:'center' }}>
+                                                    <button title="Edit" onClick={() => salesReturnCreateRef.current?.open(r.id)}
+                                                        style={{ background:'#eff6ff', border:'1px solid #bfdbfe', color:'#2563eb', borderRadius:6, width:28, height:28, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                                                        onMouseOver={ev => ev.currentTarget.style.background='#dbeafe'} onMouseOut={ev => ev.currentTarget.style.background='#eff6ff'}>
+                                                        <i className="bi bi-pencil" style={{ fontSize:'0.72rem' }}></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+                {!loading && !error && hasRecords && (
+                    <div style={{ borderTop:'2px solid #e2e8f0', background:'#f8fafc', padding:'10px 20px', display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+                        {purchases.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:8 }}>
+                                <i className="bi bi-receipt-cutoff" style={{ color:'#b91c1c', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#991b1b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Purchases ({purchases.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(purchasesBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {purchaseReturns.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8 }}>
+                                <i className="bi bi-arrow-return-left" style={{ color:'#15803d', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Pur. Returns ({purchaseReturns.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(purchaseReturnsBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {orders.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#fff7ed', border:'1px solid #fed7aa', borderRadius:8 }}>
+                                <i className="bi bi-receipt" style={{ color:'#c2410c', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#9a3412', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sales ({orders.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(ordersBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {salesReturns.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8 }}>
+                                <i className="bi bi-arrow-return-left" style={{ color:'#15803d', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sales Returns ({salesReturns.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(salesReturnsBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8, padding:'7px 16px', background: netBalance >= 0 ? '#fef2f2' : '#f0fdf4', border:`1px solid ${netBalance >= 0 ? '#fecaca' : '#bbf7d0'}`, borderRadius:8 }}>
+                            <i className="bi bi-calculator" style={{ color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontSize:14 }}></i>
+                            <div>
+                                <div style={{ fontSize:'0.66rem', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Net Outstanding</div>
+                                <div style={{ fontSize:'0.95rem', fontWeight:800, color: netBalance >= 0 ? '#dc2626' : '#16a34a', fontVariantNumeric:'tabular-nums' }}>{netBalance < 0 ? '-' : '+'} SAR {fmt(Math.abs(netBalance))}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <PurchaseCreate ref={purchaseCreateRef} refreshList={fetchAll} />
+            <PurchaseReturnedCreate ref={purchaseReturnCreateRef} refreshList={fetchAll} />
+            <OrderCreate ref={orderCreateRef} refreshList={fetchAll} />
+            <SalesReturnCreate ref={salesReturnCreateRef} refreshList={fetchAll} />
+            <CustomerCreate ref={linkedCustomerCreateRef} refreshList={fetchAll} />
+        </div>
+        </>
+    );
+}
+
 const BG = '#212529';
 const BORDER = '#495057';
 
 // ── KPI Info Tooltip (ⓘ icon popup with Print/PDF/Share) ──────────────────────
-function InfoTooltip({ lines, cardTitle, store, filters }) {
+function InfoTooltip({ lines, cardTitle, store, filters, children }) {
     const [show, setShow] = useState(false);
     const [isBusy, setIsBusy] = useState(false);
     const [error, setError] = useState("");
+    const [offsetX, setOffsetX] = useState(0);
     const triggerRef = useRef(null);
     const tooltipRef = useRef(null);
     const timerRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (!show || !tooltipRef.current) { setOffsetX(0); return; }
+        const rect = tooltipRef.current.getBoundingClientRect();
+        const sidebarRight = (document.getElementById('sidebar')?.getBoundingClientRect().right ?? 0) + 8;
+        if (rect.left < sidebarRight) setOffsetX(sidebarRight - rect.left);
+        else if (rect.right > window.innerWidth - 8) setOffsetX(window.innerWidth - 8 - rect.right);
+        else setOffsetX(0);
+    }, [show]);
 
     const clearTimer = useCallback(() => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } }, []);
     const startTimer = useCallback(() => { clearTimer(); timerRef.current = setTimeout(() => setShow(false), 5000); }, [clearTimer]);
@@ -148,6 +1114,7 @@ function InfoTooltip({ lines, cardTitle, store, filters }) {
         const handle = (e) => {
             if (triggerRef.current?.contains(e.target)) return;
             if (tooltipRef.current?.contains(e.target)) return;
+            if (e.target.closest('.modal, .modal-backdrop, .modal-dialog')) return;
             setShow(false);
         };
         document.addEventListener('mousedown', handle);
@@ -185,16 +1152,23 @@ function InfoTooltip({ lines, cardTitle, store, filters }) {
     const BTN_GRN = { ...BTN, border:'1px solid #28a745', color:'#28a745' };
 
     return (
-        <span style={{ position:"relative", display:"inline-flex", alignItems:"center", marginLeft:"5px", verticalAlign:"middle" }}>
-            <i ref={triggerRef} className="bi bi-info-circle-fill"
-                style={{ fontSize:"0.75rem", color:"#adb5bd", cursor:"pointer" }}
-                onClick={e => { e.stopPropagation(); setShow(p => !p); }} />
+        <span style={{ position:"relative", display:"inline-flex", alignItems:"center", ...(children ? {} : { marginLeft:"5px", verticalAlign:"middle" }) }}>
+            {children
+                ? <span ref={triggerRef} onClick={e => { e.stopPropagation(); setShow(p => !p); }}
+                    style={{ cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4 }}>
+                    {children}
+                    <i className="bi bi-caret-down-fill" style={{ fontSize:'0.45rem', color:'#94a3b8', marginTop:2, opacity: show ? 0 : 0.8 }} />
+                  </span>
+                : <i ref={triggerRef} className="bi bi-info-circle-fill"
+                    style={{ fontSize:"0.75rem", color:"#adb5bd", cursor:"pointer" }}
+                    onClick={e => { e.stopPropagation(); setShow(p => !p); }} />
+            }
             {show && (
                 <div ref={tooltipRef}
-                    style={{ position:"absolute", top:"130%", left:"50%", transform:"translateX(-50%)",
+                    style={{ position:"absolute", top:"130%", left:"50%", transform:`translateX(calc(-50% + ${offsetX}px))`,
                         backgroundColor:BG, color:"#f8f9fa", borderRadius:"6px",
-                        border:`1px solid ${BORDER}`, fontSize:"0.73rem", zIndex:9999,
-                        minWidth:"260px", maxWidth:"400px",
+                        border:`1px solid ${BORDER}`, fontSize:"0.73rem", zIndex:1059,
+                        minWidth:"260px", maxWidth:"min(560px, 92vw)",
                         boxShadow:"0 4px 14px rgba(0,0,0,.45)", lineHeight:"1.7" }}
                     onMouseEnter={clearTimer} onMouseLeave={startTimer}
                     onClick={e => e.stopPropagation()}>
@@ -204,7 +1178,7 @@ function InfoTooltip({ lines, cardTitle, store, filters }) {
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
                         padding:'7px 10px 7px 14px', borderBottom:`1px solid ${BORDER}`,
                         fontWeight:700, fontSize:'0.8rem' }}>
-                        <span>Workshop — {cardTitle || ''}</span>
+                        <span>{cardTitle || ''}</span>
                         <button type="button" onClick={e => { e.stopPropagation(); setShow(false); }}
                             style={{ background:'none', border:'none', color:'#adb5bd', cursor:'pointer',
                                 fontSize:'1.1rem', lineHeight:1, padding:'0 0 0 10px' }}>×</button>
@@ -240,7 +1214,9 @@ function InfoTooltip({ lines, cardTitle, store, filters }) {
                                     <td style={{ padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
                                         textAlign:'right', fontWeight: line.bold ? 700 : 400,
                                         color: line.color || '#f8f9fa', whiteSpace:'nowrap' }}>
-                                        {line.value}
+                                        {line.onClick
+                                            ? <span onClick={() => { setShow(false); line.onClick(); }} style={{ cursor:'pointer', textDecoration:'underline dotted' }}>{line.value} <i className="bi bi-box-arrow-up-right" style={{ fontSize:'0.65rem' }} /></span>
+                                            : line.value}
                                     </td>
                                 </tr>
                             ))}
@@ -276,7 +1252,7 @@ function ValueTooltip({ exact, children }) {
             {show && (
                 <div style={{ position:"absolute", top:"110%", left:0, backgroundColor:"#212529",
                     color:"#f8f9fa", padding:"5px 10px", borderRadius:"5px",
-                    fontSize:"0.75rem", fontWeight:400, zIndex:9999,
+                    fontSize:"0.75rem", fontWeight:400, zIndex:1059,
                     whiteSpace:"nowrap", boxShadow:"0 3px 10px rgba(0,0,0,0.3)",
                     pointerEvents:"none" }}>
                     <div style={{ position:"absolute", bottom:"100%", left:"12px", width:0, height:0,
@@ -369,7 +1345,6 @@ function KPICard({ title, value, withoutVAT, icon, color, valueColor, note, note
                         <span className="text-uppercase text-muted fw-semibold" style={{ fontSize:'0.72rem', letterSpacing:'0.04em' }}>
                             {title}
                         </span>
-                        {tooltip && <InfoTooltip lines={tooltip} cardTitle={title} store={store} filters={filters} />}
                         {link && (
                             <a href={link} target="_blank" rel="noopener noreferrer"
                                 title="View Balance Sheet"
@@ -385,11 +1360,16 @@ function KPICard({ title, value, withoutVAT, icon, color, valueColor, note, note
                     </div>
                 </div>
                 <div className="fw-bold" style={{ fontSize:'1.45rem', color: valueColor || '#191c1e' }}>
-                    {withoutVAT !== undefined
-                        ? <ValueTooltip exact={`${fmt(value)} (w/ VAT) · ${fmt(withoutVAT)} (w/o VAT)`}>
+                    {tooltip
+                        ? <InfoTooltip lines={tooltip} cardTitle={title} store={store} filters={filters}>
                             {fmtCompact(value)}
-                          </ValueTooltip>
-                        : fmtCompact(value)}
+                          </InfoTooltip>
+                        : (withoutVAT !== undefined
+                            ? <ValueTooltip exact={`${fmt(value)} (w/ VAT) · ${fmt(withoutVAT)} (w/o VAT)`}>
+                                {fmtCompact(value)}
+                              </ValueTooltip>
+                            : fmtCompact(value))
+                    }
                 </div>
                 {withoutVAT !== undefined && (
                     <div className="small text-muted">w/o VAT: {fmtCompact(withoutVAT)}</div>
@@ -409,17 +1389,28 @@ function AutoMobileDashboard() {
     const postingRef = useRef();
 
     // ── Filter state ──────────────────────────────────────────────────────────
-    const [filterMode, setFilterMode]     = useState("range");
-    const [singleMonth, setSingleMonth]   = useState("");
-    const [fromMonth, setFromMonth]       = useState("");
-    const [toMonth, setToMonth]           = useState("");
-    const [selectedYear, setSelectedYear] = useState("");
-    const [appliedFrom, setAppliedFrom]   = useState("");
-    const [appliedTo, setAppliedTo]       = useState("");
-    const [fullYears, setFullYears]       = useState([]);
+    const [filterMode, setFilterMode]         = useState("range");
+    const [singleMonth, setSingleMonth]       = useState("");
+    const [fromMonth, setFromMonth]           = useState("");
+    const [toMonth, setToMonth]               = useState("");
+    const [selectedYear, setSelectedYear]     = useState("");
+    const [singleDate, setSingleDate]         = useState("");
+    const [rangeFromDate, setRangeFromDate]   = useState("");
+    const [rangeToDate, setRangeToDate]       = useState("");
+    const [yearFrom, setYearFrom]             = useState("");
+    const [yearTo, setYearTo]                 = useState("");
+    const [appliedFrom, setAppliedFrom]       = useState("");
+    const [appliedTo, setAppliedTo]           = useState("");
+    const [fullYears, setFullYears]           = useState([]);
 
-    const vatPercent = store?.vat_percent || 15;
-    const storeId    = localStorage.getItem("store_id") || "";
+    const vatPercent    = store?.vat_percent || 15;
+    const storeId       = localStorage.getItem("store_id") || "";
+    const PostingRef        = useRef();
+    const VendorPendingRef  = useRef();
+    const CustomerPendingRef = useRef();
+    const [expenseCategoryFilter,  setExpenseCategoryFilter]  = useState(null);
+    const [customerCreditFilter,   setCustomerCreditFilter]   = useState(null);
+    const [vendorPayablesFilter,   setVendorPayablesFilter]   = useState(null);
 
     function authHeaders() {
         return { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
@@ -440,8 +1431,14 @@ function AutoMobileDashboard() {
     function loadDashboard() {
         const params = new URLSearchParams();
         params.set('search[store_id]', storeId);
-        if (appliedFrom) params.set('from_month', appliedFrom);
-        if (appliedTo)   params.set('to_month',   appliedTo);
+        if (appliedFrom) {
+            if (appliedFrom.length === 10) params.set('from_date', appliedFrom);
+            else params.set('from_month', appliedFrom);
+        }
+        if (appliedTo) {
+            if (appliedTo.length === 10) params.set('to_date', appliedTo);
+            else params.set('to_month', appliedTo);
+        }
         setIsLoading(true);
         fetch(`/v1/automobile/dashboard?${params.toString()}`, { headers: authHeaders() })
             .then(async response => {
@@ -540,8 +1537,12 @@ function AutoMobileDashboard() {
             ['Type', 'Amount', { role:'tooltip', type:'string', p:{ html:true } }],
             [t('Labour Profit'), dashboard.labour_profit || 0,
                 tooltipHtml(t('Labour Profit'), '#4fc3f7', [
-                    { label: t('Sales Profit'),  value: `SAR ${fmt(lbd.sales_profit||0)}`,  color:'#4fc3f7' },
-                    { label: t('Return Profit'), value: `− ${fmt(lbd.return_profit||0)}`,   color:'#ffa8a8' },
+                    { label: t('— Sales —'), value: '', bold:true, color:'#4fc3f7' },
+                    { label: t('Sales Profit (Labour Charge)'),      value: `SAR ${fmt(lbd.sales_profit||0)}`,         color:'#4fc3f7' },
+                    { label: t('Return Profit (Labour Charge)'),     value: `− ${fmt(lbd.return_profit||0)}`,          color:'#ffa8a8' },
+                    { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                    { label: t('Non-VAT Sales Profit (Labour)'),     value: `SAR ${fmt(lbd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                    { label: t('Non-VAT Return Profit (Labour)'),    value: `− ${fmt(lbd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
                     { label: t('Net (with VAT)'),    value: `SAR ${fmt(dashboard.labour_profit||0)}`, color:'#4fc3f7', bold:true, divider:true },
                     { label: `VAT ${vatPercent}%`, value: `− ${fmt((dashboard.labour_profit||0)*vatPercent/(100+vatPercent))}` },
                     { label: t('Net (without VAT)'), value: `SAR ${fmt((dashboard.labour_profit||0)*100/(100+vatPercent))}`, bold:true, divider:true },
@@ -581,8 +1582,8 @@ function AutoMobileDashboard() {
             tooltipHtml(t('Spare Parts Retail Value'), '#4db6ac', [{ label:'SAR', value: fmt(dashboard.spare_parts_value?.retail_value||0), color:'#4db6ac', bold:true }], store, chartFilters)],
         [t('Total Credit'), dashboard.total_credit || 0, '#ff8a65',
             tooltipHtml(t('Total Customer Credit'), '#ff8a65', [{ label:'SAR', value: fmt(dashboard.total_credit||0), color:'#ff8a65', bold:true }], store, chartFilters)],
-        [t('Unpaid Bill'), dashboard.unpaid_bill || 0, '#ef5350',
-            tooltipHtml(t('Unpaid Bills'), '#ef5350', [{ label:'SAR', value: fmt(dashboard.unpaid_bill||0), color:'#ef5350', bold:true }], store, chartFilters)],
+        [t('Unpaid Purchase Bill'), dashboard.unpaid_bill || 0, '#ef5350',
+            tooltipHtml(t('Unpaid Purchase Bills'), '#ef5350', [{ label:'SAR', value: fmt(dashboard.unpaid_bill||0), color:'#ef5350', bold:true }], store, chartFilters)],
         [t('Additional Expense'), dashboard.additional_expense || 0, '#8d6e63',
             tooltipHtml(t('Additional Expenses'), '#8d6e63', [{ label:'SAR', value: fmt(dashboard.additional_expense||0), color:'#8d6e63', bold:true }], store, chartFilters)],
     ], [dashboard, store, chartFilters, t]);
@@ -597,6 +1598,11 @@ function AutoMobileDashboard() {
 
         const tbd  = dashboard.total_profit_breakdown   || {};
         const mbd  = dashboard.monthly_profit_breakdown || {};
+        const enableNonVatSales = store?.settings?.non_vat_sales === true;
+        const enableVATBox      = store?.settings?.enable_vat_box === true;
+        const enableSalesInQuotation = store?.settings?.enable_sales_in_quotation === true;
+        const vatb  = dashboard.vat_box         || {};
+        const vatbM = dashboard.vat_box_monthly || {};
         const lbd  = dashboard.labour_breakdown         || {};
         const sbd  = dashboard.spare_breakdown          || {};
         const abd  = dashboard.additional_breakdown     || {};
@@ -614,11 +1620,19 @@ function AutoMobileDashboard() {
                             { label: t('— Revenue —'), value: '', bold:true, color:'#90caf9' },
                             { label: t('Sales'),              value: `SAR ${fmt(tbd.sales_revenue||0)}`,       color:'#90caf9' },
                             { label: t('Sales Returns'),      value: `− ${fmt(tbd.sales_return_revenue||0)}`,  color:'#ffa8a8' },
-                            ...(tbd.qtn_revenue ? [
+                            ...(enableSalesInQuotation && tbd.qtn_revenue ? [
                                 { label: t('Quotation Sales'),   value: `SAR ${fmt(tbd.qtn_revenue||0)}`,      color:'#90caf9' },
                                 { label: t('Quotation Returns'), value: `− ${fmt(tbd.qtn_return_revenue||0)}`, color:'#ffa8a8' },
                             ] : []),
-                            { label: t('Total Revenue'), value: `SAR ${fmt(tbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                            ...(enableNonVatSales ? [
+                                { label: t('Net Revenue (with VAT)'), value: `SAR ${fmt(tbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                                { label: t('Non-VAT Sales'),          value: `SAR ${fmt(tbd.non_vat_sales_revenue||0)}`,      color:'#a5d6a7' },
+                                { label: t('Non-VAT Returns'),        value: `− ${fmt(tbd.non_vat_sales_return_revenue||0)}`, color:'#ffa8a8' },
+                                { label: t('Non-VAT Net Revenue'),    value: `SAR ${fmt(tbd.non_vat_net_revenue||0)}`,        bold:true, color:'#a5d6a7', divider:true },
+                                { label: t('Total Revenue'),          value: `SAR ${fmt((tbd.total_revenue||0) + (tbd.non_vat_net_revenue||0))}`, bold:true, color:'#69db7c', divider:true },
+                            ] : [
+                                { label: t('Total Revenue'), value: `SAR ${fmt(tbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                            ]),
                             { label: t('— Expenses —'), value: '', bold:true, color:'#ffa8a8' },
                             { label: t('Expenses'),      value: `SAR ${fmt(tbd.expense_total||0)}`,  color:'#ffa8a8' },
                             { label: t('Purchases'),     value: `SAR ${fmt(tbd.purchase_total||0)}`, color:'#ffa8a8' },
@@ -637,11 +1651,19 @@ function AutoMobileDashboard() {
                             { label: t('— Revenue —'), value: '', bold:true, color:'#90caf9' },
                             { label: t('Sales'),         value: `SAR ${fmt(mbd.sales_revenue||0)}`,       color:'#90caf9' },
                             { label: t('Sales Returns'), value: `− ${fmt(mbd.sales_return_revenue||0)}`,  color:'#ffa8a8' },
-                            ...(mbd.qtn_revenue ? [
+                            ...(enableSalesInQuotation && mbd.qtn_revenue ? [
                                 { label: t('Quotation Sales'),   value: `SAR ${fmt(mbd.qtn_revenue||0)}`,      color:'#90caf9' },
                                 { label: t('Quotation Returns'), value: `− ${fmt(mbd.qtn_return_revenue||0)}`, color:'#ffa8a8' },
                             ] : []),
-                            { label: t('Total Revenue'), value: `SAR ${fmt(mbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                            ...(enableNonVatSales ? [
+                                { label: t('Net Revenue (with VAT)'), value: `SAR ${fmt(mbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                                { label: t('Non-VAT Sales'),          value: `SAR ${fmt(mbd.non_vat_sales_revenue||0)}`,      color:'#a5d6a7' },
+                                { label: t('Non-VAT Returns'),        value: `− ${fmt(mbd.non_vat_sales_return_revenue||0)}`, color:'#ffa8a8' },
+                                { label: t('Non-VAT Net Revenue'),    value: `SAR ${fmt(mbd.non_vat_net_revenue||0)}`,        bold:true, color:'#a5d6a7', divider:true },
+                                { label: t('Total Revenue'),          value: `SAR ${fmt((mbd.total_revenue||0) + (mbd.non_vat_net_revenue||0))}`, bold:true, color:'#69db7c', divider:true },
+                            ] : [
+                                { label: t('Total Revenue'), value: `SAR ${fmt(mbd.total_revenue||0)}`, bold:true, color:'#69db7c', divider:true },
+                            ]),
                             { label: t('— Expenses —'), value: '', bold:true, color:'#ffa8a8' },
                             { label: t('Expenses'),     value: `SAR ${fmt(mbd.expense_total||0)}`,  color:'#ffa8a8' },
                             { label: t('Purchases'),    value: `SAR ${fmt(mbd.purchase_total||0)}`, color:'#ffa8a8' },
@@ -656,11 +1678,15 @@ function AutoMobileDashboard() {
                         title: t('Labour Profit'), value: lp.withVAT, withoutVAT: lp.withoutVAT,
                         icon:'bi-person-gear', color:'#e65100',
                         tooltip: [
-                            { label: t('Sales Profit (Labour Charge)'),   value: `SAR ${fmt(lbd.sales_profit||0)}`,  color:'#4fc3f7' },
-                            { label: t('Return Profit (Labour Charge)'),  value: `− ${fmt(lbd.return_profit||0)}`,   color:'#ffa8a8' },
-                            { label: t('Labour Profit (with VAT)'),       value: `SAR ${fmt(lp.withVAT)}`,           bold:true, color:'#4fc3f7', divider:true },
-                            { label: `VAT ${vatPercent}%`,                 value: `− ${fmt(lp.vat)}` },
-                            { label: t('Labour Profit (without VAT)'),    value: `SAR ${fmt(lp.withoutVAT)}`,        bold:true, color:'#4fc3f7', divider:true },
+                            { label: t('— Sales —'), value: '', bold:true, color:'#4fc3f7' },
+                            { label: t('Sales Profit (Labour Charge)'),      value: `SAR ${fmt(lbd.sales_profit||0)}`,         color:'#4fc3f7' },
+                            { label: t('Return Profit (Labour Charge)'),     value: `− ${fmt(lbd.return_profit||0)}`,          color:'#ffa8a8' },
+                            { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                            { label: t('Non-VAT Sales Profit (Labour)'),     value: `SAR ${fmt(lbd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                            { label: t('Non-VAT Return Profit (Labour)'),    value: `− ${fmt(lbd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
+                            { label: t('Labour Profit (with VAT)'),          value: `SAR ${fmt(lp.withVAT)}`,                  bold:true, color:'#4fc3f7', divider:true },
+                            { label: `VAT ${vatPercent}%`,                    value: `− ${fmt(lp.vat)}` },
+                            { label: t('Labour Profit (without VAT)'),       value: `SAR ${fmt(lp.withoutVAT)}`,               bold:true, color:'#4fc3f7', divider:true },
                         ],
                     },
                     {
@@ -691,11 +1717,11 @@ function AutoMobileDashboard() {
                 title: t('Cash & Bank'),
                 cards: [
                     { title: t('Counter Cash'), value: dashboard.counter_cash, icon:'bi-cash-stack', color:'#1a7a3a',
-                      link: '/dashboard/accounts',
-                      tooltip: [{ label:'Cash A/c Balance', value: `SAR ${fmt(dashboard.counter_cash||0)}`, bold:true, color:'#69db7c' }] },
+                      tooltip: [{ label:'Cash A/c Balance', value: `SAR ${fmt(dashboard.counter_cash||0)}`, bold:true, color:'#69db7c',
+                          onClick: () => PostingRef.current?.open({ id: dashboard.cash_account_id, name: t('Cash A/c') }) }] },
                     { title: t('Bank Cash'), value: dashboard.bank_cash, icon:'bi-bank2', color:'#004ac6',
-                      link: '/dashboard/accounts',
-                      tooltip: [{ label:'Bank A/c Balance', value: `SAR ${fmt(dashboard.bank_cash||0)}`, bold:true, color:'#74c0fc' }] },
+                      tooltip: [{ label:'Bank A/c Balance', value: `SAR ${fmt(dashboard.bank_cash||0)}`, bold:true, color:'#74c0fc',
+                          onClick: () => PostingRef.current?.open({ id: dashboard.bank_account_id, name: t('Bank A/c') }) }] },
                 ],
             },
             {
@@ -712,37 +1738,90 @@ function AutoMobileDashboard() {
                         note: `${t('Purchase')}: ${fmtCompact(dashboard.spare_parts_value?.purchase_value||0)}`,
                     },
                     { title: t('Total Credit'), value: dashboard.total_credit, icon:'bi-people', color:'#e65100',
-                      tooltip: [{ label:'SAR', value: fmt(dashboard.total_credit||0), bold:true, color:'#ffa94d' }] },
-                    { title: t('Unpaid Bill'), value: dashboard.unpaid_bill, icon:'bi-receipt-cutoff', color:'#c62828',
-                      tooltip: [{ label:'SAR', value: fmt(dashboard.unpaid_bill||0), bold:true, color:'#ffa8a8' }] },
+                      tooltip: [
+                        { label:'SAR', value: fmt(dashboard.total_credit||0), bold:true, color:'#ffa94d',
+                          onClick: () => setCustomerCreditFilter({ name: 'All Customers', balance: dashboard.total_credit }) },
+                        ...(dashboard.customer_credit_breakdown?.length ? [
+                            { divider:true, label: t('By Customer'), bold:true },
+                            ...dashboard.customer_credit_breakdown.map(c => ({ label: c.name, value: fmt(c.credit_balance), color:'#ffa94d',
+                                onClick: () => setCustomerCreditFilter({ id: c.customer_id, name: c.name, balance: c.credit_balance }) }))
+                        ] : [])
+                      ] },
+                    { title: t('Unpaid Purchase Bill'), value: dashboard.unpaid_bill, icon:'bi-receipt-cutoff', color:'#c62828',
+                      tooltip: [
+                        { label:'SAR', value: fmt(dashboard.unpaid_bill||0), bold:true, color:'#ffa8a8',
+                          onClick: () => setVendorPayablesFilter({ name: 'All Vendors', balance: dashboard.unpaid_bill }) },
+                        ...(dashboard.vendor_payables_breakdown?.length ? [
+                            { divider:true, label: t('By Vendor'), bold:true },
+                            ...dashboard.vendor_payables_breakdown.map(v => ({ label: v.name, value: fmt(v.purchase_balance), color:'#ffa8a8',
+                                onClick: () => setVendorPayablesFilter({ id: v.vendor_id, name: v.name, balance: v.purchase_balance }) }))
+                        ] : [])
+                      ] },
                     {
                         title: t('Salary Balance'), value: dashboard.salary_balance, icon:'bi-person-badge', color:'#ba1a1a',
                         valueColor: dashboard.salary_balance < 0 ? '#ba1a1a' : (dashboard.salary_balance > 0 ? '#0a58ca' : '#191c1e'),
                         note: dashboard.salary_balance < 0 ? t('Owed to Employees') : (dashboard.salary_balance > 0 ? t('Employees Owe Us') : t('Settled')),
                         noteColor: dashboard.salary_balance < 0 ? '#ba1a1a' : (dashboard.salary_balance > 0 ? '#0a58ca' : '#6c757d'),
                         tooltip: [
-                            { label: t('Owed to Employees'), value: fmt(dashboard.salary_accrued||0) },
-                            { label: t('Salary Paid'),        value: fmt(dashboard.salary_paid||0) },
-                            { label: t('Net Balance'),    value: fmt(Math.abs(dashboard.salary_balance||0)), bold: true },
-                            ...(dashboard.employee_accounts?.length ? [
-                                { label: '── Accounts ──', value: '', divider: true },
-                                ...dashboard.employee_accounts.map(a => ({
-                                    label: a.name,
-                                    value: a.balance < 0
-                                        ? `-${fmt(Math.abs(a.balance))} (${t('We Owe')})`
-                                        : (a.balance > 0 ? `${fmt(a.balance)} (${t('Owe us')})` : t('Settled')),
-                                    color: a.balance < 0 ? '#f8a5a5' : (a.balance > 0 ? '#a3d9a5' : '#adb5bd'),
-                                    onClick: () => postingRef.current?.open({ id: a.id }, { title: `${a.name} — Balance Sheet` }),
-                                })),
-                            ] : []),
+                            { label:'SAR', value: fmt(Math.abs(dashboard.salary_balance||0)), bold:true },
+                            ...(dashboard.employee_breakdown?.length ? [
+                                { divider:true, label: t('By Employee'), bold:true },
+                                { label: t('(−) Store owes employee  ·  (+) Employee owes store'), value: '' },
+                                ...dashboard.employee_breakdown.map(e => ({
+                                    label: e.name,
+                                    value: (e.direction === 'owed_to_employee' ? '−' : '+') + 'SAR ' + fmt(e.balance),
+                                    color: e.direction === 'owed_to_employee' ? '#ffa8a8' : '#74c0fc',
+                                    onClick: e.account_id ? () => PostingRef.current?.open({ id: e.account_id, name: e.name }) : undefined,
+                                }))
+                            ] : [])
                         ],
                     },
                     { title: t('Additional Expense'), value: dashboard.additional_expense, icon:'bi-wallet2', color:'#54647a',
-                      tooltip: [{ label:'SAR', value: fmt(dashboard.additional_expense||0), bold:true, color:'#adb5bd' }] },
+                      tooltip: [
+                        { label:'SAR', value: fmt(dashboard.additional_expense||0), bold:true, color:'#adb5bd' },
+                        ...(dashboard.expense_category_breakdown?.length ? [
+                            { divider:true, label: t('By Category'), bold:true },
+                            ...dashboard.expense_category_breakdown.map(c => ({ label: c.name, value: fmt(c.total), color:'#adb5bd',
+                                onClick: c.category_id ? () => setExpenseCategoryFilter({ id: c.category_id, name: c.name }) : undefined }))
+                        ] : [])
+                      ] },
                 ],
             },
+            ...(enableVATBox ? [{
+                title: t('VAT'),
+                cards: [
+                    {
+                        title: t('Total Period VAT'), value: vatb.net_vat || 0, icon:'bi-cash-stack', color:'#6610f2',
+                        valueColor: (vatb.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
+                        note: (vatb.net_vat||0) >= 0 ? t('Payable to Authority') : t('Refundable'),
+                        noteColor: (vatb.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
+                        tooltip: [
+                            { label: t('Sales VAT'),           value: `SAR ${fmt(vatb.sales_vat||0)}`,           color:'#a5d6a7' },
+                            { label: t('Sales Return VAT'),    value: `− ${fmt(vatb.sales_return_vat||0)}`,      color:'#ffa8a8' },
+                            { label: t('Purchase VAT'),        value: `− ${fmt(vatb.purchase_vat||0)}`,          color:'#ffa8a8' },
+                            { label: t('Purchase Return VAT'), value: `+ ${fmt(vatb.purchase_return_vat||0)}`,   color:'#a5d6a7' },
+                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `+ ${fmt(vatb.expense_vat||0)}`, color:'#a5d6a7' },
+                            { divider:true, label: t('Net VAT Payable'), value: `SAR ${fmt(vatb.net_vat||0)}`, bold:true, color:(vatb.net_vat||0)>=0?'#ffa8a8':'#a5d6a7' },
+                        ],
+                    },
+                    {
+                        title: `${t('Monthly VAT')} (${monthName})`, value: vatbM.net_vat || 0, icon:'bi-cash-stack', color:'#6610f2',
+                        valueColor: (vatbM.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
+                        note: (vatbM.net_vat||0) >= 0 ? t('Payable to Authority') : t('Refundable'),
+                        noteColor: (vatbM.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
+                        tooltip: [
+                            { label: t('Sales VAT'),           value: `SAR ${fmt(vatbM.sales_vat||0)}`,           color:'#a5d6a7' },
+                            { label: t('Sales Return VAT'),    value: `− ${fmt(vatbM.sales_return_vat||0)}`,      color:'#ffa8a8' },
+                            { label: t('Purchase VAT'),        value: `− ${fmt(vatbM.purchase_vat||0)}`,          color:'#ffa8a8' },
+                            { label: t('Purchase Return VAT'), value: `+ ${fmt(vatbM.purchase_return_vat||0)}`,   color:'#a5d6a7' },
+                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `+ ${fmt(vatbM.expense_vat||0)}`, color:'#a5d6a7' },
+                            { divider:true, label: t('Net VAT Payable'), value: `SAR ${fmt(vatbM.net_vat||0)}`, bold:true, color:(vatbM.net_vat||0)>=0?'#ffa8a8':'#a5d6a7' },
+                        ],
+                    },
+                ],
+            }] : []),
         ];
-    }, [dashboard, vatPercent, t]);
+    }, [dashboard, vatPercent, store, t]);
 
     const hasMonthly = monthly.length > 0;
     const hasProfit  = (dashboard.labour_profit||0)+(dashboard.spare_profit||0)+(dashboard.additional_profit||0) > 0;
@@ -779,77 +1858,141 @@ function AutoMobileDashboard() {
             </div>
 
             {/* Filter bar */}
-            <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
+            <div className="d-flex flex-column gap-2 mb-4">
+                {/* Row 1: filter type buttons */}
                 <div className="btn-group btn-group-sm" role="group">
                     <button type="button"
                         className={`btn ${filterMode==="single" ? "btn-primary" : "btn-outline-secondary"}`}
-                        onClick={() => { setFilterMode("single"); setFromMonth(""); setToMonth(""); setSelectedYear(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        onClick={() => { setFilterMode("single"); setFromMonth(""); setToMonth(""); setSelectedYear(""); setSingleDate(""); setRangeFromDate(""); setRangeToDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
                         <i className="bi bi-calendar-date me-1" />Single Month
                     </button>
                     <button type="button"
                         className={`btn ${filterMode==="range" ? "btn-primary" : "btn-outline-secondary"}`}
-                        onClick={() => { setFilterMode("range"); setSingleMonth(""); setSelectedYear(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        onClick={() => { setFilterMode("range"); setSingleMonth(""); setSelectedYear(""); setSingleDate(""); setRangeFromDate(""); setRangeToDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
                         <i className="bi bi-calendar-range me-1" />Month Range
                     </button>
                     <button type="button"
                         className={`btn ${filterMode==="year" ? "btn-primary" : "btn-outline-secondary"}`}
-                        onClick={() => { setFilterMode("year"); setSingleMonth(""); setFromMonth(""); setToMonth(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        onClick={() => { setFilterMode("year"); setSingleMonth(""); setFromMonth(""); setToMonth(""); setSingleDate(""); setRangeFromDate(""); setRangeToDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
                         <i className="bi bi-calendar3 me-1" />Year
+                    </button>
+                    <button type="button"
+                        className={`btn ${filterMode==="single_date" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => { setFilterMode("single_date"); setSingleMonth(""); setFromMonth(""); setToMonth(""); setSelectedYear(""); setRangeFromDate(""); setRangeToDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        <i className="bi bi-calendar-event me-1" />Single Date
+                    </button>
+                    <button type="button"
+                        className={`btn ${filterMode==="date_range" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => { setFilterMode("date_range"); setSingleMonth(""); setFromMonth(""); setToMonth(""); setSelectedYear(""); setSingleDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        <i className="bi bi-calendar2-range me-1" />Date Range
+                    </button>
+                    <button type="button"
+                        className={`btn ${filterMode==="year_range" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => { setFilterMode("year_range"); setSingleMonth(""); setFromMonth(""); setToMonth(""); setSelectedYear(""); setSingleDate(""); setRangeFromDate(""); setRangeToDate(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                        <i className="bi bi-calendar4-range me-1" />Year Range
                     </button>
                 </div>
 
-                {filterMode==="single" && (
-                    <input type="month" className="form-control form-control-sm" style={{ width:"auto" }}
-                        value={singleMonth}
-                        onChange={e => { setSingleMonth(e.target.value); setAppliedFrom(e.target.value); setAppliedTo(e.target.value); }} />
-                )}
-
-                {filterMode==="range" && (
-                    <>
+                {/* Row 2: filter inputs + clear + showing label */}
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                    {filterMode==="single" && (
                         <input type="month" className="form-control form-control-sm" style={{ width:"auto" }}
-                            value={fromMonth}
-                            onChange={e => { setFromMonth(e.target.value); setAppliedFrom(e.target.value); }} />
-                        <span className="text-muted small">to</span>
-                        <input type="month" className="form-control form-control-sm" style={{ width:"auto" }}
-                            value={toMonth}
-                            onChange={e => { setToMonth(e.target.value); setAppliedTo(e.target.value); }} />
-                    </>
-                )}
+                            value={singleMonth}
+                            onChange={e => { setSingleMonth(e.target.value); setAppliedFrom(e.target.value); setAppliedTo(e.target.value); }} />
+                    )}
 
-                {filterMode==="year" && (
-                    <select className="form-select form-select-sm"
-                        style={{ width:"6rem", height:"26px", padding:"0 0.5rem", fontSize:"0.8rem" }}
-                        value={selectedYear}
-                        onChange={e => {
-                            setSelectedYear(e.target.value);
-                            setAppliedFrom(e.target.value ? `${e.target.value}-01` : "");
-                            setAppliedTo(e.target.value ? `${e.target.value}-12` : "");
-                        }}>
-                        <option value="">—</option>
-                        {fullYears.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                )}
+                    {filterMode==="range" && (
+                        <>
+                            <input type="month" className="form-control form-control-sm" style={{ width:"auto" }}
+                                value={fromMonth}
+                                onChange={e => { setFromMonth(e.target.value); setAppliedFrom(e.target.value); }} />
+                            <span className="text-muted small">to</span>
+                            <input type="month" className="form-control form-control-sm" style={{ width:"auto" }}
+                                value={toMonth}
+                                onChange={e => { setToMonth(e.target.value); setAppliedTo(e.target.value); }} />
+                        </>
+                    )}
 
-                {(appliedFrom || appliedTo) && (
-                    <button className="btn btn-sm btn-outline-secondary"
-                        onClick={() => { setSingleMonth(""); setFromMonth(""); setToMonth(""); setSelectedYear(""); setAppliedFrom(""); setAppliedTo(""); }}>
-                        Clear
-                    </button>
-                )}
+                    {filterMode==="year" && (
+                        <select className="form-select form-select-sm"
+                            style={{ width:"6rem", height:"26px", padding:"0 0.5rem", fontSize:"0.8rem" }}
+                            value={selectedYear}
+                            onChange={e => {
+                                setSelectedYear(e.target.value);
+                                setAppliedFrom(e.target.value ? `${e.target.value}-01` : "");
+                                setAppliedTo(e.target.value ? `${e.target.value}-12` : "");
+                            }}>
+                            <option value="">—</option>
+                            {fullYears.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    )}
 
-                {dataMinMonth && dataMaxMonth && (
-                    <span className="text-muted small fst-italic ms-1">
-                        <i className="bi bi-info-circle me-1" />Data: {dataMinMonth} → {dataMaxMonth}
-                    </span>
-                )}
+                    {filterMode==="single_date" && (
+                        <input type="date" className="form-control form-control-sm" style={{ width:"auto" }}
+                            value={singleDate}
+                            onChange={e => { setSingleDate(e.target.value); setAppliedFrom(e.target.value); setAppliedTo(e.target.value); }} />
+                    )}
 
-                {(appliedFrom || appliedTo) && (
-                    <span className="text-muted small fst-italic">
-                        {filterMode==="year" && selectedYear ? `Showing: ${selectedYear}`
-                            : appliedFrom===appliedTo ? `Showing: ${appliedFrom}`
-                            : `Showing: ${appliedFrom||dataMinMonth} → ${appliedTo||dataMaxMonth}`}
-                    </span>
-                )}
+                    {filterMode==="date_range" && (
+                        <>
+                            <input type="date" className="form-control form-control-sm" style={{ width:"auto" }}
+                                value={rangeFromDate}
+                                onChange={e => { setRangeFromDate(e.target.value); setAppliedFrom(e.target.value); }} />
+                            <span className="text-muted small">to</span>
+                            <input type="date" className="form-control form-control-sm" style={{ width:"auto" }}
+                                value={rangeToDate}
+                                onChange={e => { setRangeToDate(e.target.value); setAppliedTo(e.target.value); }} />
+                        </>
+                    )}
+
+                    {filterMode==="year_range" && (
+                        <>
+                            <select className="form-select form-select-sm"
+                                style={{ width:"6rem", height:"26px", padding:"0 0.5rem", fontSize:"0.8rem" }}
+                                value={yearFrom}
+                                onChange={e => {
+                                    setYearFrom(e.target.value);
+                                    setAppliedFrom(e.target.value ? `${e.target.value}-01` : "");
+                                }}>
+                                <option value="">From</option>
+                                {fullYears.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                            <span className="text-muted small">to</span>
+                            <select className="form-select form-select-sm"
+                                style={{ width:"6rem", height:"26px", padding:"0 0.5rem", fontSize:"0.8rem" }}
+                                value={yearTo}
+                                onChange={e => {
+                                    setYearTo(e.target.value);
+                                    setAppliedTo(e.target.value ? `${e.target.value}-12` : "");
+                                }}>
+                                <option value="">To</option>
+                                {fullYears.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </>
+                    )}
+
+                    {(appliedFrom || appliedTo) && (
+                        <button className="btn btn-sm btn-outline-secondary"
+                            onClick={() => { setSingleMonth(""); setFromMonth(""); setToMonth(""); setSelectedYear(""); setSingleDate(""); setRangeFromDate(""); setRangeToDate(""); setYearFrom(""); setYearTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
+                            Clear
+                        </button>
+                    )}
+
+                    {dataMinMonth && dataMaxMonth && (
+                        <span className="text-muted small fst-italic ms-1">
+                            <i className="bi bi-info-circle me-1" />Data: {dataMinMonth} → {dataMaxMonth}
+                        </span>
+                    )}
+
+                    {(appliedFrom || appliedTo) && (
+                        <span className="text-muted small fst-italic">
+                            {filterMode==="year" && selectedYear ? `Showing: ${selectedYear}`
+                                : filterMode==="year_range" && (yearFrom || yearTo) ? `Showing: ${yearFrom||'…'} → ${yearTo||'…'}`
+                                : appliedFrom===appliedTo ? `Showing: ${appliedFrom}`
+                                : `Showing: ${appliedFrom||dataMinMonth} → ${appliedTo||dataMaxMonth}`}
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* KPI sections */}
@@ -950,7 +2093,38 @@ function AutoMobileDashboard() {
                 </div>
             </div>
         </div>
-        <PostingIndex ref={postingRef} />
+        <PostingIndex ref={PostingRef} />
+        <VendorPending   ref={VendorPendingRef}   size="xl" />
+        <CustomerPending ref={CustomerPendingRef} size="xl" />
+
+{!!expenseCategoryFilter && (
+            <ExpenseCategoryModal
+                category={expenseCategoryFilter}
+                appliedFrom={appliedFrom}
+                appliedTo={appliedTo}
+                storeId={storeId}
+                vatPercent={vatPercent}
+                onClose={() => setExpenseCategoryFilter(null)}
+            />
+        )}
+        {!!customerCreditFilter && (
+            <CustomerCreditModal
+                customer={customerCreditFilter}
+                storeId={storeId}
+                appliedFrom={appliedFrom}
+                appliedTo={appliedTo}
+                onClose={() => setCustomerCreditFilter(null)}
+            />
+        )}
+        {!!vendorPayablesFilter && (
+            <VendorPayablesModal
+                vendor={vendorPayablesFilter}
+                storeId={storeId}
+                appliedFrom={appliedFrom}
+                appliedTo={appliedTo}
+                onClose={() => setVendorPayablesFilter(null)}
+            />
+        )}
         </>
     );
 }

@@ -2951,7 +2951,7 @@ function CustomerIndex(props) {
                                                                         <Dropdown.Toggle variant="outline-secondary" size="sm" id={`cust-hist-${customer.id}`} title="History & Links">
                                                                             <i className="bi bi-clock-history"></i>
                                                                         </Dropdown.Toggle>
-                                                                        <Dropdown.Menu style={{ minWidth: 230 }}>
+                                                                        <Dropdown.Menu style={{ minWidth: 230 }} popperConfig={{ strategy: 'fixed' }} renderOnMount>
                                                                             <Dropdown.Item onClick={() => DetailsViewRef.current?.open(customer.id, 'repairs')}>
                                                                                 <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
                                                                             </Dropdown.Item>

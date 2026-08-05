@@ -430,6 +430,9 @@ function ExpenseIndex(props) {
             setEnableSelection(false);
         }
 
+        if (props.selectedCategoryIds?.length > 0) {
+            searchByMultipleValuesField("category_id", props.selectedCategoryIds);
+        }
 
         //list();
         //getStore(localStorage.getItem("store_id"));

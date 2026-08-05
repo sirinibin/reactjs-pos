@@ -6,7 +6,7 @@ import DatePicker from "react-datepicker";
 import { DebounceInput } from "react-debounce-input";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo2Decimals, trimTo8Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import VehicleCreate from "../vehicle/create.js";
@@ -187,8 +187,21 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     sendWhatsAppMessage,
     dateLocale,
     openUpdateProductForm,
+    openLinkedProducts,
+    openProductImages,
+    openProductHistory,
+    openSalesHistory,
+    openSalesReturnHistory,
+    openPurchaseHistory,
+    openPurchaseReturnHistory,
+    openDeliveryNoteHistory,
+    openQuotationHistory,
+    openQuotationSalesHistory,
+    openQuotationSalesReturnHistory,
+    openNonVATSalesHistory,
+    openNonVATSalesReturnHistory,
     discount, setDiscount,
-    setDiscountWithVAT,
+    discountWithVAT, setDiscountWithVAT,
     shipping, setShipping,
     roundingAmount, setRoundingAmount,
     renderNetTotalBeforeRoundingTooltip,
@@ -205,6 +218,8 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [isVehicleLoading, setIsVehicleLoading] = useState(false);
     const [showVehicleModal, setShowVehicleModal] = useState(false);
+    const [infoMenu, setInfoMenu] = useState(null); // { top, left, product, liveIndex }
+    const infoMenuRef = useRef(null);
     const paymentRowsRef = useRef(null);
     const vehicleCreateRef = useRef(null);
     const storeId = localStorage.getItem("store_id");
@@ -329,6 +344,16 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
         // customer/store changes, not every formData mutation, to avoid refetch loops.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [canUseType5, formData.customer_id, setFormData, storeId]);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (infoMenuRef.current && !infoMenuRef.current.contains(e.target)) {
+                setInfoMenu(null);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [infoMenu]);
 
     function reloadVehicles(selectId) {
         if (!formData.customer_id) return;
@@ -728,11 +753,13 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                     <tr>
                                         <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
                                         <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
+                                        <th style={{ width: "36px", padding: "3px 6px" }}></th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
                                         <th style={{ width: "70px", padding: "3px 6px" }}>{t("Stock")}</th>
                                         <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price ex. VAT")}</th>
                                         <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price with VAT")}</th>
+                                        <th style={{ width: "110px", padding: "3px 6px" }}>{t("L. Disc. (incl. VAT)")}</th>
                                         <th style={{ width: "110px", padding: "3px 6px" }}>{t("Line Total")}</th>
                                         <th style={{ width: "50px", padding: "3px 6px" }}></th>
                                     </tr>
@@ -740,7 +767,7 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                 <tbody>
                                     {activeProducts.length === 0 && (
                                         <tr>
-                                            <td colSpan={9} className="text-center text-muted py-5">
+                                            <td colSpan={11} className="text-center text-muted py-5">
                                                 <i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>
                                                 {t("Search and add products or services to continue")}
                                             </td>
@@ -748,7 +775,6 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                     )}
                                     {[...activeProducts].reverse().map((product, index) => {
                                         const liveIndex = selectedProducts.indexOf(product);
-                                        const lineTotal = trimTo2Decimals((parseFloat(product.quantity) || 0) * ((parseFloat(product.unit_price_with_vat) || 0) - (parseFloat(product.unit_discount_with_vat) || 0)));
                                         return (
                                             <tr key={`${product.product_id || product.id || product.code}-${index}`}>
                                                 <td style={{ padding: "3px 6px", color: "#6b7280", fontWeight: 600, fontSize: "13px", textAlign: "center" }}>{index + 1}</td>
@@ -774,8 +800,23 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: "3px 6px", fontSize: "13px", color: "#374151", whiteSpace: "nowrap" }}>
-                                                    <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={(v) => v} />
+                                                <td style={{ padding: "3px 6px" }}>
+                                                    <span
+                                                        style={{ cursor: "pointer", padding: "2px 6px", display: "inline-flex", alignItems: "center" }}
+                                                        onClick={(e) => {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            setInfoMenu(m => m?.liveIndex === liveIndex ? null : { bottom: window.innerHeight - rect.top + 4, left: rect.left, product, liveIndex });
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-three-dots-vertical" style={{ fontSize: "14px", color: "#6b7280" }}></i>
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: "3px 6px", fontSize: "13px", whiteSpace: "nowrap" }}>
+                                                    <span style={{ color: errors[`purchase_unit_price_${liveIndex}`] ? "#dc3545" : "#374151", fontWeight: errors[`purchase_unit_price_${liveIndex}`] ? 700 : 400 }}
+                                                        title={errors[`purchase_unit_price_${liveIndex}`] || ""}>
+                                                        <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={(v) => v} />
+                                                        {errors[`purchase_unit_price_${liveIndex}`] && <i className="bi bi-exclamation-triangle-fill ms-1" style={{ fontSize: "11px" }} />}
+                                                    </span>
                                                 </td>
                                                 <td style={{ padding: "3px 6px", whiteSpace: "nowrap" }}>
                                                     {!product.is_service && (
@@ -806,12 +847,24 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                         min="0"
                                                         className="form-control form-control-sm"
                                                         value={product.quantity}
+                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
                                                         ref={(el) => {
                                                             if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
                                                             inputRefs.current[liveIndex][`sales_type5_product_quantity_${liveIndex}`] = el;
                                                         }}
                                                         onChange={(e) => {
-                                                            selectedProducts[liveIndex].quantity = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
+                                                            const _newQty = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
+                                                            const _oldLineDisc = selectedProducts[liveIndex].line_discount_with_vat != null
+                                                                ? selectedProducts[liveIndex].line_discount_with_vat
+                                                                : (selectedProducts[liveIndex].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[liveIndex].quantity) || 1);
+                                                            selectedProducts[liveIndex].quantity = _newQty;
+                                                            if (_oldLineDisc && _newQty) {
+                                                                const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                const _udwv = parseFloat(trimTo8Decimals(_oldLineDisc / _newQty));
+                                                                selectedProducts[liveIndex].unit_discount_with_vat = _udwv;
+                                                                selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(_udwv / _vatMul));
+                                                                selectedProducts[liveIndex].line_discount_with_vat = _oldLineDisc;
+                                                            }
                                                             setSelectedProducts([...selectedProducts]);
                                                             queueRecalculate(liveIndex);
                                                         }}
@@ -821,9 +874,11 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                     <input
                                                         type="number"
                                                         min="0"
-                                                        className="form-control form-control-sm"
+                                                        className={`form-control form-control-sm${errors[`unit_price_${liveIndex}`] ? " is-invalid" : ""}`}
                                                         style={{ width: "90px" }}
+                                                        title={errors[`unit_price_${liveIndex}`] || ""}
                                                         value={product.unit_price}
+                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
                                                         ref={(el) => {
                                                             if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
                                                             inputRefs.current[liveIndex][`sales_type5_product_price_ex_${liveIndex}`] = el;
@@ -842,9 +897,11 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                     <input
                                                         type="number"
                                                         min="0"
-                                                        className="form-control form-control-sm"
+                                                        className={`form-control form-control-sm${errors[`unit_price_with_vat_${liveIndex}`] ? " is-invalid" : ""}`}
                                                         style={{ width: "90px" }}
+                                                        title={errors[`unit_price_with_vat_${liveIndex}`] || ""}
                                                         value={product.unit_price_with_vat}
+                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
                                                         ref={(el) => {
                                                             if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
                                                             inputRefs.current[liveIndex][`sales_type5_product_price_${liveIndex}`] = el;
@@ -859,8 +916,63 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                         }}
                                                     />
                                                 </td>
-                                                <td style={{ padding: "3px 6px", fontWeight: 700, color: "#0f172a" }}>
-                                                    <NumberFormat value={lineTotal} displayType="text" thousandSeparator renderText={(value) => value} />
+                                                <td style={{ padding: "3px 6px" }}>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="any"
+                                                        className="form-control form-control-sm"
+                                                        style={{ width: "100px" }}
+                                                        value={product.line_discount_with_vat != null ? product.line_discount_with_vat : (parseFloat(trimTo2Decimals((parseFloat(product.unit_discount_with_vat) || 0) * (parseFloat(product.quantity) || 0))) || "")}
+                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                        onChange={(e) => {
+                                                            const val = parseFloat(e.target.value) || 0;
+                                                            const qty = parseFloat(product.quantity) || 1;
+                                                            const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                            const udwv = parseFloat(trimTo8Decimals(val / qty));
+                                                            selectedProducts[liveIndex].unit_discount_with_vat = udwv;
+                                                            selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(udwv / vatMul));
+                                                            selectedProducts[liveIndex].line_discount_with_vat = e.target.value === "" ? "" : val;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            queueRecalculate(liveIndex);
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: "3px 6px" }}>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="any"
+                                                        className="form-control form-control-sm"
+                                                        style={{ width: "100px", fontWeight: 700 }}
+                                                        onWheel={(e) => e.target.blur()}
+                                                        value={parseFloat(trimTo2Decimals(((selectedProducts[liveIndex].unit_price_with_vat || 0) - (selectedProducts[liveIndex].unit_discount_with_vat || 0)) * (selectedProducts[liveIndex].quantity || 0))) || ""}
+                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                        onChange={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (parseFloat(e.target.value) === 0 || !e.target.value) {
+                                                                const _udwv = parseFloat(selectedProducts[liveIndex].unit_discount_with_vat) || 0;
+                                                                const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                selectedProducts[liveIndex].unit_price_with_vat = _udwv;
+                                                                selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(_udwv / _vatMul));
+                                                                selectedProducts[liveIndex].line_total_with_vat = e.target.value === "" ? "" : 0;
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => { queueRecalculate(liveIndex); }, 100);
+                                                                return;
+                                                            }
+                                                            selectedProducts[liveIndex].line_total_with_vat = parseFloat(e.target.value);
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            timerRef.current = setTimeout(() => {
+                                                                if (selectedProducts[liveIndex].quantity > 0) {
+                                                                    selectedProducts[liveIndex].unit_price_with_vat = parseFloat(trimTo8Decimals((selectedProducts[liveIndex].line_total_with_vat / selectedProducts[liveIndex].quantity) + selectedProducts[liveIndex].unit_discount_with_vat));
+                                                                    selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(selectedProducts[liveIndex].unit_price_with_vat / (1 + (formData.vat_percent / 100))));
+                                                                    selectedProducts[liveIndex].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount / selectedProducts[liveIndex].unit_price) * 100)));
+                                                                    selectedProducts[liveIndex].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount_with_vat / selectedProducts[liveIndex].unit_price_with_vat) * 100)));
+                                                                }
+                                                                queueRecalculate(liveIndex);
+                                                            }, 100);
+                                                        }}
+                                                    />
                                                 </td>
                                                 <td style={{ padding: "3px 6px" }}>
                                                     <button type="button" className="btn btn-link text-danger p-0" disabled={isZatcaReported} onClick={() => removeProduct(product)}>
@@ -940,7 +1052,6 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                     >
                                                         <option value="">{t("Method")}</option>
                                                         <option value="cash">{t("Cash")}</option>
-                                                        <option value="mada">Mada</option>
                                                         <option value="debit_card">{t("Debit Card")}</option>
                                                         <option value="credit_card">{t("Credit Card")}</option>
                                                         <option value="bank_transfer">{t("Bank Transfer")}</option>
@@ -1103,18 +1214,19 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
 
                         <div style={{ display: "grid", gap: "8px", marginBottom: "10px" }}>
                             <div>
-                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Discount (excl. VAT)")}</label>
+                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Discount (incl. VAT)")}</label>
                                 <input
                                     type="number"
                                     min="0"
                                     className="form-control form-control-sm"
-                                    value={discount || ""}
+                                    value={discountWithVAT || ""}
                                     onChange={(e) => {
-                                        const value = e.target.value ? parseFloat(e.target.value) : "";
-                                        setDiscount(value);
-                                        setDiscountWithVAT(value !== "" ? parseFloat((value * (1 + ((parseFloat(formData.vat_percent) || 0) / 100))).toFixed(2)) : "");
+                                        const valueWithVAT = e.target.value ? parseFloat(e.target.value) : "";
+                                        const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                        setDiscountWithVAT(valueWithVAT);
+                                        setDiscount(valueWithVAT !== "" ? parseFloat((valueWithVAT / vatMul).toFixed(8)) : "");
                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => reCalculate(), 150);
+                                        timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 150);
                                     }}
                                 />
                             </div>
@@ -1276,6 +1388,38 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                 )}
             </Modal.Body>
         </Modal>
+        {infoMenu && (
+            <div
+                ref={infoMenuRef}
+                style={{
+                    position: "fixed",
+                    bottom: infoMenu.bottom,
+                    left: infoMenu.left,
+                    background: "#fff",
+                    border: "1px solid rgba(0,0,0,.15)",
+                    borderRadius: "0.375rem",
+                    boxShadow: "0 0.5rem 1rem rgba(0,0,0,.15)",
+                    zIndex: 1055,
+                    minWidth: "210px",
+                    fontSize: "13px",
+                    padding: "4px 0",
+                }}
+            >
+                {openProductHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-clock-history me-2" style={{ color: '#6366f1' }}></i>{t('Product History')}</div>}
+                {openSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-check me-2" style={{ color: '#2563eb' }}></i>{t('Sales History')}</div>}
+                {openSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-dash me-2" style={{ color: '#dc2626' }}></i>{t('Sales Return History')}</div>}
+                {openPurchaseHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-check me-2" style={{ color: '#7c3aed' }}></i>{t('Purchase History')}</div>}
+                {openPurchaseReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-dash me-2" style={{ color: '#db2777' }}></i>{t('Purchase Return History')}</div>}
+                {openDeliveryNoteHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openDeliveryNoteHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t('Delivery Note History')}</div>}
+                {openQuotationHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-text me-2" style={{ color: '#d97706' }}></i>{t('Quotation History')}</div>}
+                {store?.settings?.enable_sales_in_quotation && openQuotationSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t('Qtn. Sales History')}</div>}
+                {store?.settings?.enable_sales_in_quotation && openQuotationSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t('Qtn. Sales Return History')}</div>}
+                {store?.settings?.non_vat_sales && openNonVATSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt-cutoff me-2" style={{ color: '#059669' }}></i>{t('Non VAT Sales History')}</div>}
+                {store?.settings?.non_vat_sales && openNonVATSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-arrow-return-left me-2" style={{ color: '#9d174d' }}></i>{t('Non VAT Sales Return History')}</div>}
+                {openProductImages && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductImages(infoMenu.product.product_id); setInfoMenu(null); }}><i className="bi bi-image me-2" style={{ color: '#0284c7' }}></i>{t('Product Images')}</div>}
+                {openLinkedProducts && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openLinkedProducts(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-link-45deg me-2" style={{ color: '#7c3aed' }}></i>{t('Linked Products')}</div>}
+            </div>
+        )}
         </>
     );
 });

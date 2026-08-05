@@ -270,7 +270,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
         <OrderPrint ref={PrintRef} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className={props.modalClass || ""}>
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button - always top right */}

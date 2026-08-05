@@ -304,7 +304,8 @@ const SalesHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
 
@@ -315,6 +316,11 @@ const SalesHistory = forwardRef((props, ref) => {
     let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     let [showOrderForm, setShowOrderForm] = useState(false);
+
+    useEffect(() => {
+        if (showOrderForm) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showOrderForm]);
 
     const OrderUpdateFormRef = useRef();
 
@@ -477,7 +483,7 @@ const SalesHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
             <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={handleUpdated} />
             {/*<Modal
                 show={show}

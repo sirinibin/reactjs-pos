@@ -18,6 +18,8 @@ import PostingIndex from "./../posting/index.js";
 import { ObjectToSearchQueryParams } from './queryUtils.js';
 //import { set } from "date-fns";
 
+const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+
 const VendorPending = forwardRef((props, ref) => {
     const dragRef = useRef(null);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -223,25 +225,25 @@ const VendorPending = forwardRef((props, ref) => {
     return (
         <>
             {showBalanceSheet && <PostingIndex ref={AccountBalanceSheetRef} />}
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}
-                backdrop={false}                // ✅ Allow editing background
+            <Modal show={show} {...(props.size ? { size: props.size } : { fullscreen: true })} onHide={handleClose} animation={false} scrollable={true}
+                className="above-sales-modal"
+                backdrop={false}
                 keyboard={false}
-                centered={false}                // ❌ disable auto-centering
-                enforceFocus={false}            // ✅ allow focus outside
-                dialogAs={({ children, ...props }) => (
+                centered={false}
+                enforceFocus={false}
+                dialogAs={props.size ? undefined : ({ children, ...dlgProps }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
                             ref={dragRef}
-                            className="modal-dialog modal-fullscreen"    // ✅ preserve Bootstrap xl class
-                            {...props}
+                            className="modal-dialog modal-fullscreen"
+                            {...dlgProps}
                             style={{
-                                position: "absolute",
-                                top: "0%",
-                                left: "0%",
-                                transform: "translate(-50%, -50%)",
+                                position: "fixed",
+                                top: "0",
+                                left: "0",
                                 margin: "0",
-                                zIndex: 1055,
-                                width: "100%",           // Full width inside container
+                                zIndex: 1082,
+                                width: "100%",
                             }}
                         >
                             <div className="modal-content">{children}</div>
@@ -353,7 +355,7 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
                                 />
                             </Tab>
-                            <Tab eventKey="quotation_sales"
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales"
                                 disabled={!selectedCustomers?.length}
                                 title={
                                     <>
@@ -372,8 +374,8 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
-                            <Tab eventKey="quotation_sales_return"
+                            </Tab>}
+                            {storeSettings?.enable_sales_in_quotation && <Tab eventKey="quotation_sales_return"
                                 disabled={!selectedCustomers?.length}
                                 title={
                                     <>
@@ -392,7 +394,7 @@ const VendorPending = forwardRef((props, ref) => {
                                     pendingView={true}
 
                                 />
-                            </Tab>
+                            </Tab>}
 
                         </Tabs>
 

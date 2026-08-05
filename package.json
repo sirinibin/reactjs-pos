@@ -75,7 +75,8 @@
     "moduleNameMapper": {
       "^canvas$": "<rootDir>/src/__mocks__/canvas.js",
       "\\.node$": "<rootDir>/src/__mocks__/nativeAddon.js",
-      "^jspdf$": "<rootDir>/src/__mocks__/jspdf.js"
+      "^jspdf$": "<rootDir>/src/__mocks__/jspdf.js",
+      "^html2pdf\\.js$": "<rootDir>/src/__mocks__/html2pdf.js"
     }
   },
   "eslintConfig": {

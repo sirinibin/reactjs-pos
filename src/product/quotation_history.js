@@ -365,7 +365,8 @@ const QuotationHistory = forwardRef((props, ref) => {
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        page = 1;
+        setPage(page);
     }
 
     function changePage(newPage) {
@@ -427,6 +428,10 @@ const QuotationHistory = forwardRef((props, ref) => {
 
     let [showQuotationForm, setShowQuotationForm] = useState(false);
 
+    useEffect(() => {
+        if (showQuotationForm) document.body.classList.add('form-over-history');
+        return () => document.body.classList.remove('form-over-history');
+    }, [showQuotationForm]);
 
     //Table settings
     const [showSuccess, setShowSuccess] = useState(false);
@@ -488,7 +493,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
-            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} modalClass="above-history-modal" />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

@@ -33,9 +33,10 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
                     margin: "0",
                     zIndex: 1060,
                     width: "70%",
+                    height: "90vh",
                 }}
             >
-                <div className="modal-content">{dialogChildren}</div>
+                <div className="modal-content" style={{ height: "100%" }}>{dialogChildren}</div>
             </div>
         </Draggable>
     ), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -62,7 +63,7 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
                     ></button>
                 </div>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body style={{ minHeight: 0, overflowY: "auto" }}>
                 <>{children}</>
             </Modal.Body>
         </Modal>

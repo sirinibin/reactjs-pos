@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PreviewContent from './previewContent.js';
 import PreviewContentWithSellerInfo from './previewContentWithSellerInfo.js';
+import PreviewContentType2 from './previewContentType2.js';
+import PreviewContentType3 from './previewContentType3.js';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 
@@ -87,7 +89,29 @@ function InvoicePrintPage() {
             @page { size: A4; margin: 0; }
         `}</style>
             <div style={{ background: 'white' }}>
-                {(!model.store?.settings?.show_seller_info_in_invoice ||
+                {model.store?.settings?.invoice_a4_preview_design === 'type2' && (
+                    <PreviewContentType2
+                        model={model}
+                        invoiceBackground={invoiceBackground}
+                        whatsAppShare={false}
+                        modelName={modelName}
+                        selectText={noop}
+                        selectQRCode={noop}
+                        fontSizes={fontSizes}
+                    />
+                )}
+                {model.store?.settings?.invoice_a4_preview_design === 'type3' && (
+                    <PreviewContentType3
+                        model={model}
+                        invoiceBackground={invoiceBackground}
+                        whatsAppShare={false}
+                        modelName={modelName}
+                        selectText={noop}
+                        selectQRCode={noop}
+                        fontSizes={fontSizes}
+                    />
+                )}
+                {!['type2','type3'].includes(model.store?.settings?.invoice_a4_preview_design) && (!model.store?.settings?.show_seller_info_in_invoice ||
                     modelName === 'stock_transfer' ||
                     modelName === 'whatsapp_stock_transfer') && (
                         <PreviewContent
@@ -100,7 +124,7 @@ function InvoicePrintPage() {
                             fontSizes={fontSizes}
                         />
                     )}
-                {model.store?.settings?.show_seller_info_in_invoice &&
+                {!['type2','type3'].includes(model.store?.settings?.invoice_a4_preview_design) && model.store?.settings?.show_seller_info_in_invoice &&
                     modelName !== 'stock_transfer' &&
                     modelName !== 'whatsapp_stock_transfer' && (
                         <PreviewContentWithSellerInfo

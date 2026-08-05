@@ -1129,8 +1129,8 @@ function PurchaseReturnIndex(props) {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showPurchases && <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />}
-            {showPurchaseReturnCreate && <PurchaseReturnCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />}
-            {showPurchaseReturnView && <PurchaseReturnView ref={DetailsViewRef} />}
+            {showPurchaseReturnCreate && <PurchaseReturnCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showPurchaseReturnView && <PurchaseReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {showPurchaseReturnPaymentCreate && <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />}
             {showPurchaseReturnPaymentDetailsView && <PurchaseReturnPaymentDetailsView ref={PurchaseReturnPaymentDetailsViewRef} openUpdateForm={openPurchaseReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}

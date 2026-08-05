@@ -23,18 +23,18 @@ describe("ObjectToSearchQueryParams", () => {
         expect(ObjectToSearchQueryParams({ deleted: true })).toBe("search[deleted]=true");
     });
 
-    test("keys with spaces in value", () => {
+    test("spaces in value are percent-encoded", () => {
         expect(ObjectToSearchQueryParams({ name: "saudi market" })).toBe(
-            "search[name]=saudi market"
+            "search[name]=saudi%20market"
         );
     });
 
-    test("null value is coerced to string 'null'", () => {
-        expect(ObjectToSearchQueryParams({ id: null })).toBe("search[id]=null");
+    test("null value is filtered out (returns empty string)", () => {
+        expect(ObjectToSearchQueryParams({ id: null })).toBe("");
     });
 
-    test("undefined value produces 'undefined' string", () => {
-        expect(ObjectToSearchQueryParams({ x: undefined })).toBe("search[x]=undefined");
+    test("undefined value is filtered out (returns empty string)", () => {
+        expect(ObjectToSearchQueryParams({ x: undefined })).toBe("");
     });
 
     describe("real-world search object shapes", () => {
@@ -55,16 +55,13 @@ describe("ObjectToSearchQueryParams", () => {
     });
 
     describe("type coercion edge cases", () => {
-        test("array value is comma-joined via Array.toString coercion", () => {
-            // [1, 2, 3].toString() = "1,2,3" — useful for multi-ID filters
-            expect(ObjectToSearchQueryParams({ ids: [1, 2, 3] })).toBe("search[ids]=1,2,3");
+        test("array value is percent-encoded via encodeURIComponent (commas become %2C)", () => {
+            expect(ObjectToSearchQueryParams({ ids: [1, 2, 3] })).toBe("search[ids]=1%2C2%2C3");
         });
 
-        test("'&' in value is NOT URL-encoded — raw template literal, no escaping", () => {
-            // "hello&world" would break URL parsers: "&world" is read as a new param.
-            // Callers must URL-encode unsafe characters before passing them here.
+        test("'&' in value is percent-encoded to %26", () => {
             expect(ObjectToSearchQueryParams({ name: "hello&world" })).toBe(
-                "search[name]=hello&world"
+                "search[name]=hello%26world"
             );
         });
     });

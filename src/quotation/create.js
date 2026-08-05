@@ -334,12 +334,19 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const [show, SetShow] = useState(false);
 
+  useEffect(() => {
+    if (!show || props.fromHistory) return;
+    document.body.classList.add('quotation-form-open');
+    return () => document.body.classList.remove('quotation-form-open');
+  }, [show, props.fromHistory]);
+
   function handleClose() {
     selectedProducts = [];
     setSelectedProducts([]);
     setIsResumingDraft(false);
     draftFlashShownRef.current = false;
     SetShow(false);
+    props.onClose?.();
   }
 
   useEffect(() => {
@@ -3044,7 +3051,7 @@ async function checkWarning(i) {
     { key: 'unit_price', label: 'Unit Price(without VAT)', visible: true },
     { key: 'unit_price_with_vat', label: 'Unit Price(with VAT)', visible: true },
     { key: 'unit_discount', label: 'Unit Disc.(without VAT)', visible: true },
-    { key: 'unit_discount_with_vat', label: 'Unit Disc.(with VAT)', visible: true },
+    { key: 'unit_discount_with_vat', label: 'L. Disc. (incl. VAT)', visible: true },
     { key: 'unit_discount_percent_with_vat', label: 'Unit Disc. %(with VAT)', visible: true },
     { key: 'price', label: 'Price(without VAT)', visible: true },
     { key: 'price_with_vat', label: 'Price(with VAT)', visible: true },
@@ -3344,7 +3351,7 @@ async function checkWarning(i) {
         animation={false}
         backdrop="static"
         scrollable={true}
-        className={[enableProductSelection ? "above-sales-modal" : "", props.modalClass || ""].filter(Boolean).join(" ")}
+        className={`${enableProductSelection ? "above-sales-modal " : ""}quotation-create-wrap${props.fromHistory ? ' from-history-form' : ''}${props.modalClass ? ' ' + props.modalClass : ''}`}
         {...(enableProductSelection ? {
           backdrop: false,
           keyboard: false,
@@ -4318,7 +4325,7 @@ async function checkWarning(i) {
                           if (col.key === 'unit_price') return <th key="unit_price" style={{ ...thStyle, textAlign: 'right' }}>U. Price (ex. VAT){resizeHandle('unit_price')}</th>;
                           if (col.key === 'unit_price_with_vat') return <th key="unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>U. Price (inc. VAT){resizeHandle('unit_price_with_vat')}</th>;
                           if (col.key === 'unit_discount') return <th key="unit_discount" style={{ ...thStyle, textAlign: 'right' }}>U. Disc. (ex. VAT){resizeHandle('unit_discount')}</th>;
-                          if (col.key === 'unit_discount_with_vat') return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>U. Disc. (inc. VAT){resizeHandle('unit_discount_with_vat')}</th>;
+                          if (col.key === 'unit_discount_with_vat') return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>L. Disc. (incl. VAT){resizeHandle('unit_discount_with_vat')}</th>;
                           if (col.key === 'unit_discount_percent_with_vat') return <th key="unit_discount_percent_with_vat" style={{ ...thStyle, textAlign: 'right' }}>U. Disc. %{resizeHandle('unit_discount_percent_with_vat')}</th>;
                           if (col.key === 'price') return <th key="price" style={{ ...thStyle, textAlign: 'right' }}>Total (ex. VAT){resizeHandle('price')}</th>;
                           if (col.key === 'price_with_vat') return <th key="price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>Total (inc. VAT){resizeHandle('price_with_vat')}</th>;
@@ -4819,8 +4826,16 @@ async function checkWarning(i) {
                                     }
 
 
+                                    const _oldLineDisc = selectedProducts[index].line_discount_with_vat != null
+                                        ? selectedProducts[index].line_discount_with_vat
+                                        : (selectedProducts[index].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[index].quantity) || 1);
                                     product.quantity = parseFloat(e.target.value);
                                     selectedProducts[index].quantity = parseFloat(e.target.value);
+                                    if (_oldLineDisc && parseFloat(e.target.value)) {
+                                        selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_oldLineDisc / parseFloat(e.target.value)));
+                                        selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))));
+                                        selectedProducts[index].line_discount_with_vat = _oldLineDisc;
+                                    }
                                     timerRef.current = setTimeout(() => {
                                       checkErrors(index);
                                       //checkWarnings(index);
@@ -5218,7 +5233,7 @@ async function checkWarning(i) {
                                   name={`${"quotation_unit_discount_with_vat_" + index}`}
                                   onWheel={(e) => e.target.blur()}
                                   className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
-                                  value={selectedProducts[index].unit_discount_with_vat}
+                                  value={selectedProducts[index].line_discount_with_vat != null ? selectedProducts[index].line_discount_with_vat : (selectedProducts[index].unit_discount_with_vat ? parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount_with_vat || 0) * (selectedProducts[index].quantity || 1))) : selectedProducts[index].unit_discount_with_vat)}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_unit_discount_with_vat_" + index}`] = el;
@@ -5317,7 +5332,8 @@ async function checkWarning(i) {
                                       setErrors({ ...errors });
                                     }
 
-                                    selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value); //input
+                                    const _qty = parseFloat(selectedProducts[index].quantity) || 1;
+                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(parseFloat(e.target.value) / _qty));
 
 
                                     setFormData({ ...formData });
@@ -5805,7 +5821,7 @@ async function checkWarning(i) {
                       if (col.key === 'unit_price') return <th key="unit_price">Unit Price(without VAT)</th>;
                       if (col.key === 'unit_price_with_vat') return <th key="unit_price_with_vat">Unit Price(with VAT)</th>;
                       if (col.key === 'unit_discount') return <th key="unit_discount">Unit Disc.(without VAT)</th>;
-                      if (col.key === 'unit_discount_with_vat') return <th key="unit_discount_with_vat">Unit Disc.(with VAT)</th>;
+                      if (col.key === 'unit_discount_with_vat') return <th key="unit_discount_with_vat">L. Disc. (incl. VAT)</th>;
                       if (col.key === 'unit_discount_percent_with_vat') return <th key="unit_discount_percent_with_vat">Unit Disc. %(with VAT)</th>;
                       if (col.key === 'price') return <th key="price">Price(without VAT)</th>;
                       if (col.key === 'price_with_vat') return <th key="price_with_vat">Price(with VAT)</th>;
@@ -6301,8 +6317,16 @@ async function checkWarning(i) {
                                     }
 
 
+                                    const _oldLineDisc = selectedProducts[index].line_discount_with_vat != null
+                                        ? selectedProducts[index].line_discount_with_vat
+                                        : (selectedProducts[index].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[index].quantity) || 1);
                                     product.quantity = parseFloat(e.target.value);
                                     selectedProducts[index].quantity = parseFloat(e.target.value);
+                                    if (_oldLineDisc && parseFloat(e.target.value)) {
+                                        selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(_oldLineDisc / parseFloat(e.target.value)));
+                                        selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))));
+                                        selectedProducts[index].line_discount_with_vat = _oldLineDisc;
+                                    }
                                     timerRef.current = setTimeout(() => {
                                       checkErrors(index);
                                       //checkWarnings(index);
@@ -6700,7 +6724,7 @@ async function checkWarning(i) {
                                   name={`${"quotation_unit_discount_with_vat_" + index}`}
                                   onWheel={(e) => e.target.blur()}
                                   className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
-                                  value={selectedProducts[index].unit_discount_with_vat}
+                                  value={selectedProducts[index].line_discount_with_vat != null ? selectedProducts[index].line_discount_with_vat : (selectedProducts[index].unit_discount_with_vat ? parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount_with_vat || 0) * (selectedProducts[index].quantity || 1))) : selectedProducts[index].unit_discount_with_vat)}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_unit_discount_with_vat_" + index}`] = el;
@@ -6799,7 +6823,8 @@ async function checkWarning(i) {
                                       setErrors({ ...errors });
                                     }
 
-                                    selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value); //input
+                                    const _qty = parseFloat(selectedProducts[index].quantity) || 1;
+                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(parseFloat(e.target.value) / _qty));
 
 
                                     setFormData({ ...formData });

@@ -10,6 +10,8 @@ import { DEFAULT_MENU, getLandingPath } from './sidebar_menu_config';
 import PostingIndex from './posting/index.js';
 import QuotationIndex from './quotation/index.js';
 import QuotationSalesReturnIndex from './quotation_sales_return/index.js';
+import NonVATSalesIndex from './non_vat_sales/index.js';
+import NonVATSalesReturnIndex from './non_vat_sales_return/index.js';
 import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
 import StockTransferIndex from './stock_transfer/index.js';
@@ -602,6 +604,32 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <QuotationSalesReturnIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/non-vat-sales">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <NonVATSalesIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/non-vat-sales-returns">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <NonVATSalesReturnIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

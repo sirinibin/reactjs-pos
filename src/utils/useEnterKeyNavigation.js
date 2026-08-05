@@ -6,7 +6,7 @@ export function useEnterKeyNavigation({ stayClass = "barcode", onStay = null } =
             if (event.code !== "Enter" && event.code !== "NumpadEnter") return;
             const form = event.target.form;
             if (!form || !event.target) return;
-            const index = Array.prototype.indexOf.call(form, event.target);
+            const index = Array.prototype.indexOf.call(form.elements, event.target);
             if (!form.elements[index + 1]) return;
             const cls = event.target.getAttribute("class") || "";
             if (cls.includes(stayClass)) {

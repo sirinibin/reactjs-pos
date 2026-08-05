@@ -2,6 +2,8 @@ import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, us
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import PreviewContent from './previewContent.js';
 import PreviewContentWithSellerInfo from './previewContentWithSellerInfo.js';
+import PreviewContentType2 from './previewContentType2.js';
+import PreviewContentType3 from './previewContentType3.js';
 
 //import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -110,7 +112,7 @@ const Preview = forwardRef((props, ref) => {
                     }
                 }
 
-                if (!model.zatca?.qr_code && model.store?.vat_no && model.modelName !== "purchase_request" && model.modelName !== "whatsapp_purchase_request") {
+                if (!model.zatca?.qr_code && model.store?.vat_no && modelName !== "purchase_request" && modelName !== "whatsapp_purchase_request" && modelName !== "non_vat_invoice" && modelName !== "non_vat_sales_return") {
                     try {
                         const qrInvoice = new Invoice({
                             sellerName: model.store.name || '',
@@ -232,6 +234,10 @@ const Preview = forwardRef((props, ref) => {
     */
 
     function setHideVAT(modelName) {
+        if (modelName === "non_vat_invoice" || ((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "non_vat_invoice")) {
+            model.hideVAT = true;
+            return;
+        }
         if (model.store?.settings.hide_quotation_invoice_vat) {
             if (((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "invoice") || modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
                 model.hideVAT = true;
@@ -432,18 +438,36 @@ const Preview = forwardRef((props, ref) => {
             model.invoiceTitle = model.store?.settings?.invoice?.purchase_order_title || "PURCHASE ORDER | أمر الشراء";
         } else if (model.modelName === "purchase_request" || model.modelName === "whatsapp_purchase_request") {
             model.invoiceTitle = "PURCHASE REQUEST | طلب الشراء";
+        } else if (model.modelName === "non_vat_invoice") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_titles?.credit;
+            } else {
+                model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_titles?.paid;
+                if (IsCashOnly) {
+                    model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_titles?.cash;
+                }
+            }
+        } else if (model.modelName === "non_vat_sales_return") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_return_titles?.credit;
+            } else {
+                model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_return_titles?.paid;
+                if (IsCashOnly) {
+                    model.invoiceTitle = model.store?.settings?.invoice?.non_vat_sales_return_titles?.cash;
+                }
+            }
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store.settings?.invoice?.quotation_title;
 
-            if (model.type === "invoice" && model.payment_status === "not_paid") {
+            if ((model.type === "invoice" || model.type === "non_vat_invoice") && model.payment_status === "not_paid") {
                 //  model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
                 model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.credit;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
                    // model.invoiceTitle = "CREDIT SALES ORDER | أمر مبيعات الائتمان";
 
                 }*/
-            } else if (model.type === "invoice") {
+            } else if (model.type === "invoice" || model.type === "non_vat_invoice") {
                 //model.invoiceTitle = "INVOICE | فاتورة";
                 model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.paid;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
@@ -472,16 +496,18 @@ const Preview = forwardRef((props, ref) => {
 
     let [modelName, setModelName] = useState("sales");
 
+    function fmn() { return modelName === "non_vat_invoice" ? "quotation" : modelName; }
+
     function changePageSize(size) {
-        fontSizes[modelName + "_pageSize"] = parseInt(size);
+        fontSizes[fmn() + "_pageSize"] = parseInt(size);
         setFontSizes({ ...fontSizes });
         saveToLocalStorage("fontSizes", fontSizes);
         preparePages();
     }
 
     function preparePages() {
-        if (fontSizes[modelName + "_pageSize"]) {
-            model.pageSize = fontSizes[modelName + "_pageSize"];
+        if (fontSizes[fmn() + "_pageSize"]) {
+            model.pageSize = fontSizes[fmn() + "_pageSize"];
         } else {
             model.pageSize = 15
         }
@@ -592,6 +618,8 @@ const Preview = forwardRef((props, ref) => {
             apiPath = "purchase-order";
         } else if (modelName && (modelName === "purchase_request" || modelName === "whatsapp_purchase_request")) {
             apiPath = "purchase-request";
+        } else if (modelName && modelName === "non_vat_invoice") {
+            apiPath = "non-vat-sales";
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -609,6 +637,9 @@ const Preview = forwardRef((props, ref) => {
                 console.log(data);
 
                 model = data.result;
+                if (modelName === "non_vat_invoice") {
+                    model.type = "non_vat_invoice";
+                }
                 setModel({ ...model });
                 return model;
             })
@@ -985,6 +1016,8 @@ const Preview = forwardRef((props, ref) => {
             filename += "Purchase";
         } else if (modelName === "purchase_return" || modelName === "whatsapp_purchase_return") {
             filename += "Purchase_Return";
+        } else if (modelName === "non_vat_invoice") {
+            filename += "Invoice";
         } else if (modelName === "quotation" || modelName === "whatsapp_quotation") {
             filename += "Quotation";
         } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
@@ -1116,7 +1149,7 @@ const Preview = forwardRef((props, ref) => {
                         margin: 0,
                         filename: `${fileName}.pdf`,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
+                        html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => { await clonedDoc.fonts.ready; clonedDoc.querySelectorAll('*').forEach(el => { const hasArabic = Array.from(el.childNodes).some(n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)); if (hasArabic) el.style.letterSpacing = '0px'; }); } },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     })
                     .from(element)
@@ -1236,7 +1269,7 @@ const Preview = forwardRef((props, ref) => {
                     margin: 0,
                     filename: `${fileName}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
+                    html2canvas: { scale: 2, useCORS: true, onclone: async (clonedDoc) => { await clonedDoc.fonts.ready; clonedDoc.querySelectorAll('*').forEach(el => { const hasArabic = Array.from(el.childNodes).some(n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)); if (hasArabic) el.style.letterSpacing = '0px'; }); } },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 }).outputPdf('bloburl');
 
@@ -1412,7 +1445,7 @@ const Preview = forwardRef((props, ref) => {
                 margin: 0,
                 filename: `${fileName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: true },
+                html2canvas: { scale: 2, useCORS: true, logging: true, onclone: async (clonedDoc) => { await clonedDoc.fonts.ready; clonedDoc.querySelectorAll('*').forEach(el => { const hasArabic = Array.from(el.childNodes).some(n => n.nodeType === 3 && /[؀-ۿ]/.test(n.textContent)); if (hasArabic) el.style.letterSpacing = '0px'; }); } },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
@@ -1498,7 +1531,7 @@ const Preview = forwardRef((props, ref) => {
             : `${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
 
         let message = "";
-        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && (model?.type === "invoice" || model?.type === "non_vat_invoice")) {
             message = `${t("Hello, here is your Invoice")}:\n${pdfUrl}`;
         } else if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
             message = `${t("Hello, here is your Quotation")}:\n${pdfUrl}`;
@@ -1582,7 +1615,7 @@ const Preview = forwardRef((props, ref) => {
         // alert("Type:" + model?.type);
         // alert("modelName:" + modelName);
         let message = "";
-        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && (model?.type === "invoice" || model?.type === "non_vat_invoice")) {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
             message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
@@ -1825,8 +1858,8 @@ const Preview = forwardRef((props, ref) => {
     const selectText = (name) => {
         selectedText = name;
         setSelectedText(name);
-        if (!fontSizes[modelName + "_" + selectedText]) {
-            fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+        if (!fontSizes[fmn() + "_" + selectedText]) {
+            fontSizes[fmn() + "_" + selectedText] = defaultFontSizes[selectedText];
         }
         setShowSlider(true);
     };
@@ -1834,8 +1867,8 @@ const Preview = forwardRef((props, ref) => {
     const selectQRCode = () => {
         selectedText = "";
         setSelectedText("");
-        if (!fontSizes[modelName + "_qrCode"]) {
-            fontSizes[modelName + "_qrCode"] = defaultFontSizes[modelName + "_qrCode"];
+        if (!fontSizes[fmn() + "_qrCode"]) {
+            fontSizes[fmn() + "_qrCode"] = defaultFontSizes[fmn() + "_qrCode"];
         }
         setShowQrCodeSlider(true);
     };
@@ -1904,13 +1937,13 @@ const Preview = forwardRef((props, ref) => {
 
     const increment = () => {
         if (selectedText) {
-            if (!fontSizes[modelName + "_" + selectedText]) {
-                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            if (!fontSizes[fmn() + "_" + selectedText]) {
+                fontSizes[fmn() + "_" + selectedText] = defaultFontSizes[selectedText];
             }
 
-            fontSizes[modelName + "_" + selectedText].value += fontSizes[modelName + "_" + selectedText].step;
-            fontSizes[modelName + "_" + selectedText]["value"] = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText]?.value).toFixed(2));
-            fontSizes[modelName + "_" + selectedText]["size"] = fontSizes[modelName + "_" + selectedText]?.value + fontSizes[modelName + "_" + selectedText]?.unit;
+            fontSizes[fmn() + "_" + selectedText].value += fontSizes[fmn() + "_" + selectedText].step;
+            fontSizes[fmn() + "_" + selectedText]["value"] = parseFloat(Math.min(fontSizes[fmn() + "_" + selectedText]?.value).toFixed(2));
+            fontSizes[fmn() + "_" + selectedText]["size"] = fontSizes[fmn() + "_" + selectedText]?.value + fontSizes[fmn() + "_" + selectedText]?.unit;
             setFontSizes({ ...fontSizes });
             saveToLocalStorage("fontSizes", fontSizes);
         }
@@ -1918,13 +1951,13 @@ const Preview = forwardRef((props, ref) => {
 
     const decrement = (element) => {
         if (selectedText) {
-            if (!fontSizes[modelName + "_" + selectedText]) {
-                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            if (!fontSizes[fmn() + "_" + selectedText]) {
+                fontSizes[fmn() + "_" + selectedText] = defaultFontSizes[selectedText];
             }
 
-            fontSizes[modelName + "_" + selectedText].value -= fontSizes[modelName + "_" + selectedText].step;
-            fontSizes[modelName + "_" + selectedText].value = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText].value).toFixed(2));
-            fontSizes[modelName + "_" + selectedText].size = fontSizes[modelName + "_" + selectedText].value + fontSizes[modelName + "_" + selectedText].unit;
+            fontSizes[fmn() + "_" + selectedText].value -= fontSizes[fmn() + "_" + selectedText].step;
+            fontSizes[fmn() + "_" + selectedText].value = parseFloat(Math.min(fontSizes[fmn() + "_" + selectedText].value).toFixed(2));
+            fontSizes[fmn() + "_" + selectedText].size = fontSizes[fmn() + "_" + selectedText].value + fontSizes[fmn() + "_" + selectedText].unit;
             setFontSizes({ ...fontSizes });
             saveToLocalStorage("fontSizes", fontSizes);
         }
@@ -1933,17 +1966,17 @@ const Preview = forwardRef((props, ref) => {
 
     const QrSize = (operation, attribute) => {
 
-        if (!fontSizes[modelName + "_qrCode"]) {
-            fontSizes[modelName + "_qrCode"] = defaultFontSizes["qrCode"];
+        if (!fontSizes[fmn() + "_qrCode"]) {
+            fontSizes[fmn() + "_qrCode"] = defaultFontSizes["qrCode"];
         }
         if (operation === "increment") {
-            fontSizes[modelName + "_qrCode"][attribute].value += fontSizes[modelName + "_qrCode"][attribute].step;
+            fontSizes[fmn() + "_qrCode"][attribute].value += fontSizes[fmn() + "_qrCode"][attribute].step;
         } else if (operation === "decrement") {
-            fontSizes[modelName + "_qrCode"][attribute].value -= fontSizes[modelName + "_qrCode"][attribute].step;
+            fontSizes[fmn() + "_qrCode"][attribute].value -= fontSizes[fmn() + "_qrCode"][attribute].step;
         }
 
-        fontSizes[modelName + "_qrCode"][attribute]["value"] = parseFloat(Math.min(fontSizes[modelName + "_qrCode"][attribute]?.value).toFixed(2));
-        fontSizes[modelName + "_qrCode"][attribute]["size"] = fontSizes[modelName + "_qrCode"][attribute]?.value + fontSizes[modelName + "_qrCode"][attribute]?.unit;
+        fontSizes[fmn() + "_qrCode"][attribute]["value"] = parseFloat(Math.min(fontSizes[fmn() + "_qrCode"][attribute]?.value).toFixed(2));
+        fontSizes[fmn() + "_qrCode"][attribute]["size"] = fontSizes[fmn() + "_qrCode"][attribute]?.value + fontSizes[fmn() + "_qrCode"][attribute]?.unit;
         setFontSizes({ ...fontSizes });
         saveToLocalStorage("fontSizes", fontSizes);
     };
@@ -2031,7 +2064,7 @@ const Preview = forwardRef((props, ref) => {
 
     const handleFontChange = (e) => {
         // setSelectedFont(e.target.value);
-        fontSizes[modelName + "_font"] = e.target.value;
+        fontSizes[fmn() + "_font"] = e.target.value;
         setFontSizes({ ...fontSizes })
         saveToLocalStorage("fontSizes", fontSizes);
     };
@@ -2114,226 +2147,337 @@ const Preview = forwardRef((props, ref) => {
                     <button type="button" className="btn-close" onClick={() => setDownloadFlash(null)} aria-label="Close"></button>
                 </div>
             )}
-            <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
-                {/* Left: Title */}
-                <div className="flex-grow-1">
-                    <Modal.Title>{t(`${formatModelName(modelName)} Preview`)}</Modal.Title>
-                </div>
-
-                {/* Right: Fixed control block */}
-                <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
-                    {/* Slider */}
-                    {showSlider && (
-                        <div className="d-flex align-items-center border rounded bg-light p-2">
-                            <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">{t("Font Size")}: {fontSizes[modelName + "_" + selectedText]?.size}</span>
-                            <button className="btn btn-outline-secondary" onClick={increment}>+</button>
-                            <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
+            {model?.store?.settings?.invoice_header_design === 'type2' ? (
+                /* ── TYPE 2: Modern grouped toolbar ── */
+                <div style={{ background: 'linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%)', padding: '0', borderBottom: '1px solid #15304e', flexShrink: 0 }}>
+                    {/* Top bar: title + action buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <i className="bi bi-file-earmark-text" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px' }}></i>
+                            <span style={{ color: '#fff', fontWeight: '700', fontSize: '15px', letterSpacing: '0.3px' }}>{t(`${formatModelName(modelName)} Preview`)}</span>
                         </div>
-                    )}
-
-                    {showQrCodeSlider && (
-                        <>
-                            <div className="d-flex align-items-center border rounded bg-light p-2">
-                                <button className="btn btn-outline-secondary" onClick={() => {
-                                    QrSize("decrement", "width");
-                                }}>−</button>
-                                <span className="mx-2">{t("Width")}: {fontSizes[modelName + "_qrCode"]["width"]?.size}</span>
-                                <button className="btn btn-outline-secondary" onClick={() => {
-                                    QrSize("increment", "width");
-                                }}>+</button>
-
-
-                                <button className="btn btn-outline-secondary" style={{ marginLeft: "10px" }} onClick={() => {
-                                    QrSize("decrement", "height");
-                                }}>−</button>
-                                <span className="mx-2">{t("Height")}: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
-                                <button className="btn btn-outline-secondary" onClick={() => {
-                                    QrSize("increment", "height");
-                                }}>+</button>
-                                <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
-
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Button size="sm" variant="light" className="d-flex align-items-center gap-1" disabled={isDownloading}
+                                style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontWeight: '600' }}
+                                onClick={(e) => { e.preventDefault(); handleDownload(); }}>
+                                {isDownloading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-file-earmark-arrow-down"></i> PDF</>}
+                            </Button>
+                            <Button size="sm"
+                                style={{ background: whatsAppShare ? '#25d366' : 'rgba(255,255,255,0.15)', border: whatsAppShare ? '1px solid #1ebe5d' : '1px solid rgba(255,255,255,0.3)', color: '#fff', fontWeight: '600' }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (whatsAppShare) { model.printing = false; setModel({ ...model }); openWhatsAppShare(); }
+                                    else { model.printing = true; setModel({ ...model }); handlePrint(); }
+                                }}
+                                className="d-flex align-items-center gap-1">
+                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : (
+                                    !whatsAppShare ? <><i className="bi bi-printer"></i> {t("Print")}</> :
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" /></svg>
+                                )}
+                            </Button>
+                            <button className="btn-close btn-close-white" onClick={handleClose} aria-label={t("Close")} style={{ opacity: 0.8 }}></button>
+                        </div>
+                    </div>
+                    {/* Bottom controls strip */}
+                    <div style={{ background: 'rgba(0,0,0,0.18)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '6px 16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                        {showSlider && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.12)', borderRadius: '6px', padding: '3px 8px' }}>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={decrement}>−</button>
+                                <span style={{ color: '#fff', fontSize: '12px', whiteSpace: 'nowrap' }}>{t("Font Size")}: {fontSizes[fmn() + "_" + selectedText]?.size}</span>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={increment}>+</button>
+                                <button className="btn-close btn-close-white ms-1" style={{ fontSize: '10px', opacity: 0.7 }} onClick={() => setShowSlider(false)}></button>
                             </div>
-                            {/* <div className="d-flex align-items-center border rounded bg-light p-2">
-                                <button className="btn btn-outline-secondary" onClick={() => {
-                                    QrSize("decrement", "height");
-                                }}>−</button>
-                                <span className="mx-2">Height: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
-                                <button className="btn btn-outline-secondary" onClick={() => {
-                                    QrSize("increment", "height");
-                                }}>+</button>
-                                <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
-                            </div>*/}
-                        </>
-                    )}
-
-                    <label htmlFor="font-select">{t("Select Font")}: </label>
-                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
-                        {fonts.map((font) => (
-                            <option key={font.value} value={font.value}>
-                                {font.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    {/* Show Store Header - Always fixed here */}
-                    <div className="form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="storeHeaderCheck"
-                            checked={fontSizes[modelName + "_storeHeader"]?.visible}
-                            onChange={() => {
-                                fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
-
-                                setFontSizes({ ...fontSizes });
-
-                                saveToLocalStorage("fontSizes", fontSizes);
-                            }}
-                        />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">{t("Show Store Header")}</label>
-                    </div>
-
-
-
-                    {/* Margin Control */}
-
-                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
-                        <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">{t("Margin Top")}: {fontSizes[modelName + "_marginTop"]?.size}</span>
-                        <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-                    </div>
-
-                    <div className="col ">
-                        <>
-                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
-                            <select
-                                value={fontSizes[modelName + "_pageSize"]}
-                                onChange={(e) => {
-                                    changePageSize(e.target.value);
-                                }}
-                                className="form-control pull-right"
-                                style={{
-                                    border: "solid 1px",
-                                    borderColor: "silver",
-                                    width: "55px",
-                                }}
-                            >
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                                <option value="11">11</option>
-                                <option value="12">12</option>
-                                <option value="13">13</option>
-                                <option value="14">14</option>
-                                <option value="15">15</option>
-                                <option value="16">16</option>
+                        )}
+                        {showQrCodeSlider && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.12)', borderRadius: '6px', padding: '3px 8px' }}>
+                                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>W:</span>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => QrSize("decrement", "width")}>−</button>
+                                <span style={{ color: '#fff', fontSize: '12px' }}>{fontSizes[fmn() + "_qrCode"]?.["width"]?.size}</span>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => QrSize("increment", "width")}>+</button>
+                                <span style={{ color: 'rgba(255,255,255,0.5)', margin: '0 2px' }}>|</span>
+                                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>H:</span>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => QrSize("decrement", "height")}>−</button>
+                                <span style={{ color: '#fff', fontSize: '12px' }}>{fontSizes[fmn() + "_qrCode"]?.["height"]?.size}</span>
+                                <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => QrSize("increment", "height")}>+</button>
+                                <button className="btn-close btn-close-white ms-1" style={{ fontSize: '10px', opacity: 0.7 }} onClick={() => setShowQrCodeSlider(false)}></button>
+                            </div>
+                        )}
+                        {/* Font selector */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <i className="bi bi-type" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px' }}></i>
+                            <select id="font-select" value={fontSizes[fmn() + "_font"]} onChange={handleFontChange}
+                                style={{ fontSize: '12px', padding: '2px 6px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.12)', color: '#fff', minWidth: '130px' }}>
+                                {fonts.map((font) => (
+                                    <option key={font.value} value={font.value} style={{ background: '#1a3a5c', color: '#fff' }}>{font.label}</option>
+                                ))}
                             </select>
-                        </>
+                        </div>
+                        {/* Show Store Header toggle */}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}>
+                            <input type="checkbox" className="form-check-input" style={{ margin: 0 }}
+                                checked={fontSizes[fmn() + "_storeHeader"]?.visible}
+                                onChange={() => {
+                                    fontSizes[fmn() + "_storeHeader"].visible = !fontSizes[fmn() + "_storeHeader"]?.visible;
+                                    setFontSizes({ ...fontSizes });
+                                    saveToLocalStorage("fontSizes", fontSizes);
+                                }} />
+                            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', whiteSpace: 'nowrap' }}>{t("Show Store Header")}</span>
+                        </label>
+                        {/* Margin Top */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.12)', borderRadius: '6px', padding: '3px 8px' }}>
+                            <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => decrementSize(fmn() + "_marginTop")}>−</button>
+                            <span style={{ color: '#fff', fontSize: '12px', whiteSpace: 'nowrap' }}>{t("Margin Top")}: {fontSizes[fmn() + "_marginTop"]?.size}</span>
+                            <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => incrementSize(fmn() + "_marginTop")}>+</button>
+                        </div>
+                        {/* Page Size */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <i className="bi bi-layout-text-window-reverse" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px' }}></i>
+                            <select value={fontSizes[fmn() + "_pageSize"]} onChange={(e) => changePageSize(e.target.value)}
+                                style={{ fontSize: '12px', padding: '2px 6px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.12)', color: '#fff', width: '52px' }}>
+                                {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(n => <option key={n} value={n.toString()} style={{ background: '#1a3a5c', color: '#fff' }}>{n}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                /* ── TYPE 1: Original modal header ── */
+                <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
+                    {/* Left: Title */}
+                    <div className="flex-grow-1">
+                        <Modal.Title>{t(`${formatModelName(modelName)} Preview`)}</Modal.Title>
                     </div>
 
+                    {/* Right: Fixed control block */}
+                    <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
+                        {/* Slider */}
+                        {showSlider && (
+                            <div className="d-flex align-items-center border rounded bg-light p-2">
+                                <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
+                                <span className="mx-2">{t("Font Size")}: {fontSizes[fmn() + "_" + selectedText]?.size}</span>
+                                <button className="btn btn-outline-secondary" onClick={increment}>+</button>
+                                <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
+                            </div>
+                        )}
+
+                        {showQrCodeSlider && (
+                            <>
+                                <div className="d-flex align-items-center border rounded bg-light p-2">
+                                    <button className="btn btn-outline-secondary" onClick={() => {
+                                        QrSize("decrement", "width");
+                                    }}>−</button>
+                                    <span className="mx-2">{t("Width")}: {fontSizes[fmn() + "_qrCode"]?.["width"]?.size}</span>
+                                    <button className="btn btn-outline-secondary" onClick={() => {
+                                        QrSize("increment", "width");
+                                    }}>+</button>
+
+
+                                    <button className="btn btn-outline-secondary" style={{ marginLeft: "10px" }} onClick={() => {
+                                        QrSize("decrement", "height");
+                                    }}>−</button>
+                                    <span className="mx-2">{t("Height")}: {fontSizes[fmn() + "_qrCode"]?.["height"]?.size}</span>
+                                    <button className="btn btn-outline-secondary" onClick={() => {
+                                        QrSize("increment", "height");
+                                    }}>+</button>
+                                    <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
+
+                                </div>
+                                {/* <div className="d-flex align-items-center border rounded bg-light p-2">
+                                    <button className="btn btn-outline-secondary" onClick={() => {
+                                        QrSize("decrement", "height");
+                                    }}>−</button>
+                                    <span className="mx-2">Height: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
+                                    <button className="btn btn-outline-secondary" onClick={() => {
+                                        QrSize("increment", "height");
+                                    }}>+</button>
+                                    <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
+                                </div>*/}
+                            </>
+                        )}
+
+                        <label htmlFor="font-select">{t("Select Font")}: </label>
+                        <select id="font-select" value={fontSizes[fmn() + "_font"]} onChange={handleFontChange}>
+                            {fonts.map((font) => (
+                                <option key={font.value} value={font.value}>
+                                    {font.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* Show Store Header - Always fixed here */}
+                        <div className="form-check">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="storeHeaderCheck"
+                                checked={fontSizes[fmn() + "_storeHeader"]?.visible}
+                                onChange={() => {
+                                    fontSizes[fmn() + "_storeHeader"].visible = !fontSizes[fmn() + "_storeHeader"]?.visible;
+
+                                    setFontSizes({ ...fontSizes });
+
+                                    saveToLocalStorage("fontSizes", fontSizes);
+                                }}
+                            />
+                            <label htmlFor="storeHeaderCheck" className="form-check-label">{t("Show Store Header")}</label>
+                        </div>
 
 
 
-                    {/* Print & Close Buttons */}
-                    <div className="d-flex align-items-center">
-                        <Button variant="primary" className="d-flex align-items-center gap-2" disabled={isDownloading} onClick={(e) => {
-                            e.preventDefault();
-                            handleDownload()
-                        }}>
-                            {isDownloading ? (
-                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
-                            ) : (
-                                <><i className="bi bi-file-earmark-arrow-down"></i>PDF</>
-                            )}
-                        </Button>&nbsp;&nbsp;
+                        {/* Margin Control */}
+
+                        <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                            <button className="btn btn-outline-secondary" onClick={() => decrementSize(fmn() + "_marginTop")}>−</button>
+                            <span className="mx-2">{t("Margin Top")}: {fontSizes[fmn() + "_marginTop"]?.size}</span>
+                            <button className="btn btn-outline-secondary" onClick={() => incrementSize(fmn() + "_marginTop")}>+</button>
+                        </div>
+
+                        <div className="col ">
+                            <>
+                                <label className="form-label">{t("Page Size")}:&nbsp;</label>
+                                <select
+                                    value={fontSizes[fmn() + "_pageSize"]}
+                                    onChange={(e) => {
+                                        changePageSize(e.target.value);
+                                    }}
+                                    className="form-control pull-right"
+                                    style={{
+                                        border: "solid 1px",
+                                        borderColor: "silver",
+                                        width: "55px",
+                                    }}
+                                >
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                    <option value="15">15</option>
+                                    <option value="16">16</option>
+                                </select>
+                            </>
+                        </div>
 
 
-                        <Button
-                            variant={whatsAppShare ? "success" : "primary"}
-                            onClick={(e) => {
+
+
+                        {/* Print & Close Buttons */}
+                        <div className="d-flex align-items-center">
+                            <Button variant="primary" className="d-flex align-items-center gap-2" disabled={isDownloading} onClick={(e) => {
                                 e.preventDefault();
+                                handleDownload()
+                            }}>
+                                {isDownloading ? (
+                                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                ) : (
+                                    <><i className="bi bi-file-earmark-arrow-down"></i>PDF</>
+                                )}
+                            </Button>&nbsp;&nbsp;
 
-                                if (whatsAppShare) {
-                                    model.printing = false;
-                                    setModel({ ...model });
-                                    openWhatsAppShare();
-                                } else {
-                                    model.printing = true;
-                                    setModel({ ...model });
-                                    handlePrint();
+
+                            <Button
+                                variant={whatsAppShare ? "success" : "primary"}
+                                onClick={(e) => {
+                                    e.preventDefault();
+
+                                    if (whatsAppShare) {
+                                        model.printing = false;
+                                        setModel({ ...model });
+                                        openWhatsAppShare();
+                                    } else {
+                                        model.printing = true;
+                                        setModel({ ...model });
+                                        handlePrint();
+                                    }
+
+                                }}
+                                className="me-2"
+                            >
+                                {isProcessing ?
+                                    <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden={true}
+                                    />
+
+                                    : ""
                                 }
 
-                            }}
-                            className="me-2"
-                        >
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
+                                {!isProcessing && <>
+                                    {!whatsAppShare ? (
+                                        <>
+                                            <i className="bi bi-printer"></i> {t("Print")}
+                                        </>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                        </svg>
+                                    )}
+                                </>}
+                            </Button>
+                            {/*
 
-                                : ""
-                            }
+                               <Button variant="primary" onClick={handleCreate}>
+                                                        {isProcessing ?
+                                                            <Spinner
+                                                                as="span"
+                                                                animation="border"
+                                                                size="sm"
+                                                                role="status"
+                                                                aria-hidden={true}
+                                                            />
 
-                            {!isProcessing && <>
-                                {!whatsAppShare ? (
-                                    <>
-                                        <i className="bi bi-printer"></i> {t("Print")}
-                                    </>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                    </svg>
-                                )}
-                            </>}
-                        </Button>
-                        {/*
-                        
-                           <Button variant="primary" onClick={handleCreate}>
-                                                    {isProcessing ?
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="border"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden={true}
-                                                        />
-                        
-                                                        : ""
-                                                    }
-                                                    {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
-                        
-                                                </Button>
+                                                            : ""
+                                                        }
+                                                        {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
 
-                        */}
-                        <button className="btn-close" onClick={handleClose} aria-label={t("Close")} ></button>
+                                                    </Button>
+
+                            */}
+                            <button className="btn-close" onClick={handleClose} aria-label={t("Close")} ></button>
+                        </div>
                     </div>
-                </div>
-            </Modal.Header>
+                </Modal.Header>
+            )}
 
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    {(!model.store?.settings?.show_seller_info_in_invoice || modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") && <PreviewContent
+                    {model.store?.settings?.invoice_a4_preview_design === "type2" && <PreviewContentType2
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}
-                        modelName={modelName}
+                        modelName={modelName === "non_vat_invoice" ? "quotation" : modelName}
                         selectText={selectText}
                         selectQRCode={selectQRCode}
                         fontSizes={fontSizes} />}
-                    {model.store?.settings?.show_seller_info_in_invoice && modelName !== "stock_transfer" && modelName !== "whatsapp_stock_transfer" && <PreviewContentWithSellerInfo
+                    {model.store?.settings?.invoice_a4_preview_design === "type3" && <PreviewContentType3
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}
-                        modelName={modelName}
+                        modelName={modelName === "non_vat_invoice" ? "quotation" : modelName}
+                        selectText={selectText}
+                        selectQRCode={selectQRCode}
+                        fontSizes={fontSizes} />}
+                    {!["type2", "type3"].includes(model.store?.settings?.invoice_a4_preview_design) && (!model.store?.settings?.show_seller_info_in_invoice || modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") && <PreviewContent
+                        model={model}
+                        invoiceBackground={InvoiceBackground}
+                        whatsAppShare={whatsAppShare}
+                        modelName={modelName === "non_vat_invoice" ? "quotation" : modelName}
+                        selectText={selectText}
+                        selectQRCode={selectQRCode}
+                        fontSizes={fontSizes} />}
+                    {!["type2", "type3"].includes(model.store?.settings?.invoice_a4_preview_design) && model.store?.settings?.show_seller_info_in_invoice && modelName !== "stock_transfer" && modelName !== "whatsapp_stock_transfer" && <PreviewContentWithSellerInfo
+                        model={model}
+                        invoiceBackground={InvoiceBackground}
+                        whatsAppShare={whatsAppShare}
+                        modelName={modelName === "non_vat_invoice" ? "quotation" : modelName}
                         selectText={selectText}
                         selectQRCode={selectQRCode}
                         fontSizes={fontSizes} />}

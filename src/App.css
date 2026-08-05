@@ -12016,3 +12016,60 @@ span.flatpickr-weekday {
 .order-print-wrap { z-index: 1090 !important; }
 body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
+/* Lower history/picker modals when a create-form is opened on top of them */
+body.form-over-history .above-sales-modal { z-index: 1072 !important; }
+/* Purchase/PurchaseReturn/Vendor create forms must appear above history modals (which can be 1082 inside sales form) */
+.purchase-create-wrap { z-index: 1088 !important; }
+.purchase-return-create-wrap { z-index: 1088 !important; }
+.vendor-create-wrap { z-index: 1088 !important; }
+/* Tooltips must always appear above all modals (sales form injects z-index 1082 on .above-sales-modal) */
+.tooltip { z-index: 1090 !important; }
+
+/* Sub-forms that can be opened from history modals — must appear above history (1072 with form-over-history active) */
+.sales-return-create-wrap { z-index: 1080 !important; }
+.quotation-create-wrap { z-index: 1080 !important; }
+.quotation-sales-return-create-wrap { z-index: 1080 !important; }
+/* Delivery Note form modal — one step above above-sales-modal (1065) */
+.delivery-note-create-wrap { z-index: 1066 !important; }
+/* Product Create form — must appear above all parent forms (purchase 1088, quotation/delivery-note ~1066-1080) */
+.pw-modal-wrap { z-index: 1095 !important; }
+/* Raise history modals above their standalone parent form.
+   These rules intentionally win over body.form-over-history (1072) via CSS source-order.
+   fromHistory={true} on sub-forms prevents them from adding these body classes, so there is
+   no reference-counting conflict when a sub-form mounts/unmounts. */
+body.purchase-form-open .above-sales-modal { z-index: 1089 !important; }
+body.purchase-return-form-open .above-sales-modal { z-index: 1089 !important; }
+body.sales-return-form-open .above-sales-modal { z-index: 1081 !important; }
+body.quotation-form-open .above-sales-modal { z-index: 1081 !important; }
+body.quotation-sales-return-form-open .above-sales-modal { z-index: 1081 !important; }
+body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
+.above-pending-modal { z-index: 1090 !important; }
+.modal-backdrop.above-pending-modal { z-index: 1089 !important; }
+.order-preview-wrap { z-index: 1300 !important; }
+.modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
+/* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both
+   a parent-form class AND form-over-history are active simultaneously — beats any (0-2-1) rule. */
+body.purchase-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }
+body.purchase-return-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }
+body.sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.quotation-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.quotation-sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
+body.delivery-note-form-open.form-over-history .above-sales-modal { z-index: 1067 !important; }
+/* Sub-forms opened FROM a history modal carry the .from-history-form class (added when fromHistory prop is true).
+   This targets only the sub-form, not the parent form that shares the same base class, so the parent
+   never gets incorrectly elevated and the stacking order is: sub-form (1093) > history (≤1089) > parent (≤1088). */
+body.form-over-history .from-history-form { z-index: 1093 !important; }
+/* When a form is opened FROM the account balance sheet (balance-sheet-open), the body-class rules
+   above would accidentally raise the balance sheet above the form. These higher-specificity rules
+   (spec 31 > spec 21) ensure the form stays above the balance sheet in that scenario. */
+body.balance-sheet-open.purchase-form-open .purchase-create-wrap { z-index: 1090 !important; }
+body.balance-sheet-open.purchase-return-form-open .purchase-return-create-wrap { z-index: 1090 !important; }
+body.balance-sheet-open.sales-return-form-open .sales-return-create-wrap { z-index: 1082 !important; }
+body.balance-sheet-open.quotation-form-open .quotation-create-wrap { z-index: 1082 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return-create-wrap { z-index: 1082 !important; }
+/* When purchase history is opened from inside the product form (pw-modal-wrap = 1095),
+   both the history modal and the purchase sub-form must float above it. */
+body.product-form-open.form-over-history .above-sales-modal { z-index: 1097 !important; }
+body.product-form-open.form-over-history .from-history-form { z-index: 1099 !important; }
+/* Purchase form opened directly from a product form link (no history table) */
+.above-product-form { z-index: 1100 !important; }
