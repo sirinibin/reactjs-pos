@@ -19,6 +19,7 @@ import ExpenseCreate from "../expense/create.js";
 import CapitalCreate from "../capital/create.js";
 import DividentCreate from "../divident/create.js";
 import QuotationCreate from "../quotation/create.js";
+import QuotationType3Form from "../quotation/QuotationType3Form.js";
 import EmployeeSalaryPaymentCreate from "../employee/salaryPayment.js";
 import CustomerCreate from "../customer/create.js";
 import VendorCreate from "../vendor/create.js";
@@ -805,6 +806,8 @@ const PostingIndex = forwardRef((props, ref) => {
     const VendorUpdateFormRef = useRef();
     const EmployeeUpdateFormRef = useRef();
     const UserUpdateFormRef = useRef();
+    const NonVatSalesUpdateFormRef = useRef();
+    const NonVatSalesReturnUpdateFormRef = useRef();
 
     let [showUpdateForm, setShowUpdateForm] = useState(false);
     const timerRef = useRef(null);
@@ -854,6 +857,10 @@ const PostingIndex = forwardRef((props, ref) => {
                 EmployeeUpdateFormRef.current.open(id);
             } else if (referenceModel === "user_opening_balance") {
                 UserUpdateFormRef.current.open(id);
+            } else if (referenceModel === "non_vat_sales") {
+                NonVatSalesUpdateFormRef.current.open(id, null);
+            } else if (referenceModel === "non_vat_sales_return") {
+                NonVatSalesReturnUpdateFormRef.current.open(id, null);
             }
         }, 50);
 
@@ -907,7 +914,9 @@ const PostingIndex = forwardRef((props, ref) => {
                 <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={handleUpdated} />
                 <VendorCreate ref={VendorUpdateFormRef} onUpdated={handleUpdated} />
                 <EmployeeCreate ref={EmployeeUpdateFormRef} refreshList={handleUpdated} />
-                <UserCreate ref={UserUpdateFormRef} refreshList={handleUpdated} /></>}
+                <UserCreate ref={UserUpdateFormRef} refreshList={handleUpdated} />
+                <QuotationType3Form ref={NonVatSalesUpdateFormRef} apiBase="/v1/non-vat-sales" showToastMessage={props.showToastMessage} refreshList={handleUpdated} />
+                <QuotationType3Form ref={NonVatSalesReturnUpdateFormRef} apiBase="/v1/non-vat-sales-return" showToastMessage={props.showToastMessage} refreshList={handleUpdated} /></>}
 
             <BalanceSheetPrintPreview ref={PreviewRef} />
             {isType2 && <style>{`
