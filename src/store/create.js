@@ -5247,6 +5247,21 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                    {/* ── Dashboard Visibility ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <div className="pw-group-title"><i className="bi bi-speedometer2" style={{ color: '#004ac6' }}></i> Dashboard Visibility</div>
+                                        <div className="pw-check-grid">
+                                            <label className="pw-check" htmlFor="enable_common_dashboard">
+                                                <input type="checkbox" id="enable_common_dashboard" checked={formData.settings.enable_common_dashboard !== false} value={formData.settings.enable_common_dashboard} onChange={() => { formData.settings.enable_common_dashboard = formData.settings.enable_common_dashboard !== false ? false : true; setFormData({ ...formData }); }} />
+                                                <span>Common Dashboard</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="enable_automobile_dashboard">
+                                                <input type="checkbox" id="enable_automobile_dashboard" checked={!!formData.settings.enable_automobile_dashboard} value={formData.settings.enable_automobile_dashboard} onChange={() => { formData.settings.enable_automobile_dashboard = !formData.settings.enable_automobile_dashboard; setFormData({ ...formData }); }} />
+                                                <span>Auto Mobile Dashboard</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
                                     {/* ── Quotation Settings ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Quotation Settings</div>

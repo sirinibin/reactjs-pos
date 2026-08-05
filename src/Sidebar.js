@@ -98,6 +98,8 @@ function Sidebar(props) {
         if (item.requiresAutomobileModule && !store?.settings?.enable_automobile_module) return false;
         if (item.requiresEmployeeModule && !store?.settings?.enable_employee_module) return false;
         if (item.requiresNonVATSales && !store?.settings?.non_vat_sales) return false;
+        if (item.requiresCommonDashboard && store?.settings?.enable_common_dashboard === false) return false;
+        if (item.requiresAutomobileDashboard && !store?.settings?.enable_automobile_dashboard) return false;
         if (item.requiresSalesInQuotation && !store?.settings?.enable_sales_in_quotation) return false;
         // productsOnly: hide only when services mode is active but products are not enabled.
         // Backward compat: if neither flag is set (old stores), show everything.

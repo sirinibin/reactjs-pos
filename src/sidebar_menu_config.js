@@ -2,7 +2,7 @@
 // adminOnly / warehouseOnly / productsOnly items are hidden by the sidebar at runtime
 // based on user_role / store settings — they still appear in the settings page.
 export const DEFAULT_MENU = [
-    { id: "dashboard", resource: "dashboard", label: "Dashboard", path: "/dashboard/business-dashboard", icon: "bi-speedometer2" },
+    { id: "dashboard", resource: "dashboard", label: "Dashboard", path: "/dashboard/business-dashboard", icon: "bi-speedometer2", requiresCommonDashboard: true },
     { id: "sales", resource: "sales", label: "Sales", path: "/dashboard/sales", icon: "bi-receipt" },
     { id: "sales_return", resource: "sales_return", label: "Sales Returns", path: "/dashboard/salesreturn", icon: "bi-receipt-cutoff" },
     { id: "purchases", resource: "purchases", label: "Purchases", path: "/dashboard/purchases", icon: "bi-cart4", productsOnly: true },
@@ -38,7 +38,7 @@ export const DEFAULT_MENU = [
     { id: "user_roles", resource: "user_roles", label: "User Roles (RBAC)", path: "/dashboard/user-roles", icon: "bi-shield-lock", adminOnly: true, requiresRBACModule: true },
     { id: "customer_packages", resource: "customer_packages", label: "Customer Packages", path: "/dashboard/customer-packages", icon: "bi-box-seam", adminOnly: true },
     // AutoMobile Workshop module
-    { id: "automobile_dashboard", resource: "automobile_dashboard", label: "Workshop Dashboard", path: "/dashboard/automobile-dashboard", icon: "bi-speedometer2", requiresAutomobileModule: true },
+    { id: "automobile_dashboard", resource: "automobile_dashboard", label: "Workshop Dashboard", path: "/dashboard/automobile-dashboard", icon: "bi-speedometer2", requiresAutomobileModule: true, requiresAutomobileDashboard: true },
     { id: "employees", resource: "employees", label: "Employees", path: "/dashboard/employees", icon: "bi-person-badge", requiresEmployeeModule: true },
     { id: "salaries", resource: "salaries", label: "Salaries", path: "/dashboard/salaries", icon: "bi-cash-coin", requiresEmployeeModule: true, parentId: "employees" },
     { id: "vehicles", resource: "vehicles", label: "Vehicles", path: "/dashboard/vehicles", icon: "bi-car-front", requiresAutomobileModule: true },
