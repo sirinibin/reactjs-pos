@@ -132,6 +132,7 @@ function QuotationIndex(props) {
   const [selectedStatusList, setSelectedStatusList] = useState([]);
 
   const [showDrafts, setShowDrafts] = useState(false);
+  const [draftCount, setDraftCount] = useState(0);
 
   let [type, setType] = useState("");
 
@@ -999,8 +1000,8 @@ function QuotationIndex(props) {
       <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       {showQuotationCreate && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} />
-        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} />
+        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
       {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}

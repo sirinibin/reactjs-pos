@@ -40,6 +40,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
     let [selectedAccount, setSelectedAccount] = useState(null);
     let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     let [customModalTitle, setCustomModalTitle] = useState("");
     function handleAccountBalanceSheetClose() {
         showAccountBalanceSheet = false;
