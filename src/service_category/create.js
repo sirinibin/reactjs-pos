@@ -105,7 +105,7 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
     const totalErrors = allErrors.length;
 
     return (
-        <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" style={{ zIndex: 1060 }}>
+        <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="above-pw-modal-wrap">
             <style>{`.pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }`}</style>
             <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button type="button" onClick={handleClose}

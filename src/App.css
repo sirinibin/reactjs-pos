@@ -12073,3 +12073,5 @@ body.product-form-open.form-over-history .above-sales-modal { z-index: 1097 !imp
 body.product-form-open.form-over-history .from-history-form { z-index: 1099 !important; }
 /* Purchase form opened directly from a product form link (no history table) */
 .above-product-form { z-index: 1100 !important; }
+/* Sub-category/brand create modals opened from within pw-modal-wrap forms (z-index 1095) */
+.above-pw-modal-wrap { z-index: 1100 !important; }

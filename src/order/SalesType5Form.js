@@ -212,6 +212,7 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     isUpdateForm,
     handleClose,
     fetchAndSetCustomer,
+    openReferenceUpdateForm,
 }, ref) {
     const { t } = useTranslation("common");
     const [vehicleOptions, setVehicleOptions] = useState([]);
@@ -998,6 +999,7 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                         <th style={{ padding: "3px 6px", width: "100px" }}>{t("Amount")}</th>
                                         <th style={{ padding: "3px 6px", width: "140px" }}>{t("Method")}</th>
                                         <th style={{ padding: "3px 6px" }}>{t("Description")}</th>
+                                        <th style={{ padding: "3px 6px", minWidth: "120px" }}>{t("Reference")}</th>
                                         <th style={{ padding: "3px 6px", width: "36px" }}></th>
                                     </tr>
                                 </thead>
@@ -1054,8 +1056,11 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                         <option value="cash">{t("Cash")}</option>
                                                         <option value="debit_card">{t("Debit Card")}</option>
                                                         <option value="credit_card">{t("Credit Card")}</option>
+                                                        <option value="bank_card">{t("Bank Card")}</option>
                                                         <option value="bank_transfer">{t("Bank Transfer")}</option>
                                                         <option value="bank_cheque">{t("Cheque")}</option>
+                                                        <option value="sales_return">{t("Sales Return")}</option>
+                                                        <option value="purchase">{t("Purchase")}</option>
                                                         <option value="credit">{t("On Account")}</option>
                                                     </select>
                                                 </td>
@@ -1070,6 +1075,16 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                                             setFormData({ ...formData });
                                                         }}
                                                     />
+                                                </td>
+                                                <td style={{ padding: "3px 6px" }}>
+                                                    {payment.reference_id && (
+                                                        <span
+                                                            style={{ cursor: "pointer", color: "#004ac6", fontSize: "11px" }}
+                                                            onClick={() => openReferenceUpdateForm && openReferenceUpdateForm(payment.reference_id, payment.reference_type)}
+                                                        >
+                                                            {payment.reference_code}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td style={{ padding: "3px 6px" }}>
                                                     {payment.reference_type === "customer_deposit" && isZatcaReported ? (

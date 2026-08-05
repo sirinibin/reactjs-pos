@@ -13,6 +13,7 @@ import { getDateLocale } from "../i18n/dateLocales";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import ProfitBreakdown from '../utils/ProfitBreakdown';
 
 const SalesReturnView = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
@@ -369,19 +370,42 @@ const SalesReturnView = forwardRef((props, ref) => {
                             </span>
                         </div>
 
-                        {/* Net Profit / Loss */}
-                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Net Profit / Loss")}</span>
-                            <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#004ac6', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                <NumberFormat value={trimTo2Decimals(model.net_profit || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                            </span>
-                            {(model.net_loss > 0) && (
-                                <div style={{ marginTop: '4px', fontSize: '12px', color: '#ba1a1a', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <i className="bi bi-graph-down" style={{ fontSize: '14px' }}></i>
-                                    {t("Loss")}: <NumberFormat value={trimTo2Decimals(model.net_loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                        {/* Net Profit */}
+                        {(() => {
+                            const selected = (model.products || []).filter(p => p.selected);
+                            const deductions = (model.commission || 0) + (model.cash_discount || 0) + (model.discount || 0);
+                            const totalExVAT = selected.reduce((sum, p) => {
+                                let profit = 0;
+                                if (p.purchase_unit_price > 0) profit = (p.unit_price - (p.unit_discount || 0) - p.purchase_unit_price) * p.quantity;
+                                else if (p.is_service) profit = (p.unit_price - (p.unit_discount || 0)) * p.quantity;
+                                return sum + (profit > 0 ? profit : 0);
+                            }, 0);
+                            const totalWithVAT = selected.reduce((sum, p) => {
+                                let profit = 0;
+                                if (p.purchase_unit_price_with_vat > 0) profit = (p.unit_price_with_vat - (p.unit_discount_with_vat || 0) - p.purchase_unit_price_with_vat) * p.quantity;
+                                else if (p.is_service) profit = (p.unit_price_with_vat - (p.unit_discount_with_vat || 0)) * p.quantity;
+                                return sum + (profit > 0 ? profit : 0);
+                            }, 0);
+                            const npWithVAT = trimTo2Decimals(totalWithVAT - deductions);
+                            const npExVAT = trimTo2Decimals(totalExVAT - deductions);
+                            return (
+                                <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Net Profit")}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <span style={{ fontSize: '11px', color: '#6c757d' }}>{t("with VAT")}</span>
+                                        <span style={{ fontSize: '22px', fontWeight: 700, lineHeight: '28px', letterSpacing: '-0.01em', color: npWithVAT >= 0 ? '#15803d' : '#ba1a1a', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                            <NumberFormat value={npWithVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingTop: '4px', borderTop: '1px solid #e2e8f0' }}>
+                                        <span style={{ fontSize: '11px', color: '#6c757d' }}>{t("without VAT")}</span>
+                                        <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '24px', color: npExVAT >= 0 ? '#15803d' : '#ba1a1a', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                            <NumberFormat value={npExVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            );
+                        })()}
 
                         {/* Payment Methods */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -406,7 +430,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                             </span>
                         </div>
                         <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
+                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '850px' }}>
                                 <thead style={{ backgroundColor: '#f1f5f9' }}>
                                     <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
                                         <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
@@ -417,10 +441,23 @@ const SalesReturnView = forwardRef((props, ref) => {
                                         <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
                                         <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
                                         <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total Price")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Profit (ex-VAT)")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Profit (with VAT)")}</th>
                                     </tr>
                                 </thead>
                                 <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
-                                    {model.products && model.products.filter(product => product.selected).map((product, index) => (
+                                    {model.products && model.products.filter(product => product.selected).map((product, index) => {
+                                        const profitExVAT = product.purchase_unit_price > 0
+                                            ? trimTo2Decimals((product.unit_price - (product.unit_discount || 0) - product.purchase_unit_price) * product.quantity)
+                                            : product.is_service
+                                                ? trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)
+                                                : 0;
+                                        const profitWithVAT = product.purchase_unit_price_with_vat > 0
+                                            ? trimTo2Decimals((product.unit_price_with_vat - (product.unit_discount_with_vat || 0) - product.purchase_unit_price_with_vat) * product.quantity)
+                                            : product.is_service
+                                                ? trimTo2Decimals((product.unit_price_with_vat - (product.unit_discount_with_vat || 0)) * product.quantity)
+                                                : 0;
+                                        return (
                                         <tr key={index}
                                             style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
                                             onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
@@ -442,8 +479,15 @@ const SalesReturnView = forwardRef((props, ref) => {
                                             <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
                                                 <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity + (product.vat_price || 0))} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                             </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600, color: profitExVAT >= 0 ? '#15803d' : '#ba1a1a' }}>
+                                                <NumberFormat value={profitExVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600, color: profitWithVAT >= 0 ? '#15803d' : '#ba1a1a' }}>
+                                                <NumberFormat value={profitWithVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -481,9 +525,56 @@ const SalesReturnView = forwardRef((props, ref) => {
                                         <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                     </span>
                                 </div>
+                                {(() => {
+                                    const selected = (model.products || []).filter(p => p.selected);
+                                    const deductions = (model.commission || 0) + (model.cash_discount || 0) + (model.discount || 0);
+                                    const totalExVAT = selected.reduce((sum, p) => {
+                                        let profit = 0;
+                                        if (p.purchase_unit_price > 0) {
+                                            profit = (p.unit_price - (p.unit_discount || 0) - p.purchase_unit_price) * p.quantity;
+                                        } else if (p.is_service) {
+                                            profit = (p.unit_price - (p.unit_discount || 0)) * p.quantity;
+                                        }
+                                        return sum + (profit > 0 ? profit : 0);
+                                    }, 0);
+                                    const totalWithVAT = selected.reduce((sum, p) => {
+                                        let profit = 0;
+                                        if (p.purchase_unit_price_with_vat > 0) {
+                                            profit = (p.unit_price_with_vat - (p.unit_discount_with_vat || 0) - p.purchase_unit_price_with_vat) * p.quantity;
+                                        } else if (p.is_service) {
+                                            profit = (p.unit_price_with_vat - (p.unit_discount_with_vat || 0)) * p.quantity;
+                                        }
+                                        return sum + (profit > 0 ? profit : 0);
+                                    }, 0);
+                                    const netProfitExVAT = trimTo2Decimals(totalExVAT - deductions);
+                                    const netProfitWithVAT = trimTo2Decimals(totalWithVAT - deductions);
+                                    return (<>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px', paddingTop: '4px', fontWeight: 600 }}>
+                                            <span style={{ color: '#434655' }}>{t("Net Profit (ex-VAT)")}</span>
+                                            <span style={{ color: netProfitExVAT >= 0 ? '#15803d' : '#ba1a1a' }}>
+                                                <NumberFormat value={netProfitExVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px', fontWeight: 600 }}>
+                                            <span style={{ color: '#434655' }}>{t("Net Profit (with VAT)")}</span>
+                                            <span style={{ color: netProfitWithVAT >= 0 ? '#15803d' : '#ba1a1a' }}>
+                                                <NumberFormat value={netProfitWithVAT} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </span>
+                                        </div>
+                                    </>);
+                                })()}
                             </div>
                         </div>
                     </section>
+
+                    {/* Profit Breakdown */}
+                    <ProfitBreakdown
+                        products={(model.products || []).filter(p => p.selected)}
+                        commission={model.commission}
+                        cashDiscount={model.cash_discount}
+                        discount={model.discount}
+                        t={t}
+                    />
 
                     {/* Main Body Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>

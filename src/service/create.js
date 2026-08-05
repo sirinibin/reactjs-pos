@@ -333,7 +333,7 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="pw-modal-wrap">
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="pw-modal" className="pw-modal-wrap">
                 <style>{`
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .svc-body { overflow-y: auto !important; padding: 0 !important; flex: 1; min-height: 0; }

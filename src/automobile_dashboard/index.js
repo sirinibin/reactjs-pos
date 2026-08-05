@@ -297,6 +297,8 @@ function ExpenseCategoryModal({ category, appliedFrom, appliedTo, storeId, vatPe
 function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClose }) {
     const [orders, setOrders] = useState([]);
     const [salesReturns, setSalesReturns] = useState([]);
+    const [nvSales, setNvSales] = useState([]);
+    const [nvSalesReturns, setNvSalesReturns] = useState([]);
     const [purchases, setPurchases] = useState([]);
     const [purchaseReturns, setPurchaseReturns] = useState([]);
     const [entityData, setEntityData] = useState(null);
@@ -347,6 +349,17 @@ function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClos
                 setOrders(results[0].result || []);
                 setSalesReturns(results[1].result || []);
             }
+            // Non-VAT Sales & Returns
+            const nvp  = new URLSearchParams({ 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_received,balance_amount,payment_status,payment_methods', limit: '500' });
+            const nvrp = new URLSearchParams({ 'search[store_id]': storeId || '', 'search[payment_status]': 'not_paid,paid_partially', ...dateFilter, 'select': 'id,code,date,net_total,total_payment_paid,balance_amount,payment_status,payment_methods', limit: '500' });
+            if (customer?.id) { nvp.set('search[customer_id]', customer.id); nvrp.set('search[customer_id]', customer.id); }
+            const [nvData, nvrData] = await Promise.all([
+                fetch(`/v1/non-vat-sales?${nvp}`, { headers }).then(r => r.json()).catch(() => ({})),
+                fetch(`/v1/non-vat-sales-return?${nvrp}`, { headers }).then(r => r.json()).catch(() => ({})),
+            ]);
+            setNvSales(nvData.result || []);
+            setNvSalesReturns(nvrData.result || []);
+
             let vend = null;
             const [vData, aData] = await Promise.all([
                 (cust?.vat_no && cust?.name)
@@ -379,10 +392,12 @@ function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClos
 
     const ordersBalance              = orders.reduce((s, o) => s + (parseFloat(o.balance_amount) || 0), 0);
     const salesReturnsBalance        = salesReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
+    const nvSalesBalance             = nvSales.reduce((s, o) => s + (parseFloat(o.balance_amount) || 0), 0);
+    const nvSalesReturnsBalance      = nvSalesReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
     const purchasesBalance           = purchases.reduce((s, p) => s + (parseFloat(p.balance_amount) || 0), 0);
     const purchaseReturnsBalance     = purchaseReturns.reduce((s, r) => s + (parseFloat(r.balance_amount) || 0), 0);
-    const netBalance = ordersBalance - salesReturnsBalance + purchasesBalance - purchaseReturnsBalance;
-    const totalRecords = orders.length + salesReturns.length + purchases.length + purchaseReturns.length;
+    const netBalance = ordersBalance - salesReturnsBalance + nvSalesBalance - nvSalesReturnsBalance + purchasesBalance - purchaseReturnsBalance;
+    const totalRecords = orders.length + salesReturns.length + nvSales.length + nvSalesReturns.length + purchases.length + purchaseReturns.length;
     const hasRecords = totalRecords > 0;
 
     const fmtDate = (d) => { try { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); } catch { return ''; } };
@@ -560,6 +575,60 @@ function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClos
                                         );
                                     })}
                                 </>}
+                                {nvSales.length > 0 && <>
+                                    <tr style={{ background:'#fefce8' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#a16207', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fde68a', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-receipt" style={{ marginRight:5 }}></i>Non-VAT Sales
+                                            <span style={{ float:'right', fontWeight:500 }}>{nvSales.length} record{nvSales.length!==1?'s':''} &bull; Balance: SAR {fmt(nvSalesBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {nvSales.map((o, i) => {
+                                        const rowTotal = parseFloat(o.net_total) || 0;
+                                        const paid = parseFloat(o.total_payment_received) || 0;
+                                        const balance = parseFloat(o.balance_amount) || 0;
+                                        return (
+                                            <tr key={o.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#fffef0'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(o.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#fefce8', borderRadius:5, padding:'2px 7px', color:'#a16207', fontSize:'0.73rem', fontWeight:600, border:'1px solid #fde68a' }}>{o.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(o.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(o.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px' }}></td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
+                                {nvSalesReturns.length > 0 && <>
+                                    <tr style={{ background:'#ecfdf5' }}>
+                                        <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#047857', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #a7f3d0', borderTop:'2px solid #e2e8f0' }}>
+                                            <i className="bi bi-arrow-return-left" style={{ marginRight:5 }}></i>Non-VAT Sales Returns
+                                            <span style={{ float:'right', fontWeight:500 }}>{nvSalesReturns.length} record{nvSalesReturns.length!==1?'s':''} &bull; Balance: SAR {fmt(nvSalesReturnsBalance)}</span>
+                                        </td>
+                                    </tr>
+                                    {nvSalesReturns.map((r, i) => {
+                                        const rowTotal = parseFloat(r.net_total) || 0;
+                                        const paid = parseFloat(r.total_payment_paid) || 0;
+                                        const balance = parseFloat(r.balance_amount) || 0;
+                                        return (
+                                            <tr key={r.id || i} style={{ borderBottom:'1px solid #f1f5f9', background:'#fff', transition:'background 0.1s' }}
+                                                onMouseOver={ev => ev.currentTarget.style.background='#f0fdf4'} onMouseOut={ev => ev.currentTarget.style.background='#fff'}>
+                                                <td style={{ padding:'10px 14px', color:'#cbd5e1', fontWeight:600, fontSize:'0.75rem' }}>{i+1}</td>
+                                                <td style={{ padding:'10px 14px', color:'#475569', whiteSpace:'nowrap', fontWeight:500 }}>{fmtDate(r.date)}</td>
+                                                <td style={{ padding:'10px 14px' }}><span style={{ fontFamily:'monospace', background:'#ecfdf5', borderRadius:5, padding:'2px 7px', color:'#047857', fontSize:'0.73rem', fontWeight:600, border:'1px solid #a7f3d0' }}>{r.code || '—'}</span></td>
+                                                <td style={{ padding:'10px 14px' }}>{psBadge(r.payment_status)}</td>
+                                                <td style={{ padding:'6px 14px' }}>{pmBadges(r.payment_methods)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#475569', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{fmt(rowTotal)}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', color:'#16a34a', fontVariantNumeric:'tabular-nums', fontWeight:500 }}>{paid > 0 ? fmt(paid) : <span style={{ color:'#e2e8f0' }}>—</span>}</td>
+                                                <td style={{ padding:'10px 14px', textAlign:'right', fontWeight:700, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>{fmt(balance)}</td>
+                                                <td style={{ padding:'10px 10px' }}></td>
+                                            </tr>
+                                        );
+                                    })}
+                                </>}
                                 {purchases.length > 0 && <>
                                     <tr style={{ background:'#fef2f2' }}>
                                         <td colSpan={9} style={{ padding:'6px 14px', fontSize:'0.7rem', fontWeight:700, color:'#b91c1c', textTransform:'uppercase', letterSpacing:'0.06em', borderBottom:'1px solid #fecaca', borderTop:'2px solid #e2e8f0' }}>
@@ -647,6 +716,24 @@ function CustomerCreditModal({ customer, storeId, appliedFrom, appliedTo, onClos
                                 <div>
                                     <div style={{ fontSize:'0.66rem', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Sales Returns ({salesReturns.length})</div>
                                     <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(salesReturnsBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {nvSales.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#fefce8', border:'1px solid #fde68a', borderRadius:8 }}>
+                                <i className="bi bi-receipt" style={{ color:'#a16207', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#92400e', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Non-VAT Sales ({nvSales.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#dc2626', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(nvSalesBalance)}</div>
+                                </div>
+                            </div>
+                        )}
+                        {nvSalesReturns.length > 0 && (
+                            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 14px', background:'#ecfdf5', border:'1px solid #a7f3d0', borderRadius:8 }}>
+                                <i className="bi bi-arrow-return-left" style={{ color:'#047857', fontSize:13 }}></i>
+                                <div>
+                                    <div style={{ fontSize:'0.66rem', color:'#065f46', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>Non-VAT Returns ({nvSalesReturns.length})</div>
+                                    <div style={{ fontSize:'0.88rem', fontWeight:800, color:'#16a34a', fontVariantNumeric:'tabular-nums' }}>SAR {fmt(nvSalesReturnsBalance)}</div>
                                 </div>
                             </div>
                         )}
@@ -1549,16 +1636,24 @@ function AutoMobileDashboard() {
                 ], store, chartFilters)],
             [t('Spare Profit'), dashboard.spare_profit || 0,
                 tooltipHtml(t('Spare Profit'), '#81c784', [
-                    { label: t('Sales Profit'),  value: `SAR ${fmt(sbd.sales_profit||0)}`,  color:'#81c784' },
-                    { label: t('Return Profit'), value: `− ${fmt(sbd.return_profit||0)}`,   color:'#ffa8a8' },
+                    { label: t('— Sales —'), value: '', bold:true, color:'#81c784' },
+                    { label: t('Sales Profit (Spare Parts)'),      value: `SAR ${fmt(sbd.sales_profit||0)}`,         color:'#81c784' },
+                    { label: t('Return Profit (Spare Parts)'),     value: `− ${fmt(sbd.return_profit||0)}`,          color:'#ffa8a8' },
+                    { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                    { label: t('Non-VAT Sales Profit (Spare)'),    value: `SAR ${fmt(sbd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                    { label: t('Non-VAT Return Profit (Spare)'),   value: `− ${fmt(sbd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
                     { label: t('Net (with VAT)'),    value: `SAR ${fmt(dashboard.spare_profit||0)}`, color:'#81c784', bold:true, divider:true },
                     { label: `VAT ${vatPercent}%`, value: `− ${fmt((dashboard.spare_profit||0)*vatPercent/(100+vatPercent))}` },
                     { label: t('Net (without VAT)'), value: `SAR ${fmt((dashboard.spare_profit||0)*100/(100+vatPercent))}`, bold:true, divider:true },
                 ], store, chartFilters)],
             [t('Additional Profit'), dashboard.additional_profit || 0,
                 tooltipHtml(t('Additional Profit'), '#ffb74d', [
-                    { label: t('Sales Profit'),  value: `SAR ${fmt(abd.sales_profit||0)}`,  color:'#ffb74d' },
-                    { label: t('Return Profit'), value: `− ${fmt(abd.return_profit||0)}`,   color:'#ffa8a8' },
+                    { label: t('— Sales —'), value: '', bold:true, color:'#ffb74d' },
+                    { label: t('Sales Profit (Other Services)'),       value: `SAR ${fmt(abd.sales_profit||0)}`,         color:'#ffb74d' },
+                    { label: t('Return Profit (Other Services)'),      value: `− ${fmt(abd.return_profit||0)}`,          color:'#ffa8a8' },
+                    { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                    { label: t('Non-VAT Sales Profit (Other Svcs)'),   value: `SAR ${fmt(abd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                    { label: t('Non-VAT Return Profit (Other Svcs)'),  value: `− ${fmt(abd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
                     { label: t('Net (with VAT)'),    value: `SAR ${fmt(dashboard.additional_profit||0)}`, color:'#ffb74d', bold:true, divider:true },
                     { label: `VAT ${vatPercent}%`, value: `− ${fmt((dashboard.additional_profit||0)*vatPercent/(100+vatPercent))}` },
                     { label: t('Net (without VAT)'), value: `SAR ${fmt((dashboard.additional_profit||0)*100/(100+vatPercent))}`, bold:true, divider:true },
@@ -1693,22 +1788,30 @@ function AutoMobileDashboard() {
                         title: t('Spare Profit'), value: sp.withVAT, withoutVAT: sp.withoutVAT,
                         icon:'bi-box-seam', color:'#6a1b9a',
                         tooltip: [
-                            { label: t('Sales Profit (Products)'),   value: `SAR ${fmt(sbd.sales_profit||0)}`,  color:'#81c784' },
-                            { label: t('Return Profit (Products)'),  value: `− ${fmt(sbd.return_profit||0)}`,   color:'#ffa8a8' },
-                            { label: t('Spare Profit (with VAT)'),   value: `SAR ${fmt(sp.withVAT)}`,           bold:true, color:'#81c784', divider:true },
-                            { label: `VAT ${vatPercent}%`,            value: `− ${fmt(sp.vat)}` },
-                            { label: t('Spare Profit (without VAT)'),value: `SAR ${fmt(sp.withoutVAT)}`,        bold:true, color:'#81c784', divider:true },
+                            { label: t('— Sales —'), value: '', bold:true, color:'#81c784' },
+                            { label: t('Sales Profit (Spare Parts)'),     value: `SAR ${fmt(sbd.sales_profit||0)}`,         color:'#81c784' },
+                            { label: t('Return Profit (Spare Parts)'),    value: `− ${fmt(sbd.return_profit||0)}`,          color:'#ffa8a8' },
+                            { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                            { label: t('Non-VAT Sales Profit (Spare)'),   value: `SAR ${fmt(sbd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                            { label: t('Non-VAT Return Profit (Spare)'),  value: `− ${fmt(sbd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
+                            { label: t('Spare Profit (with VAT)'),        value: `SAR ${fmt(sp.withVAT)}`,                  bold:true, color:'#81c784', divider:true },
+                            { label: `VAT ${vatPercent}%`,                 value: `− ${fmt(sp.vat)}` },
+                            { label: t('Spare Profit (without VAT)'),     value: `SAR ${fmt(sp.withoutVAT)}`,               bold:true, color:'#81c784', divider:true },
                         ],
                     },
                     {
                         title: t('Additional Profit'), value: ap.withVAT, withoutVAT: ap.withoutVAT,
                         icon:'bi-three-dots', color:'#1565c0',
                         tooltip: [
-                            { label: t('Sales Profit (Other Services)'),  value: `SAR ${fmt(abd.sales_profit||0)}`,  color:'#ffb74d' },
-                            { label: t('Return Profit (Other Services)'), value: `− ${fmt(abd.return_profit||0)}`,   color:'#ffa8a8' },
-                            { label: t('Additional Profit (with VAT)'),   value: `SAR ${fmt(ap.withVAT)}`,           bold:true, color:'#ffb74d', divider:true },
-                            { label: `VAT ${vatPercent}%`,                 value: `− ${fmt(ap.vat)}` },
-                            { label: t('Additional Profit (without VAT)'),value: `SAR ${fmt(ap.withoutVAT)}`,        bold:true, color:'#ffb74d', divider:true },
+                            { label: t('— Sales —'), value: '', bold:true, color:'#ffb74d' },
+                            { label: t('Sales Profit (Other Services)'),      value: `SAR ${fmt(abd.sales_profit||0)}`,         color:'#ffb74d' },
+                            { label: t('Return Profit (Other Services)'),     value: `− ${fmt(abd.return_profit||0)}`,          color:'#ffa8a8' },
+                            { label: t('— Non-VAT Sales —'), value: '', bold:true, color:'#a5d6a7' },
+                            { label: t('Non-VAT Sales Profit (Other Svcs)'),  value: `SAR ${fmt(abd.non_vat_sales_profit||0)}`, color:'#a5d6a7' },
+                            { label: t('Non-VAT Return Profit (Other Svcs)'), value: `− ${fmt(abd.non_vat_return_profit||0)}`,  color:'#ffa8a8' },
+                            { label: t('Additional Profit (with VAT)'),       value: `SAR ${fmt(ap.withVAT)}`,                  bold:true, color:'#ffb74d', divider:true },
+                            { label: `VAT ${vatPercent}%`,                     value: `− ${fmt(ap.vat)}` },
+                            { label: t('Additional Profit (without VAT)'),    value: `SAR ${fmt(ap.withoutVAT)}`,               bold:true, color:'#ffb74d', divider:true },
                         ],
                     },
                 ],
@@ -1791,7 +1894,7 @@ function AutoMobileDashboard() {
                 title: t('VAT'),
                 cards: [
                     {
-                        title: t('Total Period VAT'), value: vatb.net_vat || 0, icon:'bi-cash-stack', color:'#6610f2',
+                        title: t('TOTAL VAT'), value: vatb.net_vat || 0, icon:'bi-cash-stack', color:'#6610f2',
                         valueColor: (vatb.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
                         note: (vatb.net_vat||0) >= 0 ? t('Payable to Authority') : t('Refundable'),
                         noteColor: (vatb.net_vat||0) >= 0 ? '#ba1a1a' : '#1a7a3a',
@@ -1800,7 +1903,7 @@ function AutoMobileDashboard() {
                             { label: t('Sales Return VAT'),    value: `− ${fmt(vatb.sales_return_vat||0)}`,      color:'#ffa8a8' },
                             { label: t('Purchase VAT'),        value: `− ${fmt(vatb.purchase_vat||0)}`,          color:'#ffa8a8' },
                             { label: t('Purchase Return VAT'), value: `+ ${fmt(vatb.purchase_return_vat||0)}`,   color:'#a5d6a7' },
-                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `+ ${fmt(vatb.expense_vat||0)}`, color:'#a5d6a7' },
+                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `− ${fmt(vatb.expense_vat||0)}`, color:'#ffa8a8' },
                             { divider:true, label: t('Net VAT Payable'), value: `SAR ${fmt(vatb.net_vat||0)}`, bold:true, color:(vatb.net_vat||0)>=0?'#ffa8a8':'#a5d6a7' },
                         ],
                     },
@@ -1814,7 +1917,7 @@ function AutoMobileDashboard() {
                             { label: t('Sales Return VAT'),    value: `− ${fmt(vatbM.sales_return_vat||0)}`,      color:'#ffa8a8' },
                             { label: t('Purchase VAT'),        value: `− ${fmt(vatbM.purchase_vat||0)}`,          color:'#ffa8a8' },
                             { label: t('Purchase Return VAT'), value: `+ ${fmt(vatbM.purchase_return_vat||0)}`,   color:'#a5d6a7' },
-                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `+ ${fmt(vatbM.expense_vat||0)}`, color:'#a5d6a7' },
+                            { label: t('Expense VAT (w/ Vendor Inv.)'), value: `− ${fmt(vatbM.expense_vat||0)}`, color:'#ffa8a8' },
                             { divider:true, label: t('Net VAT Payable'), value: `SAR ${fmt(vatbM.net_vat||0)}`, bold:true, color:(vatbM.net_vat||0)>=0?'#ffa8a8':'#a5d6a7' },
                         ],
                     },
