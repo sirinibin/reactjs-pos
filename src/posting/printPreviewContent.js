@@ -166,10 +166,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 {/* <!-- <li><hr /></li> --> */}
                                 <li className="clickable-text" onClick={() => {
                                     props.selectText("storeCRArabic");
-                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"}</li>
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}><span dir="rtl">س.ت / {props.model.store?.registration_number_in_arabic ? props.model.store.registration_number_in_arabic : (props.model.store?.registration_number ? convertToArabicNumber(props.model.store.registration_number) : "<STORE_CR_NO_ARABIC>")}</span></li>
                                 <li className="clickable-text" onClick={() => {
                                     props.selectText("storeVATArabic");
-                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"}</li>
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} ><span dir="rtl">الرقم الضريبي / {props.model.store?.vat_no_in_arabic ? props.model.store.vat_no_in_arabic : (props.model.store?.vat_no ? convertToArabicNumber(props.model.store.vat_no) : "<STORE_VAT_NO_ARABIC>")}</span></li>
                             </ul>
                         </div>
                     </div> : ""}

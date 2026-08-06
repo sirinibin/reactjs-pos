@@ -70,7 +70,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     marginTop: page.top + "px",
                     height: "1118px",
                     width: `${props.whatsAppShare ? "750px" : "750px"}`,
-                    backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                    backgroundImage: `url(${props.invoiceBackground ? props.invoiceBackground : ""})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
@@ -92,11 +92,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         zIndex: 0,
                         pointerEvents: "none",
                         backgroundColor: "transparent",
-                        backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                        backgroundImage: `url(${props.invoiceBackground ? props.invoiceBackground : ""})`,
                     }}
                     alt="Invoice Background" />) : null}
                 <div style={{ position: "relative", zIndex: 1 }}>
-                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible ? < div className="row">
+                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? < div className="row">
                         <div className="col">
                             <ul className="list-unstyled text-left">
                                 <li>
@@ -142,15 +142,15 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 {/* <!-- <li><hr /></li> --> */}
                                 <li className="clickable-text" onClick={() => {
                                     props.selectText("storeCRArabic");
-                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"}</li>
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}><span dir="rtl">س.ت / {props.model.store?.registration_number_in_arabic ? props.model.store.registration_number_in_arabic : (props.model.store?.registration_number ? convertToArabicNumber(props.model.store.registration_number) : "<STORE_CR_NO_ARABIC>")}</span></li>
                                 <li className="clickable-text" onClick={() => {
                                     props.selectText("storeVATArabic");
-                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"}</li>
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} ><span dir="rtl">الرقم الضريبي / {props.model.store?.vat_no_in_arabic ? props.model.store.vat_no_in_arabic : (props.model.store?.vat_no ? convertToArabicNumber(props.model.store.vat_no) : "<STORE_VAT_NO_ARABIC>")}</span></li>
                             </ul>
                         </div>
                     </div> : ""}
 
-                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                         <div className="col">
                             <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                                 props.selectText("invoiceTitle");

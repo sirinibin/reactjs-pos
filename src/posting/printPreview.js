@@ -14,7 +14,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     let [whatsAppShare, setWhatsAppShare] = useState(false);
-    let InvoiceBackground = "";
+    let [InvoiceBackground, setInvoiceBackground] = useState("");
 
     useImperativeHandle(ref, () => ({
         async open(modelObj, whatsapp) {
@@ -43,6 +43,32 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                             model.store = storeData;
                         }
                     } catch (e) { }
+                }
+
+                InvoiceBackground = "";
+                if (model.store?.code === "MBDI") {
+                    InvoiceBackground = MBDIInvoiceBackground;
+                } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
+                    InvoiceBackground = LGKInvoiceBackground;
+                }
+                setInvoiceBackground(InvoiceBackground);
+
+                if (InvoiceBackground) {
+                    if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                        fontSizes[modelName + "_useBackgroundImage"] = {
+                            "checked": true,
+                        }
+                    }
+                    if (fontSizes[modelName + "_marginTop"]?.value === 0) {
+                        fontSizes[modelName + "_marginTop"] = {
+                            "value": 153,
+                            "unit": "px",
+                            "size": "153px",
+                            "step": 3
+                        };
+                    }
+                    setFontSizes({ ...fontSizes });
+                    saveToLocalStorage("fontSizes", fontSizes);
                 }
 
                 if (model.phone) {
@@ -480,12 +506,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     const handleDownload = async () => {
         setIsDownloadProcessing(true);
 
-        if (model.store.code === "MBDI") {
-            InvoiceBackground = MBDIInvoiceBackground;
-        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
-            InvoiceBackground = LGKInvoiceBackground;
-        }
-
         model.download = true;
         setModel({ ...model });
 
@@ -790,6 +810,9 @@ const handlePrint = useCallback(async () => {
         },
         "storeHeader": {
             "visible": true,
+        },
+        "useBackgroundImage": {
+            "checked": true,
         },
         "storeName": {
             "value": 3.5,
@@ -1172,6 +1195,23 @@ const handlePrint = useCallback(async () => {
                             </select>
                         </div>
 
+                        {/* Use background image toggle */}
+                        {InvoiceBackground ? (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}>
+                                <input type="checkbox" className="form-check-input" style={{ margin: 0 }}
+                                    checked={fontSizes[modelName + "_useBackgroundImage"]?.checked ? true : false}
+                                    onChange={() => {
+                                        if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                                            fontSizes[modelName + "_useBackgroundImage"] = { "checked": true };
+                                        }
+                                        fontSizes[modelName + "_useBackgroundImage"].checked = !fontSizes[modelName + "_useBackgroundImage"].checked;
+                                        setFontSizes({ ...fontSizes });
+                                        saveToLocalStorage("fontSizes", fontSizes);
+                                    }} />
+                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '11px', whiteSpace: 'nowrap' }}>Use Background Image</span>
+                            </label>
+                        ) : null}
+
                     </div>
                 </div>
             ) : (
@@ -1214,6 +1254,27 @@ const handlePrint = useCallback(async () => {
                             />
                             <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
                         </div>
+
+                        {/* Use background image toggle */}
+                        {InvoiceBackground ? (
+                            <div className="form-check">
+                                <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="useBackgroundImageCheck"
+                                    checked={fontSizes[modelName + "_useBackgroundImage"]?.checked ? true : false}
+                                    onChange={() => {
+                                        if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                                            fontSizes[modelName + "_useBackgroundImage"] = { "checked": true };
+                                        }
+                                        fontSizes[modelName + "_useBackgroundImage"].checked = !fontSizes[modelName + "_useBackgroundImage"].checked;
+                                        setFontSizes({ ...fontSizes });
+                                        saveToLocalStorage("fontSizes", fontSizes);
+                                    }}
+                                />
+                                <label htmlFor="useBackgroundImageCheck" className="form-check-label">Use Background Image</label>
+                            </div>
+                        ) : null}
 
                         {/* Margin Control */}
                         <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "100px" }}>
@@ -1273,8 +1334,8 @@ const handlePrint = useCallback(async () => {
             <Modal.Body>
                 <div ref={printAreaRef}>
                     {(model.balanceSheetA4PreviewDesign === 'type2' || model.store?.settings?.balance_sheet_a4_preview_design === 'type2')
-                        ? <BalanceSheetPrintPreviewContentType2 model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
-                        : <BalanceSheetPrintPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                        ? <BalanceSheetPrintPreviewContentType2 model={model} invoiceBackground={fontSizes[modelName + "_useBackgroundImage"]?.checked ? InvoiceBackground : ""} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                        : <BalanceSheetPrintPreviewContent model={model} invoiceBackground={fontSizes[modelName + "_useBackgroundImage"]?.checked ? InvoiceBackground : ""} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
                     }
                 </div>
             </Modal.Body>
