@@ -1,5 +1,5 @@
 import React, { createRef } from "react";
-import { render } from "@testing-library/react";
+import { render, fireEvent, act } from "@testing-library/react";
 
 // ── react-i18next ──────────────────────────────────────────────────────────────
 jest.mock("react-i18next", () => ({
@@ -62,18 +62,14 @@ beforeEach(() => {
     localStorage.setItem("access_token", "test-token");
     localStorage.setItem("store_id", "store-001");
 
-    global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        headers: { get: () => "application/json" },
-        json: () =>
-            Promise.resolve({
-                result: {},
-                data: [],
-                total_count: 0,
-                store: {},
-                settings: {},
-            }),
-    });
+    global.fetch = jest.fn().mockImplementation((url) =>
+        Promise.resolve({
+            ok: true,
+            headers: { get: () => "application/json" },
+            // /brands endpoint returns an array; all others return an empty object
+            json: () => Promise.resolve({ result: typeof url === "string" && url.includes("/brands") ? [] : {} }),
+        })
+    );
 });
 
 afterEach(() => {
@@ -127,5 +123,59 @@ describe("VehicleCreate smoke test", () => {
                 />
             );
         }).not.toThrow();
+    });
+});
+
+// ── onClose prop tests ──────────────────────────────────────────────────────
+describe("VehicleCreate onClose prop", () => {
+    it("does not crash when onClose is not provided and the close button is clicked", async () => {
+        const ref = createRef();
+        render(<VehicleCreate ref={ref} />);
+
+        await act(async () => { ref.current.open(null, "cust-001", { name: "Test" }); });
+
+        const closeBtn = document.querySelector('[aria-label="Close"]');
+        expect(closeBtn).toBeTruthy();
+        expect(() => fireEvent.click(closeBtn)).not.toThrow();
+    });
+
+    it("calls onClose when the close button is clicked", async () => {
+        const onClose = jest.fn();
+        const ref = createRef();
+        render(<VehicleCreate ref={ref} onClose={onClose} />);
+
+        await act(async () => { ref.current.open(null, "cust-001", { name: "Test" }); });
+
+        fireEvent.click(document.querySelector('[aria-label="Close"]'));
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onClose exactly once per close, not on open", async () => {
+        const onClose = jest.fn();
+        const ref = createRef();
+        render(<VehicleCreate ref={ref} onClose={onClose} />);
+
+        await act(async () => { ref.current.open(null, "cust-001", { name: "Test" }); });
+        expect(onClose).not.toHaveBeenCalled();
+
+        fireEvent.click(document.querySelector('[aria-label="Close"]'));
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onClose each time the modal is closed across multiple open/close cycles", async () => {
+        const onClose = jest.fn();
+        const ref = createRef();
+        render(<VehicleCreate ref={ref} onClose={onClose} />);
+
+        // First open-close cycle
+        await act(async () => { ref.current.open(null, "cust-001", { name: "Test" }); });
+        fireEvent.click(document.querySelector('[aria-label="Close"]'));
+        expect(onClose).toHaveBeenCalledTimes(1);
+
+        // Second open-close cycle
+        await act(async () => { ref.current.open(null, "cust-001", { name: "Test" }); });
+        fireEvent.click(document.querySelector('[aria-label="Close"]'));
+        expect(onClose).toHaveBeenCalledTimes(2);
     });
 });

@@ -15,14 +15,14 @@ function fmtDate(val) {
 function fmtAmt(val) { return val != null ? parseFloat(val).toFixed(2) : '-'; }
 
 const HIST_TABS = [
-    { key: 'repairs',               label: 'Repair Jobs',               icon: 'bi-tools',               color: '#e65100' },
-    { key: 'trello',                label: 'Repair Job Board',          icon: 'bi-kanban',              color: '#0052cc' },
-    { key: 'vehicles',              label: 'Vehicles',                  icon: 'bi-car-front',            color: '#546e7a' },
-    { key: 'sales',                 label: 'Sales History',             icon: 'bi-receipt',              color: '#2e7d32' },
-    { key: 'sales_returns',         label: 'Sales Return History',      icon: 'bi-receipt-cutoff',       color: '#b45309' },
-    { key: 'quotations',            label: 'Quotation History',         icon: 'bi-file-earmark-text',    color: '#1565c0' },
-    { key: 'non_vat_sales',         label: 'Non VAT Sales History',     icon: 'bi-file-earmark-minus',   color: '#6b21a8' },
-    { key: 'non_vat_sales_returns', label: 'Non VAT Return History',    icon: 'bi-arrow-return-left',    color: '#9d174d' },
+    { key: 'repairs', label: 'Repair Jobs', icon: 'bi-tools', color: '#e65100' },
+    { key: 'trello', label: 'Repair Job Board', icon: 'bi-kanban', color: '#0052cc' },
+    { key: 'vehicles', label: 'Vehicles', icon: 'bi-car-front', color: '#546e7a' },
+    { key: 'sales', label: 'Sales History', icon: 'bi-receipt', color: '#2e7d32' },
+    { key: 'sales_returns', label: 'Sales Return History', icon: 'bi-receipt-cutoff', color: '#b45309' },
+    { key: 'quotations', label: 'Quotation History', icon: 'bi-file-earmark-text', color: '#1565c0' },
+    { key: 'non_vat_sales', label: 'Non VAT Sales History', icon: 'bi-file-earmark-minus', color: '#6b21a8' },
+    { key: 'non_vat_sales_returns', label: 'Non VAT Return History', icon: 'bi-arrow-return-left', color: '#9d174d' },
 ];
 
 const thS = { padding: '8px 10px', fontWeight: 700, fontSize: 11, color: '#54647a', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap' };
@@ -109,7 +109,7 @@ const CustomerHistoryModal = forwardRef((props, ref) => {
                 headers: { Authorization: localStorage.getItem('access_token') }
             }).then(r => r.json());
             if (r?.result?.name) setCustomerName(r.result.name);
-        } catch (e) {}
+        } catch (e) { }
     }
 
     async function fetchHistTab(tab, id) {
@@ -161,7 +161,7 @@ const CustomerHistoryModal = forwardRef((props, ref) => {
     const isLoading = histLoading === histTab;
 
     return (<>
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable className="above-sales-modal">
             <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
                     <i className="bi bi-clock-history me-2 text-secondary"></i>{t('Customer History')}
@@ -192,19 +192,19 @@ const CustomerHistoryModal = forwardRef((props, ref) => {
 
             <Modal.Body style={histTab === 'trello' ? { padding: 0, height: '65vh', overflowY: 'auto' } : { padding: 0, minHeight: 300 }}>
 
-                        {/* REPAIR JOB BOARD */}
-                        {histTab === 'trello' && (
-                            customerIdRef.current ? (
-                                <RepairJobKanban
-                                    embedded
-                                    presetCustomerId={customerIdRef.current}
-                                    presetCustomerName={customerName}
-                                    onOpenCard={(jobId) => props.onOpenJobCard?.(jobId)}
-                                />
-                            ) : (
-                                <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
-                            )
-                        )}
+                {/* REPAIR JOB BOARD */}
+                {histTab === 'trello' && (
+                    customerIdRef.current ? (
+                        <RepairJobKanban
+                            embedded
+                            presetCustomerId={customerIdRef.current}
+                            presetCustomerName={customerName}
+                            onOpenCard={(jobId) => props.onOpenJobCard?.(jobId)}
+                        />
+                    ) : (
+                        <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
+                    )
+                )}
 
                 {isLoading && histTab !== 'trello' ? (
                     <div style={{ padding: 48, textAlign: 'center' }}><Spinner animation="border" size="sm" /></div>
@@ -468,13 +468,13 @@ const CustomerHistoryModal = forwardRef((props, ref) => {
         </Modal>
 
         {/* Edit forms — mounted outside the history modal so they render above it */}
-        <RepairJobCreate ref={repairJobCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <VehicleCreate ref={vehicleCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <OrderCreate ref={orderCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <SalesReturnCreate ref={salesReturnCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <QuotationType3Form ref={quotationFormRef} apiBase="/v1/quotation" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <QuotationType3Form ref={nonVatSalesFormRef} apiBase="/v1/non-vat-sales" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-        <QuotationType3Form ref={nonVatSalesReturnFormRef} apiBase="/v1/non-vat-sales-return" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+        <RepairJobCreate ref={repairJobCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <VehicleCreate ref={vehicleCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <OrderCreate ref={orderCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <SalesReturnCreate ref={salesReturnCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <QuotationType3Form ref={quotationFormRef} apiBase="/v1/quotation" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <QuotationType3Form ref={nonVatSalesFormRef} apiBase="/v1/non-vat-sales" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+        <QuotationType3Form ref={nonVatSalesReturnFormRef} apiBase="/v1/non-vat-sales-return" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
     </>);
 });
 

@@ -8,8 +8,9 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { trimTo2Decimals, trimTo8Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
-import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import VehicleCreate from "../vehicle/create.js";
+import VehicleView from "../vehicle/view.js";
+import CustomerHistoryModal from "../customer/history_modal.js";
 
 const CUST_COLS_T5 = [
     { key: 'code', label: 'Code', w: '12%' },
@@ -213,6 +214,7 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     handleClose,
     fetchAndSetCustomer,
     openReferenceUpdateForm,
+    showToastMessage,
 }, ref) {
     const { t } = useTranslation("common");
     const [vehicleOptions, setVehicleOptions] = useState([]);
@@ -223,6 +225,13 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     const infoMenuRef = useRef(null);
     const paymentRowsRef = useRef(null);
     const vehicleCreateRef = useRef(null);
+    const vehicleModalOriginRef = useRef(false);
+    const customerHistoryRef = useRef(null);
+    const vehicleViewRef = useRef(null);
+    const [showCustomerHistoryDD, setShowCustomerHistoryDD] = useState(false);
+    const [showVehicleHistoryDD, setShowVehicleHistoryDD] = useState(false);
+    const customerHistoryDDTimer = useRef(null);
+    const vehicleHistoryDDTimer = useRef(null);
     const storeId = localStorage.getItem("store_id");
     const activeCustomer = selectedCustomers[0];
     const customerStore = activeCustomer?.stores?.[storeId] || {};
@@ -288,15 +297,8 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
             return undefined;
         }
 
-        const searchParams = {
-            "search[customer_id]": customerId,
-            limit: 1000,
-            select: "id,customer_id,customer_name,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km",
-        };
-        if (storeId) {
-            searchParams.store_id = storeId;
-        }
-        const queryParams = ObjectToSearchQueryParams(searchParams);
+        const storeParam = storeId ? `&search[store_id]=${storeId}` : '';
+        const queryParams = `search[customer_id]=${customerId}&limit=1000&select=id,customer_id,customer_name,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km${storeParam}`;
 
         setIsVehicleLoading(true);
         fetch(`/v1/vehicle?${queryParams}`, {
@@ -358,13 +360,9 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
 
     function reloadVehicles(selectId) {
         if (!formData.customer_id) return;
-        const searchParams = {
-            "search[customer_id]": formData.customer_id,
-            limit: 1000,
-            select: "id,customer_id,customer_name,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km",
-        };
-        if (storeId) searchParams.store_id = storeId;
-        fetch(`/v1/vehicle?${ObjectToSearchQueryParams(searchParams)}`, {
+        const storeParam = storeId ? `&search[store_id]=${storeId}` : '';
+        const queryParams = `search[customer_id]=${formData.customer_id}&limit=1000&select=id,customer_id,customer_name,vehicle_number,brand,model,variant,year,engine_number,istimara_no,chassis_number,current_km${storeParam}`;
+        fetch(`/v1/vehicle?${queryParams}`, {
             method: "GET",
             headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
         })
@@ -379,7 +377,7 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                     if (v) setVehicleSelection(v);
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }
 
     const vehiclePlaceholder = !formData.customer_id
@@ -405,1036 +403,1151 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
 
     return (
         <>
-        <form className="main-height overflow-hidden w-full" onSubmit={(e) => { e.preventDefault(); handleCreate(e); }} style={{ background: pageBg }}>
-            <div className="h-100 d-flex flex-column flex-lg-row gap-3 p-3" style={{ overflow: "hidden" }}>
+            <form className="main-height overflow-hidden w-full" onSubmit={(e) => { e.preventDefault(); handleCreate(e); }} style={{ background: pageBg }}>
+                <div className="h-100 d-flex flex-column flex-lg-row gap-3 p-3" style={{ overflow: "hidden" }}>
 
-                {/* ── LEFT SCROLLABLE PANEL ── */}
-                <div className="flex-grow-1" style={{ minWidth: 0, overflowY: "auto", paddingRight: "4px", paddingTop: "10px" }}>
+                    {/* ── LEFT SCROLLABLE PANEL ── */}
+                    <div className="flex-grow-1" style={{ minWidth: 0, overflowY: "auto", paddingRight: "4px", paddingTop: "10px" }}>
 
-                    {/* Customer & Vehicle card */}
-                    <div style={{ ...cardStyle, marginBottom: "9px" }}>
-                        <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Customer & Vehicle")}</span>
+                        {/* Customer & Vehicle card */}
+                        <div style={{ ...cardStyle, marginBottom: "9px" }}>
+                            <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Customer & Vehicle")}</span>
 
-                        {/* 3-input row: Customer (narrow) | Vehicle | Date */}
-                        <div style={{ display: "flex", gap: "8px", alignItems: "end", marginBottom: "12px" }}>
-                            {/* 1. Customer (narrow input box, wide dropdown) */}
-                            <div style={{ flex: "0 0 auto" }}>
-                                <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Customer")}</label>
-                                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                                    <div style={{ width: "195px", minWidth: 0, borderRadius: "4px", outline: (errors.customer_id || errors.blocked) ? "2px solid #dc3545" : "none" }}>
-                                        <Typeahead
-                                            id="customer_id_type5"
-                                            positionFixed
-                                            filterBy={() => true}
-                                            labelKey="search_label"
-                                            isLoading={false}
-                                            emptyLabel=""
-                                            clearButton={false}
-                                            open={customerOptions.length === 0 ? false : undefined}
-                                            onChange={(selectedItems) => {
-                                                delete errors.customer_id;
-                                                delete errors.blocked;
-                                                setErrors({ ...errors });
-                                                if (selectedItems.length === 0) {
-                                                    formData.customer_id = "";
-                                                    formData.customer_name = "";
-                                                    formData.customerName = "";
-                                                    removeDepositPayments();
-                                                    setSelectedCustomers([]);
-                                                    setVehicleOptions([]);
-                                                    setVehicleSelection(null);
-                                                    setOpenCustomerSearchResult(false);
-                                                    return;
-                                                }
-                                                const selectedCustomer = selectedItems[0];
-                                                const prevCustomerId = formData.customer_id;
-                                                formData.customer_id = selectedCustomer.id;
-                                                formData.customer_name = selectedCustomer.name || "";
-                                                formData.customerName = selectedCustomer.name || "";
-                                                if (selectedCustomer.use_remarks_in_sales && selectedCustomer.remarks) {
-                                                    formData.remarks = selectedCustomer.remarks;
-                                                }
-                                                if (selectedCustomer.phone && !formData.phone) {
-                                                    formData.phone = selectedCustomer.phone;
-                                                }
-                                                if (prevCustomerId && prevCustomerId !== selectedCustomer.id) {
-                                                    removeDepositPayments();
-                                                    setVehicleOptions([]);
-                                                    setVehicleSelection(null);
-                                                }
-                                                setFormData({ ...formData });
-                                                setSelectedCustomers(selectedItems);
-                                                fetchAndSetCustomer?.(selectedCustomer.id, selectedCustomer);
-                                                setOpenCustomerSearchResult(false);
-                                                if (store?.settings?.block_sales_after_pending_count > 0) {
-                                                    const pendingCount = (selectedCustomer?.stores?.[storeId]?.sales_not_paid_count || 0) + (selectedCustomer?.stores?.[storeId]?.sales_paid_partially_count || 0);
-                                                    if (pendingCount >= store.settings.block_sales_after_pending_count) {
-                                                        errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
-                                                    }
-                                                    setErrors({ ...errors });
-                                                }
-                                            }}
-                                            options={customerOptions}
-                                            placeholder={t("Search...")}
-                                            selected={selectedCustomers}
-                                            highlightOnlyResult={true}
-                                            ref={customerSearchRef}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Escape") {
+                            {/* 3-input row: Customer (narrow) | Vehicle | Date */}
+                            <div style={{ display: "flex", gap: "8px", alignItems: "end", marginBottom: "12px" }}>
+                                {/* 1. Customer (narrow input box, wide dropdown) */}
+                                <div style={{ flex: "0 0 auto" }}>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Customer")}</label>
+                                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                        <div style={{ width: "195px", minWidth: 0, borderRadius: "4px", outline: (errors.customer_id || errors.blocked) ? "2px solid #dc3545" : "none" }}>
+                                            <Typeahead
+                                                id="customer_id_type5"
+                                                positionFixed
+                                                filterBy={() => true}
+                                                labelKey="search_label"
+                                                isLoading={false}
+                                                emptyLabel=""
+                                                clearButton={false}
+                                                open={customerOptions.length === 0 ? false : undefined}
+                                                onChange={(selectedItems) => {
                                                     delete errors.customer_id;
-                                                    formData.customer_id = "";
-                                                    formData.customer_name = "";
-                                                    formData.customerName = "";
-                                                    removeDepositPayments();
-                                                    setSelectedCustomers([]);
-                                                    setVehicleOptions([]);
-                                                    setVehicleSelection(null);
-                                                    setCustomerOptions([]);
+                                                    delete errors.blocked;
+                                                    setErrors({ ...errors });
+                                                    if (selectedItems.length === 0) {
+                                                        formData.customer_id = "";
+                                                        formData.customer_name = "";
+                                                        formData.customerName = "";
+                                                        removeDepositPayments();
+                                                        setSelectedCustomers([]);
+                                                        setVehicleOptions([]);
+                                                        setVehicleSelection(null);
+                                                        setOpenCustomerSearchResult(false);
+                                                        return;
+                                                    }
+                                                    const selectedCustomer = selectedItems[0];
+                                                    const prevCustomerId = formData.customer_id;
+                                                    formData.customer_id = selectedCustomer.id;
+                                                    formData.customer_name = selectedCustomer.name || "";
+                                                    formData.customerName = selectedCustomer.name || "";
+                                                    if (selectedCustomer.use_remarks_in_sales && selectedCustomer.remarks) {
+                                                        formData.remarks = selectedCustomer.remarks;
+                                                    }
+                                                    if (selectedCustomer.phone && !formData.phone) {
+                                                        formData.phone = selectedCustomer.phone;
+                                                    }
+                                                    if (prevCustomerId && prevCustomerId !== selectedCustomer.id) {
+                                                        removeDepositPayments();
+                                                        setVehicleOptions([]);
+                                                        setVehicleSelection(null);
+                                                    }
+                                                    setFormData({ ...formData });
+                                                    setSelectedCustomers(selectedItems);
+                                                    fetchAndSetCustomer?.(selectedCustomer.id, selectedCustomer);
                                                     setOpenCustomerSearchResult(false);
-                                                    customerSearchRef.current?.clear();
-                                                }
-                                            }}
-                                            onInputChange={(searchTerm) => {
-                                                formData.customerName = searchTerm;
-                                                formData.customer_name = searchTerm;
-                                                if (!searchTerm) {
-                                                    formData.customer_id = "";
-                                                    setSelectedCustomers([]);
-                                                    setVehicleOptions([]);
-                                                    setVehicleSelection(null);
-                                                }
-                                                setFormData({ ...formData });
-                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 350);
-                                            }}
-                                            renderMenu={(results, menuProps, state) => {
-                                                const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-                                                return (
-                                                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: "95vw", maxWidth: "95vw", minWidth: "300px", zIndex: 9999, padding: 0, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
-                                                        <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0, pointerEvents: "none" }}>
-                                                            <div style={{ display: "flex", padding: "5px 10px", background: "#f8f9fa", borderBottom: "2px solid #e2e8f0", fontWeight: 700, color: "#374151", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                                                {CUST_COLS_T5.map(col => (
-                                                                    <div key={col.key} style={{ width: col.w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t(col.label)}</div>
-                                                                ))}
-                                                            </div>
-                                                        </MenuItem>
-                                                        {results.map((option, idx) => {
-                                                            const isActive = state.activeIndex === idx || results.length === 1;
-                                                            return (
-                                                                <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                                    <div style={{ display: "flex", padding: "6px 10px", background: isActive ? "#e8f0fe" : (idx % 2 === 0 ? "#fff" : "#f8fafc"), alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>
-                                                                        {CUST_COLS_T5.map(col => (
-                                                                            <div key={col.key} style={{ width: col.w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: isActive ? "#191c1e" : "#374151", fontWeight: (isActive && col.key === "name") ? 700 : 400 }}>
-                                                                                {col.key === "code" && (option.code ? highlightWords(option.code, searchWords, isActive) : "–")}
-                                                                                {col.key === "name" && highlightWords(option.name + (option.name_in_arabic ? ` - ${option.name_in_arabic}` : ""), searchWords, isActive)}
-                                                                                {col.key === "phone" && (option.phone ? highlightWords(option.phone, searchWords, isActive) : "–")}
-                                                                                {col.key === "vat_no" && (option.vat_no ? highlightWords(option.vat_no, searchWords, isActive) : "–")}
-                                                                                {col.key === "credit_balance" && (
-                                                                                    <span style={{ fontWeight: 600, color: (option.credit_balance || 0) > 0 ? "#dc2626" : "#16a34a" }}>
-                                                                                        {option.credit_balance != null ? option.credit_balance : "–"}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </MenuItem>
-                                                            );
-                                                        })}
-                                                    </Menu>
-                                                );
-                                            }}
-                                        />
+                                                    if (store?.settings?.block_sales_after_pending_count > 0) {
+                                                        const pendingCount = (selectedCustomer?.stores?.[storeId]?.sales_not_paid_count || 0) + (selectedCustomer?.stores?.[storeId]?.sales_paid_partially_count || 0);
+                                                        if (pendingCount >= store.settings.block_sales_after_pending_count) {
+                                                            errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
+                                                        }
+                                                        setErrors({ ...errors });
+                                                    }
+                                                }}
+                                                options={customerOptions}
+                                                placeholder={t("Search...")}
+                                                selected={selectedCustomers}
+                                                highlightOnlyResult={true}
+                                                ref={customerSearchRef}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Escape") {
+                                                        delete errors.customer_id;
+                                                        formData.customer_id = "";
+                                                        formData.customer_name = "";
+                                                        formData.customerName = "";
+                                                        removeDepositPayments();
+                                                        setSelectedCustomers([]);
+                                                        setVehicleOptions([]);
+                                                        setVehicleSelection(null);
+                                                        setCustomerOptions([]);
+                                                        setOpenCustomerSearchResult(false);
+                                                        customerSearchRef.current?.clear();
+                                                    }
+                                                }}
+                                                onInputChange={(searchTerm) => {
+                                                    formData.customerName = searchTerm;
+                                                    formData.customer_name = searchTerm;
+                                                    if (!searchTerm) {
+                                                        formData.customer_id = "";
+                                                        setSelectedCustomers([]);
+                                                        setVehicleOptions([]);
+                                                        setVehicleSelection(null);
+                                                    }
+                                                    setFormData({ ...formData });
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 350);
+                                                }}
+                                                renderMenu={(results, menuProps, state) => {
+                                                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                                    return (
+                                                        <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: "95vw", maxWidth: "95vw", minWidth: "300px", zIndex: 9999, padding: 0, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+                                                            <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0, pointerEvents: "none" }}>
+                                                                <div style={{ display: "flex", padding: "5px 10px", background: "#f8f9fa", borderBottom: "2px solid #e2e8f0", fontWeight: 700, color: "#374151", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                                                    {CUST_COLS_T5.map(col => (
+                                                                        <div key={col.key} style={{ width: col.w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t(col.label)}</div>
+                                                                    ))}
+                                                                </div>
+                                                            </MenuItem>
+                                                            {results.map((option, idx) => {
+                                                                const isActive = state.activeIndex === idx || results.length === 1;
+                                                                return (
+                                                                    <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                                        <div style={{ display: "flex", padding: "6px 10px", background: isActive ? "#e8f0fe" : (idx % 2 === 0 ? "#fff" : "#f8fafc"), alignItems: "center", borderBottom: "1px solid #f0f0f0" }}>
+                                                                            {CUST_COLS_T5.map(col => (
+                                                                                <div key={col.key} style={{ width: col.w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: isActive ? "#191c1e" : "#374151", fontWeight: (isActive && col.key === "name") ? 700 : 400 }}>
+                                                                                    {col.key === "code" && (option.code ? highlightWords(option.code, searchWords, isActive) : "–")}
+                                                                                    {col.key === "name" && highlightWords(option.name + (option.name_in_arabic ? ` - ${option.name_in_arabic}` : ""), searchWords, isActive)}
+                                                                                    {col.key === "phone" && (option.phone ? highlightWords(option.phone, searchWords, isActive) : "–")}
+                                                                                    {col.key === "vat_no" && (option.vat_no ? highlightWords(option.vat_no, searchWords, isActive) : "–")}
+                                                                                    {col.key === "credit_balance" && (
+                                                                                        <span style={{ fontWeight: 600, color: (option.credit_balance || 0) > 0 ? "#dc2626" : "#16a34a" }}>
+                                                                                            {option.credit_balance != null ? option.credit_balance : "–"}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                );
+                                                            })}
+                                                        </Menu>
+                                                    );
+                                                }}
+                                            />
+                                        </div>
+                                        <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openCustomerCreateForm} title={t("New Customer")}><i className="bi bi-plus-lg"></i></Button>
+                                        <Button variant="primary" className="btn btn-primary btn-sm" type="button" onClick={openCustomers} title={t("Customer List")}><i className="bi bi-list"></i></Button>
+                                        {formData.customer_id && (
+                                            <Button variant="light" className="btn btn-light btn-sm border" type="button" onClick={() => openCustomerUpdateForm(formData.customer_id)} title={t("Edit Customer")}><i className="bi bi-pencil"></i></Button>
+                                        )}
                                     </div>
-                                    <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openCustomerCreateForm} title={t("New Customer")}><i className="bi bi-plus-lg"></i></Button>
-                                    <Button variant="primary" className="btn btn-primary btn-sm" type="button" onClick={openCustomers} title={t("Customer List")}><i className="bi bi-list"></i></Button>
-                                    {formData.customer_id && (
-                                        <Button variant="light" className="btn btn-light btn-sm border" type="button" onClick={() => openCustomerUpdateForm(formData.customer_id)} title={t("Edit Customer")}><i className="bi bi-pencil"></i></Button>
-                                    )}
+                                    {errors.customer_id && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{t(errors.customer_id)}</div>}
+                                    {errors.blocked && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{errors.blocked}</div>}
                                 </div>
-                                {errors.customer_id && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{t(errors.customer_id)}</div>}
-                                {errors.blocked && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{errors.blocked}</div>}
-                            </div>
 
-                            {/* 2. Vehicle */}
-                            <div style={{ flex: "0 0 auto" }}>
-                                <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Vehicle")}</label>
-                                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        style={{ width: "195px", fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5", border: `1px solid ${borderColor}` }}
-                                        disabled={!formData.customer_id || isVehicleLoading}
-                                        value={formData.vehicle_id || ""}
-                                        onChange={(e) => {
-                                            const vehicle = vehicleOptions.find((item) => item.id === e.target.value);
-                                            setVehicleSelection(vehicle || null);
-                                        }}
-                                    >
-                                        <option value="">{vehiclePlaceholder}</option>
-                                        {vehicleOptions.map((vehicle) => (
-                                            <option key={vehicle.id} value={vehicle.id}>{vehicleDisplayLabel(vehicle)}</option>
-                                        ))}
-                                    </select>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        type="button"
-                                        disabled={!formData.customer_id}
-                                        title={t("Add Vehicle")}
-                                        onClick={() => vehicleCreateRef.current?.open(undefined, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic })}
-                                    >
-                                        <i className="bi bi-plus-lg"></i>
-                                    </Button>
-                                    {selectedVehicle && (
+                                {/* 2. Vehicle */}
+                                <div style={{ flex: "0 0 auto" }}>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Vehicle")}</label>
+                                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                        <select
+                                            className="form-select form-select-sm"
+                                            style={{ width: "195px", fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5", border: `1px solid ${borderColor}` }}
+                                            disabled={!formData.customer_id || isVehicleLoading}
+                                            value={formData.vehicle_id || ""}
+                                            onChange={(e) => {
+                                                const vehicle = vehicleOptions.find((item) => item.id === e.target.value);
+                                                setVehicleSelection(vehicle || null);
+                                            }}
+                                        >
+                                            <option value="">{vehiclePlaceholder}</option>
+                                            {vehicleOptions.map((vehicle) => (
+                                                <option key={vehicle.id} value={vehicle.id}>{vehicleDisplayLabel(vehicle)}</option>
+                                            ))}
+                                        </select>
                                         <Button
-                                            variant="outline-primary"
+                                            variant="outline-secondary"
                                             size="sm"
                                             type="button"
-                                            title={t("Edit Vehicle")}
-                                            onClick={() => vehicleCreateRef.current?.open(selectedVehicle.id, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic })}
+                                            disabled={!formData.customer_id}
+                                            title={t("Add Vehicle")}
+                                            onClick={() => vehicleCreateRef.current?.open(undefined, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic })}
                                         >
-                                            <i className="bi bi-pencil"></i>
+                                            <i className="bi bi-plus-lg"></i>
                                         </Button>
-                                    )}
+                                        {selectedVehicle && (
+                                            <Button
+                                                variant="outline-primary"
+                                                size="sm"
+                                                type="button"
+                                                title={t("Edit Vehicle")}
+                                                onClick={() => vehicleCreateRef.current?.open(selectedVehicle.id, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic })}
+                                            >
+                                                <i className="bi bi-pencil"></i>
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 3. Km Driven */}
+                                <div style={{ flex: "0 0 110px" }}>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Km Driven")}</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        className="form-control form-control-sm"
+                                        style={{ border: `1px solid ${borderColor}` }}
+                                        value={formData.km_driven ?? ""}
+                                        placeholder="0"
+                                        onWheel={(e) => e.target.blur()}
+                                        onChange={(e) => {
+                                            formData.km_driven = e.target.value === "" ? null : parseFloat(e.target.value);
+                                            setFormData({ ...formData });
+                                        }}
+                                    />
+                                </div>
+
+                                {/* 4. Date */}
+                                <div style={{ flex: "0 0 180px" }}>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Date")}</label>
+                                    <DatePicker
+                                        id="date_str_type5"
+                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                        value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                        className={`form-control form-control-sm${errors.date_str ? " is-invalid" : ""}`}
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        locale={dateLocale}
+                                        showTimeSelect
+                                        timeIntervals="1"
+                                        onChange={(value) => {
+                                            formData.date_str = value;
+                                            setFormData({ ...formData });
+                                        }}
+                                    />
+                                    {errors.date_str && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{t(errors.date_str)}</div>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Products & Services card */}
+                        <div style={cardStyle}>
+                            <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Products & Services")}</span>
+                            <div className="d-flex gap-2 flex-wrap" style={{ marginBottom: "12px" }}>
+                                <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openProductCreateForm}><i className="bi bi-box-seam me-1"></i>{t("New Product")}</Button>
+                                <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openServiceCreateForm}><i className="bi bi-tools me-1"></i>{t("New Service")}</Button>
+                                <Button variant="primary" className="btn btn-primary btn-sm" type="button" onClick={openProducts}><i className="bi bi-list me-1"></i>{t("Products")}</Button>
+                                <Button variant="light" className="btn btn-light btn-sm border" type="button" onClick={openServices}><i className="bi bi-list me-1"></i>{t("Services")}</Button>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
+                                <div style={{ position: "relative", width: "48px", flexShrink: 0 }}>
+                                    <DebounceInput
+                                        element="input"
+                                        minLength={3}
+                                        debounceTimeout={300}
+                                        placeholder=""
+                                        title={t("Barcode")}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                getProductByBarCode(e.target.value);
+                                                e.target.value = "";
+                                            }
+                                        }}
+                                        style={{ ...inputStyle, width: "48px", padding: "7px 8px", textAlign: "center", height: "39px" }}
+                                    />
+                                    <i className="bi bi-upc-scan" style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", color: "#6b7280", pointerEvents: "none" }}></i>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <Typeahead
+                                        id="type5_product_search"
+                                        filterBy={() => true}
+                                        labelKey="search_label"
+                                        isLoading={false}
+                                        emptyLabel=""
+                                        clearButton={false}
+                                        open={productOptions.length === 0 ? false : undefined}
+                                        ref={productSearchRef}
+                                        onChange={(selectedItems) => {
+                                            if (!selectedItems.length) return;
+                                            const option = selectedItems[0];
+                                            if (isProductAdded(option.id)) {
+                                                removeProduct(option);
+                                            } else {
+                                                addProduct(option);
+                                            }
+                                            setOpenProductSearchResult(true);
+                                            setTimeout(() => productSearchRef.current?.focus(), 30);
+                                        }}
+                                        options={productOptions}
+                                        placeholder={t("Search product by name / code / barcode")}
+                                        highlightOnlyResult={false}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Escape") {
+                                                setProductOptions([]);
+                                                setOpenProductSearchResult(false);
+                                                productSearchRef.current?.clear();
+                                            }
+                                        }}
+                                        onInputChange={(searchTerm) => {
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => { suggestProducts(searchTerm); }, 350);
+                                        }}
+                                        renderMenu={(results, menuProps, state) => {
+                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                            return (
+                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: "min(96vw, 480px)", zIndex: 9999, padding: 0 }}>
+                                                    <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0, margin: 0, pointerEvents: "auto" }}>
+                                                        <div style={{ display: "flex", alignItems: "center", background: "#0f172a", padding: "7px 10px", gap: 6 }}>
+                                                            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", flex: 1 }}>{t("Select Products / Services")}</span>
+                                                            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenProductSearchResult(false); productSearchRef.current?.clear(); setProductOptions([]); }} style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.28)", color: "#fff", borderRadius: 5, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✓ {t("Done")}</button>
+                                                        </div>
+                                                    </MenuItem>
+                                                    {results.map((option, idx) => {
+                                                        const productStore = option.product_stores?.[storeId] || {};
+                                                        const checked = !!isProductAdded(option.id);
+                                                        return (
+                                                            <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                                <div onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (checked) {
+                                                                        removeProduct(option);
+                                                                    } else {
+                                                                        addProduct(option);
+                                                                    }
+                                                                }} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", background: checked ? "#e8f0fe" : idx % 2 === 0 ? "#fff" : "#f8fafc", cursor: "pointer", borderBottom: "1px solid #e5e7eb" }}>
+                                                                    <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${checked ? "#004ac6" : "#94a3b8"}`, background: checked ? "#004ac6" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                                        {checked && <i className="bi bi-check" style={{ color: "#fff", fontSize: 12 }}></i>}
+                                                                    </div>
+                                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                                        <div style={{ fontWeight: checked ? 700 : 500, fontSize: "13px", color: "#191c1e" }}>{highlightWords(option.name, searchWords, checked)}</div>
+                                                                        {option.name_in_arabic && <div style={{ fontSize: "11px", color: "#6b7280" }}>{option.name_in_arabic}</div>}
+                                                                        <div style={{ fontSize: "10px", color: "#94a3b8" }}>{[option.item_code, option.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
+                                                                    </div>
+                                                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                                                        <div style={{ fontWeight: 700, fontSize: "13px", color: "#004ac6" }}>{productStore.retail_unit_price_with_vat ?? option.unit_price_with_vat ?? "—"}</div>
+                                                                        <div style={{ fontSize: "10px", color: "#6b7280" }}>{t("Stock")}: {productStore.stock ?? "—"}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </MenuItem>
+                                                        );
+                                                    })}
+                                                </Menu>
+                                            );
+                                        }}
+                                    />
                                 </div>
                             </div>
 
-                            {/* 3. Km Driven */}
-                            <div style={{ flex: "0 0 110px" }}>
-                                <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Km Driven")}</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.1"
-                                    className="form-control form-control-sm"
-                                    style={{ border: `1px solid ${borderColor}` }}
-                                    value={formData.km_driven ?? ""}
-                                    placeholder="0"
-                                    onWheel={(e) => e.target.blur()}
-                                    onChange={(e) => {
-                                        formData.km_driven = e.target.value === "" ? null : parseFloat(e.target.value);
-                                        setFormData({ ...formData });
-                                    }}
-                                />
+                            <div className="table-responsive">
+                                <table className="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
+                                            <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
+                                            <th style={{ width: "36px", padding: "3px 6px" }}></th>
+                                            <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
+                                            <th style={{ width: "70px", padding: "3px 6px" }}>{t("Stock")}</th>
+                                            <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
+                                            <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price ex. VAT")}</th>
+                                            <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price with VAT")}</th>
+                                            <th style={{ width: "110px", padding: "3px 6px" }}>{t("L. Disc. (incl. VAT)")}</th>
+                                            <th style={{ width: "110px", padding: "3px 6px" }}>{t("Line Total")}</th>
+                                            <th style={{ width: "50px", padding: "3px 6px" }}></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {activeProducts.length === 0 && (
+                                            <tr>
+                                                <td colSpan={11} className="text-center text-muted py-5">
+                                                    <i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>
+                                                    {t("Search and add products or services to continue")}
+                                                </td>
+                                            </tr>
+                                        )}
+                                        {[...activeProducts].reverse().map((product, index) => {
+                                            const liveIndex = selectedProducts.indexOf(product);
+                                            return (
+                                                <tr key={`${product.product_id || product.id || product.code}-${index}`}>
+                                                    <td style={{ padding: "3px 6px", color: "#6b7280", fontWeight: 600, fontSize: "13px", textAlign: "center" }}>{index + 1}</td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                <div style={{ fontWeight: 600, color: "#191c1e" }}>{product.name}</div>
+                                                                {(product.item_code || product.code || product.part_number) && (
+                                                                    <div style={{ fontSize: "11px", color: "#374151" }}>
+                                                                        <span style={{ color: "#6b7280", fontWeight: 500 }}>{t("Part No.")}:</span>{" "}
+                                                                        <span style={{ fontWeight: 600 }}>{product.item_code || product.code || product.part_number}</span>
+                                                                    </div>
+                                                                )}
+                                                                {product.name_in_arabic && <div style={{ fontSize: "12px", color: "#6b7280" }}>{product.name_in_arabic}</div>}
+                                                                <div style={{ fontSize: "11px", color: "#94a3b8" }}>{[product.unit, product.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
+                                                            </div>
+                                                            {openUpdateProductForm && (product.product_id || product.id) && (
+                                                                <button type="button" onClick={() => openUpdateProductForm(product.product_id || product.id, product.is_service)}
+                                                                    style={{ background: "none", border: "none", padding: "2px 4px", cursor: "pointer", color: "#6b7280", flexShrink: 0 }}
+                                                                    title={t("Edit product")}>
+                                                                    <i className="bi bi-pencil" style={{ fontSize: "11px" }}></i>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <span
+                                                            style={{ cursor: "pointer", padding: "2px 6px", display: "inline-flex", alignItems: "center" }}
+                                                            onClick={(e) => {
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                setInfoMenu(m => m?.liveIndex === liveIndex ? null : { bottom: window.innerHeight - rect.top + 4, left: rect.left, product, liveIndex });
+                                                            }}
+                                                        >
+                                                            <i className="bi bi-three-dots-vertical" style={{ fontSize: "14px", color: "#6b7280" }}></i>
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px", fontSize: "13px", whiteSpace: "nowrap" }}>
+                                                        <span style={{ color: errors[`purchase_unit_price_${liveIndex}`] ? "#dc3545" : "#374151", fontWeight: errors[`purchase_unit_price_${liveIndex}`] ? 700 : 400 }}
+                                                            title={errors[`purchase_unit_price_${liveIndex}`] || ""}>
+                                                            <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={(v) => v} />
+                                                            {errors[`purchase_unit_price_${liveIndex}`] && <i className="bi bi-exclamation-triangle-fill ms-1" style={{ fontSize: "11px" }} />}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px", whiteSpace: "nowrap" }}>
+                                                        {!product.is_service && (
+                                                            <OverlayTrigger
+                                                                placement="top"
+                                                                overlay={
+                                                                    <Tooltip id={`t5-stock-tooltip-${liveIndex}`}>
+                                                                        {(() => {
+                                                                            const ws = product.warehouse_stocks || {};
+                                                                            const entries = [];
+                                                                            if (ws.hasOwnProperty("main_store")) entries.push(["main_store", ws["main_store"]]);
+                                                                            Object.entries(ws).forEach(([k, v]) => { if (k !== "main_store") entries.push([k, v]); });
+                                                                            const details = entries.map(([k, v]) => `${k === "main_store" ? t("Main Store") : k.replace(/^wh/, "WH").toUpperCase()}: ${v}`).join(", ");
+                                                                            return details || `${t("Main Store")}: ${product.stock ?? 0}`;
+                                                                        })()}
+                                                                    </Tooltip>
+                                                                }
+                                                            >
+                                                                <span style={{ cursor: "pointer", textDecoration: "underline dotted", fontSize: "13px" }}>
+                                                                    {product.stock ?? 0}
+                                                                </span>
+                                                            </OverlayTrigger>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className="form-control form-control-sm"
+                                                            value={product.quantity}
+                                                            onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
+                                                                inputRefs.current[liveIndex][`sales_type5_product_quantity_${liveIndex}`] = el;
+                                                            }}
+                                                            onChange={(e) => {
+                                                                const _newQty = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
+                                                                const _oldLineDisc = selectedProducts[liveIndex].line_discount_with_vat != null
+                                                                    ? selectedProducts[liveIndex].line_discount_with_vat
+                                                                    : (selectedProducts[liveIndex].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[liveIndex].quantity) || 1);
+                                                                selectedProducts[liveIndex].quantity = _newQty;
+                                                                if (_oldLineDisc && _newQty) {
+                                                                    const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                    const _udwv = parseFloat(trimTo8Decimals(_oldLineDisc / _newQty));
+                                                                    selectedProducts[liveIndex].unit_discount_with_vat = _udwv;
+                                                                    selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(_udwv / _vatMul));
+                                                                    selectedProducts[liveIndex].line_discount_with_vat = _oldLineDisc;
+                                                                }
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                queueRecalculate(liveIndex);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className={`form-control form-control-sm${errors[`unit_price_${liveIndex}`] ? " is-invalid" : ""}`}
+                                                            style={{ width: "90px" }}
+                                                            title={errors[`unit_price_${liveIndex}`] || ""}
+                                                            value={product.unit_price}
+                                                            onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
+                                                                inputRefs.current[liveIndex][`sales_type5_product_price_ex_${liveIndex}`] = el;
+                                                            }}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
+                                                                selectedProducts[liveIndex].unit_price = value;
+                                                                const vatMultiplier = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                selectedProducts[liveIndex].unit_price_with_vat = value === "" ? "" : trimTo2Decimals((parseFloat(value) || 0) * vatMultiplier);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                queueRecalculate(liveIndex);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className={`form-control form-control-sm${errors[`unit_price_with_vat_${liveIndex}`] ? " is-invalid" : ""}`}
+                                                            style={{ width: "90px" }}
+                                                            title={errors[`unit_price_with_vat_${liveIndex}`] || ""}
+                                                            value={product.unit_price_with_vat}
+                                                            onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
+                                                                inputRefs.current[liveIndex][`sales_type5_product_price_${liveIndex}`] = el;
+                                                            }}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
+                                                                selectedProducts[liveIndex].unit_price_with_vat = value;
+                                                                const vatMultiplier = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                selectedProducts[liveIndex].unit_price = value === "" ? "" : trimTo2Decimals((parseFloat(value) || 0) / vatMultiplier);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                queueRecalculate(liveIndex);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            step="any"
+                                                            className="form-control form-control-sm"
+                                                            style={{ width: "100px" }}
+                                                            value={product.line_discount_with_vat != null ? product.line_discount_with_vat : (parseFloat(trimTo2Decimals((parseFloat(product.unit_discount_with_vat) || 0) * (parseFloat(product.quantity) || 0))) || "")}
+                                                            onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                            onChange={(e) => {
+                                                                const val = parseFloat(e.target.value) || 0;
+                                                                const qty = parseFloat(product.quantity) || 1;
+                                                                const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                const udwv = parseFloat(trimTo8Decimals(val / qty));
+                                                                selectedProducts[liveIndex].unit_discount_with_vat = udwv;
+                                                                selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(udwv / vatMul));
+                                                                selectedProducts[liveIndex].line_discount_with_vat = e.target.value === "" ? "" : val;
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                queueRecalculate(liveIndex);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            step="any"
+                                                            className="form-control form-control-sm"
+                                                            style={{ width: "100px", fontWeight: 700 }}
+                                                            onWheel={(e) => e.target.blur()}
+                                                            value={parseFloat(trimTo2Decimals(((selectedProducts[liveIndex].unit_price_with_vat || 0) - (selectedProducts[liveIndex].unit_discount_with_vat || 0)) * (selectedProducts[liveIndex].quantity || 0))) || ""}
+                                                            onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
+                                                            onChange={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (parseFloat(e.target.value) === 0 || !e.target.value) {
+                                                                    const _udwv = parseFloat(selectedProducts[liveIndex].unit_discount_with_vat) || 0;
+                                                                    const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                                                    selectedProducts[liveIndex].unit_price_with_vat = _udwv;
+                                                                    selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(_udwv / _vatMul));
+                                                                    selectedProducts[liveIndex].line_total_with_vat = e.target.value === "" ? "" : 0;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => { queueRecalculate(liveIndex); }, 100);
+                                                                    return;
+                                                                }
+                                                                selectedProducts[liveIndex].line_total_with_vat = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    if (selectedProducts[liveIndex].quantity > 0) {
+                                                                        selectedProducts[liveIndex].unit_price_with_vat = parseFloat(trimTo8Decimals((selectedProducts[liveIndex].line_total_with_vat / selectedProducts[liveIndex].quantity) + selectedProducts[liveIndex].unit_discount_with_vat));
+                                                                        selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(selectedProducts[liveIndex].unit_price_with_vat / (1 + (formData.vat_percent / 100))));
+                                                                        selectedProducts[liveIndex].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount / selectedProducts[liveIndex].unit_price) * 100)));
+                                                                        selectedProducts[liveIndex].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount_with_vat / selectedProducts[liveIndex].unit_price_with_vat) * 100)));
+                                                                    }
+                                                                    queueRecalculate(liveIndex);
+                                                                }, 100);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <button type="button" className="btn btn-link text-danger p-0" disabled={isZatcaReported} onClick={() => removeProduct(product)}>
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
+                        </div>
 
-                            {/* 4. Date */}
-                            <div style={{ flex: "0 0 180px" }}>
-                                <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Date")}</label>
-                                <DatePicker
-                                    id="date_str_type5"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
-                                    className={`form-control form-control-sm${errors.date_str ? " is-invalid" : ""}`}
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    locale={dateLocale}
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        formData.date_str = value;
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                                {errors.date_str && <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>{t(errors.date_str)}</div>}
+                        {/* ── PAYMENTS TABLE — bottom of left panel ── */}
+                        <div style={{ position: "relative", border: `1px solid ${borderColor}`, borderRadius: "8px", padding: "16px 12px 12px", marginTop: "12px", background: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+                            <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Payments")}</span>
+                            <div className="table-responsive">
+                                <table className="table table-sm align-middle mb-0" style={{ fontSize: "12px" }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ padding: "3px 6px", minWidth: "140px", whiteSpace: "nowrap" }}>{t("Date")}</th>
+                                            <th style={{ padding: "3px 6px", width: "100px" }}>{t("Amount")}</th>
+                                            <th style={{ padding: "3px 6px", width: "140px" }}>{t("Method")}</th>
+                                            <th style={{ padding: "3px 6px" }}>{t("Description")}</th>
+                                            <th style={{ padding: "3px 6px", minWidth: "120px" }}>{t("Reference")}</th>
+                                            <th style={{ padding: "3px 6px", width: "36px" }}></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody ref={paymentRowsRef}>
+                                        {paymentRows.map((payment, index) => {
+                                            const paymentIndex = formData.payments_input.indexOf(payment);
+                                            return (
+                                                <tr key={`payment-${paymentIndex}`}>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <DatePicker
+                                                            selected={payment.date_str ? new Date(payment.date_str) : null}
+                                                            onChange={(value) => {
+                                                                formData.payments_input[paymentIndex].date_str = value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                            className="form-control form-control-sm"
+                                                            dateFormat="d MMM yy h:mm aa"
+                                                            showTimeSelect
+                                                            timeIntervals={1}
+                                                            placeholderText={t("Date")}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className="form-control form-control-sm text-end"
+                                                            value={payment.amount || ""}
+                                                            placeholder={t("Amount")}
+                                                            disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
+                                                            onChange={(e) => {
+                                                                delete errors[`payment_method_${paymentIndex}`];
+                                                                formData.payments_input[paymentIndex].amount = e.target.value ? parseFloat(e.target.value) : e.target.value;
+                                                                setErrors({ ...errors });
+                                                                setFormData({ ...formData });
+                                                                validatePaymentAmounts();
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <select
+                                                            className={`form-select form-select-sm${errors[`payment_method_${paymentIndex}`] ? " is-invalid" : ""}`}
+                                                            style={{ fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5", border: `1px solid ${borderColor}` }}
+                                                            value={payment.method || ""}
+                                                            disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
+                                                            onChange={(e) => {
+                                                                delete errors[`payment_method_${paymentIndex}`];
+                                                                formData.payments_input[paymentIndex].method = e.target.value;
+                                                                setErrors({ ...errors });
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        >
+                                                            <option value="">{t("Method")}</option>
+                                                            <option value="cash">{t("Cash")}</option>
+                                                            <option value="debit_card">{t("Debit Card")}</option>
+                                                            <option value="credit_card">{t("Credit Card")}</option>
+                                                            <option value="bank_card">{t("Bank Card")}</option>
+                                                            <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                                            <option value="bank_cheque">{t("Cheque")}</option>
+                                                            <option value="sales_return">{t("Sales Return")}</option>
+                                                            <option value="purchase">{t("Purchase")}</option>
+                                                            <option value="credit">{t("On Account")}</option>
+                                                        </select>
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            value={payment.description || ""}
+                                                            placeholder={t("Description")}
+                                                            onChange={(e) => {
+                                                                formData.payments_input[paymentIndex].description = e.target.value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        {payment.reference_id && (
+                                                            <span
+                                                                style={{ cursor: "pointer", color: "#004ac6", fontSize: "11px" }}
+                                                                onClick={() => openReferenceUpdateForm && openReferenceUpdateForm(payment.reference_id, payment.reference_type)}
+                                                            >
+                                                                {payment.reference_code}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: "3px 6px" }}>
+                                                        {payment.reference_type === "customer_deposit" && isZatcaReported ? (
+                                                            <i className="bi bi-lock text-muted" title={t("Cannot remove: invoice already reported to ZATCA")}></i>
+                                                        ) : (
+                                                            <button type="button" className="btn btn-link text-danger p-0" onClick={() => removePayment(paymentIndex)}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colSpan={5} style={{ padding: "6px 6px 2px", borderTop: "2px solid #e5e7eb" }}>
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                                        <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                                                            {t("Total")}:&nbsp;
+                                                            <strong style={{ color: "#191c1e" }}>
+                                                                <NumberFormat value={trimTo2Decimals(totalPaymentAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
+                                                            </strong>
+                                                        </span>
+                                                        <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                                                            {t("Balance")}:&nbsp;
+                                                            <strong style={{ color: parseFloat(balanceAmount) > 0.01 ? "#b91c1c" : "#166534" }}>
+                                                                <NumberFormat value={trimTo2Decimals(balanceAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
+                                                            </strong>
+                                                        </span>
+                                                        <span style={{ background: paymentBadge.bg, color: paymentBadge.color, borderRadius: "999px", padding: "2px 8px", fontSize: "11px", fontWeight: 700 }}>
+                                                            {paymentBadge.label}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-primary btn-sm"
+                                                        onClick={() => {
+                                                            addNewPayment();
+                                                            setTimeout(() => paymentRowsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+                                                        }}
+                                                    >
+                                                        + {t("Add Payment")}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
+                            {errors.payments && <div style={{ color: "red", fontSize: "12px", marginTop: "6px" }}>{t(errors.payments)}</div>}
                         </div>
                     </div>
 
-                    {/* Products & Services card */}
-                    <div style={cardStyle}>
-                        <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Products & Services")}</span>
-                        <div className="d-flex gap-2 flex-wrap" style={{ marginBottom: "12px" }}>
-                            <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openProductCreateForm}><i className="bi bi-box-seam me-1"></i>{t("New Product")}</Button>
-                            <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openServiceCreateForm}><i className="bi bi-tools me-1"></i>{t("New Service")}</Button>
-                            <Button variant="primary" className="btn btn-primary btn-sm" type="button" onClick={openProducts}><i className="bi bi-list me-1"></i>{t("Products")}</Button>
-                            <Button variant="light" className="btn btn-light btn-sm border" type="button" onClick={openServices}><i className="bi bi-list me-1"></i>{t("Services")}</Button>
-                        </div>
+                    {/* ── ASIDE (320px) ── */}
+                    <aside style={{ width: "100%", maxWidth: "320px", flexShrink: 0, overflowY: "auto", paddingTop: "10px" }}>
 
-                        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
-                            <div style={{ position: "relative", width: "48px", flexShrink: 0 }}>
-                                <DebounceInput
-                                    element="input"
-                                    minLength={3}
-                                    debounceTimeout={300}
-                                    placeholder=""
-                                    title={t("Barcode")}
-                                    onChange={(e) => {
-                                        if (e.target.value) {
-                                            getProductByBarCode(e.target.value);
-                                            e.target.value = "";
-                                        }
-                                    }}
-                                    style={{ ...inputStyle, width: "48px", padding: "7px 8px", textAlign: "center", height: "39px" }}
-                                />
-                                <i className="bi bi-upc-scan" style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", color: "#6b7280", pointerEvents: "none" }}></i>
+                        {/* Customer & Vehicle info card */}
+                        {activeCustomer && (
+                            <div style={{ background: "rgba(0,74,198,0.04)", border: "1px solid #c7d7f5", borderRadius: "8px", padding: "12px 14px", marginBottom: "10px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
+                                    <i className="bi bi-person-circle" style={{ color: "#004ac6", fontSize: 16 }}></i>
+                                    {activeCustomer.code && (
+                                        <span style={{ background: "#dbeafe", color: "#1e40af", borderRadius: 4, padding: "2px 7px", fontSize: 10, fontWeight: 700 }}>{activeCustomer.code}</span>
+                                    )}
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e" }}>{activeCustomer.name}</span>
+                                    <div
+                                        style={{ marginLeft: "auto" }}
+                                        onMouseEnter={() => clearTimeout(customerHistoryDDTimer.current)}
+                                        onMouseLeave={() => { customerHistoryDDTimer.current = setTimeout(() => setShowCustomerHistoryDD(false), 300); }}
+                                    >
+                                        <Dropdown align="end" show={showCustomerHistoryDD} onToggle={(v) => { clearTimeout(customerHistoryDDTimer.current); setShowCustomerHistoryDD(v); }}>
+                                            <Dropdown.Toggle variant="outline-secondary" size="sm" style={{ padding: "2px 8px", fontSize: 11, lineHeight: "18px", border: "1px solid #c7d2fe", color: "#0052cc", background: "#f0f4ff" }} title={t("History")}>
+                                                <i className="bi bi-clock-history"></i>
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu style={{ minWidth: 230, zIndex: 9999 }}>
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "repairs"); }}>
+                                                    <i className="bi bi-tools me-2 text-warning"></i>{t("Repair History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "vehicles"); }}>
+                                                    <i className="bi bi-car-front me-2 text-secondary"></i>{t("Vehicle History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Divider />
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "sales"); }}>
+                                                    <i className="bi bi-receipt me-2 text-success"></i>{t("Sales History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "sales_returns"); }}>
+                                                    <i className="bi bi-receipt-cutoff me-2 text-warning"></i>{t("Sales Return History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Divider />
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "quotations"); }}>
+                                                    <i className="bi bi-file-earmark-text me-2 text-info"></i>{t("Quotation History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Divider />
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "non_vat_sales"); }}>
+                                                    <i className="bi bi-file-earmark-minus me-2" style={{ color: "#6b21a8" }}></i>{t("Non VAT Sales History")}
+                                                </Dropdown.Item>
+                                                <Dropdown.Item onClick={() => { setShowCustomerHistoryDD(false); customerHistoryRef.current?.open(activeCustomer.id, "non_vat_sales_returns"); }}>
+                                                    <i className="bi bi-arrow-return-left me-2" style={{ color: "#9d174d" }}></i>{t("Non VAT Return History")}
+                                                </Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                    </div>
+                                </div>
+                                {activeCustomer.name_in_arabic && (
+                                    <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 4 }}>{activeCustomer.name_in_arabic}</div>
+                                )}
+                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12, color: "#374151", marginBottom: 5 }}>
+                                    {activeCustomer.phone && (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                            <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone}
+                                        </span>
+                                    )}
+                                    {activeCustomer.phone2 && (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                            <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone2}
+                                        </span>
+                                    )}
+                                    {activeCustomer.vat_no && (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                            <i className="bi bi-receipt" style={{ color: "#6b7280", fontSize: 11 }}></i>
+                                            <span style={{ color: "#6b7280" }}>VAT:</span>
+                                            <strong>{activeCustomer.vat_no}</strong>
+                                        </span>
+                                    )}
+                                </div>
+                                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 6, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                                    <span
+                                        style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", userSelect: "none" }}
+                                        onClick={() => openCustomerPending && openCustomerPending(activeCustomer)}
+                                        title={t("Click to view pendings")}
+                                    >
+                                        <i className="bi bi-wallet2" style={{ color: "#004ac6", fontSize: 12 }}></i>
+                                        <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Balance")}:</span>
+                                        <strong style={{ fontSize: 14, color: (parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance) || 0) > 0 ? "#dc2626" : "#16a34a" }}>
+                                            {parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance ?? 0).toFixed(2)}
+                                        </strong>
+                                        <i className="bi bi-box-arrow-up-right" style={{ color: "#004ac6", fontSize: 10 }}></i>
+                                    </span>
+                                    {parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit) > 0 && (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                            <i className="bi bi-shield-check" style={{ color: "#6b7280", fontSize: 12 }}></i>
+                                            <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Limit")}:</span>
+                                            <strong style={{ fontSize: 13, color: "#374151" }}>{parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit).toFixed(2)}</strong>
+                                        </span>
+                                    )}
+                                    {!isVehicleLoading && (
+                                        <button type="button" onClick={() => setShowVehicleModal(true)}
+                                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563eb", fontWeight: 600 }}>
+                                            <i className="bi bi-car-front" style={{ fontSize: 12 }}></i>
+                                            {vehicleOptions.length} {vehicleOptions.length === 1 ? t("vehicle") : t("vehicles")}
+                                        </button>
+                                    )}
+                                </div>
+                                {selectedVehicle && (
+                                    <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,135,90,0.05)", border: "1px solid #b3e0cc", borderRadius: 6 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                            <i className="bi bi-car-front" style={{ color: "#00875a", fontSize: 14 }}></i>
+                                            <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e", letterSpacing: "0.04em" }}>
+                                                {selectedVehicle.vehicle_number || [selectedVehicle.brand, selectedVehicle.model].filter(Boolean).join(" ") || "—"}
+                                            </span>
+                                            {selectedVehicle.vehicle_number && (selectedVehicle.brand || selectedVehicle.model) && (
+                                                <span style={{ fontSize: 12, color: "#5e6c84" }}>{selectedVehicle.brand} {selectedVehicle.model}</span>
+                                            )}
+                                            <div
+                                                style={{ marginLeft: "auto" }}
+                                                onMouseEnter={() => clearTimeout(vehicleHistoryDDTimer.current)}
+                                                onMouseLeave={() => { vehicleHistoryDDTimer.current = setTimeout(() => setShowVehicleHistoryDD(false), 300); }}
+                                            >
+                                                <Dropdown align="end" show={showVehicleHistoryDD} onToggle={(v) => { clearTimeout(vehicleHistoryDDTimer.current); setShowVehicleHistoryDD(v); }}>
+                                                    <Dropdown.Toggle variant="outline-secondary" size="sm" style={{ padding: "1px 7px", fontSize: 11, lineHeight: "16px", border: "1px solid #b3e0cc", color: "#00875a", background: "#f0faf5" }} title={t("Vehicle History")}>
+                                                        <i className="bi bi-clock-history"></i>
+                                                    </Dropdown.Toggle>
+                                                    <Dropdown.Menu style={{ minWidth: 200, zIndex: 9999 }}>
+                                                        <Dropdown.Item onClick={() => { setShowVehicleHistoryDD(false); vehicleViewRef.current?.open(selectedVehicle.id, "repairs"); }}>
+                                                            <i className="bi bi-wrench me-2 text-danger"></i>{t("Repair History")}
+                                                        </Dropdown.Item>
+                                                        <Dropdown.Divider />
+                                                        <Dropdown.Item onClick={() => { setShowVehicleHistoryDD(false); vehicleViewRef.current?.open(selectedVehicle.id, "sales"); }}>
+                                                            <i className="bi bi-receipt me-2 text-success"></i>{t("Sales History")}
+                                                        </Dropdown.Item>
+                                                        <Dropdown.Item onClick={() => { setShowVehicleHistoryDD(false); vehicleViewRef.current?.open(selectedVehicle.id, "quotations"); }}>
+                                                            <i className="bi bi-file-earmark-text me-2 text-info"></i>{t("Quotation History")}
+                                                        </Dropdown.Item>
+                                                    </Dropdown.Menu>
+                                                </Dropdown>
+                                            </div>
+                                        </div>
+                                        {selectedVehicle.year && (
+                                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{t("Year")}: <strong>{selectedVehicle.year}</strong></div>
+                                        )}
+                                        {selectedVehicle.current_km && (
+                                            <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 5, background: "#f0faf5", border: "1px solid #b3e0cc", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
+                                                <i className="bi bi-speedometer2" style={{ color: "#00875a", fontSize: 11 }}></i>
+                                                <strong>{parseFloat(selectedVehicle.current_km).toLocaleString()}</strong> km
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <Typeahead
-                                    id="type5_product_search"
-                                    filterBy={() => true}
-                                    labelKey="search_label"
-                                    isLoading={false}
-                                    emptyLabel=""
-                                    clearButton={false}
-                                    open={productOptions.length === 0 ? false : undefined}
-                                    ref={productSearchRef}
-                                    onChange={(selectedItems) => {
-                                        if (!selectedItems.length) return;
-                                        const option = selectedItems[0];
-                                        if (isProductAdded(option.id)) {
-                                            removeProduct(option);
-                                        } else {
-                                            addProduct(option);
-                                        }
-                                        setOpenProductSearchResult(true);
-                                        setTimeout(() => productSearchRef.current?.focus(), 30);
-                                    }}
-                                    options={productOptions}
-                                    placeholder={t("Search product by name / code / barcode")}
-                                    highlightOnlyResult={false}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Escape") {
-                                            setProductOptions([]);
-                                            setOpenProductSearchResult(false);
-                                            productSearchRef.current?.clear();
-                                        }
-                                    }}
-                                    onInputChange={(searchTerm) => {
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => { suggestProducts(searchTerm); }, 350);
-                                    }}
-                                    renderMenu={(results, menuProps, state) => {
-                                        const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-                                        return (
-                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: "min(96vw, 480px)", zIndex: 9999, padding: 0 }}>
-                                                <MenuItem disabled style={{ position: "sticky", top: 0, padding: 0, margin: 0, pointerEvents: "auto" }}>
-                                                    <div style={{ display: "flex", alignItems: "center", background: "#0f172a", padding: "7px 10px", gap: 6 }}>
-                                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", flex: 1 }}>{t("Select Products / Services")}</span>
-                                                        <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenProductSearchResult(false); productSearchRef.current?.clear(); setProductOptions([]); }} style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.28)", color: "#fff", borderRadius: 5, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✓ {t("Done")}</button>
-                                                    </div>
-                                                </MenuItem>
-                                                {results.map((option, idx) => {
-                                                    const productStore = option.product_stores?.[storeId] || {};
-                                                    const checked = !!isProductAdded(option.id);
-                                                    return (
-                                                        <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                            <div onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (checked) {
-                                                                    removeProduct(option);
-                                                                } else {
-                                                                    addProduct(option);
-                                                                }
-                                                            }} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", background: checked ? "#e8f0fe" : idx % 2 === 0 ? "#fff" : "#f8fafc", cursor: "pointer", borderBottom: "1px solid #e5e7eb" }}>
-                                                                <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${checked ? "#004ac6" : "#94a3b8"}`, background: checked ? "#004ac6" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                                    {checked && <i className="bi bi-check" style={{ color: "#fff", fontSize: 12 }}></i>}
-                                                                </div>
-                                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                                    <div style={{ fontWeight: checked ? 700 : 500, fontSize: "13px", color: "#191c1e" }}>{highlightWords(option.name, searchWords, checked)}</div>
-                                                                    {option.name_in_arabic && <div style={{ fontSize: "11px", color: "#6b7280" }}>{option.name_in_arabic}</div>}
-                                                                    <div style={{ fontSize: "10px", color: "#94a3b8" }}>{[option.item_code, option.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
-                                                                </div>
-                                                                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                                                    <div style={{ fontWeight: 700, fontSize: "13px", color: "#004ac6" }}>{productStore.retail_unit_price_with_vat ?? option.unit_price_with_vat ?? "—"}</div>
-                                                                    <div style={{ fontSize: "10px", color: "#6b7280" }}>{t("Stock")}: {productStore.stock ?? "—"}</div>
-                                                                </div>
-                                                            </div>
-                                                        </MenuItem>
-                                                    );
-                                                })}
-                                            </Menu>
-                                        );
-                                    }}
-                                />
+                        )}
+
+                        {/* Bill Summary card */}
+                        <div style={cardStyle}>
+                            <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Bill Summary")}</span>
+
+                            <div style={{ display: "grid", gap: "8px", marginBottom: "10px" }}>
+                                <div>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Discount (incl. VAT)")}</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="form-control form-control-sm"
+                                        value={discountWithVAT || ""}
+                                        onChange={(e) => {
+                                            const valueWithVAT = e.target.value ? parseFloat(e.target.value) : "";
+                                            const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
+                                            setDiscountWithVAT(valueWithVAT);
+                                            setDiscount(valueWithVAT !== "" ? parseFloat((valueWithVAT / vatMul).toFixed(8)) : "");
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 150);
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Shipping / Handling")}</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="form-control form-control-sm"
+                                        value={shipping || ""}
+                                        onChange={(e) => {
+                                            const value = e.target.value ? parseFloat(e.target.value) : 0;
+                                            setShipping(value);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => reCalculate(), 150);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: "grid", gap: "8px" }}>
+                                {[
+                                    { label: t("Subtotal"), value: formData.total || 0 },
+                                    { label: t("Discount"), value: discount || 0, negative: true },
+                                    { label: t("Taxable Amount"), value: taxableAmount },
+                                    { label: `${t("VAT")} (${formData.vat_percent || 0}%)`, value: formData.vat_price || 0 },
+                                    { label: t("Shipping / Handling"), value: shipping || 0 },
+                                ].map((row) => (
+                                    <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px" }}>
+                                        <span style={{ color: "#6b7280" }}>{row.label}</span>
+                                        <span style={{ fontWeight: 600, color: row.negative ? "#b91c1c" : "#191c1e" }}>
+                                            {row.negative ? "−" : ""}
+                                            <NumberFormat value={trimTo2Decimals(row.value || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "10px", paddingTop: "10px" }}>
+                                {parseFloat(roundingAmount || 0) !== 0 && (
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                        <span style={{ color: "#6b7280", display: "flex", alignItems: "center", gap: 4 }}>
+                                            {t("Net Total Before Rounding")}
+                                            {renderNetTotalBeforeRoundingTooltip && (
+                                                <OverlayTrigger placement="left" overlay={renderNetTotalBeforeRoundingTooltip()}>
+                                                    <span style={{ textDecoration: "underline dotted", cursor: "pointer" }}>ℹ️</span>
+                                                </OverlayTrigger>
+                                            )}
+                                        </span>
+                                        <span style={{ fontWeight: 600, color: "#191c1e" }}>
+                                            <NumberFormat value={trimTo2Decimals((formData.net_total || 0) - (roundingAmount || 0))} displayType="text" thousandSeparator renderText={v => v} />
+                                        </span>
+                                    </div>
+                                )}
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+                                    <span style={{ color: "#6b7280" }}>
+                                        {t("Rounding Amount")}
+                                        {" "}[<label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontWeight: 500 }}>
+                                            <input type="checkbox" style={{ width: 13, height: 13 }} checked={!!formData.auto_rounding_amount} onChange={() => {
+                                                formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                                setFormData({ ...formData });
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
+                                            }} />
+                                            {t("Auto")}
+                                        </label>]
+                                    </span>
+                                    <input type="number" disabled={!!formData.auto_rounding_amount} style={{ width: 100, fontSize: 12 }} className="form-control form-control-sm" value={roundingAmount || ""} onWheel={e => e.target.blur()}
+                                        onChange={e => {
+                                            const v = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                            setRoundingAmount(v);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
+                                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e" }}>{t("Net Total")}</span>
+                                    <span style={{ fontSize: "22px", fontWeight: 800, color: "#004ac6", lineHeight: 1 }}>
+                                        <NumberFormat value={trimTo2Decimals(formData.net_total || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
+                                    </span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px", fontSize: "13px" }}>
+                                    <span style={{ color: "#6b7280" }}>{t("Total Payments")}</span>
+                                    <span style={{ fontWeight: 600, color: "#191c1e" }}><NumberFormat value={trimTo2Decimals(totalPaymentAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} /></span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px" }}>
+                                    <span style={{ color: "#6b7280" }}>{t("Balance")}</span>
+                                    <span style={{ fontWeight: 700, color: parseFloat(balanceAmount) > 0.01 ? "#b91c1c" : "#166534" }}><NumberFormat value={trimTo2Decimals(balanceAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} /></span>
+                                </div>
+                                <div style={{ marginTop: "9px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#6b7280" }}>{t("Payment Status")}</span>
+                                    <span style={{ background: paymentBadge.bg, color: paymentBadge.color, borderRadius: "999px", padding: "4px 10px", fontSize: "12px", fontWeight: 700 }}>{paymentBadge.label}</span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: "grid", gap: "6px", marginTop: "12px" }}>
+                                <button type="submit" disabled={isSubmitting} style={{ background: "#004ac6", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 14px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                                    {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : (isUpdateForm ? t("Update Sale") : t("Create Sale"))}
+                                </button>
+                                <button type="button" onClick={handleClose} style={{ background: "#fff", color: "#475569", border: `1px solid ${borderColor}`, borderRadius: "6px", padding: "10px 14px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                                    {t("Close")}
+                                </button>
                             </div>
                         </div>
-
-                        <div className="table-responsive">
-                            <table className="table table-sm align-middle mb-0">
-                                <thead>
+                    </aside>
+                </div>
+            </form>
+            <VehicleCreate
+                ref={vehicleCreateRef}
+                refreshList={() => { }}
+                showToastMessage={showToastMessage}
+                openDetailsView={(newId) => reloadVehicles(newId)}
+                onClose={() => {
+                    if (vehicleModalOriginRef.current) {
+                        vehicleModalOriginRef.current = false;
+                        setShowVehicleModal(true);
+                    }
+                }}
+            />
+            <CustomerHistoryModal ref={customerHistoryRef} showToastMessage={showToastMessage} />
+            <VehicleView ref={vehicleViewRef} showToastMessage={showToastMessage} noRepairJobBoard />
+            <Modal show={showVehicleModal} onHide={() => setShowVehicleModal(false)} size="lg" className="vehicle-list-modal-wrap">
+                <Modal.Header closeButton>
+                    <Modal.Title style={{ fontSize: "15px", fontWeight: 700 }}>
+                        <i className="bi bi-car-front me-2"></i>
+                        {t("Vehicles")} — {formData.customer_name || t("Customer")}
+                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>({vehicleOptions.length})</span>
+                    </Modal.Title>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        style={{ fontSize: "11px", padding: "4px 10px", marginLeft: "12px" }}
+                        onClick={() => {
+                            setShowVehicleModal(false);
+                            vehicleModalOriginRef.current = true;
+                            vehicleCreateRef.current?.open(undefined, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic });
+                        }}
+                    >
+                        <i className="bi bi-plus-lg me-1"></i>{t("Create New Vehicle")}
+                    </button>
+                </Modal.Header>
+                <Modal.Body style={{ padding: 0 }}>
+                    {vehicleOptions.length === 0 ? (
+                        <div style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                            <i className="bi bi-car-front" style={{ fontSize: "32px", display: "block", marginBottom: "8px" }}></i>
+                            {t("No vehicles found for this customer")}
+                        </div>
+                    ) : (
+                        <div style={{ overflowX: "auto" }}>
+                            <table className="table table-sm table-hover align-middle mb-0">
+                                <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
                                     <tr>
-                                        <th style={{ width: "36px", padding: "3px 6px", color: "#6b7280", fontWeight: 600 }}>#</th>
-                                        <th style={{ minWidth: "220px", padding: "3px 6px" }}>{t("Item")}</th>
-                                        <th style={{ width: "36px", padding: "3px 6px" }}></th>
-                                        <th style={{ width: "90px", padding: "3px 6px" }}>{t("P. U.Price")}</th>
-                                        <th style={{ width: "70px", padding: "3px 6px" }}>{t("Stock")}</th>
-                                        <th style={{ width: "80px", padding: "3px 6px" }}>{t("Qty")}</th>
-                                        <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price ex. VAT")}</th>
-                                        <th style={{ width: "90px", padding: "3px 6px" }}>{t("U.Price with VAT")}</th>
-                                        <th style={{ width: "110px", padding: "3px 6px" }}>{t("L. Disc. (incl. VAT)")}</th>
-                                        <th style={{ width: "110px", padding: "3px 6px" }}>{t("Line Total")}</th>
-                                        <th style={{ width: "50px", padding: "3px 6px" }}></th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Vehicle No.")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Brand / Model")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Year")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Chassis No.")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Istimara No.")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Current KM")}</th>
+                                        <th style={{ fontSize: "12px", padding: "8px 12px" }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activeProducts.length === 0 && (
-                                        <tr>
-                                            <td colSpan={11} className="text-center text-muted py-5">
-                                                <i className="bi bi-box-seam d-block mb-2" style={{ fontSize: "28px" }}></i>
-                                                {t("Search and add products or services to continue")}
+                                    {vehicleOptions.map((v) => (
+                                        <tr key={v.id} style={{ cursor: "pointer" }} onClick={() => { setVehicleSelection(v); setShowVehicleModal(false); }}>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px", fontWeight: 600 }}>{v.vehicle_number || "—"}</td>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px" }}>{[v.brand, v.model, v.variant].filter(Boolean).join(" ") || "—"}</td>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.year || "—"}</td>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.chassis_number || "—"}</td>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.istimara_no || "—"}</td>
+                                            <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.current_km || "—"}</td>
+                                            <td style={{ padding: "8px 12px" }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        title={t("Edit vehicle")}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowVehicleModal(false);
+                                                            vehicleModalOriginRef.current = true;
+                                                            vehicleCreateRef.current?.open(v.id, formData.customer_id, { name: formData.customer_name, name_in_arabic: activeCustomer?.name_in_arabic });
+                                                        }}
+                                                        style={{ fontSize: "11px", padding: "3px 8px" }}
+                                                    >
+                                                        <i className="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        title={t("Vehicle History")}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowVehicleModal(false);
+                                                            vehicleViewRef.current?.open(v.id, "repairs");
+                                                        }}
+                                                        style={{ fontSize: "11px", padding: "3px 8px" }}
+                                                    >
+                                                        <i className="bi bi-clock-history"></i>
+                                                    </button>
+                                                    <button type="button" className="btn btn-sm btn-primary" onClick={(e) => { e.stopPropagation(); setVehicleSelection(v); setShowVehicleModal(false); }} style={{ fontSize: "11px", padding: "3px 10px" }}>{t("Select")}</button>
+                                                </div>
                                             </td>
                                         </tr>
-                                    )}
-                                    {[...activeProducts].reverse().map((product, index) => {
-                                        const liveIndex = selectedProducts.indexOf(product);
-                                        return (
-                                            <tr key={`${product.product_id || product.id || product.code}-${index}`}>
-                                                <td style={{ padding: "3px 6px", color: "#6b7280", fontWeight: 600, fontSize: "13px", textAlign: "center" }}>{index + 1}</td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ fontWeight: 600, color: "#191c1e" }}>{product.name}</div>
-                                                            {(product.item_code || product.code || product.part_number) && (
-                                                                <div style={{ fontSize: "11px", color: "#374151" }}>
-                                                                    <span style={{ color: "#6b7280", fontWeight: 500 }}>{t("Part No.")}:</span>{" "}
-                                                                    <span style={{ fontWeight: 600 }}>{product.item_code || product.code || product.part_number}</span>
-                                                                </div>
-                                                            )}
-                                                            {product.name_in_arabic && <div style={{ fontSize: "12px", color: "#6b7280" }}>{product.name_in_arabic}</div>}
-                                                            <div style={{ fontSize: "11px", color: "#94a3b8" }}>{[product.unit, product.is_service ? t("Service") : t("Product")].filter(Boolean).join(" • ")}</div>
-                                                        </div>
-                                                        {openUpdateProductForm && (product.product_id || product.id) && (
-                                                            <button type="button" onClick={() => openUpdateProductForm(product.product_id || product.id, product.is_service)}
-                                                                style={{ background: "none", border: "none", padding: "2px 4px", cursor: "pointer", color: "#6b7280", flexShrink: 0 }}
-                                                                title={t("Edit product")}>
-                                                                <i className="bi bi-pencil" style={{ fontSize: "11px" }}></i>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <span
-                                                        style={{ cursor: "pointer", padding: "2px 6px", display: "inline-flex", alignItems: "center" }}
-                                                        onClick={(e) => {
-                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                            setInfoMenu(m => m?.liveIndex === liveIndex ? null : { bottom: window.innerHeight - rect.top + 4, left: rect.left, product, liveIndex });
-                                                        }}
-                                                    >
-                                                        <i className="bi bi-three-dots-vertical" style={{ fontSize: "14px", color: "#6b7280" }}></i>
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding: "3px 6px", fontSize: "13px", whiteSpace: "nowrap" }}>
-                                                    <span style={{ color: errors[`purchase_unit_price_${liveIndex}`] ? "#dc3545" : "#374151", fontWeight: errors[`purchase_unit_price_${liveIndex}`] ? 700 : 400 }}
-                                                        title={errors[`purchase_unit_price_${liveIndex}`] || ""}>
-                                                        <NumberFormat value={trimTo2Decimals(parseFloat(product.purchase_unit_price) || 0)} displayType="text" thousandSeparator renderText={(v) => v} />
-                                                        {errors[`purchase_unit_price_${liveIndex}`] && <i className="bi bi-exclamation-triangle-fill ms-1" style={{ fontSize: "11px" }} />}
-                                                    </span>
-                                                </td>
-                                                <td style={{ padding: "3px 6px", whiteSpace: "nowrap" }}>
-                                                    {!product.is_service && (
-                                                        <OverlayTrigger
-                                                            placement="top"
-                                                            overlay={
-                                                                <Tooltip id={`t5-stock-tooltip-${liveIndex}`}>
-                                                                    {(() => {
-                                                                        const ws = product.warehouse_stocks || {};
-                                                                        const entries = [];
-                                                                        if (ws.hasOwnProperty("main_store")) entries.push(["main_store", ws["main_store"]]);
-                                                                        Object.entries(ws).forEach(([k, v]) => { if (k !== "main_store") entries.push([k, v]); });
-                                                                        const details = entries.map(([k, v]) => `${k === "main_store" ? t("Main Store") : k.replace(/^wh/, "WH").toUpperCase()}: ${v}`).join(", ");
-                                                                        return details || `${t("Main Store")}: ${product.stock ?? 0}`;
-                                                                    })()}
-                                                                </Tooltip>
-                                                            }
-                                                        >
-                                                            <span style={{ cursor: "pointer", textDecoration: "underline dotted", fontSize: "13px" }}>
-                                                                {product.stock ?? 0}
-                                                            </span>
-                                                        </OverlayTrigger>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        className="form-control form-control-sm"
-                                                        value={product.quantity}
-                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
-                                                        ref={(el) => {
-                                                            if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
-                                                            inputRefs.current[liveIndex][`sales_type5_product_quantity_${liveIndex}`] = el;
-                                                        }}
-                                                        onChange={(e) => {
-                                                            const _newQty = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
-                                                            const _oldLineDisc = selectedProducts[liveIndex].line_discount_with_vat != null
-                                                                ? selectedProducts[liveIndex].line_discount_with_vat
-                                                                : (selectedProducts[liveIndex].unit_discount_with_vat || 0) * (parseFloat(selectedProducts[liveIndex].quantity) || 1);
-                                                            selectedProducts[liveIndex].quantity = _newQty;
-                                                            if (_oldLineDisc && _newQty) {
-                                                                const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                                                const _udwv = parseFloat(trimTo8Decimals(_oldLineDisc / _newQty));
-                                                                selectedProducts[liveIndex].unit_discount_with_vat = _udwv;
-                                                                selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(_udwv / _vatMul));
-                                                                selectedProducts[liveIndex].line_discount_with_vat = _oldLineDisc;
-                                                            }
-                                                            setSelectedProducts([...selectedProducts]);
-                                                            queueRecalculate(liveIndex);
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        className={`form-control form-control-sm${errors[`unit_price_${liveIndex}`] ? " is-invalid" : ""}`}
-                                                        style={{ width: "90px" }}
-                                                        title={errors[`unit_price_${liveIndex}`] || ""}
-                                                        value={product.unit_price}
-                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
-                                                        ref={(el) => {
-                                                            if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
-                                                            inputRefs.current[liveIndex][`sales_type5_product_price_ex_${liveIndex}`] = el;
-                                                        }}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
-                                                            selectedProducts[liveIndex].unit_price = value;
-                                                            const vatMultiplier = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                                            selectedProducts[liveIndex].unit_price_with_vat = value === "" ? "" : trimTo2Decimals((parseFloat(value) || 0) * vatMultiplier);
-                                                            setSelectedProducts([...selectedProducts]);
-                                                            queueRecalculate(liveIndex);
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        className={`form-control form-control-sm${errors[`unit_price_with_vat_${liveIndex}`] ? " is-invalid" : ""}`}
-                                                        style={{ width: "90px" }}
-                                                        title={errors[`unit_price_with_vat_${liveIndex}`] || ""}
-                                                        value={product.unit_price_with_vat}
-                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
-                                                        ref={(el) => {
-                                                            if (!inputRefs.current[liveIndex]) inputRefs.current[liveIndex] = {};
-                                                            inputRefs.current[liveIndex][`sales_type5_product_price_${liveIndex}`] = el;
-                                                        }}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value === "" ? "" : Math.max(0, parseFloat(e.target.value) || 0);
-                                                            selectedProducts[liveIndex].unit_price_with_vat = value;
-                                                            const vatMultiplier = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                                            selectedProducts[liveIndex].unit_price = value === "" ? "" : trimTo2Decimals((parseFloat(value) || 0) / vatMultiplier);
-                                                            setSelectedProducts([...selectedProducts]);
-                                                            queueRecalculate(liveIndex);
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        step="any"
-                                                        className="form-control form-control-sm"
-                                                        style={{ width: "100px" }}
-                                                        value={product.line_discount_with_vat != null ? product.line_discount_with_vat : (parseFloat(trimTo2Decimals((parseFloat(product.unit_discount_with_vat) || 0) * (parseFloat(product.quantity) || 0))) || "")}
-                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
-                                                        onChange={(e) => {
-                                                            const val = parseFloat(e.target.value) || 0;
-                                                            const qty = parseFloat(product.quantity) || 1;
-                                                            const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                                            const udwv = parseFloat(trimTo8Decimals(val / qty));
-                                                            selectedProducts[liveIndex].unit_discount_with_vat = udwv;
-                                                            selectedProducts[liveIndex].unit_discount = parseFloat(trimTo8Decimals(udwv / vatMul));
-                                                            selectedProducts[liveIndex].line_discount_with_vat = e.target.value === "" ? "" : val;
-                                                            setSelectedProducts([...selectedProducts]);
-                                                            queueRecalculate(liveIndex);
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        step="any"
-                                                        className="form-control form-control-sm"
-                                                        style={{ width: "100px", fontWeight: 700 }}
-                                                        onWheel={(e) => e.target.blur()}
-                                                        value={parseFloat(trimTo2Decimals(((selectedProducts[liveIndex].unit_price_with_vat || 0) - (selectedProducts[liveIndex].unit_discount_with_vat || 0)) * (selectedProducts[liveIndex].quantity || 0))) || ""}
-                                                        onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 20); }}
-                                                        onChange={(e) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (parseFloat(e.target.value) === 0 || !e.target.value) {
-                                                                const _udwv = parseFloat(selectedProducts[liveIndex].unit_discount_with_vat) || 0;
-                                                                const _vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                                                selectedProducts[liveIndex].unit_price_with_vat = _udwv;
-                                                                selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(_udwv / _vatMul));
-                                                                selectedProducts[liveIndex].line_total_with_vat = e.target.value === "" ? "" : 0;
-                                                                setSelectedProducts([...selectedProducts]);
-                                                                timerRef.current = setTimeout(() => { queueRecalculate(liveIndex); }, 100);
-                                                                return;
-                                                            }
-                                                            selectedProducts[liveIndex].line_total_with_vat = parseFloat(e.target.value);
-                                                            setSelectedProducts([...selectedProducts]);
-                                                            timerRef.current = setTimeout(() => {
-                                                                if (selectedProducts[liveIndex].quantity > 0) {
-                                                                    selectedProducts[liveIndex].unit_price_with_vat = parseFloat(trimTo8Decimals((selectedProducts[liveIndex].line_total_with_vat / selectedProducts[liveIndex].quantity) + selectedProducts[liveIndex].unit_discount_with_vat));
-                                                                    selectedProducts[liveIndex].unit_price = parseFloat(trimTo8Decimals(selectedProducts[liveIndex].unit_price_with_vat / (1 + (formData.vat_percent / 100))));
-                                                                    selectedProducts[liveIndex].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount / selectedProducts[liveIndex].unit_price) * 100)));
-                                                                    selectedProducts[liveIndex].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[liveIndex].unit_discount_with_vat / selectedProducts[liveIndex].unit_price_with_vat) * 100)));
-                                                                }
-                                                                queueRecalculate(liveIndex);
-                                                            }, 100);
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <button type="button" className="btn btn-link text-danger p-0" disabled={isZatcaReported} onClick={() => removeProduct(product)}>
-                                                        <i className="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                    ))}
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    {/* ── PAYMENTS TABLE — bottom of left panel ── */}
-                    <div style={{ position: "relative", border: `1px solid ${borderColor}`, borderRadius: "8px", padding: "16px 12px 12px", marginTop: "12px", background: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                        <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Payments")}</span>
-                        <div className="table-responsive">
-                            <table className="table table-sm align-middle mb-0" style={{ fontSize: "12px" }}>
-                                <thead>
-                                    <tr>
-                                        <th style={{ padding: "3px 6px", minWidth: "140px", whiteSpace: "nowrap" }}>{t("Date")}</th>
-                                        <th style={{ padding: "3px 6px", width: "100px" }}>{t("Amount")}</th>
-                                        <th style={{ padding: "3px 6px", width: "140px" }}>{t("Method")}</th>
-                                        <th style={{ padding: "3px 6px" }}>{t("Description")}</th>
-                                        <th style={{ padding: "3px 6px", minWidth: "120px" }}>{t("Reference")}</th>
-                                        <th style={{ padding: "3px 6px", width: "36px" }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody ref={paymentRowsRef}>
-                                    {paymentRows.map((payment, index) => {
-                                        const paymentIndex = formData.payments_input.indexOf(payment);
-                                        return (
-                                            <tr key={`payment-${paymentIndex}`}>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <DatePicker
-                                                        selected={payment.date_str ? new Date(payment.date_str) : null}
-                                                        onChange={(value) => {
-                                                            formData.payments_input[paymentIndex].date_str = value;
-                                                            setFormData({ ...formData });
-                                                        }}
-                                                        className="form-control form-control-sm"
-                                                        dateFormat="d MMM yy h:mm aa"
-                                                        showTimeSelect
-                                                        timeIntervals={1}
-                                                        placeholderText={t("Date")}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        className="form-control form-control-sm text-end"
-                                                        value={payment.amount || ""}
-                                                        placeholder={t("Amount")}
-                                                        disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
-                                                        onChange={(e) => {
-                                                            delete errors[`payment_method_${paymentIndex}`];
-                                                            formData.payments_input[paymentIndex].amount = e.target.value ? parseFloat(e.target.value) : e.target.value;
-                                                            setErrors({ ...errors });
-                                                            setFormData({ ...formData });
-                                                            validatePaymentAmounts();
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <select
-                                                        className={`form-select form-select-sm${errors[`payment_method_${paymentIndex}`] ? " is-invalid" : ""}`}
-                                                        style={{ fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5", border: `1px solid ${borderColor}` }}
-                                                        value={payment.method || ""}
-                                                        disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
-                                                        onChange={(e) => {
-                                                            delete errors[`payment_method_${paymentIndex}`];
-                                                            formData.payments_input[paymentIndex].method = e.target.value;
-                                                            setErrors({ ...errors });
-                                                            setFormData({ ...formData });
-                                                        }}
-                                                    >
-                                                        <option value="">{t("Method")}</option>
-                                                        <option value="cash">{t("Cash")}</option>
-                                                        <option value="debit_card">{t("Debit Card")}</option>
-                                                        <option value="credit_card">{t("Credit Card")}</option>
-                                                        <option value="bank_card">{t("Bank Card")}</option>
-                                                        <option value="bank_transfer">{t("Bank Transfer")}</option>
-                                                        <option value="bank_cheque">{t("Cheque")}</option>
-                                                        <option value="sales_return">{t("Sales Return")}</option>
-                                                        <option value="purchase">{t("Purchase")}</option>
-                                                        <option value="credit">{t("On Account")}</option>
-                                                    </select>
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control form-control-sm"
-                                                        value={payment.description || ""}
-                                                        placeholder={t("Description")}
-                                                        onChange={(e) => {
-                                                            formData.payments_input[paymentIndex].description = e.target.value;
-                                                            setFormData({ ...formData });
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    {payment.reference_id && (
-                                                        <span
-                                                            style={{ cursor: "pointer", color: "#004ac6", fontSize: "11px" }}
-                                                            onClick={() => openReferenceUpdateForm && openReferenceUpdateForm(payment.reference_id, payment.reference_type)}
-                                                        >
-                                                            {payment.reference_code}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: "3px 6px" }}>
-                                                    {payment.reference_type === "customer_deposit" && isZatcaReported ? (
-                                                        <i className="bi bi-lock text-muted" title={t("Cannot remove: invoice already reported to ZATCA")}></i>
-                                                    ) : (
-                                                        <button type="button" className="btn btn-link text-danger p-0" onClick={() => removePayment(paymentIndex)}>
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colSpan={5} style={{ padding: "6px 6px 2px", borderTop: "2px solid #e5e7eb" }}>
-                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                                    <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                                                        {t("Total")}:&nbsp;
-                                                        <strong style={{ color: "#191c1e" }}>
-                                                            <NumberFormat value={trimTo2Decimals(totalPaymentAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
-                                                        </strong>
-                                                    </span>
-                                                    <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                                                        {t("Balance")}:&nbsp;
-                                                        <strong style={{ color: parseFloat(balanceAmount) > 0.01 ? "#b91c1c" : "#166534" }}>
-                                                            <NumberFormat value={trimTo2Decimals(balanceAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
-                                                        </strong>
-                                                    </span>
-                                                    <span style={{ background: paymentBadge.bg, color: paymentBadge.color, borderRadius: "999px", padding: "2px 8px", fontSize: "11px", fontWeight: 700 }}>
-                                                        {paymentBadge.label}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-primary btn-sm"
-                                                    onClick={() => {
-                                                        addNewPayment();
-                                                        setTimeout(() => paymentRowsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
-                                                    }}
-                                                >
-                                                    + {t("Add Payment")}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                        {errors.payments && <div style={{ color: "red", fontSize: "12px", marginTop: "6px" }}>{t(errors.payments)}</div>}
-                    </div>
-                </div>
-
-                {/* ── ASIDE (320px) ── */}
-                <aside style={{ width: "100%", maxWidth: "320px", flexShrink: 0, overflowY: "auto", paddingTop: "10px" }}>
-
-                    {/* Customer & Vehicle info card */}
-                    {activeCustomer && (
-                        <div style={{ background: "rgba(0,74,198,0.04)", border: "1px solid #c7d7f5", borderRadius: "8px", padding: "12px 14px", marginBottom: "10px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
-                                <i className="bi bi-person-circle" style={{ color: "#004ac6", fontSize: 16 }}></i>
-                                {activeCustomer.code && (
-                                    <span style={{ background: "#dbeafe", color: "#1e40af", borderRadius: 4, padding: "2px 7px", fontSize: 10, fontWeight: 700 }}>{activeCustomer.code}</span>
-                                )}
-                                <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e" }}>{activeCustomer.name}</span>
-                            </div>
-                            {activeCustomer.name_in_arabic && (
-                                <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 4 }}>{activeCustomer.name_in_arabic}</div>
-                            )}
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12, color: "#374151", marginBottom: 5 }}>
-                                {activeCustomer.phone && (
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                                        <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone}
-                                    </span>
-                                )}
-                                {activeCustomer.phone2 && (
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                                        <i className="bi bi-telephone" style={{ color: "#6b7280", fontSize: 11 }}></i>{activeCustomer.phone2}
-                                    </span>
-                                )}
-                                {activeCustomer.vat_no && (
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                                        <i className="bi bi-receipt" style={{ color: "#6b7280", fontSize: 11 }}></i>
-                                        <span style={{ color: "#6b7280" }}>VAT:</span>
-                                        <strong>{activeCustomer.vat_no}</strong>
-                                    </span>
-                                )}
-                            </div>
-                            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 6, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                                    <i className="bi bi-wallet2" style={{ color: "#004ac6", fontSize: 12 }}></i>
-                                    <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Balance")}:</span>
-                                    <strong style={{ fontSize: 14, color: (parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance) || 0) > 0 ? "#dc2626" : "#16a34a" }}>
-                                        {parseFloat(customerStore.credit_balance ?? activeCustomer.credit_balance ?? 0).toFixed(2)}
-                                    </strong>
-                                </span>
-                                {parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit) > 0 && (
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                                        <i className="bi bi-shield-check" style={{ color: "#6b7280", fontSize: 12 }}></i>
-                                        <span style={{ fontSize: 12, color: "#6b7280" }}>{t("Limit")}:</span>
-                                        <strong style={{ fontSize: 13, color: "#374151" }}>{parseFloat(customerStore.credit_limit ?? activeCustomer.credit_limit).toFixed(2)}</strong>
-                                    </span>
-                                )}
-                                {!isVehicleLoading && (
-                                    <button type="button" onClick={() => setShowVehicleModal(true)}
-                                        style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563eb", fontWeight: 600 }}>
-                                        <i className="bi bi-car-front" style={{ fontSize: 12 }}></i>
-                                        {vehicleOptions.length} {vehicleOptions.length === 1 ? t("vehicle") : t("vehicles")}
-                                    </button>
-                                )}
-                            </div>
-                            {selectedVehicle && (
-                                <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(0,135,90,0.05)", border: "1px solid #b3e0cc", borderRadius: 6 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                                        <i className="bi bi-car-front" style={{ color: "#00875a", fontSize: 14 }}></i>
-                                        <span style={{ fontWeight: 700, fontSize: 13, color: "#191c1e", letterSpacing: "0.04em" }}>
-                                            {selectedVehicle.vehicle_number || [selectedVehicle.brand, selectedVehicle.model].filter(Boolean).join(" ") || "—"}
-                                        </span>
-                                        {selectedVehicle.vehicle_number && (selectedVehicle.brand || selectedVehicle.model) && (
-                                            <span style={{ fontSize: 12, color: "#5e6c84" }}>{selectedVehicle.brand} {selectedVehicle.model}</span>
-                                        )}
-                                    </div>
-                                    {selectedVehicle.year && (
-                                        <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{t("Year")}: <strong>{selectedVehicle.year}</strong></div>
-                                    )}
-                                    {selectedVehicle.current_km && (
-                                        <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 5, background: "#f0faf5", border: "1px solid #b3e0cc", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
-                                            <i className="bi bi-speedometer2" style={{ color: "#00875a", fontSize: 11 }}></i>
-                                            <strong>{parseFloat(selectedVehicle.current_km).toLocaleString()}</strong> km
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     )}
-
-                    {/* Bill Summary card */}
-                    <div style={cardStyle}>
-                        <span style={{ position: "absolute", top: "-8px", left: "14px", fontSize: "10px", fontWeight: 600, color: "#6b7280", background: "#fff", padding: "0 4px" }}>{t("Bill Summary")}</span>
-
-                        <div style={{ display: "grid", gap: "8px", marginBottom: "10px" }}>
-                            <div>
-                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Discount (incl. VAT)")}</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    className="form-control form-control-sm"
-                                    value={discountWithVAT || ""}
-                                    onChange={(e) => {
-                                        const valueWithVAT = e.target.value ? parseFloat(e.target.value) : "";
-                                        const vatMul = 1 + ((parseFloat(formData.vat_percent) || 0) / 100);
-                                        setDiscountWithVAT(valueWithVAT);
-                                        setDiscount(valueWithVAT !== "" ? parseFloat((valueWithVAT / vatMul).toFixed(8)) : "");
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 150);
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Shipping / Handling")}</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    className="form-control form-control-sm"
-                                    value={shipping || ""}
-                                    onChange={(e) => {
-                                        const value = e.target.value ? parseFloat(e.target.value) : 0;
-                                        setShipping(value);
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => reCalculate(), 150);
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{ display: "grid", gap: "8px" }}>
-                            {[
-                                { label: t("Subtotal"), value: formData.total || 0 },
-                                { label: t("Discount"), value: discount || 0, negative: true },
-                                { label: t("Taxable Amount"), value: taxableAmount },
-                                { label: `${t("VAT")} (${formData.vat_percent || 0}%)`, value: formData.vat_price || 0 },
-                                { label: t("Shipping / Handling"), value: shipping || 0 },
-                            ].map((row) => (
-                                <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px" }}>
-                                    <span style={{ color: "#6b7280" }}>{row.label}</span>
-                                    <span style={{ fontWeight: 600, color: row.negative ? "#b91c1c" : "#191c1e" }}>
-                                        {row.negative ? "−" : ""}
-                                        <NumberFormat value={trimTo2Decimals(row.value || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "10px", paddingTop: "10px" }}>
-                            {parseFloat(roundingAmount || 0) !== 0 && (
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
-                                    <span style={{ color: "#6b7280", display: "flex", alignItems: "center", gap: 4 }}>
-                                        {t("Net Total Before Rounding")}
-                                        {renderNetTotalBeforeRoundingTooltip && (
-                                            <OverlayTrigger placement="left" overlay={renderNetTotalBeforeRoundingTooltip()}>
-                                                <span style={{ textDecoration: "underline dotted", cursor: "pointer" }}>ℹ️</span>
-                                            </OverlayTrigger>
-                                        )}
-                                    </span>
-                                    <span style={{ fontWeight: 600, color: "#191c1e" }}>
-                                        <NumberFormat value={trimTo2Decimals((formData.net_total || 0) - (roundingAmount || 0))} displayType="text" thousandSeparator renderText={v => v} />
-                                    </span>
-                                </div>
-                            )}
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
-                                <span style={{ color: "#6b7280" }}>
-                                    {t("Rounding Amount")}
-                                    {" "}[<label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontWeight: 500 }}>
-                                        <input type="checkbox" style={{ width: 13, height: 13 }} checked={!!formData.auto_rounding_amount} onChange={() => {
-                                            formData.auto_rounding_amount = !formData.auto_rounding_amount;
-                                            setFormData({ ...formData });
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
-                                        }} />
-                                        {t("Auto")}
-                                    </label>]
-                                </span>
-                                <input type="number" disabled={!!formData.auto_rounding_amount} style={{ width: 100, fontSize: 12 }} className="form-control form-control-sm" value={roundingAmount || ""} onWheel={e => e.target.blur()}
-                                    onChange={e => {
-                                        const v = e.target.value === "" ? 0 : parseFloat(e.target.value);
-                                        setRoundingAmount(v);
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => reCalculateRef?.current?.(), 100);
-                                    }}
-                                />
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
-                                <span style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e" }}>{t("Net Total")}</span>
-                                <span style={{ fontSize: "22px", fontWeight: 800, color: "#004ac6", lineHeight: 1 }}>
-                                    <NumberFormat value={trimTo2Decimals(formData.net_total || 0)} displayType="text" thousandSeparator renderText={(value) => value} />
-                                </span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "6px", fontSize: "13px" }}>
-                                <span style={{ color: "#6b7280" }}>{t("Total Payments")}</span>
-                                <span style={{ fontWeight: 600, color: "#191c1e" }}><NumberFormat value={trimTo2Decimals(totalPaymentAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} /></span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontSize: "13px" }}>
-                                <span style={{ color: "#6b7280" }}>{t("Balance")}</span>
-                                <span style={{ fontWeight: 700, color: parseFloat(balanceAmount) > 0.01 ? "#b91c1c" : "#166534" }}><NumberFormat value={trimTo2Decimals(balanceAmount || 0)} displayType="text" thousandSeparator renderText={(value) => value} /></span>
-                            </div>
-                            <div style={{ marginTop: "9px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: "#6b7280" }}>{t("Payment Status")}</span>
-                                <span style={{ background: paymentBadge.bg, color: paymentBadge.color, borderRadius: "999px", padding: "4px 10px", fontSize: "12px", fontWeight: 700 }}>{paymentBadge.label}</span>
-                            </div>
-                        </div>
-
-                        <div style={{ display: "grid", gap: "6px", marginTop: "12px" }}>
-                            <button type="submit" disabled={isSubmitting} style={{ background: "#004ac6", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 14px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
-                                {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : (isUpdateForm ? t("Update Sale") : t("Create Sale"))}
-                            </button>
-                            <button type="button" onClick={handleClose} style={{ background: "#fff", color: "#475569", border: `1px solid ${borderColor}`, borderRadius: "6px", padding: "10px 14px", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-                                {t("Close")}
-                            </button>
-                        </div>
-                    </div>
-                </aside>
-            </div>
-        </form>
-        <VehicleCreate
-            ref={vehicleCreateRef}
-            refreshList={() => {}}
-            openDetailsView={(newId) => reloadVehicles(newId)}
-        />
-        <Modal show={showVehicleModal} onHide={() => setShowVehicleModal(false)} size="lg" className="vehicle-list-modal-wrap">
-            <Modal.Header closeButton>
-                <Modal.Title style={{ fontSize: "15px", fontWeight: 700 }}>
-                    <i className="bi bi-car-front me-2"></i>
-                    {t("Vehicles")} — {formData.customer_name || t("Customer")}
-                    <span style={{ marginLeft: "8px", fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>({vehicleOptions.length})</span>
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body style={{ padding: 0 }}>
-                {vehicleOptions.length === 0 ? (
-                    <div style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
-                        <i className="bi bi-car-front" style={{ fontSize: "32px", display: "block", marginBottom: "8px" }}></i>
-                        {t("No vehicles found for this customer")}
-                    </div>
-                ) : (
-                    <div style={{ overflowX: "auto" }}>
-                        <table className="table table-sm table-hover align-middle mb-0">
-                            <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
-                                <tr>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Vehicle No.")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Brand / Model")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Year")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Chassis No.")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Istimara No.")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px", fontWeight: 700 }}>{t("Current KM")}</th>
-                                    <th style={{ fontSize: "12px", padding: "8px 12px" }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {vehicleOptions.map((v) => (
-                                    <tr key={v.id} style={{ cursor: "pointer" }} onClick={() => { setVehicleSelection(v); setShowVehicleModal(false); }}>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px", fontWeight: 600 }}>{v.vehicle_number || "—"}</td>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{[v.brand, v.model, v.variant].filter(Boolean).join(" ") || "—"}</td>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.year || "—"}</td>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.chassis_number || "—"}</td>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.istimara_no || "—"}</td>
-                                        <td style={{ fontSize: "13px", padding: "8px 12px" }}>{v.current_km || "—"}</td>
-                                        <td style={{ padding: "8px 12px" }}>
-                                            <button type="button" className="btn btn-sm btn-primary" onClick={(e) => { e.stopPropagation(); setVehicleSelection(v); setShowVehicleModal(false); }} style={{ fontSize: "11px", padding: "3px 10px" }}>{t("Select")}</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </Modal.Body>
-        </Modal>
-        {infoMenu && (
-            <div
-                ref={infoMenuRef}
-                style={{
-                    position: "fixed",
-                    bottom: infoMenu.bottom,
-                    left: infoMenu.left,
-                    background: "#fff",
-                    border: "1px solid rgba(0,0,0,.15)",
-                    borderRadius: "0.375rem",
-                    boxShadow: "0 0.5rem 1rem rgba(0,0,0,.15)",
-                    zIndex: 1055,
-                    minWidth: "210px",
-                    fontSize: "13px",
-                    padding: "4px 0",
-                }}
-            >
-                {openProductHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-clock-history me-2" style={{ color: '#6366f1' }}></i>{t('Product History')}</div>}
-                {openSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-check me-2" style={{ color: '#2563eb' }}></i>{t('Sales History')}</div>}
-                {openSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-dash me-2" style={{ color: '#dc2626' }}></i>{t('Sales Return History')}</div>}
-                {openPurchaseHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-check me-2" style={{ color: '#7c3aed' }}></i>{t('Purchase History')}</div>}
-                {openPurchaseReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-dash me-2" style={{ color: '#db2777' }}></i>{t('Purchase Return History')}</div>}
-                {openDeliveryNoteHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openDeliveryNoteHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t('Delivery Note History')}</div>}
-                {openQuotationHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-text me-2" style={{ color: '#d97706' }}></i>{t('Quotation History')}</div>}
-                {store?.settings?.enable_sales_in_quotation && openQuotationSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t('Qtn. Sales History')}</div>}
-                {store?.settings?.enable_sales_in_quotation && openQuotationSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t('Qtn. Sales Return History')}</div>}
-                {store?.settings?.non_vat_sales && openNonVATSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt-cutoff me-2" style={{ color: '#059669' }}></i>{t('Non VAT Sales History')}</div>}
-                {store?.settings?.non_vat_sales && openNonVATSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-arrow-return-left me-2" style={{ color: '#9d174d' }}></i>{t('Non VAT Sales Return History')}</div>}
-                {openProductImages && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductImages(infoMenu.product.product_id); setInfoMenu(null); }}><i className="bi bi-image me-2" style={{ color: '#0284c7' }}></i>{t('Product Images')}</div>}
-                {openLinkedProducts && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openLinkedProducts(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-link-45deg me-2" style={{ color: '#7c3aed' }}></i>{t('Linked Products')}</div>}
-            </div>
-        )}
+                </Modal.Body>
+            </Modal>
+            {infoMenu && (
+                <div
+                    ref={infoMenuRef}
+                    style={{
+                        position: "fixed",
+                        bottom: infoMenu.bottom,
+                        left: infoMenu.left,
+                        background: "#fff",
+                        border: "1px solid rgba(0,0,0,.15)",
+                        borderRadius: "0.375rem",
+                        boxShadow: "0 0.5rem 1rem rgba(0,0,0,.15)",
+                        zIndex: 1055,
+                        minWidth: "210px",
+                        fontSize: "13px",
+                        padding: "4px 0",
+                    }}
+                >
+                    {openProductHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-clock-history me-2" style={{ color: '#6366f1' }}></i>{t('Product History')}</div>}
+                    {openSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-check me-2" style={{ color: '#2563eb' }}></i>{t('Sales History')}</div>}
+                    {openSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-cart-dash me-2" style={{ color: '#dc2626' }}></i>{t('Sales Return History')}</div>}
+                    {openPurchaseHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-check me-2" style={{ color: '#7c3aed' }}></i>{t('Purchase History')}</div>}
+                    {openPurchaseReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openPurchaseReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-bag-dash me-2" style={{ color: '#db2777' }}></i>{t('Purchase Return History')}</div>}
+                    {openDeliveryNoteHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openDeliveryNoteHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t('Delivery Note History')}</div>}
+                    {openQuotationHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-text me-2" style={{ color: '#d97706' }}></i>{t('Quotation History')}</div>}
+                    {store?.settings?.enable_sales_in_quotation && openQuotationSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t('Qtn. Sales History')}</div>}
+                    {store?.settings?.enable_sales_in_quotation && openQuotationSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openQuotationSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t('Qtn. Sales Return History')}</div>}
+                    {store?.settings?.non_vat_sales && openNonVATSalesHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-receipt-cutoff me-2" style={{ color: '#059669' }}></i>{t('Non VAT Sales History')}</div>}
+                    {store?.settings?.non_vat_sales && openNonVATSalesReturnHistory && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openNonVATSalesReturnHistory(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-arrow-return-left me-2" style={{ color: '#9d174d' }}></i>{t('Non VAT Sales Return History')}</div>}
+                    {openProductImages && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openProductImages(infoMenu.product.product_id); setInfoMenu(null); }}><i className="bi bi-image me-2" style={{ color: '#0284c7' }}></i>{t('Product Images')}</div>}
+                    {openLinkedProducts && <div className="dropdown-item" style={{ cursor: "pointer", padding: "6px 14px" }} onMouseDown={() => { openLinkedProducts(infoMenu.product); setInfoMenu(null); }}><i className="bi bi-link-45deg me-2" style={{ color: '#7c3aed' }}></i>{t('Linked Products')}</div>}
+                </div>
+            )}
         </>
     );
 });

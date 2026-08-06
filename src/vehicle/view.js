@@ -45,10 +45,10 @@ function Pagination({ page, total, perPage, onChange }) {
 }
 
 const HIST_TABS = [
-    { key: 'repairs',    label: 'Repair Jobs',        icon: 'bi-tools',             color: '#e65100' },
-    { key: 'sales',      label: 'Sales History',      icon: 'bi-receipt',           color: '#2e7d32' },
-    { key: 'quotations', label: 'Quotation History',  icon: 'bi-file-earmark-text', color: '#1565c0' },
-    { key: 'trello',     label: 'Repair Job Board',   icon: 'bi-kanban',            color: '#0052cc' },
+    { key: 'repairs', label: 'Repair Jobs', icon: 'bi-tools', color: '#e65100' },
+    { key: 'sales', label: 'Sales History', icon: 'bi-receipt', color: '#2e7d32' },
+    { key: 'quotations', label: 'Quotation History', icon: 'bi-file-earmark-text', color: '#1565c0' },
+    { key: 'trello', label: 'Repair Job Board', icon: 'bi-kanban', color: '#0052cc' },
 ];
 
 const VehicleView = forwardRef((props, ref) => {
@@ -104,7 +104,7 @@ const VehicleView = forwardRef((props, ref) => {
                 const r = await fetch(`/v1/product?search[name]=Labour+Charge&search[is_service]=1&search[store_id]=${storeId}&limit=1&select=id,name`, { headers }).then(r => r.json());
                 if (r?.result?.[0]) { labourProductId = r.result[0].id; }
                 else { const c = await fetch(`/v1/product?search[store_id]=${storeId}`, { method: 'POST', headers, body: JSON.stringify({ name: 'Labour Charge', is_service: true, store_id: storeId }) }).then(r => r.json()); labourProductId = c?.result?.id || null; }
-            } catch (e) {}
+            } catch (e) { }
             const vatFactor = 1.15;
             products.push({ product_id: labourProductId, name: 'Labour Charge', quantity: 1, unit_price: parseFloat((labour / vatFactor).toFixed(4)), unit_price_with_vat: labour, purchase_unit_price: 0, purchase_unit_price_with_vat: 0, unit_discount: 0, unit_discount_with_vat: 0, unit: '', is_service: true });
         }
@@ -159,7 +159,7 @@ const VehicleView = forwardRef((props, ref) => {
             const storeId = localStorage.getItem('store_id') || '';
             const r = await fetch(`/v1/vehicle/${id}?search[store_id]=${storeId}&select=id,brand,model,variant,vehicle_number,year,customer_id,customer_name`, { headers }).then(r => r.json());
             if (r?.result) setHistVehicle(r.result);
-        } catch(e) {}
+        } catch (e) { }
     }
 
     function getVehicle(id) {
@@ -199,7 +199,7 @@ const VehicleView = forwardRef((props, ref) => {
                 const r = await fetch(`/v1/repair-job?search[vehicle_id]=${vid}&search[store_id]=${storeId}&limit=200&sort=-date_str&select=id,job_number,title,date,status,labour_charge,total,km`, { headers }).then(r => r.json());
                 setHistData(h => ({ ...h, repairs: r?.result || [] }));
             }
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
         setHistLoading(null);
     }
 
@@ -344,7 +344,7 @@ const VehicleView = forwardRef((props, ref) => {
             </Modal>
 
             {/* ── Vehicle History Modal (standalone, no details behind) ── */}
-            <Modal show={histShow} size="xl" onHide={handleHistClose} animation={false} backdrop="static" scrollable>
+            <Modal show={histShow} size="xl" onHide={handleHistClose} animation={false} backdrop="static" scrollable className="above-sales-modal">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
                         <i className="bi bi-clock-history me-2 text-secondary"></i>{t('Vehicle History')}
@@ -534,22 +534,22 @@ const VehicleView = forwardRef((props, ref) => {
                     )}
                 </Modal.Body>
             </Modal>
-        <>
-            {!props.noRepairJobBoard && <>
-                <RepairJobCardView
-                    ref={cardViewRef}
-                    showToastMessage={props.showToastMessage}
-                    onFullEdit={props.onOpenRepairJobUpdate}
-                    onCreateSalesInvoice={async (job) => { const p = await buildJobPrefill(job, 'invoice'); orderCreateRef.current?.openWithPrefill(p); }}
-                    onCreateQuotation={async (job) => { const p = await buildJobPrefill(job, 'quotation'); qt3FormRef.current?.open(null, p); }}
-                />
-                <QuotationType3Form ref={qt3FormRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-                <OrderCreate ref={orderCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-            </>}
-            <OrderCreate ref={histSalesCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
-            <QuotationType3Form ref={histQuotationFormRef} apiBase="/v1/quotation" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => {}} />
+            <>
+                {!props.noRepairJobBoard && <>
+                    <RepairJobCardView
+                        ref={cardViewRef}
+                        showToastMessage={props.showToastMessage}
+                        onFullEdit={props.onOpenRepairJobUpdate}
+                        onCreateSalesInvoice={async (job) => { const p = await buildJobPrefill(job, 'invoice'); orderCreateRef.current?.openWithPrefill(p); }}
+                        onCreateQuotation={async (job) => { const p = await buildJobPrefill(job, 'quotation'); qt3FormRef.current?.open(null, p); }}
+                    />
+                    <QuotationType3Form ref={qt3FormRef} refreshList={() => { }} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+                    <OrderCreate ref={orderCreateRef} refreshList={() => { }} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+                </>}
+                <OrderCreate ref={histSalesCreateRef} refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+                <QuotationType3Form ref={histQuotationFormRef} apiBase="/v1/quotation" refreshList={refreshCurrentTab} showToastMessage={props.showToastMessage} openDetailsView={() => { }} />
+            </>
         </>
-</>
     );
 });
 

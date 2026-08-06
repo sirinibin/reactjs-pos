@@ -32,7 +32,7 @@ const VehicleCreate = forwardRef((props, ref) => {
     const [activeCustomer, setActiveCustomer] = useState(null);
     const [customerVehicles, setCustomerVehicles] = useState([]);
 
-    function handleClose() { SetShow(false); }
+    function handleClose() { SetShow(false); if (props.onClose) props.onClose(); }
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");

@@ -12075,3 +12075,8 @@ body.product-form-open.form-over-history .from-history-form { z-index: 1099 !imp
 .above-product-form { z-index: 1100 !important; }
 /* Sub-category/brand create modals opened from within pw-modal-wrap forms (z-index 1095) */
 .above-pw-modal-wrap { z-index: 1100 !important; }
+/* Product/Vendor Search Settings modal (column picker) opened from inside the Purchase create
+   form (.purchase-create-wrap = 1088, or up to 1100 in nested contexts above) must always float
+   on top of it, regardless of which context the purchase form was opened from. */
+.purchase-search-settings-modal-wrap { z-index: 1150 !important; }
+.purchase-search-settings-modal-wrap + .modal-backdrop { z-index: 1149 !important; }

@@ -108,12 +108,12 @@ function _saveDnDismissedMap(map) {
 }
 
 const DEFAULT_CUSTOMER_COLS = [
-    { key: 'code',           label: 'Code',          width: 10, visible: true },
-    { key: 'name',           label: 'Name',          width: 47, visible: true },
-    { key: 'phone',          label: 'Phone',         width: 10, visible: true },
-    { key: 'vat_no',         label: 'VAT No.',       width: 13, visible: true },
-    { key: 'credit_balance', label: 'Credit Balance',width: 10, visible: true },
-    { key: 'credit_limit',   label: 'Credit Limit',  width: 10, visible: true },
+    { key: 'code', label: 'Code', width: 10, visible: true },
+    { key: 'name', label: 'Name', width: 47, visible: true },
+    { key: 'phone', label: 'Phone', width: 10, visible: true },
+    { key: 'vat_no', label: 'VAT No.', width: 13, visible: true },
+    { key: 'credit_balance', label: 'Credit Balance', width: 10, visible: true },
+    { key: 'credit_limit', label: 'Credit Limit', width: 10, visible: true },
 ];
 const ORDER_CUSTOMER_COLS_KEY = 'order_customer_search_columns';
 
@@ -1287,7 +1287,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     checkForNewlyEligibleDeposits(formData.net_total);
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }
 
     // Called after every net_total update — shows modal for any deposit that just became eligible
@@ -1878,7 +1878,7 @@ const OrderCreate = forwardRef((props, ref) => {
             await fetch(`/v1/vehicle/${vehicleId}?search[store_id]=${storeId}`, {
                 method: 'PUT', headers,
                 body: JSON.stringify({ current_km: parseFloat(latest.km_driven) }),
-            }).catch(() => {});
+            }).catch(() => { });
         }
     }
 
@@ -2419,7 +2419,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     const isJson = res.headers.get("content-type")?.includes("application/json");
                     const data = isJson ? await res.json() : null;
                     if (res.ok && data?.result) return data.result;
-                } catch (e) {}
+                } catch (e) { }
                 return [];
             })
         );
@@ -2691,7 +2691,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 );
                 const d = await r.json();
                 if (r.ok && d.result) productMap[p.product_id] = d.result.product_stores?.[storeId] ?? {};
-            } catch (_) {}
+            } catch (_) { }
         }));
         po.products.forEach(p => {
             const ps = productMap[p.product_id] ?? {};
@@ -4957,7 +4957,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 parsed.forEach(c => { keyMap[c.key] = c; });
                 return DEFAULT_CUSTOMER_COLS.map(d => keyMap[d.key] ? { ...d, ...keyMap[d.key] } : d);
             }
-        } catch {}
+        } catch { }
         return DEFAULT_CUSTOMER_COLS.map(c => ({ ...c }));
     });
 
@@ -8854,6 +8854,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         renderNetTotalTooltip={renderNetTotalTooltip}
                         fetchAndSetCustomer={fetchAndSetCustomer}
                         startPsColResize={startPsColResize}
+                        showToastMessage={props.showToastMessage}
                     />}
 
                     {formType === "type4" && <SalesVanStoreBody
@@ -9457,67 +9458,67 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 </ResizableTableCell>);
                                                                 if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                                     <Dropdown drop="top">
-                                                                            <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
-                                                                                <i className="bi bi-info"></i>
-                                                                            </Dropdown.Toggle>
-                                                                            <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                                                                <Dropdown.Item onClick={() => openLinkedProducts(product)}>
-                                                                                    <i className="bi bi-link"></i>&nbsp;
-                                                                                    {t("Linked Products")} ({getShortcut('linkedProducts')})
-                                                                                </Dropdown.Item>
+                                                                        <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                                                            <i className="bi bi-info"></i>
+                                                                        </Dropdown.Toggle>
+                                                                        <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                            <Dropdown.Item onClick={() => openLinkedProducts(product)}>
+                                                                                <i className="bi bi-link"></i>&nbsp;
+                                                                                {t("Linked Products")} ({getShortcut('linkedProducts')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openProductHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("History")} ({getShortcut('productHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openProductHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("History")} ({getShortcut('productHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openSalesHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Sales History")} ({getShortcut('salesHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openSalesHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Sales History")} ({getShortcut('salesHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Purchase History")} ({getShortcut('purchaseHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Purchase History")} ({getShortcut('purchaseHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Quotation History")} ({getShortcut('quotationHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Quotation History")} ({getShortcut('quotationHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
-                                                                                </Dropdown.Item>
+                                                                            <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
+                                                                            </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                                                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                                                                    {t("Images")} ({getShortcut('images')})
-                                                                                </Dropdown.Item>
-                                                                            </Dropdown.Menu>
+                                                                            <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
+                                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                                {t("Images")} ({getShortcut('images')})
+                                                                            </Dropdown.Item>
+                                                                        </Dropdown.Menu>
 
-                                                                        </Dropdown>
+                                                                    </Dropdown>
 
                                                                 </td>);
 
