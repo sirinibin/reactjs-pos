@@ -42,19 +42,22 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
                 if (localStorage.getItem("store_id")) {
                     await getStore(localStorage.getItem("store_id"));
-                    if (whatsAppShare) {
-                        if (model.store.code === "MBDI") {
-                            InvoiceBackground = MBDIInvoiceBackground;
-                        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
-                            InvoiceBackground = LGKInvoiceBackground;
-                        }
 
+                    InvoiceBackground = "";
+                    if (model.store?.code === "MBDI") {
+                        InvoiceBackground = MBDIInvoiceBackground;
+                    } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
+                        InvoiceBackground = LGKInvoiceBackground;
+                    }
+                    setInvoiceBackground(InvoiceBackground);
 
-                        setInvoiceBackground(InvoiceBackground);
-                        fontSizes[modelName + "_storeHeader"] = {
-                            "visible": false,
+                    if (InvoiceBackground) {
+                        if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                            fontSizes[modelName + "_useBackgroundImage"] = {
+                                "checked": true,
+                            }
                         }
-                        if (fontSizes[modelName + "_marginTop"].value === 0) {
+                        if (fontSizes[modelName + "_marginTop"]?.value === 0) {
                             fontSizes[modelName + "_marginTop"] = {
                                 "value": 153,
                                 "unit": "px",
@@ -529,6 +532,9 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         "storeHeader": {
             "visible": true,
         },
+        "useBackgroundImage": {
+            "checked": true,
+        },
         "storeName": {
             "value": 3.5,
             "unit": "mm",
@@ -949,6 +955,22 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                                 }} />
                             <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', whiteSpace: 'nowrap' }}>Store Header</span>
                         </label>
+                        {/* Use background image toggle */}
+                        {InvoiceBackground ? (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', margin: 0 }}>
+                                <input type="checkbox" className="form-check-input" style={{ margin: 0 }}
+                                    checked={fontSizes[modelName + "_useBackgroundImage"]?.checked ? true : false}
+                                    onChange={() => {
+                                        if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                                            fontSizes[modelName + "_useBackgroundImage"] = { "checked": true };
+                                        }
+                                        fontSizes[modelName + "_useBackgroundImage"].checked = !fontSizes[modelName + "_useBackgroundImage"].checked;
+                                        setFontSizes({ ...fontSizes });
+                                        saveToLocalStorage("fontSizes", fontSizes);
+                                    }} />
+                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', whiteSpace: 'nowrap' }}>Use Background Image</span>
+                            </label>
+                        ) : null}
                         {/* Margin top */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.12)', borderRadius: '6px', padding: '3px 8px' }}>
                             <button className="btn btn-sm" style={{ color: '#fff', padding: '0 4px' }} onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
@@ -1036,6 +1058,21 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                                 }} />
                             <label htmlFor="storeHeaderCheck" className="mb-0 text-nowrap" style={{ fontSize: "0.8rem" }}>Store Header</label>
                         </div>
+                        {InvoiceBackground ? (
+                            <div className="d-flex align-items-center" style={{ gap: "4px" }}>
+                                <input type="checkbox" className="form-check-input mt-0" id="useBackgroundImageCheck"
+                                    checked={fontSizes[modelName + "_useBackgroundImage"]?.checked ? true : false}
+                                    onChange={() => {
+                                        if (!fontSizes[modelName + "_useBackgroundImage"]) {
+                                            fontSizes[modelName + "_useBackgroundImage"] = { "checked": true };
+                                        }
+                                        fontSizes[modelName + "_useBackgroundImage"].checked = !fontSizes[modelName + "_useBackgroundImage"].checked;
+                                        setFontSizes({ ...fontSizes });
+                                        saveToLocalStorage("fontSizes", fontSizes);
+                                    }} />
+                                <label htmlFor="useBackgroundImageCheck" className="mb-0 text-nowrap" style={{ fontSize: "0.8rem" }}>Use Background Image</label>
+                            </div>
+                        ) : null}
                         <div className="d-flex align-items-center border rounded bg-light px-2 py-1" style={{ gap: "4px" }}>
                             <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                             <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>Margin: {fontSizes[modelName + "_marginTop"]?.size}</span>
@@ -1066,7 +1103,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             )}
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <CustomerDepositPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} selectQRCode={() => { setShowQrCodeSlider(true); setShowSlider(false); }} />
+                    <CustomerDepositPreviewContent model={model} invoiceBackground={fontSizes[modelName + "_useBackgroundImage"]?.checked ? InvoiceBackground : ""} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} selectQRCode={() => { setShowQrCodeSlider(true); setShowSlider(false); }} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
