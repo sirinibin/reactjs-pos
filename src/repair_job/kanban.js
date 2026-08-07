@@ -68,6 +68,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
     const boardRef = useRef(null);
     const touchState = useRef(null);
+    const longPressTimerRef = useRef(null);
     const jobsRef = useRef([]);
     const cardMapRef = useRef({});
     const cardOrderRef = useRef({});
@@ -209,34 +210,45 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             const dx = touch.clientX - ts.startX;
             const dy = touch.clientY - ts.startY;
 
-            if (!ts.isDragging && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-                ts.isDragging = true;
-                dragJobId.current = ts.jobId;
-                setDraggingJobId(ts.jobId);
-                if (ts.cardEl) {
-                    const rect = ts.cardEl.getBoundingClientRect();
-                    const ghost = ts.cardEl.cloneNode(true);
-                    Object.assign(ghost.style, {
-                        position: 'fixed',
-                        width: rect.width + 'px',
-                        height: rect.height + 'px',
-                        top: (touch.clientY - 30) + 'px',
-                        left: (touch.clientX - rect.width / 2) + 'px',
-                        transform: 'rotate(3deg) scale(1.03)',
-                        boxShadow: '0 12px 28px rgba(9,30,66,0.4)',
-                        borderRadius: '8px',
-                        opacity: '0.9',
-                        pointerEvents: 'none',
-                        background: '#fff',
-                        zIndex: '9999',
-                        transition: 'none',
-                    });
-                    document.body.appendChild(ghost);
-                    ts.ghostEl = ghost;
-                }
-            }
+            const moved = Math.abs(dx) > 8 || Math.abs(dy) > 8;
 
-            if (!ts.isDragging) return;
+            if (!ts.isDragging) {
+                if (moved && !ts.longPressed) {
+                    // Moved before long-press fired → it's a scroll, not a drag.
+                    // Cancel the long-press timer and let native scroll take over.
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                    touchState.current = null;
+                    return;
+                }
+                if (ts.longPressed && moved) {
+                    ts.isDragging = true;
+                    dragJobId.current = ts.jobId;
+                    setDraggingJobId(ts.jobId);
+                    if (ts.cardEl) {
+                        const rect = ts.cardEl.getBoundingClientRect();
+                        const ghost = ts.cardEl.cloneNode(true);
+                        Object.assign(ghost.style, {
+                            position: 'fixed',
+                            width: rect.width + 'px',
+                            height: rect.height + 'px',
+                            top: (touch.clientY - 30) + 'px',
+                            left: (touch.clientX - rect.width / 2) + 'px',
+                            transform: 'rotate(3deg) scale(1.03)',
+                            boxShadow: '0 12px 28px rgba(9,30,66,0.4)',
+                            borderRadius: '8px',
+                            opacity: '0.9',
+                            pointerEvents: 'none',
+                            background: '#fff',
+                            zIndex: '9999',
+                            transition: 'none',
+                        });
+                        document.body.appendChild(ghost);
+                        ts.ghostEl = ghost;
+                    }
+                }
+                if (!ts.isDragging) return;
+            }
 
             e.preventDefault(); // Block page scroll while dragging a card
 
@@ -291,6 +303,8 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         }
 
         function handleTouchEnd() {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
             const ts = touchState.current;
             if (!ts) return;
 
@@ -635,17 +649,26 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
 
     function onCardTouchStart(e, jobId) {
         const touch = e.touches[0];
+        const cardEl = e.currentTarget;
+        clearTimeout(longPressTimerRef.current);
         touchState.current = {
             jobId,
             startX: touch.clientX,
             startY: touch.clientY,
             isDragging: false,
+            longPressed: false,
             ghostEl: null,
             targetListId: null,
             targetJobId: null,
             targetPosition: null,
-            cardEl: e.currentTarget,
+            cardEl,
         };
+        // Wait 150 ms before allowing drag — lets quick scroll pass through untouched
+        longPressTimerRef.current = setTimeout(() => {
+            if (touchState.current && touchState.current.jobId === jobId) {
+                touchState.current.longPressed = true;
+            }
+        }, 150);
     }
 
     // List drag
