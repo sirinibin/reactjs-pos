@@ -66,6 +66,13 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
     const autoScrollListId = useRef(null);
     const autoScrollCursorY = useRef(0);
 
+    const boardRef = useRef(null);
+    const touchState = useRef(null);
+    const jobsRef = useRef([]);
+    const cardMapRef = useRef({});
+    const cardOrderRef = useRef({});
+    const listsRef = useRef([]);
+
     const [hoveredJobId, setHoveredJobId] = useState(null);
     const [showArchived, setShowArchived] = useState(false);
     const showArchivedRef = useRef(false);
@@ -161,18 +168,12 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                         const el = columnCardsRef.current[targetListId];
                         if (el) el.scrollTop = el.scrollHeight;
                     }, 100);
-                } else {
-                    setTimeout(() => {
-                        Object.values(columnCardsRef.current).forEach(el => { if (el) el.scrollTop = el.scrollHeight; });
-                    }, 100);
                 }
             })
             .catch(e => { console.error('[Kanban] fetchJobs error:', e); setIsLoading(false); });
     }
 
-    // Infinite scroll: attach scroll listeners to each column's card container.
-    // Fires only on actual user scroll — avoids the IntersectionObserver false-positive
-    // that fires immediately when a short column's sentinel is already in view.
+    // Infinite scroll: attach scroll listeners to each column's card container
     useEffect(() => {
         const cleanups = [];
         lists.forEach(list => {
@@ -189,6 +190,195 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         return () => cleanups.forEach(fn => fn());
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lists, jobs]);
+
+    // Keep refs in sync with latest state so touch handlers can read them without stale closures
+    useEffect(() => { jobsRef.current = jobs; }, [jobs]);
+    useEffect(() => { cardMapRef.current = cardMap; }, [cardMap]);
+    useEffect(() => { cardOrderRef.current = cardOrder; }, [cardOrder]);
+    useEffect(() => { listsRef.current = lists; }, [lists]);
+
+    // Touch drag-and-drop for mobile (HTML5 drag API doesn't work on touch screens)
+    useEffect(() => {
+        const board = boardRef.current;
+        if (!board) return;
+
+        function handleTouchMove(e) {
+            const ts = touchState.current;
+            if (!ts) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - ts.startX;
+            const dy = touch.clientY - ts.startY;
+
+            if (!ts.isDragging && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+                ts.isDragging = true;
+                dragJobId.current = ts.jobId;
+                setDraggingJobId(ts.jobId);
+                if (ts.cardEl) {
+                    const rect = ts.cardEl.getBoundingClientRect();
+                    const ghost = ts.cardEl.cloneNode(true);
+                    Object.assign(ghost.style, {
+                        position: 'fixed',
+                        width: rect.width + 'px',
+                        height: rect.height + 'px',
+                        top: (touch.clientY - 30) + 'px',
+                        left: (touch.clientX - rect.width / 2) + 'px',
+                        transform: 'rotate(3deg) scale(1.03)',
+                        boxShadow: '0 12px 28px rgba(9,30,66,0.4)',
+                        borderRadius: '8px',
+                        opacity: '0.9',
+                        pointerEvents: 'none',
+                        background: '#fff',
+                        zIndex: '9999',
+                        transition: 'none',
+                    });
+                    document.body.appendChild(ghost);
+                    ts.ghostEl = ghost;
+                }
+            }
+
+            if (!ts.isDragging) return;
+
+            e.preventDefault(); // Block page scroll while dragging a card
+
+            if (ts.ghostEl && ts.cardEl) {
+                const rect = ts.cardEl.getBoundingClientRect();
+                ts.ghostEl.style.top = (touch.clientY - 30) + 'px';
+                ts.ghostEl.style.left = (touch.clientX - rect.width / 2) + 'px';
+            }
+
+            // Find the element under the finger (hide ghost so it doesn't block hit-test)
+            if (ts.ghostEl) ts.ghostEl.style.display = 'none';
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (ts.ghostEl) ts.ghostEl.style.display = '';
+            if (!el) return;
+
+            // Walk up to find column (data-list-id)
+            let node = el;
+            let foundListId = null;
+            while (node && node !== document.body) {
+                if (node.dataset && node.dataset.listId) { foundListId = node.dataset.listId; break; }
+                node = node.parentElement;
+            }
+            if (foundListId) {
+                ts.targetListId = foundListId;
+                setDragOverListId(foundListId);
+            }
+
+            // Walk up to find target card (data-job-id)
+            node = el;
+            let foundJobId = null;
+            let foundJobPos = null;
+            while (node && node !== document.body) {
+                if (node.dataset && node.dataset.jobId && node.dataset.jobId !== String(ts.jobId)) {
+                    const jrect = node.getBoundingClientRect();
+                    foundJobId = node.dataset.jobId;
+                    foundJobPos = touch.clientY < jrect.top + jrect.height / 2 ? 'above' : 'below';
+                    break;
+                }
+                node = node.parentElement;
+            }
+            if (foundJobId) {
+                ts.targetJobId = foundJobId;
+                ts.targetPosition = foundJobPos;
+                setDragOverJobId(foundJobId);
+                setDragOverPosition(foundJobPos);
+            } else {
+                ts.targetJobId = null;
+                ts.targetPosition = null;
+                setDragOverJobId(null);
+                setDragOverPosition(null);
+            }
+        }
+
+        function handleTouchEnd() {
+            const ts = touchState.current;
+            if (!ts) return;
+
+            if (ts.ghostEl) {
+                document.body.removeChild(ts.ghostEl);
+                ts.ghostEl = null;
+            }
+
+            if (ts.isDragging && ts.targetListId) {
+                const jobId = ts.jobId;
+                const listId = ts.targetListId;
+                const currentJobs = jobsRef.current;
+                const currentCardOrder = cardOrderRef.current;
+                const currentCardMap = cardMapRef.current;
+                const currentLists = listsRef.current;
+                const getJobListIdLocal = (j) => currentCardMap[j.id] || statusToListId(j.status);
+
+                let targetJobs = currentJobs.filter(j => getJobListIdLocal(j) === listId);
+                const order = currentCardOrder[listId];
+                if (order && order.length > 0) {
+                    const idxMap = {};
+                    order.forEach((id, i) => { idxMap[id] = i; });
+                    targetJobs = [...targetJobs].sort((a, b) => {
+                        const ai = idxMap[a.id] !== undefined ? idxMap[a.id] : Infinity;
+                        const bi = idxMap[b.id] !== undefined ? idxMap[b.id] : Infinity;
+                        return ai - bi;
+                    });
+                }
+
+                const orderedIds = targetJobs.map(j => j.id).filter(id => id !== jobId);
+                if (ts.targetJobId) {
+                    const targetIdx = orderedIds.indexOf(ts.targetJobId);
+                    if (targetIdx >= 0) {
+                        orderedIds.splice(ts.targetPosition === 'above' ? targetIdx : targetIdx + 1, 0, jobId);
+                    } else {
+                        orderedIds.push(jobId);
+                    }
+                } else {
+                    orderedIds.push(jobId);
+                }
+
+                const sourceJob = currentJobs.find(j => j.id === jobId);
+                const sourceListId = sourceJob ? getJobListIdLocal(sourceJob) : null;
+                const newCardOrder = { ...currentCardOrder };
+                if (sourceListId && sourceListId !== listId) {
+                    newCardOrder[sourceListId] = (newCardOrder[sourceListId] || []).filter(id => id !== jobId);
+                }
+                newCardOrder[listId] = orderedIds;
+                setCardOrder(newCardOrder);
+                saveCardOrder(newCardOrder);
+
+                const newMap = { ...currentCardMap, [jobId]: listId };
+                setCardMap(newMap);
+                saveCardMap(newMap);
+
+                if (currentLists.length > 0) {
+                    const isLastList = listId === currentLists[currentLists.length - 1].id;
+                    const job = currentJobs.find(j => j.id === jobId);
+                    if (isLastList && job && job.status !== 'closed') {
+                        patchJob(jobId, { status: 'closed' }).then(updated => {
+                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
+                        });
+                    } else if (!isLastList && job && job.status === 'closed') {
+                        patchJob(jobId, { status: 'open' }).then(updated => {
+                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'open' } : j));
+                        });
+                    }
+                }
+            }
+
+            dragJobId.current = null;
+            setDraggingJobId(null);
+            setDragOverListId(null);
+            setDragOverJobId(null);
+            setDragOverPosition(null);
+            touchState.current = null;
+        }
+
+        board.addEventListener('touchmove', handleTouchMove, { passive: false });
+        board.addEventListener('touchend', handleTouchEnd);
+        board.addEventListener('touchcancel', handleTouchEnd);
+        return () => {
+            board.removeEventListener('touchmove', handleTouchMove);
+            board.removeEventListener('touchend', handleTouchEnd);
+            board.removeEventListener('touchcancel', handleTouchEnd);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Vehicle filter Typeahead — suggests vehicles (scoped to selected customer)
     async function suggestVehiclesForKanban(term) {
@@ -441,6 +631,21 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, rect.width / 2, 30);
         setTimeout(() => document.body.removeChild(ghost), 0);
+    }
+
+    function onCardTouchStart(e, jobId) {
+        const touch = e.touches[0];
+        touchState.current = {
+            jobId,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            isDragging: false,
+            ghostEl: null,
+            targetListId: null,
+            targetJobId: null,
+            targetPosition: null,
+            cardEl: e.currentTarget,
+        };
     }
 
     // List drag
@@ -976,7 +1181,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             </div>
 
             {/* Columns area */}
-            <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 12, padding: '14px 18px', alignItems: 'stretch' }}>
+            <div ref={boardRef} style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: 12, padding: '14px 18px', alignItems: 'stretch' }}>
                 {lists.map(list => {
                     const listJobs = getListJobs(list.id);
                     const visibleJobs = listJobs.slice(0, (columnPages[list.id] || 1) * PAGE_SIZE);
@@ -988,6 +1193,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                     return (
                         <div
                             key={list.id}
+                            data-list-id={list.id}
                             onDragOver={(e) => onColumnDragOver(e, list.id)}
                             onDragLeave={onColumnDragLeave}
                             onDrop={(e) => onColumnDrop(e, list.id)}
@@ -1101,6 +1307,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                             <div
                                                 data-job-id={job.id}
                                                 draggable
+                                                onTouchStart={(e) => onCardTouchStart(e, job.id)}
                                                 onDragStart={(e) => { onCardDragStart(e, job.id); setHoveredJobId(null); }}
                                                 onDragEnd={onDragEnd}
                                                 onDragOver={(e) => onCardDragOver(e, job.id)}
