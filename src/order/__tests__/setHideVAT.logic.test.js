@@ -1,73 +1,102 @@
 /**
- * Unit tests for the simplified setHideVAT logic (preview.js).
+ * Unit tests for setHideVAT logic (preview.js).
  *
- * Before this change the function had extra conditions:
- *   • quotation + type=invoice   → hideVAT = true  (wrong — VAT was zeroed in backend)
- *   • quotation_sales_return     → hideVAT = true  (wrong — same bug)
- *
- * After the fix the rule is: ONLY non_vat_invoice model hides VAT.
- * These tests serve as regression guards for that invariant.
+ * Rules:
+ *   1. non_vat_invoice → always hideVAT=true
+ *   2. store.no_tax_for_quotation_invoice=true + quotation/whatsapp_quotation type=invoice → hideVAT=true
+ *   3. store.no_tax_for_quotation_invoice=true + quotation_sales_return/whatsapp_qsr → hideVAT=true
+ *   4. Everything else → hideVAT=false
  */
 
 /**
- * Mirrors the simplified setHideVAT from preview.js.
- * Kept in sync: if the function changes, update here too.
+ * Mirrors setHideVAT from preview.js — update both if logic changes.
  */
 function setHideVAT(modelName, model = {}) {
     if (modelName === 'non_vat_invoice') return true;
+    if (model.store?.settings?.no_tax_for_quotation_invoice) {
+        if (
+            modelName === 'quotation_sales_return' ||
+            modelName === 'whatsapp_quotation_sales_return' ||
+            ((modelName === 'quotation' || modelName === 'whatsapp_quotation') && model.type === 'invoice')
+        ) return true;
+    }
     return false;
 }
 
-describe('setHideVAT — simplified logic (preview.js)', () => {
-    // ── cases that MUST hide VAT ──────────────────────────────────────────────
+describe('setHideVAT — logic (preview.js)', () => {
+    // ── non_vat_invoice always hides VAT ─────────────────────────────────────
 
-    test('non_vat_invoice → hideVAT=true', () => {
+    test('non_vat_invoice → true (no store flag needed)', () => {
         expect(setHideVAT('non_vat_invoice')).toBe(true);
     });
 
-    // ── regressions: cases that previously hid VAT incorrectly ───────────────
-
-    test('quotation_sales_return → hideVAT=false (regression: was hidden when store setting on)', () => {
-        expect(setHideVAT('quotation_sales_return')).toBe(false);
+    test('non_vat_invoice → true even when no_tax_for_quotation_invoice is false', () => {
+        expect(setHideVAT('non_vat_invoice', { store: { settings: { no_tax_for_quotation_invoice: false } } })).toBe(true);
     });
 
-    test('whatsapp_quotation_sales_return → hideVAT=false (regression: was hidden)', () => {
-        expect(setHideVAT('whatsapp_quotation_sales_return')).toBe(false);
+    // ── no_tax_for_quotation_invoice flag ON ─────────────────────────────────
+
+    test('quotation type=invoice + flag ON → true', () => {
+        expect(setHideVAT('quotation', { type: 'invoice', store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(true);
     });
 
-    test('quotation with type=invoice → hideVAT=false (regression: was hidden)', () => {
-        // Previously: modelName=quotation + hide_quotation_invoice_vat setting → true
-        // Now: always false; VAT is always calculated in backend
+    test('whatsapp_quotation type=invoice + flag ON → true', () => {
+        expect(setHideVAT('whatsapp_quotation', { type: 'invoice', store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(true);
+    });
+
+    test('quotation_sales_return + flag ON → true', () => {
+        expect(setHideVAT('quotation_sales_return', { store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(true);
+    });
+
+    test('whatsapp_quotation_sales_return + flag ON → true', () => {
+        expect(setHideVAT('whatsapp_quotation_sales_return', { store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(true);
+    });
+
+    test('quotation type=quotation + flag ON → false (flag only affects invoice type)', () => {
+        expect(setHideVAT('quotation', { type: 'quotation', store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(false);
+    });
+
+    // ── no_tax_for_quotation_invoice flag OFF (or absent) ────────────────────
+
+    test('quotation type=invoice + flag OFF → false', () => {
+        expect(setHideVAT('quotation', { type: 'invoice', store: { settings: { no_tax_for_quotation_invoice: false } } })).toBe(false);
+    });
+
+    test('quotation_sales_return + flag OFF → false', () => {
+        expect(setHideVAT('quotation_sales_return', { store: { settings: { no_tax_for_quotation_invoice: false } } })).toBe(false);
+    });
+
+    test('quotation type=invoice + no store settings → false', () => {
         expect(setHideVAT('quotation', { type: 'invoice' })).toBe(false);
     });
 
-    test('whatsapp_quotation with type=invoice → hideVAT=false (regression)', () => {
-        expect(setHideVAT('whatsapp_quotation', { type: 'invoice' })).toBe(false);
+    test('quotation_sales_return + no store settings → false', () => {
+        expect(setHideVAT('quotation_sales_return')).toBe(false);
     });
 
-    // ── cases that have always been correct ───────────────────────────────────
-
-    test('quotation (type=quotation) → hideVAT=false', () => {
-        expect(setHideVAT('quotation', { type: 'quotation' })).toBe(false);
+    test('whatsapp_quotation_sales_return + no store settings → false', () => {
+        expect(setHideVAT('whatsapp_quotation_sales_return')).toBe(false);
     });
 
-    test('non_vat_sales_return → hideVAT=false (NonVAT Sales module: handled at model level, not here)', () => {
-        expect(setHideVAT('non_vat_sales_return')).toBe(false);
-    });
+    // ── unrelated models always false ────────────────────────────────────────
 
-    test('sales → hideVAT=false', () => {
+    test('sales → false', () => {
         expect(setHideVAT('sales')).toBe(false);
     });
 
-    test('purchase → hideVAT=false', () => {
+    test('purchase → false', () => {
         expect(setHideVAT('purchase')).toBe(false);
     });
 
-    test('undefined modelName → hideVAT=false', () => {
+    test('non_vat_sales_return → false', () => {
+        expect(setHideVAT('non_vat_sales_return')).toBe(false);
+    });
+
+    test('undefined modelName → false', () => {
         expect(setHideVAT(undefined)).toBe(false);
     });
 
-    test('empty string modelName → hideVAT=false', () => {
+    test('empty string modelName → false', () => {
         expect(setHideVAT('')).toBe(false);
     });
 });

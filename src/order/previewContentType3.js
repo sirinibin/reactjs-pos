@@ -587,7 +587,7 @@ const PreviewContentType3 = forwardRef((props, ref) => {
                                             <th style={{ padding: "4px 3px", background: C.navy, color: C.white, fontWeight: 700 }}>
                                                 {!hideVAT
                                                     ? <><div>السعر مع الضريبة</div><div>Total (inc. VAT)</div></>
-                                                    : <><div>السعر</div><div>Total (inc. VAT)</div></>}
+                                                    : <><div>السعر</div><div>Price</div></>}
                                             </th>
                                         </>}
                                     </tr>
