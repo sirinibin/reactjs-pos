@@ -1270,6 +1270,13 @@ const OrderIndex = forwardRef((props, ref) => {
 
     let [showOrderCreateForm, setShowOrderCreateForm] = useState(false);
     const CreateFormRef = useRef();
+    const pendingUpdateIdRef = useRef(null);
+    useEffect(() => {
+        if (pendingUpdateIdRef.current !== null && CreateFormRef.current) {
+            CreateFormRef.current.open(pendingUpdateIdRef.current);
+            pendingUpdateIdRef.current = null;
+        }
+    }, [showOrderCreateForm]);
     function deleteDraftOrder(id) {
         if (!window.confirm('Delete this draft?')) return;
         const storeId = localStorage.getItem('store_id');
@@ -1311,12 +1318,13 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     function openUpdateForm(id) {
-        setShowOrderCreateForm(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-
-        timerRef.current = setTimeout(() => {
-            CreateFormRef.current?.open(id);
-        }, 50);
+        if (CreateFormRef.current) {
+            CreateFormRef.current.open(id);
+        } else {
+            pendingUpdateIdRef.current = id;
+            showOrderCreateForm = true;
+            setShowOrderCreateForm(true);
+        }
     }
 
     function openDraftForm(id) {

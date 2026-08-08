@@ -1046,7 +1046,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </tr>
                                             <tr style={{ borderBottom: tableBorderThickness }}>
                                                 <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                    {props.model.hideVAT ? "Sales Discount :" : "Total Discount الخصم الإجمالي :"}
+                                                    {props.model.hideVAT ? "Sales Discount خصم المبيعات :" : "Total Discount الخصم الإجمالي :"}
                                                 </th>
                                                 <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
                                                     <Amount amount={trimTo2Decimals(props.model.discount)} />

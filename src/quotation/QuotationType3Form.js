@@ -469,10 +469,11 @@ const QuotationType3Form = forwardRef((props, ref) => {
     function openProductsModal() { productsRef.current?.open(true); }
     function openServicesModal() { productsRef.current?.open(true, null, null, true); }
     function handleSelectedProductsFromModal(selected) {
+        const isNoTaxInvoice = store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice';
         const newProds = selected.map(option => {
             const ps = option.product_stores?.[storeId] || {};
             const basePrice = parseFloat(ps.retail_unit_price) || 0;
-            const priceWithVat = ((excludeServiceVat && option.is_service) || (excludeProductVat && !option.is_service)) ? basePrice : (parseFloat(ps.retail_unit_price_with_vat) || 0);
+            const priceWithVat = ((excludeServiceVat && option.is_service) || (excludeProductVat && !option.is_service) || isNoTaxInvoice) ? basePrice : (parseFloat(ps.retail_unit_price_with_vat) || 0);
             return { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: basePrice, unit_price_with_vat: priceWithVat, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service, stock: parseFloat(ps.stock) || 0, warehouse_stocks: ps.warehouse_stocks || {} };
         });
         const updated = [...newProds, ...selectedProducts];
@@ -486,7 +487,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
     function addProduct(option) {
         const ps = option.product_stores?.[storeId] || {};
         const basePrice = parseFloat(ps.retail_unit_price) || 0;
-        const priceWithVat = ((excludeServiceVat && option.is_service) || (excludeProductVat && !option.is_service)) ? basePrice : (parseFloat(ps.retail_unit_price_with_vat) || 0);
+        const isNoTaxInvoice = store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice';
+        const priceWithVat = ((excludeServiceVat && option.is_service) || (excludeProductVat && !option.is_service) || isNoTaxInvoice) ? basePrice : (parseFloat(ps.retail_unit_price_with_vat) || 0);
         const newProd = { product_id: option.id, part_number: option.part_number || option.item_code || "", name: option.name, quantity: 1, unit_price: basePrice, unit_price_with_vat: priceWithVat, purchase_unit_price: parseFloat(ps.purchase_unit_price) || 0, purchase_unit_price_with_vat: parseFloat(ps.purchase_unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, unit: option.unit || "", is_service: option.is_service, stock: parseFloat(ps.stock) || 0, warehouse_stocks: ps.warehouse_stocks || {} };
         const updated = [newProd, ...selectedProducts];
         setSelectedProducts(updated);
@@ -535,6 +537,24 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     // Keep ref in sync so open()'s setTimeout always calls the latest version
     useEffect(() => { reCalculateRef.current = reCalculate; }, [reCalculate]);
+
+    // When no_tax_for_quotation_invoice flag loads and form already has type=invoice,
+    // zero out vat_percent and recalculate so prices and totals are consistent.
+    useEffect(() => {
+        if (!store?.settings?.no_tax_for_quotation_invoice || formData.type !== 'invoice') return;
+        if (formData.vat_percent === 0) return;
+        formData.vat_percent = 0;
+        const updatedProds = selectedProducts.map(p => ({
+            ...p,
+            unit_price_with_vat: p.unit_price !== '' && p.unit_price !== undefined ? parseFloat(p.unit_price) : p.unit_price_with_vat,
+            unit_discount_with_vat: p.unit_discount !== '' && p.unit_discount !== undefined ? parseFloat(p.unit_discount) : p.unit_discount_with_vat,
+        }));
+        setSelectedProducts(updatedProds);
+        setFormData({ ...formData });
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculateRef.current?.(updatedProds), 150);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [store?.settings?.no_tax_for_quotation_invoice, formData.type]);
 
 
     async function handleCreate(e) {
@@ -864,7 +884,26 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                 <label className="form-label fw-semibold" style={{ fontSize: "13px" }}>{t("Type")}</label>
                                                 <select className="form-select form-select-sm" style={{ border: `1px solid ${borderColor}`, fontSize: ".875rem", padding: ".25rem 2rem .25rem .5rem", lineHeight: "1.5" }}
                                                     value={formData.type || "quotation"}
-                                                    onChange={e => { formData.type = e.target.value; if (e.target.value === 'quotation') { formData.payment_status = ""; } setFormData({ ...formData }); }}>
+                                                    onChange={e => {
+                                                        formData.type = e.target.value;
+                                                        if (e.target.value === 'quotation') { formData.payment_status = ""; }
+                                                        if (store?.settings?.no_tax_for_quotation_invoice) {
+                                                            const vatPct = e.target.value === 'invoice' ? 0 : (store.vat_percent || 15);
+                                                            formData.vat_percent = vatPct;
+                                                            const vatMul = 1 + (vatPct / 100);
+                                                            const updatedProds = selectedProducts.map(p => ({
+                                                                ...p,
+                                                                unit_price_with_vat: p.unit_price !== '' && p.unit_price !== undefined ? parseFloat(trimTo2Decimals((parseFloat(p.unit_price) || 0) * vatMul)) : p.unit_price_with_vat,
+                                                                unit_discount_with_vat: p.unit_discount !== '' && p.unit_discount !== undefined ? parseFloat(trimTo8Decimals((parseFloat(p.unit_discount) || 0) * vatMul)) : p.unit_discount_with_vat,
+                                                            }));
+                                                            setSelectedProducts(updatedProds);
+                                                            setFormData({ ...formData });
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => reCalculateRef.current?.(updatedProds), 150);
+                                                            return;
+                                                        }
+                                                        setFormData({ ...formData });
+                                                    }}>
                                                     <option value="quotation">{t("Quotation")}</option>
                                                     <option value="invoice">{t("Invoice")}</option>
                                                 </select>

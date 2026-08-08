@@ -238,6 +238,16 @@ const Preview = forwardRef((props, ref) => {
             model.hideVAT = true;
             return;
         }
+        if (model.store?.settings?.no_tax_for_quotation_invoice) {
+            if (
+                modelName === "quotation_sales_return" ||
+                modelName === "whatsapp_quotation_sales_return" ||
+                ((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "invoice")
+            ) {
+                model.hideVAT = true;
+                return;
+            }
+        }
         model.hideVAT = false;
     }
 
