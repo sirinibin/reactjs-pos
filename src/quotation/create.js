@@ -1370,6 +1370,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (alreadyAdded && !product.allow_duplicates) {
       selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity || 0) + 1;
     } else if (!alreadyAdded || product.allow_duplicates) {
+      const _unitPrice = product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price ? product.product_stores[formData.store_id]?.retail_unit_price : 0;
+      const _isNoTaxInvoice = store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice';
+      const _unitPriceWithVat = _isNoTaxInvoice ? _unitPrice : (product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price_with_vat ? product.product_stores[formData.store_id]?.retail_unit_price_with_vat : 0);
       selectedProducts.push({
         product_id: product.id,
         code: product.item_code,
@@ -1378,8 +1381,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         name: product.name,
         quantity: 1,
         product_stores: product.product_stores,
-        unit_price: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price ? product.product_stores[formData.store_id]?.retail_unit_price : 0,
-        unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price_with_vat ? product.product_stores[formData.store_id]?.retail_unit_price_with_vat : 0,
+        unit_price: _unitPrice,
+        unit_price_with_vat: _unitPriceWithVat,
         unit: product.unit ? product.unit : "",
         purchase_unit_price: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price ? product.product_stores[formData.store_id]?.purchase_unit_price : 0,
         purchase_unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat ? product.product_stores[formData.store_id]?.purchase_unit_price_with_vat : 0,
@@ -3096,6 +3099,25 @@ async function checkWarning(i) {
     }
   }, [store?.settings?.quotation_create_form_design]);
 
+  // When no_tax_for_quotation_invoice flag is on and form has type=invoice,
+  // zero out vat_percent so all product prices and totals exclude VAT.
+  useEffect(() => {
+    if (!store?.settings?.no_tax_for_quotation_invoice || formData.type !== 'invoice') return;
+    if (formData.vat_percent === 0) return;
+    formData.vat_percent = 0;
+    for (let i = 0; i < selectedProducts.length; i++) {
+      const up = parseFloat(selectedProducts[i].unit_price);
+      const ud = parseFloat(selectedProducts[i].unit_discount);
+      if (!isNaN(up)) selectedProducts[i].unit_price_with_vat = up;
+      if (!isNaN(ud)) selectedProducts[i].unit_discount_with_vat = ud;
+    }
+    setSelectedProducts([...selectedProducts]);
+    setFormData({ ...formData });
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => reCalculate(), 100);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.settings?.no_tax_for_quotation_invoice, formData.type]);
+
   const SC_COL_DEFAULTS_Q = { si_no: 40, part_number: 100, name: 200, info: 50, purchase_unit_price: 130, stock: 60, qty: 70, warehouse: 130, unit_price: 130, unit_price_with_vat: 130, unit_discount: 120, unit_discount_with_vat: 120, unit_discount_percent: 90, price: 120, price_with_vat: 120 };
   const [scColWidths, setScColWidths] = useState(() => { try { return JSON.parse(localStorage.getItem('q_sc_col_widths')) || {}; } catch { return {}; } });
   useEffect(() => { localStorage.setItem('q_sc_col_widths', JSON.stringify(scColWidths)); }, [scColWidths]);
@@ -3428,6 +3450,18 @@ async function checkWarning(i) {
                         setErrors({ ...errors });
 
                         formData.type = e.target.value;
+                        if (store?.settings?.no_tax_for_quotation_invoice) {
+                          const vatPct = e.target.value === 'invoice' ? 0 : (store.vat_percent || 15);
+                          formData.vat_percent = vatPct;
+                          const vatMul = 1 + (vatPct / 100);
+                          for (let i = 0; i < selectedProducts.length; i++) {
+                            const up = parseFloat(selectedProducts[i].unit_price);
+                            const ud = parseFloat(selectedProducts[i].unit_discount);
+                            if (!isNaN(up)) selectedProducts[i].unit_price_with_vat = parseFloat(trimTo2Decimals(up * vatMul));
+                            if (!isNaN(ud)) selectedProducts[i].unit_discount_with_vat = parseFloat(trimTo8Decimals(ud * vatMul));
+                          }
+                          setSelectedProducts([...selectedProducts]);
+                        }
                         setFormData({ ...formData });
                         console.log(formData);
 

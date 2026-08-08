@@ -301,6 +301,62 @@ const StoreCreate = forwardRef((props, ref) => {
         setFlash({ text, type });
         flashTimerRef.current = setTimeout(() => setFlash(null), 4000);
     }
+    const [populating, setPopulating] = useState(false);
+    const [clearing, setClearing] = useState(false);
+
+    async function populateTestData() {
+        if (!formData.id) return;
+        if (!window.confirm(`Populate "${formData.name}" with Automobile Workshop test data?\n\nThis will add sample data to this store:\n• 6 customers\n• 4 technicians (employees)\n• 14 spare parts & services\n• 8 vehicles\n• 10 repair jobs (across all statuses)`)) return;
+        setPopulating(true);
+        try {
+            const res = await fetch(`/v1/store/${formData.id}/populate-test-data`, {
+                method: 'POST',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                const s = data.result || {};
+                const msg = `Test data added: ${s.customers || 0} customers, ${s.vehicles || 0} vehicles, ${s.employees || 0} technicians, ${s.products || 0} products, ${s.repair_jobs || 0} repair jobs`;
+                showFlash(msg, 'success');
+                if (props.showToastMessage) props.showToastMessage(msg, 'success');
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed to populate test data';
+                showFlash(errMsg, 'danger');
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            showFlash('Error: ' + e.message, 'danger');
+        } finally {
+            setPopulating(false);
+        }
+    }
+
+    async function clearStoreData() {
+        if (!formData.id) return;
+        if (!window.confirm(`CLEAR ALL DATA for "${formData.name}"?\n\nThis will permanently delete ALL data in this store's database:\n• Sales, purchases, quotations & payments\n• Products, stock & categories\n• Customers, vendors & vehicles\n• Repair jobs, employees & accounting ledger\n\nStore settings will be kept.\nThis CANNOT be undone!`)) return;
+        if (!window.confirm(`FINAL CONFIRMATION\n\nWipe every record of "${formData.name}"?`)) return;
+        setClearing(true);
+        try {
+            const res = await fetch(`/v1/store/${formData.id}/clear-data`, {
+                method: 'POST',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                const msg = `Store data cleared (${data.result?.dropped_collections ?? 0} collections dropped)`;
+                showFlash(msg, 'success');
+                if (props.showToastMessage) props.showToastMessage(msg, 'success');
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed to clear store data';
+                showFlash(errMsg, 'danger');
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            showFlash('Error: ' + e.message, 'danger');
+        } finally {
+            setClearing(false);
+        }
+    }
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -877,6 +933,24 @@ const StoreCreate = forwardRef((props, ref) => {
                         {formData.id ? `Update Store — ${formData.name}` : 'Create New Store'}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
+                        {formData.id && (
+                            <>
+                                <button type="button"
+                                    style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                    onClick={populateTestData} disabled={populating || clearing}
+                                    title="Fill this store with Automobile Workshop sample data">
+                                    {populating ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <i className="bi bi-database-add"></i>}
+                                    Populate Test Data
+                                </button>
+                                <button type="button"
+                                    style={{ background: '#ffdad6', color: '#93000a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                    onClick={clearStoreData} disabled={populating || clearing}
+                                    title="Delete ALL data in this store's database">
+                                    {clearing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <i className="bi bi-trash3"></i>}
+                                    Clear Data
+                                </button>
+                            </>
+                        )}
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
@@ -5277,6 +5351,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <label className="pw-check" htmlFor="enable_monthly_serial_number">
                                                 <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
                                                 <span>Enable Monthly Serial Number Reset</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="no_tax_for_quotation_invoice">
+                                                <input type="checkbox" id="no_tax_for_quotation_invoice" checked={!!formData.settings.no_tax_for_quotation_invoice} value={formData.settings.no_tax_for_quotation_invoice} onChange={() => { formData.settings.no_tax_for_quotation_invoice = !formData.settings.no_tax_for_quotation_invoice; setFormData({ ...formData }); }} />
+                                                <span>No Tax for Quotation Invoice &amp; Quotation Sales Return</span>
                                             </label>
                                         </div>
                                         <div className="row g-3" style={{ maxWidth: '560px' }}>
