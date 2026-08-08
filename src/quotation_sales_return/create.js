@@ -2300,7 +2300,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                             </ul>
                         </div>
                     )}
-                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                    {formType !== 'type2' && <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
                     <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
                         {/* Left: customer display + date, phone, vat, remarks, address */}
                         <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
@@ -2425,7 +2425,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                             );
                         })() : <div className="sc-header-right" />}
                     </div>
-                    </section>
+                    </section>}
 
                     {selectedProducts?.length === 0 && "Already returned all products"}
                     {selectedProducts?.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
