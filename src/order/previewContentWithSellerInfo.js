@@ -163,8 +163,8 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", paddingRight: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                             props.selectText("invoiceDetails");
                         }}>
-                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice" && props.model.type !== "non_vat_invoice") || props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request" || props.modelName === "non_vat_invoice" || props.modelName === "non_vat_sales_return") ? "100%" : "74%"}` }}>
-                                {props.modelName === "quotation" && props.model.type !== "invoice" && props.model.type !== "non_vat_invoice" && <>
+                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice") || props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request" || props.modelName === "non_vat_invoice" || props.modelName === "non_vat_sales_return") ? "100%" : "74%"}` }}>
+                                {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
@@ -177,7 +177,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
                                     </div>
                                 </>}
-                                {(props.modelName !== "quotation" || props.model.type === "invoice" || props.model.type === "non_vat_invoice") && <>
+                                {(props.modelName !== "quotation" || props.model.type === "invoice") && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >{(props.modelName === "purchase_request" || props.modelName === "whatsapp_purchase_request") ? "Purchase Request No. | رقم طلب الشراء:" : "Invoice No. | رقم الفاتورة:"}</div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>

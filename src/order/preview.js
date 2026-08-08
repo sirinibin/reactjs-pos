@@ -234,19 +234,11 @@ const Preview = forwardRef((props, ref) => {
     */
 
     function setHideVAT(modelName) {
-        if (modelName === "non_vat_invoice" || ((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "non_vat_invoice")) {
+        if (modelName === "non_vat_invoice") {
             model.hideVAT = true;
             return;
         }
-        if (model.store?.settings.hide_quotation_invoice_vat) {
-            if (((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "invoice") || modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
-                model.hideVAT = true;
-            } else {
-                model.hideVAT = false;
-            }
-        } else {
-            model.hideVAT = false;
-        }
+        model.hideVAT = false;
     }
 
     function setInvoiceTitle(modelName) {
@@ -460,14 +452,14 @@ const Preview = forwardRef((props, ref) => {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store.settings?.invoice?.quotation_title;
 
-            if ((model.type === "invoice" || model.type === "non_vat_invoice") && model.payment_status === "not_paid") {
+            if (model.type === "invoice" && model.payment_status === "not_paid") {
                 //  model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
                 model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.credit;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
                    // model.invoiceTitle = "CREDIT SALES ORDER | أمر مبيعات الائتمان";
 
                 }*/
-            } else if (model.type === "invoice" || model.type === "non_vat_invoice") {
+            } else if (model.type === "invoice") {
                 //model.invoiceTitle = "INVOICE | فاتورة";
                 model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.paid;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
@@ -1531,7 +1523,7 @@ const Preview = forwardRef((props, ref) => {
             : `${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
 
         let message = "";
-        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && (model?.type === "invoice" || model?.type === "non_vat_invoice")) {
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
             message = `${t("Hello, here is your Invoice")}:\n${pdfUrl}`;
         } else if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
             message = `${t("Hello, here is your Quotation")}:\n${pdfUrl}`;
@@ -1615,7 +1607,7 @@ const Preview = forwardRef((props, ref) => {
         // alert("Type:" + model?.type);
         // alert("modelName:" + modelName);
         let message = "";
-        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && (model?.type === "invoice" || model?.type === "non_vat_invoice")) {
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
             message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
