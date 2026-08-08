@@ -99,4 +99,22 @@ describe('setHideVAT — logic (preview.js)', () => {
     test('empty string modelName → false', () => {
         expect(setHideVAT('')).toBe(false);
     });
+
+    // ── edge cases ───────────────────────────────────────────────────────────
+
+    test('null store → false (no crash)', () => {
+        expect(setHideVAT('quotation', { type: 'invoice', store: null })).toBe(false);
+    });
+
+    test('null settings → false (no crash)', () => {
+        expect(setHideVAT('quotation', { type: 'invoice', store: { settings: null } })).toBe(false);
+    });
+
+    test('flag ON + delivery_note → false', () => {
+        expect(setHideVAT('delivery_note', { store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(false);
+    });
+
+    test('flag ON + sales_return → false', () => {
+        expect(setHideVAT('sales_return', { store: { settings: { no_tax_for_quotation_invoice: true } } })).toBe(false);
+    });
 });
