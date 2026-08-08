@@ -510,7 +510,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
             const r = await fetch(`${apiBase}/calculate-net-total`, { method: "POST", headers, body: JSON.stringify(body) }).then(r => r.json());
             if (r?.result) {
                 setFormData(prev => {
-                    const isInv = prev.type === 'invoice' || prev.type === 'non_vat_invoice';
+                    const isInv = prev.type === 'invoice' || apiBase !== '/v1/quotation';
                     const newNetTotal = parseFloat(r.result.net_total) || 0;
                     let paymentsInput = prev.payments_input;
                     if (isInv && paymentsInput) {
@@ -605,7 +605,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
             if (!formData.id && r.result?.id) {
                 setShow(false);
                 if (store.settings?.enable_automobile_module && apiBase === '/v1/quotation') {
-                    setTimeout(() => previewRef.current?.open({ ...r.result, hideVAT: formData.type === 'non_vat_invoice' }, undefined, "quotation"), 100);
+                    setTimeout(() => previewRef.current?.open({ ...r.result }, undefined, "quotation"), 100);
                 } else {
                     if (props.openDetailsView) props.openDetailsView(r.result.id);
                 }
@@ -638,9 +638,9 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     const activeProducts = useMemo(() => selectedProducts.filter(p => !p.deleted), [selectedProducts]);
     const paymentRows = (formData.payments_input || []).filter(p => !p.deleted);
-    const isInvoice = formData.type === 'invoice' || formData.type === 'non_vat_invoice';
     const isNonVATForm = apiBase !== '/v1/quotation';
-    const excludeServiceVat = isNonVATForm ? !!formData.exclude_service_tax : (formData.type === 'non_vat_invoice');
+    const isInvoice = formData.type === 'invoice' || isNonVATForm;
+    const excludeServiceVat = isNonVATForm ? !!formData.exclude_service_tax : false;
     const excludeProductVat = isNonVATForm && !!formData.exclude_product_tax;
 
     const totalPaymentAmount = useMemo(() => (formData.payments_input || []).filter(p => !p.deleted).reduce((s, p) => s + (parseFloat(p.amount) || 0), 0), [formData.payments_input]);
@@ -711,7 +711,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                         <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openCreateForm(); }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                             <i className="bi bi-plus" style={{ fontSize: "14px" }}></i> {t("Create New")}
                         </button>
-                        <button type="button" disabled={!isUpdateForm} onClick={() => previewRef.current?.open({ ...formData, hideVAT: formData.type === 'non_vat_invoice', store }, undefined, apiBase === '/v1/non-vat-sales-return' ? "non_vat_sales_return" : apiBase !== '/v1/quotation' ? "non_vat_invoice" : "quotation")} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
+                        <button type="button" disabled={!isUpdateForm} onClick={() => previewRef.current?.open({ ...formData, store }, undefined, apiBase === '/v1/non-vat-sales-return' ? "non_vat_sales_return" : apiBase !== '/v1/quotation' ? "non_vat_invoice" : "quotation")} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer", opacity: !isUpdateForm ? 0.5 : 1 }}>
                             <i className="bi bi-file-earmark-pdf" style={{ fontSize: "14px" }}></i> {t("Print A4")}
                         </button>
                         {props.openJobCard && (formData.repair_job_ids?.length > 0 ? (
@@ -867,7 +867,6 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                     onChange={e => { formData.type = e.target.value; if (e.target.value === 'quotation') { formData.payment_status = ""; } setFormData({ ...formData }); }}>
                                                     <option value="quotation">{t("Quotation")}</option>
                                                     <option value="invoice">{t("Invoice")}</option>
-                                                    <option value="non_vat_invoice">{t("Non VAT Invoice")}</option>
                                                 </select>
                                             </div>
                                         )}

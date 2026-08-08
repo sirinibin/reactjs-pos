@@ -757,7 +757,7 @@ function QuotationIndex(props) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      PreviewRef.current?.open({ ...quotation, hideVAT: quotation.type === 'non_vat_invoice' }, undefined, "quotation");
+      PreviewRef.current?.open({ ...quotation }, undefined, "quotation");
     }, 100);
 
   }, []);
@@ -790,7 +790,7 @@ function QuotationIndex(props) {
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      PrintRef.current?.open({ ...quotation, hideVAT: quotation.type === 'non_vat_invoice' }, "quotation");
+      PrintRef.current?.open({ ...quotation }, "quotation");
     }, 50);
 
   }, []);

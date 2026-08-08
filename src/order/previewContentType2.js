@@ -106,8 +106,8 @@ const PreviewContentType2 = forwardRef((props, ref) => {
     const forVendor = ["purchase", "whatsapp_purchase", "purchase_return", "whatsapp_purchase_return",
         "purchase_order", "whatsapp_purchase_order"].includes(mn);
     const isQuotation = (mn === "quotation" || mn === "whatsapp_quotation")
-        && m.type !== "invoice" && m.type !== "non_vat_invoice";
-    const isNonVAT = mn === "non_vat_invoice" || mn === "non_vat_sales_return" || m.type === "non_vat_invoice";
+        && m.type !== "invoice";
+    const isNonVAT = mn === "non_vat_invoice" || mn === "non_vat_sales_return";
     const isDelivery = mn === "delivery_note" || mn === "whatsapp_delivery_note";
     const isTransfer = mn === "stock_transfer" || mn === "whatsapp_stock_transfer";
     const isPO = mn === "purchase_order" || mn === "whatsapp_purchase_order";

@@ -246,7 +246,7 @@ const QuotationView = forwardRef((props, ref) => {
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
                                 {isNonVAT ? t("Details of Invoice") : t("Details of Quotation")} #{model.code}
                             </h1>
-                            {model.status && (model.type === 'invoice' || model.type === 'non_vat_invoice') && (
+                            {model.status && model.type === 'invoice' && (
                                 <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
                                     {formatPaymentMethod(model.status)}
                                 </span>
@@ -352,8 +352,8 @@ const QuotationView = forwardRef((props, ref) => {
                             );
                         })()}
 
-                        {(model.type === 'invoice' || model.type === 'non_vat_invoice') ? (
-                            /* Payment Methods — shown when type=invoice or non_vat_invoice */
+                        {model.type === 'invoice' ? (
+                            /* Payment Methods — shown when type=invoice */
                             <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Payment Methods")}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
