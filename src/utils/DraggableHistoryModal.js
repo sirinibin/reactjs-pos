@@ -52,7 +52,7 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
             centered={false}
             enforceFocus={false}
             dialogAs={DialogComponent}
-            className="draggable-history-modal"
+            className="above-sales-modal draggable-history-modal"
         >
             <Modal.Header>
                 <Modal.Title>
