@@ -1214,15 +1214,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const CreateFormRef = useRef();
-    const pendingSRUpdateArgRef = useRef(null);
-    const srCreateFormCallbackRef = useCallback((instance) => {
-        CreateFormRef.current = instance;
-        if (instance && pendingSRUpdateArgRef.current) {
-            const { id, orderID } = pendingSRUpdateArgRef.current;
-            pendingSRUpdateArgRef.current = null;
-            instance.open(id, orderID);
-        }
-    }, []);
     function restoreSalesReturn(id) {
         const requestOptions = {
             method: "POST",
