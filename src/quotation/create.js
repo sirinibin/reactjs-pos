@@ -337,8 +337,14 @@ const QuotationCreate = forwardRef((props, ref) => {
   useEffect(() => {
     if (!show || props.fromHistory) return;
     document.body.classList.add('quotation-form-open');
-    return () => document.body.classList.remove('quotation-form-open');
-  }, [show, props.fromHistory]);
+    if (props.modalClass === 'above-pending-modal') {
+      document.body.classList.add('quotation-form-pending-open');
+    }
+    return () => {
+      document.body.classList.remove('quotation-form-open');
+      document.body.classList.remove('quotation-form-pending-open');
+    };
+  }, [show, props.fromHistory, props.modalClass]);
 
   function handleClose() {
     selectedProducts = [];
