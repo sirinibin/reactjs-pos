@@ -1,11 +1,10 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
 import imageCompression from 'browser-image-compression';
 import { Modal, Badge } from 'react-bootstrap';
-import { confirm } from 'react-bootstrap-confirmation';
-
 const ImageGallery = forwardRef((props, ref) => {
     const [images, setImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(null);
+    const [confirmDeleteIndex, setConfirmDeleteIndex] = useState(null);
 
     const lastStoredRef = useRef(null);
 
@@ -120,10 +119,12 @@ const ImageGallery = forwardRef((props, ref) => {
         }
     };
 
-    const deleteImage = async (index) => {
-        const result = await confirm('Are you sure, you want to delete this image?');
-        if (!result) return;
+    const deleteImage = (index) => {
+        setConfirmDeleteIndex(index);
+    };
 
+    const doDelete = async (index) => {
+        setConfirmDeleteIndex(null);
         const img = images[index];
         if (img.serverUrl) {
             await fetch(`/v1/${props.modelName}/delete-image?url=${encodeURIComponent(img.serverUrl)}&id=${encodeURIComponent(props.id)}&storeID=${encodeURIComponent(props.storeID)}`, {
@@ -131,7 +132,6 @@ const ImageGallery = forwardRef((props, ref) => {
             });
         }
         setImages(images.filter((_, i) => i !== index));
-
         if (props.handleDelete) {
             props.handleDelete(index);
         }
@@ -185,7 +185,13 @@ const ImageGallery = forwardRef((props, ref) => {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {images?.map((img, index) => (
                     <div key={index} style={{ width: '180px', flexShrink: 0 }}>
-                        <div className="position-relative border rounded p-1" style={{ cursor: 'pointer' }} onClick={() => setModalIndex(index)}>
+                        <div className="position-relative border rounded p-1" style={{ cursor: 'pointer' }} onClick={() => {
+                            if (props.onImageClick) {
+                                props.onImageClick(index, images.map(img => img.preview));
+                            } else {
+                                setModalIndex(index);
+                            }
+                        }}>
                             <img
                                 src={img.preview}
                                 className="rounded"
@@ -274,6 +280,32 @@ const ImageGallery = forwardRef((props, ref) => {
                     )}
                 </Modal.Body>
             </Modal>
+
+            {confirmDeleteIndex !== null && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 999999,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: 8, padding: '24px 28px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.25)', minWidth: 300, textAlign: 'center',
+                        color: '#191c1e',
+                    }}>
+                        <p style={{ marginBottom: 16, fontSize: 15, fontWeight: 500 }}>
+                            Are you sure you want to delete this image?
+                        </p>
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                            <button type="button" className="btn btn-danger" onClick={() => doDelete(confirmDeleteIndex)}>
+                                Delete
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => setConfirmDeleteIndex(null)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 });

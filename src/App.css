@@ -12044,7 +12044,10 @@ body.quotation-form-open .above-sales-modal { z-index: 1081 !important; }
 body.quotation-sales-return-form-open .above-sales-modal { z-index: 1081 !important; }
 body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
 .above-pending-modal { z-index: 1090 !important; }
+.order-create-wrap.above-pending-modal { z-index: 1095 !important; }
 .modal-backdrop.above-pending-modal { z-index: 1089 !important; }
+.above-pending-modal-dialog { z-index: 1100 !important; }
+.modal-backdrop.above-pending-modal-dialog { z-index: 1099 !important; }
 .order-preview-wrap { z-index: 1300 !important; }
 .modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
 /* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both

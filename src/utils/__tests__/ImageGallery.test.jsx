@@ -1,6 +1,5 @@
 import React, { createRef } from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { confirm } from "react-bootstrap-confirmation";
 import imageCompression from "browser-image-compression";
 import ImageGallery from "../ImageGallery";
 
@@ -10,13 +9,6 @@ import ImageGallery from "../ImageGallery";
 jest.mock("browser-image-compression", () =>
     jest.fn((file) => Promise.resolve(file))
 );
-
-// ---------------------------------------------------------------------------
-// react-bootstrap-confirmation
-// ---------------------------------------------------------------------------
-jest.mock("react-bootstrap-confirmation", () => ({
-    confirm: jest.fn(() => Promise.resolve(true)),
-}));
 
 // ---------------------------------------------------------------------------
 // react-bootstrap: Modal, Badge, Button
@@ -93,8 +85,6 @@ beforeEach(() => {
     });
     // Restore createObjectURL in case clearAllMocks wiped the implementation
     global.URL.createObjectURL = jest.fn(() => "blob:mock-preview-url");
-    // Re-apply confirm default so clearAllMocks does not leave it undefined
-    confirm.mockResolvedValue(true);
     localStorage.clear();
 });
 
@@ -236,8 +226,8 @@ describe("ImageGallery", () => {
         });
     });
 
-    // 8. Clicking the delete button shows a confirmation dialog ---------------
-    test("8. clicking the delete (×) button shows a confirmation dialog", async () => {
+    // 8. Clicking the delete button shows an inline confirmation dialog --------
+    test("8. clicking the delete (×) button shows an inline confirmation dialog", async () => {
         const { ref, container } = renderGallery({
             storedImages: ["/img/photo.jpg"],
         });
@@ -250,7 +240,7 @@ describe("ImageGallery", () => {
             expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
         });
 
-        // Use the CSS class to locate the delete button robustly
+        // The × button has btn-danger class; there should be exactly one at this point
         const deleteBtn = container.querySelector("button.btn-danger");
         expect(deleteBtn).toBeInTheDocument();
 
@@ -258,15 +248,16 @@ describe("ImageGallery", () => {
             fireEvent.click(deleteBtn);
         });
 
-        expect(confirm).toHaveBeenCalledWith(
-            "Are you sure, you want to delete this image?"
-        );
+        // The component shows an inline confirm dialog (not react-bootstrap-confirmation)
+        await waitFor(() => {
+            expect(
+                screen.getByText(/are you sure you want to delete this image/i)
+            ).toBeInTheDocument();
+        });
     });
 
     // 9. Confirmed delete calls fetch with the delete-image endpoint ----------
     test("9. confirmed delete POSTs to the delete-image endpoint", async () => {
-        confirm.mockResolvedValue(true);
-
         const { ref, container } = renderGallery({
             storedImages: ["/img/photo.jpg"],
         });
@@ -279,12 +270,25 @@ describe("ImageGallery", () => {
             expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
         });
 
-        // Clear upload-call history before triggering delete
         global.fetch.mockClear();
 
+        // Click × to open the inline confirm dialog
         const deleteBtn = container.querySelector("button.btn-danger");
         await act(async () => {
             fireEvent.click(deleteBtn);
+        });
+
+        // Wait for the inline dialog to appear
+        await waitFor(() => {
+            expect(
+                screen.getByText(/are you sure you want to delete this image/i)
+            ).toBeInTheDocument();
+        });
+
+        // Click the "Delete" button inside the inline dialog to confirm
+        const confirmDeleteBtn = screen.getByRole("button", { name: /^delete$/i });
+        await act(async () => {
+            fireEvent.click(confirmDeleteBtn);
         });
 
         await waitFor(() => {

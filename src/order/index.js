@@ -46,7 +46,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
     //deploy to master
     let [enableSelection, setEnableSelection] = useState(false);
-    let [pendingView, setPendingView] = useState(false);
+    let [pendingView, setPendingView] = useState(props.pendingView || false);
 
     const dragRef = useRef(null);
     const jobCardViewRef = useRef(null);
@@ -1271,12 +1271,14 @@ const OrderIndex = forwardRef((props, ref) => {
     let [showOrderCreateForm, setShowOrderCreateForm] = useState(false);
     const CreateFormRef = useRef();
     const pendingUpdateIdRef = useRef(null);
-    useEffect(() => {
-        if (pendingUpdateIdRef.current !== null && CreateFormRef.current) {
-            CreateFormRef.current.open(pendingUpdateIdRef.current);
+    const createFormCallbackRef = useCallback((instance) => {
+        CreateFormRef.current = instance;
+        if (instance && pendingUpdateIdRef.current !== null) {
+            const id = pendingUpdateIdRef.current;
             pendingUpdateIdRef.current = null;
+            instance.open(id);
         }
-    }, [showOrderCreateForm]);
+    }, []);
     function deleteDraftOrder(id) {
         if (!window.confirm('Delete this draft?')) return;
         const storeId = localStorage.getItem('store_id');
@@ -1455,18 +1457,25 @@ const OrderIndex = forwardRef((props, ref) => {
     const printA4ButtonRef = useRef();
 
     const PreviewRef = useRef();
-    const openPreview = useCallback((order) => {
-        setShowOrderPreview(true);
-        setShowPrintTypeSelection(false);
-
-
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(order, undefined, "sales");
-        }, 100);
+    const pendingPreviewCallRef = useRef(null);
+    const previewCallbackRef = useCallback((instance) => {
+        PreviewRef.current = instance;
+        if (instance && pendingPreviewCallRef.current) {
+            const { order, printType, modelName } = pendingPreviewCallRef.current;
+            pendingPreviewCallRef.current = null;
+            instance.open(order, printType, modelName);
+        }
     }, []);
-
     let [showOrderPreview, setShowOrderPreview] = useState(false);
+    const openPreview = useCallback((order) => {
+        setShowPrintTypeSelection(false);
+        if (PreviewRef.current) {
+            PreviewRef.current.open(order, undefined, "sales");
+        } else {
+            pendingPreviewCallRef.current = { order, printType: undefined, modelName: "sales" };
+            setShowOrderPreview(true);
+        }
+    }, []);
 
     const openPrintTypeSelection = useCallback((order) => {
         setSelectedOrder(order);
@@ -1618,8 +1627,8 @@ const OrderIndex = forwardRef((props, ref) => {
             />
 
             {showPrint && <OrderPrint ref={PrintRef} />}
-            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
-            <Modal show={showPrintTypeSelection} onHide={() => {
+            {(pendingView || showOrderPreview) && <OrderPreview ref={previewCallbackRef} />}
+            <Modal show={showPrintTypeSelection} className={pendingView ? "above-pending-modal-dialog" : ""} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
@@ -1661,7 +1670,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
-            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
+            {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
             <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
             {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
