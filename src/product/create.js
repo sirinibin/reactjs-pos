@@ -1211,6 +1211,12 @@ const ProductCreate = forwardRef((props, ref) => {
     imageViewerRef.current.open(0);
   }
 
+  function handleGalleryImageClick(index, imageUrls) {
+    productImages = imageUrls;
+    setProductImages(imageUrls);
+    imageViewerRef.current.open(index);
+  }
+
 
   const SHORTCUTS = {
     DEFAULT: {
@@ -1684,7 +1690,7 @@ const ProductCreate = forwardRef((props, ref) => {
   return (
     <>
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
-      <ImageViewerModal ref={imageViewerRef} images={productImages} />
+      <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName="above-pw-modal-wrap" />
       <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -2839,7 +2845,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-images">Product Photos</SectionTitle>
-                    <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName="product" handleDelete={handleDeleteImage} />
+                    <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName="product" handleDelete={handleDeleteImage} onImageClick={handleGalleryImageClick} />
                   </div>
 
                 </div>

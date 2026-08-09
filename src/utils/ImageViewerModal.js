@@ -9,13 +9,8 @@ const ImageViewerModal = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(startIndex = 0) {
-            if (images.length > 0) {
-                setIndex(startIndex);
-                setZoom(1);
-            } else {
-                setIndex(0); // Still open modal even if no images
-                setZoom(1);
-            }
+            setIndex(startIndex);
+            setZoom(1);
         },
         close() {
             setIndex(null);
@@ -61,7 +56,7 @@ const ImageViewerModal = forwardRef((props, ref) => {
     }, []);
 
     return (
-        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen className="above-sales-modal">
+        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen className={`above-sales-modal${props.modalClassName ? ' ' + props.modalClassName : ''}`}>
             <Modal.Header closeButton />
             <Modal.Body
                 className="p-0 d-flex justify-content-center align-items-center position-relative"

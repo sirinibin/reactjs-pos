@@ -7092,7 +7092,7 @@ async function reCalculate(productIndex) {
                     border: "1px solid rgba(0,0,0,.15)",
                     borderRadius: "0.375rem",
                     boxShadow: "0 0.5rem 1rem rgba(0,0,0,.15)",
-                    zIndex: 1055,
+                    zIndex: 9999,
                     minWidth: "210px",
                     fontSize: "13px",
                     padding: "4px 0",
