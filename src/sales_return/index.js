@@ -45,7 +45,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     let [enableSelection, setEnableSelection] = useState(false);
-    let [pendingView, setPendingView] = useState(false);
+    let [pendingView, setPendingView] = useState(props.pendingView || false);
 
     let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
@@ -1278,12 +1278,23 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         if (result) { restoreSalesReturn(id); }
     };
 
+    const pendingSRUpdateArgRef = useRef(null);
+    const srCreateFormCallbackRef = useCallback((instance) => {
+        CreateFormRef.current = instance;
+        if (instance && pendingSRUpdateArgRef.current) {
+            const { id, orderID } = pendingSRUpdateArgRef.current;
+            pendingSRUpdateArgRef.current = null;
+            instance.open(id, orderID);
+        }
+    }, []);
+
     function openUpdateForm(id, orderID) {
-        setShowSalesReturnCreateForm(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            CreateFormRef.current?.open(id, orderID);
-        }, 50);
+        if (CreateFormRef.current) {
+            CreateFormRef.current.open(id, orderID);
+        } else {
+            pendingSRUpdateArgRef.current = { id, orderID };
+            setShowSalesReturnCreateForm(true);
+        }
     }
 
     function openCreateForm(sale) {
@@ -1326,16 +1337,23 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     const printA4ButtonRef = useRef();
 
     const PreviewRef = useRef();
+    const pendingSRPreviewCallRef = useRef(null);
+    const srPreviewCallbackRef = useCallback((instance) => {
+        PreviewRef.current = instance;
+        if (instance && pendingSRPreviewCallRef.current) {
+            const { model, printType, modelName } = pendingSRPreviewCallRef.current;
+            pendingSRPreviewCallRef.current = null;
+            instance.open(model, printType, modelName);
+        }
+    }, []);
     const openPreview = useCallback((salesReturn) => {
-        setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
-
-        if (timerRef.current) clearTimeout(timerRef.current);
-
-        timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(salesReturn, undefined, "sales_return");
-        }, 100);
-
+        if (PreviewRef.current) {
+            PreviewRef.current.open(salesReturn, undefined, "sales_return");
+        } else {
+            pendingSRPreviewCallRef.current = { model: salesReturn, printType: undefined, modelName: "sales_return" };
+            setShowOrderPreview(true);
+        }
     }, []);
 
 
@@ -1488,7 +1506,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             />
 
 
-            <Modal show={showPrintTypeSelection} onHide={() => {
+            <Modal show={showPrintTypeSelection} className={pendingView ? "above-pending-modal-dialog" : ""} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
@@ -1529,9 +1547,9 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             </Modal>
             {showOrderPrint && <OrderPrint ref={PrintRef} />}
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
-            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+            {(pendingView || showOrderPreview) && <OrderPreview ref={srPreviewCallbackRef} />}
             {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
-            {showSalesReturnCreateForm && <SalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {(pendingView || showSalesReturnCreateForm) && <SalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnDetailsView && <SalesReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnPaymentCreate && <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />}
             {showSalesReturnPaymentDetailsView && <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
