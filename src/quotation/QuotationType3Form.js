@@ -141,6 +141,18 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const clearDraftRef = useRef(() => {});
     const draftFlashShownRef = useRef(false);
 
+    useEffect(() => {
+        if (!show) return;
+        document.body.classList.add('quotation-form-open');
+        if (props.modalClass === 'above-pending-modal') {
+            document.body.classList.add('quotation-form-pending-open');
+        }
+        return () => {
+            document.body.classList.remove('quotation-form-open');
+            document.body.classList.remove('quotation-form-pending-open');
+        };
+    }, [show, props.modalClass]);
+
     function openSalesHistory(model) { SalesHistoryRef.current?.open(model); }
     function openSalesReturnHistory(model) { SalesReturnHistoryRef.current?.open(model); }
     function openPurchaseHistory(model) { PurchaseHistoryRef.current?.open(model); }
