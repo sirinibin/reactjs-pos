@@ -12049,6 +12049,8 @@ body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
 .above-pending-modal-dialog { z-index: 1100 !important; }
 .modal-backdrop.above-pending-modal-dialog { z-index: 1099 !important; }
 body.quotation-form-pending-open .draggable-history-modal { z-index: 1097 !important; }
+body.sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
+body.quotation-sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
 .order-preview-wrap { z-index: 1300 !important; }
 .modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
 /* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both
@@ -12059,6 +12061,8 @@ body.sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081
 body.quotation-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
 body.quotation-sales-return-form-open.form-over-history .above-sales-modal { z-index: 1081 !important; }
 body.delivery-note-form-open.form-over-history .above-sales-modal { z-index: 1067 !important; }
+body.sales-return-form-open.form-over-history .draggable-history-modal { z-index: 1081 !important; }
+body.quotation-sales-return-form-open.form-over-history .draggable-history-modal { z-index: 1081 !important; }
 /* Sub-forms opened FROM a history modal carry the .from-history-form class (added when fromHistory prop is true).
    This targets only the sub-form, not the parent form that shares the same base class, so the parent
    never gets incorrectly elevated and the stacking order is: sub-form (1093) > history (≤1089) > parent (≤1088). */
