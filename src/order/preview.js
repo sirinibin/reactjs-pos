@@ -99,16 +99,16 @@ const Preview = forwardRef((props, ref) => {
                         /* fontSizes[modelName + "_storeHeader"] = {
                              "visible": false,
                          }*/
-                        if (fontSizes[modelName + "_marginTop"]?.value === 0) {
-                            fontSizes[modelName + "_marginTop"] = {
+                        if (fontSizesRef.current[modelName + "_marginTop"]?.value === 0) {
+                            fontSizesRef.current[modelName + "_marginTop"] = {
                                 "value": 153,
                                 "unit": "px",
                                 "size": "153px",
                                 "step": 3
                             };
                         }
-                        setFontSizes({ ...fontSizes });
-                        saveToLocalStorage("fontSizes", fontSizes);
+                        setFontSizes({ ...fontSizesRef.current });
+                        saveToLocalStorage("fontSizes", fontSizesRef.current);
                     }
                 }
 
