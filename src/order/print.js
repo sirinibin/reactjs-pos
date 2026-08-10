@@ -13,15 +13,15 @@ import { fetchStore } from '../utils/storeUtils.js';
 //import { format } from "date-fns";
 
 const PRINT_DEFAULT_FONT_SIZES = {
-    "printQrCode": {
+    "qrCode": {
         "height": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
         "width": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
     },
     "printPageSize": 11,
-    "printFont": "Cairo",
+    "font": "Cairo",
     "printReportPageSize": 20,
-    "printMarginTop": { "value": 0, "unit": "px", "size": "0px", "step": 3 },
-    "printStoreHeader": { "visible": true },
+    "marginTop": { "value": 0, "unit": "px", "size": "0px", "step": 3 },
+    "storeHeader": { "visible": true },
     "storeName": { "value": 3.5, "unit": "mm", "size": "3.5mm", "step": 0.1 },
     "storeTitle": { "value": 2.8, "unit": "mm", "size": "3.8mm", "step": 0.1 },
     "storeCR": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
