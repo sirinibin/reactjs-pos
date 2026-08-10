@@ -1078,12 +1078,22 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     let [showSalesReturnDetailsView, setShowSalesReturnDetailsView] = useState(false);
     const DetailsViewRef = useRef();
+    const pendingDetailsIdRef = useRef(null);
+    const detailsViewCallbackRef = useCallback((instance) => {
+        DetailsViewRef.current = instance;
+        if (instance && pendingDetailsIdRef.current !== null) {
+            const id = pendingDetailsIdRef.current;
+            pendingDetailsIdRef.current = null;
+            instance.open(id);
+        }
+    }, []);
     function openDetailsView(id) {
-        setShowSalesReturnDetailsView(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            DetailsViewRef.current?.open(id);
-        }, 50);
+        if (DetailsViewRef.current) {
+            DetailsViewRef.current.open(id);
+        } else {
+            pendingDetailsIdRef.current = id;
+            setShowSalesReturnDetailsView(true);
+        }
     }
 
 
@@ -1550,7 +1560,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             {(pendingView || showOrderPreview) && <OrderPreview ref={srPreviewCallbackRef} />}
             {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
             {(pendingView || showSalesReturnCreateForm) && <SalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
-            {showSalesReturnDetailsView && <SalesReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {(pendingView || showSalesReturnDetailsView) && <SalesReturnView ref={detailsViewCallbackRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnPaymentCreate && <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />}
             {showSalesReturnPaymentDetailsView && <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 

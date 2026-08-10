@@ -1,4 +1,4 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle, useMemo, useCallback, useEffect } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
@@ -11,6 +11,69 @@ import { useTranslation } from 'react-i18next';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 //import { format } from "date-fns";
+
+const PRINT_DEFAULT_FONT_SIZES = {
+    "printQrCode": {
+        "height": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
+        "width": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
+    },
+    "printPageSize": 11,
+    "printFont": "Cairo",
+    "printReportPageSize": 20,
+    "printMarginTop": { "value": 0, "unit": "px", "size": "0px", "step": 3 },
+    "printStoreHeader": { "visible": true },
+    "storeName": { "value": 3.5, "unit": "mm", "size": "3.5mm", "step": 0.1 },
+    "storeTitle": { "value": 2.8, "unit": "mm", "size": "3.8mm", "step": 0.1 },
+    "storeCR": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "storeVAT": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "storeNameArabic": { "value": 3.5, "unit": "mm", "size": "3.5mm", "step": 0.1 },
+    "storeTitleArabic": { "value": 2.8, "unit": "mm", "size": "3.8mm", "step": 0.1 },
+    "storeCRArabic": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "storeVATArabic": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "invoiceTitle": { "value": 3, "unit": "mm", "size": "3mm", "step": 0.1 },
+    "invoiceDetails": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "invoicePageCount": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "tableHead": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "tableBody": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "tableFooter": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "signature": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "footer": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "bankAccountHeader": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+    "bankAccountBody": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
+};
+
+const PRINT_MODEL_NAMES = [
+    "sales", "whatsapp_sales",
+    "sales_return", "whatsapp_sales_return",
+    "purchase", "whatsapp_purchase",
+    "purchase_return", "whatsapp_purchase_return",
+    "quotation", "whatsapp_quotation",
+    "quotation_sales_return", "whatsapp_quotation_sales_return",
+    "delivery_note", "whatsapp_delivery_note",
+    "customer_deposit", "whatsapp_customer_deposit",
+    "customer_withdrawal", "whatsapp_customer_withdrawal",
+    "balance_sheet", "whatsapp_balance_sheet",
+    "stock_transfer", "whatsapp_stock_transfer",
+    "purchase_order", "whatsapp_purchase_order",
+    "purchase_request", "whatsapp_purchase_request",
+    "non_vat_invoice", "non_vat_sales_return",
+];
+
+function buildInitialPrintFontSizes() {
+    let stored = {};
+    try {
+        const raw = localStorage.getItem("printFontSizes");
+        if (raw) stored = JSON.parse(raw);
+    } catch (_) {}
+    for (const modelName of PRINT_MODEL_NAMES) {
+        for (const key in PRINT_DEFAULT_FONT_SIZES) {
+            if (!stored[modelName + "_" + key]) {
+                stored[modelName + "_" + key] = PRINT_DEFAULT_FONT_SIZES[key];
+            }
+        }
+    }
+    return stored;
+}
 
 const OrderPrint = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
@@ -910,149 +973,6 @@ const OrderPrint = forwardRef((props, ref) => {
         }
     }, [webPrint, tauriPrint]);
 
-    const defaultFontSizes = useMemo(() => ({
-        "printQrCode": {
-            "height": {
-                "value": 138,
-                "unit": "px",
-                "size": "138px",
-                "step": 1
-            },
-            "width": {
-                "value": 138,
-                "unit": "px",
-                "size": "138px",
-                "step": 1
-            },
-        },
-        "printPageSize": 11,
-        "printFont": "Cairo",
-        "printReportPageSize": 20,
-        "printMarginTop": {
-            "value": 0,
-            "unit": "px",
-            "size": "0px",
-            "step": 3
-        },
-        "printStoreHeader": {
-            "visible": true,
-        },
-        "storeName": {
-            "value": 3.5,
-            "unit": "mm",
-            "size": "3.5mm",
-            "step": 0.1,
-        },
-        "storeTitle": {
-            "value": 2.8,
-            "unit": "mm",
-            "size": "3.8mm",
-            "step": 0.1,
-        },
-        "storeCR": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "storeVAT": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "storeNameArabic": {
-            "value": 3.5,
-            "unit": "mm",
-            "size": "3.5mm",
-            "step": 0.1,
-        },
-        "storeTitleArabic": {
-            "value": 2.8,
-            "unit": "mm",
-            "size": "3.8mm",
-            "step": 0.1,
-        },
-        "storeCRArabic": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "storeVATArabic": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "invoiceTitle": {
-            "value": 3,
-            "unit": "mm",
-            "size": "3mm",
-            "step": 0.1,
-        },
-        "invoiceDetails": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "invoicePageCount": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "tableHead": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "tableBody": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "tableFooter": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "signature": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "footer": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "bankAccountHeader": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-        "bankAccountBody": {
-            "value": 2.2,
-            "unit": "mm",
-            "size": "2.2mm",
-            "step": 0.1,
-        },
-    }), []);
-
-
-    const getFromLocalStorage = useCallback((key) => {
-        const stored = localStorage.getItem(key);
-        return stored ? JSON.parse(stored) : null;
-    }, []);
-
     const saveToLocalStorage = useCallback((key, obj) => {
         localStorage.setItem(key, JSON.stringify(obj));
     }, []);
@@ -1063,48 +983,7 @@ const OrderPrint = forwardRef((props, ref) => {
         saveToLocalStorage("printFontSizes", fontSizes);
         preparePages();
     }
-    let [fontSizes, setFontSizes] = useState(defaultFontSizes);
-
-    useEffect(() => {
-        let storedFontSizes = getFromLocalStorage("printFontSizes");
-        if (storedFontSizes) {
-            setFontSizes({ ...storedFontSizes });
-        } else {
-            storedFontSizes = {};
-        }
-
-        let modelNames = [
-            "sales",
-            "whatsapp_sales",
-            "sales_return",
-            "whatsapp_sales_return",
-            "purchase",
-            "whatsapp_purchase",
-            "purchase_return",
-            "whatsapp_purchase_return",
-            "quotation",
-            "whatsapp_quotation",
-            "quotation_sales_return",
-            "whatsapp_quotation_sales_return",
-            "delivery_note",
-            "whatsapp_delivery_note",
-            "customer_deposit",
-            "whatsapp_customer_deposit",
-            "customer_withdrawal",
-            "whatsapp_customer_withdrawal",
-            "balance_sheet",
-            "whatsapp_balance_sheet"
-        ];
-        for (let key1 in modelNames) {
-            for (let key2 in defaultFontSizes) {
-                if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
-                    storedFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
-                }
-            }
-        }
-        setFontSizes({ ...storedFontSizes });
-        saveToLocalStorage("printFontSizes", storedFontSizes);
-    }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
+    let [fontSizes, setFontSizes] = useState(buildInitialPrintFontSizes);
 
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations
     /*

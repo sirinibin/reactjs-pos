@@ -521,8 +521,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                     role="img"
                                     aria-hidden={false}
                                     style={{
-                                        width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size,
-                                        height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size,
+                                        width: props.fontSizes[props.modelName + "_qrCode"]?.["width"]?.size,
+                                        height: props.fontSizes[props.modelName + "_qrCode"]?.["height"]?.size,
                                         display: "block",
                                         background: "#fff"
                                     }}
@@ -821,8 +821,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                 role="img"
                                                                 aria-hidden={false}
                                                                 style={{
-                                                                    width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size,
-                                                                    height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size,
+                                                                    width: props.fontSizes[props.modelName + "_qrCode"]?.["width"]?.size,
+                                                                    height: props.fontSizes[props.modelName + "_qrCode"]?.["height"]?.size,
                                                                     display: "block",
                                                                     background: "#fff"
                                                                 }}

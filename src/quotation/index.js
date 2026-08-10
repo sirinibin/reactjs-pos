@@ -36,7 +36,7 @@ import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function QuotationIndex(props) {
   let [enableSelection, setEnableSelection] = useState(props.enableSelection || false);
-  let [pendingView, setPendingView] = useState(false);
+  let [pendingView, setPendingView] = useState(props.pendingView || false);
 
   const { lastMessage } = useContext(WebSocketContext);
 
@@ -587,11 +587,13 @@ function QuotationIndex(props) {
   }
 
   function openUpdateForm(id) {
-    setShowQuotationCreate(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      CreateFormRef.current?.open(id);
-    }, 50);
+    if (CreateFormRef.current) {
+      CreateFormRef.current.open(id);
+    } else {
+      pendingUpdateIdRef.current = id;
+      showQuotationCreate = true;
+      setShowQuotationCreate(true);
+    }
   }
 
   function openDraftForm(id) {
@@ -604,12 +606,22 @@ function QuotationIndex(props) {
 
   let [showQuotationView, setShowQuotationView] = useState(false);
   const DetailsViewRef = useRef();
+  const pendingDetailsIdRef = useRef(null);
+  const detailsViewCallbackRef = useCallback((instance) => {
+    DetailsViewRef.current = instance;
+    if (instance && pendingDetailsIdRef.current !== null) {
+      const id = pendingDetailsIdRef.current;
+      pendingDetailsIdRef.current = null;
+      instance.open(id);
+    }
+  }, []);
   function openDetailsView(id) {
-    setShowQuotationView(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      DetailsViewRef.current?.open(id);
-    }, 50);
+    if (DetailsViewRef.current) {
+      DetailsViewRef.current.open(id);
+    } else {
+      pendingDetailsIdRef.current = id;
+      setShowQuotationView(true);
+    }
   }
 
   let [showQuotationCreate, setShowQuotationCreate] = useState(false);
@@ -644,6 +656,16 @@ function QuotationIndex(props) {
   }
 
   const CreateFormRef = useRef();
+  const pendingUpdateIdRef = useRef(null);
+  const createFormCallbackRef = useCallback((instance) => {
+    CreateFormRef.current = instance;
+    if (instance && pendingUpdateIdRef.current !== null) {
+      const id = pendingUpdateIdRef.current;
+      pendingUpdateIdRef.current = null;
+      instance.open(id);
+    }
+  }, []);
+
   function openCreateForm() {
     setShowQuotationCreate(true);
 
@@ -956,7 +978,7 @@ function QuotationIndex(props) {
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
         setShowPrintTypeSelection(showPrintTypeSelection);
-      }} centered>
+      }} centered className={pendingView ? "above-pending-modal-dialog" : ""}>
         <Modal.Header closeButton>
           <Modal.Title>Select Print Type</Modal.Title>
         </Modal.Header>
@@ -996,12 +1018,12 @@ function QuotationIndex(props) {
       {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
       <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
-      {showQuotationCreate && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
-        : <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+      {(pendingView || showQuotationCreate) && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
+        ? <QuotationType3Form ref={createFormCallbackRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+        : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
-      {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
+      {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">

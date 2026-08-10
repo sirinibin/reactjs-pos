@@ -9,6 +9,9 @@
  *   5. srCreateFormCallbackRef fires open(id, orderID) for stored pending args on mount
  *   6. PrintTypeSelection modal receives 'above-pending-modal-dialog' class when pendingView
  *   7. SalesReturnCreate receives modalClass='above-pending-modal' when pendingView
+ *   8. SalesReturnView pre-mount condition (pendingView || showSalesReturnDetailsView)
+ *   9. openDetailsView calls ref.open(id) when ready, or queues id + triggers state when not
+ *  10. detailsViewCallbackRef fires open(id) for pending id and clears it after mount
  */
 
 // ── 1. pendingView initialisation ────────────────────────────────────────────
@@ -304,5 +307,231 @@ describe('SalesReturnCreate modalClass prop', () => {
         expect(getSalesReturnCreateModalClass(true)).not.toBe(
             getSalesReturnCreateModalClass(false)
         );
+    });
+});
+
+// ── 8. SalesReturnView pre-mount condition ────────────────────────────────────
+
+// Mirrors: {(pendingView || showSalesReturnDetailsView) && <SalesReturnView ref={detailsViewCallbackRef} .../>}
+function shouldMountSalesReturnView(pendingView, showSalesReturnDetailsView) {
+    return pendingView || showSalesReturnDetailsView;
+}
+
+describe('SalesReturnView pre-mount condition (pendingView || showSalesReturnDetailsView)', () => {
+    test('mounted when pendingView=true, showSalesReturnDetailsView=false', () => {
+        expect(shouldMountSalesReturnView(true, false)).toBe(true);
+    });
+
+    test('mounted when pendingView=false, showSalesReturnDetailsView=true', () => {
+        expect(shouldMountSalesReturnView(false, true)).toBe(true);
+    });
+
+    test('mounted when both true', () => {
+        expect(shouldMountSalesReturnView(true, true)).toBe(true);
+    });
+
+    test('NOT mounted when pendingView=false, showSalesReturnDetailsView=false', () => {
+        expect(shouldMountSalesReturnView(false, false)).toBe(false);
+    });
+});
+
+// ── 9. openDetailsView (sales_return) ─────────────────────────────────────────
+
+// Mirrors (sales_return/index.js lines 1090-1097):
+//   function openDetailsView(id) {
+//       if (DetailsViewRef.current) {
+//           DetailsViewRef.current.open(id);
+//       } else {
+//           pendingDetailsIdRef.current = id;
+//           setShowSalesReturnDetailsView(true);   // NOTE: no variable mutation before setState
+//       }
+//   }
+// Unlike order/index.js, sales_return does NOT have `showSalesReturnDetailsView = true`
+// before the setState call — only setShowSalesReturnDetailsView(true).
+function openDetailsView(id, ref, pendingDetailsIdRef, setShowSalesReturnDetailsView) {
+    if (ref.current) {
+        ref.current.open(id);
+    } else {
+        pendingDetailsIdRef.current = id;
+        setShowSalesReturnDetailsView(true);
+    }
+}
+
+describe('openDetailsView (sales_return)', () => {
+    test('calls ref.current.open(id) when ref is ready', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+        const pendingRef = { current: null };
+        const setShow = jest.fn();
+
+        openDetailsView('sr-abc', ref, pendingRef, setShow);
+
+        expect(openMock).toHaveBeenCalledWith('sr-abc');
+        expect(pendingRef.current).toBeNull();
+        expect(setShow).not.toHaveBeenCalled();
+    });
+
+    test('stores id and calls setShowSalesReturnDetailsView(true) when ref is null', () => {
+        const ref = { current: null };
+        const pendingRef = { current: null };
+        const setShow = jest.fn();
+
+        openDetailsView('sr-xyz', ref, pendingRef, setShow);
+
+        expect(pendingRef.current).toBe('sr-xyz');
+        expect(setShow).toHaveBeenCalledWith(true);
+    });
+
+    test('ref.current=undefined is treated as missing (falls back to queue)', () => {
+        const ref = { current: undefined };
+        const pendingRef = { current: null };
+        const setShow = jest.fn();
+
+        openDetailsView('sr-undef', ref, pendingRef, setShow);
+
+        expect(pendingRef.current).toBe('sr-undef');
+        expect(setShow).toHaveBeenCalledWith(true);
+    });
+
+    test('works with 24-char MongoDB ObjectId', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+
+        openDetailsView('6a2e56679fb5226ef6e12168', ref, { current: null }, jest.fn());
+
+        expect(openMock).toHaveBeenCalledWith('6a2e56679fb5226ef6e12168');
+    });
+
+    test('calling twice with ref ready calls open twice', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+
+        openDetailsView('sr-1', ref, { current: null }, jest.fn());
+        openDetailsView('sr-2', ref, { current: null }, jest.fn());
+
+        expect(openMock).toHaveBeenCalledTimes(2);
+        expect(openMock).toHaveBeenNthCalledWith(1, 'sr-1');
+        expect(openMock).toHaveBeenNthCalledWith(2, 'sr-2');
+    });
+
+    test('does NOT call setShowSalesReturnDetailsView when ref is ready', () => {
+        const ref = { current: { open: jest.fn() } };
+        const setShow = jest.fn();
+
+        openDetailsView('sr-ready', ref, { current: null }, setShow);
+
+        expect(setShow).not.toHaveBeenCalled();
+    });
+});
+
+// ── 10. detailsViewCallbackRef (sales_return) ─────────────────────────────────
+
+// Mirrors (sales_return/index.js lines 1082-1089):
+//   const detailsViewCallbackRef = useCallback((instance) => {
+//       DetailsViewRef.current = instance;
+//       if (instance && pendingDetailsIdRef.current !== null) {
+//           const id = pendingDetailsIdRef.current;
+//           pendingDetailsIdRef.current = null;
+//           instance.open(id);
+//       }
+//   }, []);
+// Single id only (not id+orderID as in edit button) — view button passes only id.
+function handleDetailsViewCallbackRef(instance, detailsViewRef, pendingDetailsIdRef) {
+    detailsViewRef.current = instance;
+    if (instance && pendingDetailsIdRef.current !== null) {
+        const id = pendingDetailsIdRef.current;
+        pendingDetailsIdRef.current = null;
+        instance.open(id);
+    }
+}
+
+describe('detailsViewCallbackRef (sales_return)', () => {
+    test('sets detailsViewRef.current on mount', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: null };
+        const instance = { open: jest.fn() };
+
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+
+        expect(detailsViewRef.current).toBe(instance);
+    });
+
+    test('fires open(id) for pending id on mount', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: 'sr-pending' };
+        const instance = { open: jest.fn() };
+
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+
+        expect(instance.open).toHaveBeenCalledWith('sr-pending');
+    });
+
+    test('clears pending id after consuming it', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: 'sr-pending' };
+        const instance = { open: jest.fn() };
+
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+
+        expect(pendingRef.current).toBeNull();
+    });
+
+    test('does NOT call open when no pending id', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: null };
+        const instance = { open: jest.fn() };
+
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+
+        expect(instance.open).not.toHaveBeenCalled();
+    });
+
+    test('clears ref on unmount (instance=null)', () => {
+        const detailsViewRef = { current: { open: jest.fn() } };
+        const pendingRef = { current: null };
+
+        handleDetailsViewCallbackRef(null, detailsViewRef, pendingRef);
+
+        expect(detailsViewRef.current).toBeNull();
+    });
+
+    test('does NOT consume pending id on unmount', () => {
+        const detailsViewRef = { current: { open: jest.fn() } };
+        const pendingRef = { current: 'sr-unmount' };
+
+        handleDetailsViewCallbackRef(null, detailsViewRef, pendingRef);
+
+        expect(pendingRef.current).toBe('sr-unmount');
+    });
+
+    test('pending id is NOT replayed on re-mount after being consumed', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: 'sr-once' };
+        const instance1 = { open: jest.fn() };
+        const instance2 = { open: jest.fn() };
+
+        // mount: pending id consumed
+        handleDetailsViewCallbackRef(instance1, detailsViewRef, pendingRef);
+        expect(instance1.open).toHaveBeenCalledWith('sr-once');
+        expect(pendingRef.current).toBeNull();
+
+        // unmount then re-mount: no pending id, open must NOT fire
+        handleDetailsViewCallbackRef(null, detailsViewRef, pendingRef);
+        handleDetailsViewCallbackRef(instance2, detailsViewRef, pendingRef);
+
+        expect(instance2.open).not.toHaveBeenCalled();
+    });
+
+    test('pending id consumed exactly once even on second call', () => {
+        const detailsViewRef = { current: null };
+        const pendingRef = { current: 'sr-first' };
+        const instance = { open: jest.fn() };
+
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+        expect(instance.open).toHaveBeenCalledTimes(1);
+
+        // Re-call simulating a re-render (callback ref fires again with same instance)
+        handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
+        expect(instance.open).toHaveBeenCalledTimes(1); // still 1, not called again
     });
 });
