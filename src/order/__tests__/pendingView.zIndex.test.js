@@ -186,6 +186,60 @@ describe('z-index stacking invariants — history modal in pending mode', () => 
     });
 });
 
+// ── Sales Return / Qtn Sales Return history modal in pending mode ─────────────
+
+describe('App.css — sales-return history modal z-index rules in pending mode', () => {
+    test('body.sales-return-form-open targets .draggable-history-modal at z-index 1097', () => {
+        expect(APP_CSS).toMatch(
+            /body\.sales-return-form-open\s+\.draggable-history-modal\s*\{[^}]*z-index\s*:\s*1097\s*!important/
+        );
+    });
+
+    test('body.quotation-sales-return-form-open targets .draggable-history-modal at z-index 1097', () => {
+        expect(APP_CSS).toMatch(
+            /body\.quotation-sales-return-form-open\s+\.draggable-history-modal\s*\{[^}]*z-index\s*:\s*1097\s*!important/
+        );
+    });
+
+    test('body.sales-return-form-open.form-over-history drops .draggable-history-modal to 1081', () => {
+        expect(APP_CSS).toMatch(
+            /body\.sales-return-form-open\.form-over-history\s+\.draggable-history-modal\s*\{[^}]*z-index\s*:\s*1081\s*!important/
+        );
+    });
+
+    test('body.quotation-sales-return-form-open.form-over-history drops .draggable-history-modal to 1081', () => {
+        expect(APP_CSS).toMatch(
+            /body\.quotation-sales-return-form-open\.form-over-history\s+\.draggable-history-modal\s*\{[^}]*z-index\s*:\s*1081\s*!important/
+        );
+    });
+});
+
+describe('z-index stacking — sales return history modal in pending mode', () => {
+    const Z = {
+        salesReturnHistoryPending: 1097,  // body.sales-return-form-open .draggable-history-modal
+        salesReturnFormPending: 1090,     // .above-pending-modal (sales-return-create-wrap in pendingView)
+        customerPendingModal: 1082,       // customer_pending.js dialog zIndex
+        formOverHistoryDropped: 1081,     // body.sales-return-form-open.form-over-history .draggable-history-modal
+        subFormOverHistory: 1093,         // .from-history-form (sub-form opened from history)
+    };
+
+    test('history modal (1097) is above sales return form in pendingView (1090)', () => {
+        expect(Z.salesReturnHistoryPending).toBeGreaterThan(Z.salesReturnFormPending);
+    });
+
+    test('sales return form in pendingView (1090) is above customer_pending (1082)', () => {
+        expect(Z.salesReturnFormPending).toBeGreaterThan(Z.customerPendingModal);
+    });
+
+    test('history modal (1097) is above customer_pending (1082)', () => {
+        expect(Z.salesReturnHistoryPending).toBeGreaterThan(Z.customerPendingModal);
+    });
+
+    test('form-over-history drops history modal to 1081 (below sub-form at 1093)', () => {
+        expect(Z.formOverHistoryDropped).toBeLessThan(Z.subFormOverHistory);
+    });
+});
+
 // ── CSS selector specificity — why draggable-history-modal target is correct ──
 
 describe('CSS selector specificity — why draggable-history-modal target is correct', () => {
