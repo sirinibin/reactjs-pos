@@ -2219,7 +2219,7 @@ const Preview = forwardRef((props, ref) => {
                             <input type="checkbox" className="form-check-input" style={{ margin: 0 }}
                                 checked={fontSizes[fmn() + "_storeHeader"]?.visible}
                                 onChange={() => {
-                                    fontSizes[fmn() + "_storeHeader"].visible = !fontSizes[fmn() + "_storeHeader"]?.visible;
+                                    fontSizes[fmn() + "_storeHeader"] = { ...(fontSizes[fmn() + "_storeHeader"] || {}), visible: !fontSizes[fmn() + "_storeHeader"]?.visible };
                                     setFontSizes({ ...fontSizes });
                                     saveToLocalStorage("fontSizes", fontSizes);
                                 }} />
@@ -2313,7 +2313,7 @@ const Preview = forwardRef((props, ref) => {
                                 id="storeHeaderCheck"
                                 checked={fontSizes[fmn() + "_storeHeader"]?.visible}
                                 onChange={() => {
-                                    fontSizes[fmn() + "_storeHeader"].visible = !fontSizes[fmn() + "_storeHeader"]?.visible;
+                                    fontSizes[fmn() + "_storeHeader"] = { ...(fontSizes[fmn() + "_storeHeader"] || {}), visible: !fontSizes[fmn() + "_storeHeader"]?.visible };
 
                                     setFontSizes({ ...fontSizes });
 
