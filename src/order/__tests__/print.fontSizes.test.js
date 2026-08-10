@@ -16,15 +16,15 @@
 
 // Mirrors PRINT_DEFAULT_FONT_SIZES from order/print.js (lines 15-43)
 const PRINT_DEFAULT_FONT_SIZES = {
-    "printQrCode": {
+    "qrCode": {
         "height": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
         "width": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
     },
     "printPageSize": 11,
-    "printFont": "Cairo",
+    "font": "Cairo",
     "printReportPageSize": 20,
-    "printMarginTop": { "value": 0, "unit": "px", "size": "0px", "step": 3 },
-    "printStoreHeader": { "visible": true },
+    "marginTop": { "value": 0, "unit": "px", "size": "0px", "step": 3 },
+    "storeHeader": { "visible": true },
     "storeName": { "value": 3.5, "unit": "mm", "size": "3.5mm", "step": 0.1 },
     "storeTitle": { "value": 2.8, "unit": "mm", "size": "3.8mm", "step": 0.1 },
     "storeCR": { "value": 2.2, "unit": "mm", "size": "2.2mm", "step": 0.1 },
@@ -106,23 +106,23 @@ describe('buildInitialPrintFontSizes — empty localStorage', () => {
         expect(result['sales_printPageSize']).toBe(11);
     });
 
-    test('"sales" model has correct printFont ("Cairo")', () => {
-        expect(result['sales_printFont']).toBe('Cairo');
+    test('"sales" model has correct font ("Cairo")', () => {
+        expect(result['sales_font']).toBe('Cairo');
     });
 
     test('"quotation" model has default keys populated', () => {
         expect(result['quotation_storeName']).toBeDefined();
-        expect(result['quotation_printQrCode']).toBeDefined();
+        expect(result['quotation_qrCode']).toBeDefined();
     });
 
     test('"non_vat_invoice" model has default keys populated (newly added model)', () => {
         expect(result['non_vat_invoice_storeName']).toBeDefined();
-        expect(result['non_vat_invoice_printQrCode']).toBeDefined();
+        expect(result['non_vat_invoice_qrCode']).toBeDefined();
     });
 
     test('"non_vat_sales_return" model has default keys populated (newly added model)', () => {
         expect(result['non_vat_sales_return_storeName']).toBeDefined();
-        expect(result['non_vat_sales_return_printQrCode']).toBeDefined();
+        expect(result['non_vat_sales_return_qrCode']).toBeDefined();
     });
 
     test('ALL model names in PRINT_MODEL_NAMES have all default keys', () => {
@@ -143,7 +143,7 @@ describe('buildInitialPrintFontSizes — partial localStorage (upgrade scenario)
     const partialData = JSON.stringify({
         sales_storeName: customStoreName,
         quotation_tableBody: customTableBody,
-        // sales_printQrCode is deliberately absent → should be filled with default
+        // sales_qrCode is deliberately absent → should be filled with default
         // non_vat_invoice_* keys are absent → should be filled with defaults
     });
 
@@ -154,8 +154,8 @@ describe('buildInitialPrintFontSizes — partial localStorage (upgrade scenario)
         expect(result['sales_storeName']).toEqual(customStoreName);
     });
 
-    test('fills in "sales_printQrCode" when missing from existing data', () => {
-        expect(result['sales_printQrCode']).toEqual(PRINT_DEFAULT_FONT_SIZES['printQrCode']);
+    test('fills in "sales_qrCode" when missing from existing data', () => {
+        expect(result['sales_qrCode']).toEqual(PRINT_DEFAULT_FONT_SIZES['qrCode']);
     });
 
     test('does NOT overwrite existing "quotation_tableBody"', () => {
@@ -164,7 +164,7 @@ describe('buildInitialPrintFontSizes — partial localStorage (upgrade scenario)
 
     test('adds "non_vat_invoice" keys when not in old saved data', () => {
         expect(result['non_vat_invoice_storeName']).toEqual(PRINT_DEFAULT_FONT_SIZES['storeName']);
-        expect(result['non_vat_invoice_printQrCode']).toEqual(PRINT_DEFAULT_FONT_SIZES['printQrCode']);
+        expect(result['non_vat_invoice_qrCode']).toEqual(PRINT_DEFAULT_FONT_SIZES['qrCode']);
     });
 });
 
@@ -259,17 +259,17 @@ describe('PRINT_DEFAULT_FONT_SIZES content', () => {
         expect(PRINT_DEFAULT_FONT_SIZES['printPageSize']).toBe(11);
     });
 
-    test('has "printFont" key = "Cairo"', () => {
-        expect(PRINT_DEFAULT_FONT_SIZES['printFont']).toBe('Cairo');
+    test('has "font" key = "Cairo"', () => {
+        expect(PRINT_DEFAULT_FONT_SIZES['font']).toBe('Cairo');
     });
 
-    test('"printQrCode" has both width and height sub-keys', () => {
-        expect(PRINT_DEFAULT_FONT_SIZES['printQrCode']['width']).toBeDefined();
-        expect(PRINT_DEFAULT_FONT_SIZES['printQrCode']['height']).toBeDefined();
+    test('"qrCode" has both width and height sub-keys', () => {
+        expect(PRINT_DEFAULT_FONT_SIZES['qrCode']['width']).toBeDefined();
+        expect(PRINT_DEFAULT_FONT_SIZES['qrCode']['height']).toBeDefined();
     });
 
-    test('"printQrCode.width.size" = "138px"', () => {
-        expect(PRINT_DEFAULT_FONT_SIZES['printQrCode']['width']['size']).toBe('138px');
+    test('"qrCode.width.size" = "138px"', () => {
+        expect(PRINT_DEFAULT_FONT_SIZES['qrCode']['width']['size']).toBe('138px');
     });
 
     test('"storeName.size" = "3.5mm"', () => {
