@@ -12048,7 +12048,7 @@ body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
 .modal-backdrop.above-pending-modal { z-index: 1089 !important; }
 .above-pending-modal-dialog { z-index: 1100 !important; }
 .modal-backdrop.above-pending-modal-dialog { z-index: 1099 !important; }
-body.quotation-form-pending-open .above-sales-modal { z-index: 1096 !important; }
+body.quotation-form-pending-open .draggable-history-modal { z-index: 1097 !important; }
 .order-preview-wrap { z-index: 1300 !important; }
 .modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
 /* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both

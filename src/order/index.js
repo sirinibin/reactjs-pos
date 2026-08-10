@@ -1256,14 +1256,23 @@ const OrderIndex = forwardRef((props, ref) => {
     let [showOrderView, setShowOrderView] = useState(false);
 
     const DetailsViewRef = useRef();
+    const pendingDetailsIdRef = useRef(null);
+    const detailsViewCallbackRef = useCallback((instance) => {
+        DetailsViewRef.current = instance;
+        if (instance && pendingDetailsIdRef.current !== null) {
+            const id = pendingDetailsIdRef.current;
+            pendingDetailsIdRef.current = null;
+            instance.open(id);
+        }
+    }, []);
     function openDetailsView(id) {
-        showOrderView = true;
-        setShowOrderView(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-
-        timerRef.current = setTimeout(() => {
-            DetailsViewRef.current?.open(id);
-        }, 50);
+        if (DetailsViewRef.current) {
+            DetailsViewRef.current.open(id);
+        } else {
+            pendingDetailsIdRef.current = id;
+            showOrderView = true;
+            setShowOrderView(true);
+        }
     }
 
 
@@ -1672,7 +1681,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
             <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
-            {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {(pendingView || showOrderView) && <OrderView ref={detailsViewCallbackRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {/* Error Modal */}

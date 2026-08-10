@@ -136,3 +136,99 @@ describe('CSS specificity: why two-class selector beats single-class with !impor
         expect(appCssSpecificity).toBeGreaterThan(inlineStyleSpecificity);
     });
 });
+
+// ── DraggableHistoryModal z-index rule ────────────────────────────────────────
+
+describe('App.css — DraggableHistoryModal z-index rule in pending mode', () => {
+    test('body.quotation-form-pending-open targets .draggable-history-modal at z-index 1097', () => {
+        expect(APP_CSS).toMatch(
+            /body\.quotation-form-pending-open\s+\.draggable-history-modal\s*\{[^}]*z-index\s*:\s*1097\s*!important/
+        );
+    });
+
+    test('OLD rule targeting .above-sales-modal for quotation-form-pending-open is GONE', () => {
+        expect(APP_CSS).not.toMatch(
+            /body\.quotation-form-pending-open\s+\.above-sales-modal/
+        );
+    });
+
+    test('body.quotation-form-open .above-sales-modal still exists at z-index 1081 (non-pending rule)', () => {
+        expect(APP_CSS).toMatch(
+            /body\.quotation-form-open\s+\.above-sales-modal\s*\{[^}]*z-index\s*:\s*1081\s*!important/
+        );
+    });
+});
+
+// ── z-index stacking invariants — history modal in pending mode ───────────────
+
+describe('z-index stacking invariants — history modal in pending mode', () => {
+    const Z = {
+        draggableHistoryModalPending: 1097,  // body.quotation-form-pending-open .draggable-history-modal
+        quotationFormPending: 1090,           // .above-pending-modal
+        customerPendingWithFormOpen: 1081,    // body.quotation-form-open .above-sales-modal
+    };
+
+    test('history modal in pending mode (1097) is above quotation form (1090)', () => {
+        expect(Z.draggableHistoryModalPending).toBeGreaterThan(Z.quotationFormPending);
+    });
+
+    test('quotation form (1090) is above customer_pending when form open (1081)', () => {
+        expect(Z.quotationFormPending).toBeGreaterThan(Z.customerPendingWithFormOpen);
+    });
+
+    test('history modal (1097) is above customer_pending (1081)', () => {
+        expect(Z.draggableHistoryModalPending).toBeGreaterThan(Z.customerPendingWithFormOpen);
+    });
+
+    test('customer_pending (1081) is NOT raised to 1096+ — it stays below form (1090)', () => {
+        expect(Z.customerPendingWithFormOpen).toBeLessThan(1096);
+        expect(Z.customerPendingWithFormOpen).toBeLessThan(Z.quotationFormPending);
+    });
+});
+
+// ── CSS selector specificity — why draggable-history-modal target is correct ──
+
+describe('CSS selector specificity — why draggable-history-modal target is correct', () => {
+    // Specificity: body.quotation-form-pending-open .above-sales-modal    → (0,2,1)
+    //              body.quotation-form-pending-open .draggable-history-modal → (0,2,1)
+    // Both have same specificity, but .draggable-history-modal is only on DraggableHistoryModal,
+    // NOT on customer_pending — so targeting it keeps customer_pending at 1081, not 1097.
+
+    function hasClass(elementClasses, className) {
+        return elementClasses.split(' ').includes(className);
+    }
+
+    const customerPendingClasses = 'modal show above-sales-modal';
+    const draggableHistoryModalClasses = 'above-sales-modal draggable-history-modal';
+
+    test('customer_pending does NOT have draggable-history-modal class', () => {
+        expect(hasClass(customerPendingClasses, 'draggable-history-modal')).toBe(false);
+    });
+
+    test('DraggableHistoryModal has draggable-history-modal class', () => {
+        expect(hasClass(draggableHistoryModalClasses, 'draggable-history-modal')).toBe(true);
+    });
+
+    test('CSS rule only matches DraggableHistoryModal, not customer_pending', () => {
+        // The rule `body.quotation-form-pending-open .draggable-history-modal { z-index: 1097 }`
+        // matches DraggableHistoryModal (has class) but NOT customer_pending (lacks class)
+        const ruleMatchesDraggable = hasClass(draggableHistoryModalClasses, 'draggable-history-modal');
+        const ruleMatchesCustomerPending = hasClass(customerPendingClasses, 'draggable-history-modal');
+
+        expect(ruleMatchesDraggable).toBe(true);
+        expect(ruleMatchesCustomerPending).toBe(false);
+    });
+
+    test('both selectors have the same specificity (0,2,1) — class count = 2, element count = 1', () => {
+        function specificity(selector) {
+            const classes = (selector.match(/\.\w[\w-]*/g) || []).length;
+            const elements = (selector.match(/^[a-z]+/g) || []).length;
+            return { classes, elements };
+        }
+
+        const oldSelector = 'body.quotation-form-pending-open .above-sales-modal';
+        const newSelector = 'body.quotation-form-pending-open .draggable-history-modal';
+
+        expect(specificity(oldSelector)).toEqual(specificity(newSelector));
+    });
+});

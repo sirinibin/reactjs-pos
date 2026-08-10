@@ -106,7 +106,7 @@ function QuotationSalesReturnIndex(props) {
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
     let [enableSelection, setEnableSelection] = useState(true);
-    let [pendingView, setPendingView] = useState(false);
+    let [pendingView, setPendingView] = useState(props.pendingView || false);
 
     useEffect(() => {
         if (props.enableSelection) {
@@ -981,12 +981,22 @@ function QuotationSalesReturnIndex(props) {
 
     let [showQuotationSalesReturnView, setShowQuotationSalesReturnView] = useState(false);
     const DetailsViewRef = useRef();
+    const pendingDetailsIdRef = useRef(null);
+    const detailsViewCallbackRef = useCallback((instance) => {
+        DetailsViewRef.current = instance;
+        if (instance && pendingDetailsIdRef.current !== null) {
+            const id = pendingDetailsIdRef.current;
+            pendingDetailsIdRef.current = null;
+            instance.open(id);
+        }
+    }, []);
     function openDetailsView(id) {
-        setShowQuotationSalesReturnView(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
+        if (DetailsViewRef.current) {
             DetailsViewRef.current.open(id);
-        }, 50);
+        } else {
+            pendingDetailsIdRef.current = id;
+            setShowQuotationSalesReturnView(true);
+        }
     }
 
 
@@ -1089,12 +1099,22 @@ function QuotationSalesReturnIndex(props) {
 
     let [showQuotationSalesReturnCreate, setShowQuotationSalesReturnCreate] = useState(false);
     const CreateFormRef = useRef();
+    const pendingSRUpdateArgRef = useRef(null);
+    const srCreateFormCallbackRef = useCallback((instance) => {
+        CreateFormRef.current = instance;
+        if (instance && pendingSRUpdateArgRef.current) {
+            const { id, orderID } = pendingSRUpdateArgRef.current;
+            pendingSRUpdateArgRef.current = null;
+            instance.open(id, orderID);
+        }
+    }, []);
     function openUpdateForm(id, orderID) {
-        setShowQuotationSalesReturnCreate(true);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
+        if (CreateFormRef.current) {
             CreateFormRef.current.open(id, orderID);
-        }, 50);
+        } else {
+            pendingSRUpdateArgRef.current = { id, orderID };
+            setShowQuotationSalesReturnCreate(true);
+        }
     }
 
     function openCreateForm(sale) {
@@ -1290,7 +1310,7 @@ function QuotationSalesReturnIndex(props) {
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
-            }} centered>
+            }} centered className={pendingView ? "above-pending-modal-dialog" : ""}>
                 <Modal.Header closeButton>
                     <Modal.Title>Select Print Type</Modal.Title>
                 </Modal.Header>
@@ -1329,8 +1349,8 @@ function QuotationSalesReturnIndex(props) {
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             {showQuotations && <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />}
-            {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
-            {showQuotationSalesReturnView && <QuotationSalesReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {(pendingView || showQuotationSalesReturnCreate) && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {(pendingView || showQuotationSalesReturnView) && <QuotationSalesReturnView ref={detailsViewCallbackRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {showQuotationSalesReturnPaymentCreate && <QuotationSalesReturnPaymentCreate ref={QuotationSalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openQuotationSalesReturnPaymentDetailsView} />}
             {showQuotationSalesReturnPaymentDetailsView && <QuotationSalesReturnPaymentDetailsView ref={QuotationSalesReturnPaymentDetailsViewRef} openUpdateForm={openQuotationSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
