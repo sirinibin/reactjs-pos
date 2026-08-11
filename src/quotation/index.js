@@ -1015,7 +1015,7 @@ function QuotationIndex(props) {
         </Modal.Body>
       </Modal>
       {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
-      {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+      {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
       <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       {(pendingView || showQuotationCreate) && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
@@ -1063,6 +1063,7 @@ function QuotationIndex(props) {
                   "Loss": loss,
                 }}
                 onToggle={handleSummaryToggle}
+                modalClass={pendingView ? "above-pending-modal" : ""}
               />
               {enableSalesInQuotation && <StatsSummary
                 title="Qtn. Sales Summary"
@@ -1096,6 +1097,7 @@ function QuotationIndex(props) {
                   "Net Loss": invoiceLoss,
                 }}
                 onToggle={handleSummaryToggle}
+                modalClass={pendingView ? "above-pending-modal" : ""}
               />}
             </div>
           </div>

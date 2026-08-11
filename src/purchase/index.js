@@ -1233,7 +1233,7 @@ function PurchaseIndex(props) {
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
 
-            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showPreview && <Preview ref={PreviewRef} />}
             {showPurchaseCreate && <PurchaseCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
             {showPurchaseView && <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
@@ -1291,6 +1291,7 @@ function PurchaseIndex(props) {
                                 }}
 
                                 onToggle={handleSummaryToggle}
+                                modalClass={pendingView ? "above-pending-modal" : ""}
                             />
                         </span>
                     </div>

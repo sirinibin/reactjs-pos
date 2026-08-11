@@ -1191,7 +1191,7 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false} className={props.modalClass || ""}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 {/* Left: Title */}
                 <div className="flex-grow-1">

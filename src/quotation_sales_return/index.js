@@ -1346,7 +1346,7 @@ function QuotationSalesReturnIndex(props) {
                     </Button>
                 </Modal.Body>
             </Modal>
-            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             {showQuotations && <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />}
             {(pendingView || showQuotationSalesReturnCreate) && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
@@ -1398,6 +1398,7 @@ function QuotationSalesReturnIndex(props) {
                                     "Net Loss Return": loss,
                                 }}
                                 onToggle={handleSummaryToggle}
+                                modalClass={pendingView ? "above-pending-modal" : ""}
                             />
                         </span>
                     </div>
