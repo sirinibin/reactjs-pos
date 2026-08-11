@@ -393,7 +393,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
+                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity : ""}  {!product.is_service && product.unit ? product.unit : ""}</td>
                                             <td className="text-end" style={{ padding: "1px" }} >
                                                 {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
                                             </td>

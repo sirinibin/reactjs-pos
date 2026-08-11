@@ -12010,7 +12010,7 @@ span.flatpickr-weekday {
 /* Secondary modals (pickers, history panels) that must float above the fullscreen sales modal */
 .above-sales-modal { z-index: 1065 !important; }
 .above-sales-modal + .modal-backdrop { z-index: 1060 !important; }
-.above-preview-modal { z-index: 1092 !important; }
+.above-preview-modal { z-index: 1310 !important; }
 /* Update forms opened from within a history modal, and the print preview modal */
 .above-history-modal { z-index: 1090 !important; }
 .order-print-wrap { z-index: 1090 !important; }
