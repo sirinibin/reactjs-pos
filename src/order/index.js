@@ -1677,7 +1677,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
-            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />}
             <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
@@ -1775,6 +1775,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 }}
                                 statsDefaultVisibility={{ "Delivery Note": false }}
                                 onToggle={handleSummaryToggle}
+                                modalClass={pendingView ? "above-pending-modal" : ""}
                             />
                         </span>
                     </div>

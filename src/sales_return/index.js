@@ -1556,7 +1556,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
             {showOrderPrint && <OrderPrint ref={PrintRef} />}
-            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {(pendingView || showOrderPreview) && <OrderPreview ref={srPreviewCallbackRef} />}
             {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
             {(pendingView || showSalesReturnCreateForm) && <SalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
@@ -1646,6 +1646,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                     "Commission Paid By Bank": commissionPaidByBank,
                                 }}
                                 onToggle={handleSummaryToggle}
+                                modalClass={pendingView ? "above-pending-modal" : ""}
                             />
                         </span>
                     </div>

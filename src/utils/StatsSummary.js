@@ -10,7 +10,7 @@ import { generateInfoPdf, generateSectionPdf, safeName } from './pdfGenerator';
 import { uploadPdfForShare } from './pdfShare';
 
 
-const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey, store = {} }) => {
+const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey, store = {}, modalClass = "" }) => {
     const { t } = useTranslation();
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -621,7 +621,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     };
 
     const renderSettingsModal = () => (
-        <Modal show={showSettings} onHide={() => setShowSettings(false)} size="lg">
+        <Modal show={showSettings} onHide={() => setShowSettings(false)} size="lg" className={modalClass}>
             <Modal.Header closeButton>
                 <Modal.Title>{t(`Customize ${title} Summary`)}</Modal.Title>
             </Modal.Header>

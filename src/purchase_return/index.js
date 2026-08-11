@@ -1127,7 +1127,7 @@ function PurchaseReturnIndex(props) {
 
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showPurchases && <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />}
             {showPurchaseReturnCreate && <PurchaseReturnCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showPurchaseReturnView && <PurchaseReturnView ref={DetailsViewRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
@@ -1172,6 +1172,7 @@ function PurchaseReturnIndex(props) {
                                 }}
 
                                 onToggle={handleSummaryToggle}
+                                modalClass={pendingView ? "above-pending-modal" : ""}
                             />
                         </span>
 
