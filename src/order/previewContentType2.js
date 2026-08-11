@@ -687,7 +687,7 @@ const PreviewContentType2 = forwardRef((props, ref) => {
                                                     )}
                                                 </td>
                                                 <td style={{ padding: "4px 3px", borderRight: showPrices ? `1px solid ${C.borderLight}` : "none" }}>
-                                                    {product.quantity || ""}{product.unit ? ` ${product.unit}` : ""}
+                                                    {product.quantity || ""}{!product.is_service && product.unit ? ` ${product.unit}` : ""}
                                                 </td>
                                                 {showPrices && <>
                                                     <td style={{ padding: "4px 3px", borderRight: `1px solid ${C.borderLight}`, textAlign: "right" }}>

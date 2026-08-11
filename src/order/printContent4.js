@@ -177,7 +177,7 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-center" style={{ border: "solid 0px", width: "77px", }}>
                                         <h4 className="print-value-umluj" style={{ fontSize: "3mm", maxWidth: "77px" }}>
-                                            {product.quantity}  {product.unit ? product.unit : ""}
+                                            {product.quantity}  {!product.is_service && product.unit ? product.unit : ""}
                                         </h4>
                                     </td>
                                     <td className="text-end" style={{ border: "solid 0px", width: "110px", paddingRight: "5px" }}>
