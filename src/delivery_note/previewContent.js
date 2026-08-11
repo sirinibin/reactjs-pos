@@ -245,7 +245,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
 
                                             </td>
-                                            <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                            <td>{product.quantity}  {!product.is_service && product.unit ? product.unit : ""} </td>
                                             {props.model.net_total > 0 && <td>{product.unit_price ? product.unit_price.toFixed(2) : "0.00"}</td>}
                                             {props.model.net_total > 0 && props.model.total_with_vat > 0 && <td>{product.unit_price_with_vat ? product.unit_price_with_vat.toFixed(2) : "0.00"}</td>}
                                             {props.model.net_total > 0 && <td>{product.unit_discount ? product.unit_discount.toFixed(2) : "0.00"}</td>}

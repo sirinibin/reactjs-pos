@@ -728,7 +728,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             }}>{product.name_in_arabic}</span></>}
                                                         </span>}
                                                     </th>
-                                                    <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
+                                                    <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {!product.is_service && product.unit ? product.unit : ""}</td>
                                                     {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                         <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                             {props.model.hideVAT
