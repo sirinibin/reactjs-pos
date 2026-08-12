@@ -25,6 +25,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 //import Draggable2 from "react-draggable";
 
 const ProductHistory = forwardRef((props, ref) => {
@@ -517,8 +518,9 @@ const ProductHistory = forwardRef((props, ref) => {
     useEffect(() => {
         const anyOpen = showOrderForm || showSalesReturnForm || showPurchaseForm || showPurchaseReturnForm ||
             showQuotationForm || showQuotationSalesReturnForm || showDeliveryNoteForm || showStockTransferForm;
-        if (anyOpen) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!anyOpen) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showOrderForm, showSalesReturnForm, showPurchaseForm, showPurchaseReturnForm,
         showQuotationForm, showQuotationSalesReturnForm, showDeliveryNoteForm, showStockTransferForm]);
 
@@ -852,13 +854,13 @@ const ProductHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
-            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
-            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
-            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
-            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
-            {showDeliveryNoteForm && <DeliveryNoteCreate fromHistory={true} ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
+            {showOrderForm && <OrderCreate fromHistory={true} modalClass={props.subFormModalClass} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} modalClass={props.subFormModalClass} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
+            {showPurchaseReturnForm && <PurchaseReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseReturnForm(false)} />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
+            {showDeliveryNoteForm && <DeliveryNoteCreate fromHistory={true} modalClass={props.subFormModalClass} ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
             {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowStockTransferForm(false)} />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />

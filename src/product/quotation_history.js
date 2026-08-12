@@ -17,6 +17,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 
 const QuotationHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
@@ -429,8 +430,9 @@ const QuotationHistory = forwardRef((props, ref) => {
     let [showQuotationForm, setShowQuotationForm] = useState(false);
 
     useEffect(() => {
-        if (showQuotationForm) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!showQuotationForm) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showQuotationForm]);
 
     //Table settings
@@ -493,7 +495,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
-            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

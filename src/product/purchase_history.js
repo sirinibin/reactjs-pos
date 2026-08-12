@@ -17,6 +17,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 
 const PurchaseHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
@@ -402,8 +403,9 @@ const PurchaseHistory = forwardRef((props, ref) => {
     let [showPurchaseForm, setShowPurchaseForm] = useState(false);
 
     useEffect(() => {
-        if (showPurchaseForm) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!showPurchaseForm) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showPurchaseForm]);
 
     const PurchaseUpdateFormRef = useRef();
@@ -486,7 +488,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showPurchaseForm && <PurchaseCreate fromHistory={true} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
+            {showPurchaseForm && <PurchaseCreate fromHistory={true} modalClass={props.subFormModalClass} ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowPurchaseForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

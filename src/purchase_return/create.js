@@ -2504,15 +2504,15 @@ async function reCalculate(productIndex) {
                 <VendorDepositCreate ref={VendorDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
                 <PurchaseUpdateForm ref={PurchaseUpdateFormRef} onUpdated={handleReferenceUpdated} />
             </>}
-            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
-            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
-            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
-            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
             <Preview ref={PreviewRef} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />

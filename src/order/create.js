@@ -5736,7 +5736,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
 
-            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             {showOrderPrintPreview && <OrderPrint ref={PrintRef} onPrintClose={handlePrintClose} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} onPrintClose={handlePrintClose} />}
             <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
@@ -5812,16 +5812,16 @@ const OrderCreate = forwardRef((props, ref) => {
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
             <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} />
-            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
-            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
-            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
-            <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
-            <ProductNonVATSalesHistory ref={NonVATSalesHistoryRef} />
-            <ProductNonVATSalesReturnHistory ref={NonVATSalesReturnHistoryRef} />
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <ProductNonVATSalesHistory ref={NonVATSalesHistoryRef} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <ProductNonVATSalesReturnHistory ref={NonVATSalesReturnHistoryRef} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />

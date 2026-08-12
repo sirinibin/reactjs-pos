@@ -28,12 +28,14 @@ const ProductQuotationSalesReturnHistory = forwardRef((props, ref) => {
             show={show}
             onClose={() => setShow(false)}
             title={`Qtn. Sales Return History of ${product?.name}${product?.name_in_arabic ? " / " + product?.name_in_arabic : ""}`}
+            extraClass={props.extraClass}
         >
             {show && (
                 <ProductQuotationSalesReturnHistoryTable
                     ref={tableRef}
                     model={product}
                     selectedCustomers={selectedCustomers}
+                    subFormModalClass={props.extraClass === "order-inner-history-modal" ? "above-inner-history-form" : ""}
                 />
             )}
         </DraggableHistoryModal>

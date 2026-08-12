@@ -3515,7 +3515,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 onRestoreDefaults={restoreVendorColDefaults}
                 className="purchase-search-settings-modal-wrap"
             />
-            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
@@ -3539,15 +3539,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
             </div>
 
             <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
-            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
-            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
-            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
-            <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-            <ProductNonVATSalesHistory ref={NonVATSalesHistoryRef} />
-            <ProductNonVATSalesReturnHistory ref={NonVATSalesReturnHistoryRef} />
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <ProductNonVATSalesHistory ref={NonVATSalesHistoryRef} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+            <ProductNonVATSalesReturnHistory ref={NonVATSalesReturnHistoryRef} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
             <Preview ref={PreviewRef} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />

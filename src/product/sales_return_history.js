@@ -13,6 +13,7 @@ import CustomerCreate from "./../customer/create.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
@@ -418,8 +419,9 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     let [showSalesReturnForm, setShowSalesReturnForm] = useState(false);
 
     useEffect(() => {
-        if (showOrderForm || showSalesReturnForm) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!showOrderForm && !showSalesReturnForm) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showOrderForm, showSalesReturnForm]);
 
     const handleUpdated = () => {
@@ -514,8 +516,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
-            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
+            {showOrderForm && <OrderCreate fromHistory={true} modalClass={props.subFormModalClass} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showSalesReturnForm && <SalesReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowSalesReturnForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"
