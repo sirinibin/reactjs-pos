@@ -2214,17 +2214,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           onDragEnd={handleCustomerColDragEnd}
           onRestoreDefaults={restoreCustomerColDefaults}
       />
-      <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
+      <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToDeliveryNote} showToastMessage={props.showToastMessage} />
-      <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
-      <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-      <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
-      <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
-      <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
-      <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
-      <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+      <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
+      <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
       <div
         className="toast-container position-fixed top-0 end-0 p-3"
@@ -2262,7 +2262,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className={`above-sales-modal delivery-note-create-wrap${props.fromHistory ? ' from-history-form' : ''}`}>
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className={`above-sales-modal delivery-note-create-wrap${props.fromHistory ? ' from-history-form' : ''}${props.modalClass ? ' ' + props.modalClass : ''}`}>
         <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '5px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button type="button" onClick={handleClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}

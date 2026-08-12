@@ -17,6 +17,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 
 const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
@@ -421,8 +422,9 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     let [showQuotationSalesReturnForm, setShowQuotationSalesReturnForm] = useState(false);
 
     useEffect(() => {
-        if (showQuotationForm || showQuotationSalesReturnForm) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!showQuotationForm && !showQuotationSalesReturnForm) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showQuotationForm, showQuotationSalesReturnForm]);
 
     //Table settings
@@ -482,8 +484,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
-            {showQuotationForm && <QuotationCreate fromHistory={true} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
-            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
+            {showQuotationForm && <QuotationCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
             {/*<Modal
                 show={show}
                 size="xl"

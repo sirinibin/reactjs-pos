@@ -372,7 +372,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
     return (
         <>
-            <DeliveryNoteView ref={DeliveryNoteDetailsViewRef} />
+            <DeliveryNoteView ref={DeliveryNoteDetailsViewRef} modalClass={props.subFormModalClass} />
             <CustomerView ref={CustomerDetailsViewRef} />
             {/*<Modal
                 show={show}

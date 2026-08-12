@@ -48,7 +48,7 @@ const ProductNonVATSalesHistory = forwardRef((props, ref) => {
     const nameAr = product?.name_in_arabic ? ` / ${product.name_in_arabic}` : "";
 
     return (
-        <DraggableHistoryModal show={show} onClose={() => setShow(false)} title={`Non VAT Sales History of ${name}${nameAr}`}>
+        <DraggableHistoryModal show={show} onClose={() => setShow(false)} title={`Non VAT Sales History of ${name}${nameAr}`} extraClass={props.extraClass}>
             {show && (
                 <div style={{ padding: "12px", overflowX: "auto" }}>
                     {isLoading ? (

@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useCallback } from "react";
 import { Modal } from "react-bootstrap";
 import Draggable from "react-draggable";
 
-function DraggableHistoryModal({ show, onClose, title, children }) {
+function DraggableHistoryModal({ show, onClose, title, children, extraClass }) {
     const dragRef = useRef(null);
     // Inline z-index on the Bootstrap Modal container so the history modal always
     // appears above nested quotation / sales forms regardless of other CSS load order.
@@ -52,7 +52,7 @@ function DraggableHistoryModal({ show, onClose, title, children }) {
             centered={false}
             enforceFocus={false}
             dialogAs={DialogComponent}
-            className="above-sales-modal draggable-history-modal"
+            className={`above-sales-modal draggable-history-modal${extraClass ? ' ' + extraClass : ''}`}
         >
             <Modal.Header>
                 <Modal.Title>

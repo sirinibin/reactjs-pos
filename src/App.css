@@ -12018,6 +12018,8 @@ body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
 /* Lower history/picker modals when a create-form is opened on top of them */
 body.form-over-history .above-sales-modal { z-index: 1072 !important; }
+/* Inner history modals opened from within an OrderCreate form (which itself is inside a history modal) need z-index above the OrderCreate form (1093) */
+body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1200 !important; }
 /* Purchase/PurchaseReturn/Vendor create forms must appear above history modals (which can be 1082 inside sales form) */
 .purchase-create-wrap { z-index: 1088 !important; }
 .purchase-return-create-wrap { z-index: 1088 !important; }
@@ -12067,6 +12069,8 @@ body.quotation-sales-return-form-open.form-over-history .draggable-history-modal
    This targets only the sub-form, not the parent form that shares the same base class, so the parent
    never gets incorrectly elevated and the stacking order is: sub-form (1093) > history (≤1089) > parent (≤1088). */
 body.form-over-history .from-history-form { z-index: 1093 !important; }
+/* Sub-forms (OrderCreate etc.) opened from within an inner history modal (z-index 1200) need to float above it */
+body.form-over-history .above-inner-history-form { z-index: 1250 !important; }
 /* When a form is opened FROM the account balance sheet (balance-sheet-open), the body-class rules
    above would accidentally raise the balance sheet above the form. These higher-specificity rules
    (spec 31 > spec 21) ensure the form stays above the balance sheet in that scenario. */

@@ -14,6 +14,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
+import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
@@ -318,8 +319,9 @@ const SalesHistory = forwardRef((props, ref) => {
     let [showOrderForm, setShowOrderForm] = useState(false);
 
     useEffect(() => {
-        if (showOrderForm) document.body.classList.add('form-over-history');
-        return () => document.body.classList.remove('form-over-history');
+        if (!showOrderForm) return;
+        acquireFormOverHistory();
+        return releaseFormOverHistory;
     }, [showOrderForm]);
 
     const OrderUpdateFormRef = useRef();
@@ -483,7 +485,7 @@ const SalesHistory = forwardRef((props, ref) => {
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            {showOrderForm && <OrderCreate fromHistory={true} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
+            {showOrderForm && <OrderCreate fromHistory={true} modalClass={props.subFormModalClass} ref={OrderUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowOrderForm(false)} />}
             <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={handleUpdated} />
             {/*<Modal
                 show={show}
