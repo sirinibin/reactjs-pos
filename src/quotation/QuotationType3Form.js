@@ -140,6 +140,12 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const CustomerPendingRef = useRef();
     const clearDraftRef = useRef(() => {});
     const draftFlashShownRef = useRef(false);
+    const latestRequestRef = useRef(0);
+    const loadMoreRequestRef = useRef(0);
+    const productSearchTermRef = useRef("");
+    const [productSearchTotalCount, setProductSearchTotalCount] = useState(0);
+    const [productSearchPage, setProductSearchPage] = useState(1);
+    const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
 
     useEffect(() => {
         if (!show) return;
@@ -461,8 +467,16 @@ const QuotationType3Form = forwardRef((props, ref) => {
         } catch (e) { }
     }
 
-    async function suggestProducts(searchTerm) {
-        setProductOptions([]);
+    async function suggestProducts(searchTerm, page = 1) {
+        const requestId = Date.now();
+        if (page === 1) {
+            latestRequestRef.current = requestId;
+            loadMoreRequestRef.current = 0;
+            setProductOptions([]);
+            productSearchTermRef.current = searchTerm;
+        } else {
+            loadMoreRequestRef.current = requestId;
+        }
         searchTerm = searchTerm.replace(/\s+/g, " ").trim();
         if (!searchTerm) return;
         const apiTerm = searchTerm
@@ -472,10 +486,31 @@ const QuotationType3Form = forwardRef((props, ref) => {
         const qs = ObjectToSearchQueryParams({ search_text: apiTerm || searchTerm, store_id: storeId });
         const select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${storeId}.purchase_unit_price,product_stores.${storeId}.purchase_unit_price_with_vat,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`;
         try {
-            const r = await fetch(`/v1/product?${select}&${qs}&limit=100&sort=-country_name`, { headers });
+            const r = await fetch(`/v1/product?${select}&${qs}&limit=100&page=${page}&sort=-country_name`, { headers });
             const data = await r.json();
-            setProductOptions(data?.result || []);
+            if (page === 1) {
+                if (latestRequestRef.current !== requestId) return;
+            } else {
+                if (loadMoreRequestRef.current !== requestId) return;
+            }
+            const products = data?.result || [];
+            if (page === 1 && (!products || products.length === 0)) {
+                return;
+            }
+            setProductSearchTotalCount(data.total_count || 0);
+            setProductSearchPage(page);
+            if (page === 1) {
+                setProductOptions(products);
+            } else {
+                setProductOptions(prev => [...prev, ...products]);
+            }
         } catch (e) { }
+    }
+
+    async function loadMoreProducts() {
+        setIsLoadingMoreProducts(true);
+        await suggestProducts(productSearchTermRef.current, productSearchPage + 1);
+        setIsLoadingMoreProducts(false);
     }
 
     function openProductsModal() { productsRef.current?.open(true); }
@@ -1007,6 +1042,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                     <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
                                         <div style={{ flex: 1 }}>
                                             <Typeahead id="qt3_product_search" filterBy={() => true} labelKey="search_label" emptyLabel="" clearButton={false}
+                                                paginate={false} maxResults={10000}
                                                 open={productOptions.length === 0 ? false : undefined} ref={productSearchRef}
                                                 onChange={(items) => {
                                                     if (!items.length) return;
@@ -1050,6 +1086,32 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                                     </MenuItem>
                                                                 );
                                                             })}
+                                                            {results.length < productSearchTotalCount && (
+                                                                <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                                                                    <div
+                                                                        style={{ display: 'flex', justifyContent: 'center', padding: '6px 8px', borderTop: '1px solid #ddd', pointerEvents: 'auto' }}
+                                                                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                    >
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-outline-secondary btn-sm"
+                                                                            disabled={isLoadingMoreProducts}
+                                                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                loadMoreProducts();
+                                                                            }}
+                                                                        >
+                                                                            {isLoadingMoreProducts
+                                                                                ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                                                                : <>Load {productSearchTotalCount - results.length} more</>
+                                                                            }
+                                                                        </button>
+                                                                    </div>
+                                                                </MenuItem>
+                                                            )}
                                                         </Menu>
                                                     );
                                                 }}

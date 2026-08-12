@@ -817,14 +817,24 @@ const QuotationCreate = forwardRef((props, ref) => {
   };
 
   const latestRequestRef = useRef(0);
+  const loadMoreRequestRef = useRef(0);
+  const productSearchTermRef = useRef("");
+  const [productSearchTotalCount, setProductSearchTotalCount] = useState(0);
+  const [productSearchPage, setProductSearchPage] = useState(1);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
 
 
 
-  async function suggestProducts(searchTerm) {
+  async function suggestProducts(searchTerm, page = 1) {
     const requestId = Date.now();
-    latestRequestRef.current = requestId;
-
-    setProductOptions([]);
+    if (page === 1) {
+      latestRequestRef.current = requestId;
+      loadMoreRequestRef.current = 0;
+      setProductOptions([]);
+      productSearchTermRef.current = searchTerm;
+    } else {
+      loadMoreRequestRef.current = requestId;
+    }
 
     if (!searchTerm) {
       setTimeout(() => {
@@ -864,14 +874,18 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
 
-    const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=-country_name", requestOptions);
+    const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&page=" + page + "&sort=-country_name", requestOptions);
     const data = await result.json();
     // Only update if this is the latest request
-    if (latestRequestRef.current !== requestId) return;
+    if (page === 1) {
+      if (latestRequestRef.current !== requestId) return;
+    } else {
+      if (loadMoreRequestRef.current !== requestId) return;
+    }
 
     let products = data.result || [];
 
-    if (!products || products.length === 0) {
+    if (page === 1 && (!products || products.length === 0)) {
       openProductSearchResult = false;
       setOpenProductSearchResult(false);
       return;
@@ -879,8 +893,10 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     openProductSearchResult = true;
     setOpenProductSearchResult(true);
+    setProductSearchTotalCount(data.total_count || 0);
+    setProductSearchPage(page);
 
-    const filtered = products.filter((opt) => customFilter(opt, searchTerm));
+    const filtered = page === 1 ? products.filter((opt) => customFilter(opt, searchTerm)) : products;
 
     const sorted = filtered.sort((a, b) => {
       const aHasCountry = a.country_name && a.country_name.trim() !== "";
@@ -945,7 +961,17 @@ const QuotationCreate = forwardRef((props, ref) => {
       return 0;
     });
 
-    setProductOptions(sorted);
+    if (page === 1) {
+      setProductOptions(sorted);
+    } else {
+      setProductOptions(prev => [...prev, ...sorted]);
+    }
+  }
+
+  async function loadMoreProducts() {
+    setIsLoadingMoreProducts(true);
+    await suggestProducts(productSearchTermRef.current, productSearchPage + 1);
+    setIsLoadingMoreProducts(false);
   }
 
   async function getProductByBarCode(barcode) {
@@ -3807,6 +3833,8 @@ async function checkWarning(i) {
                   labelKey="search_label"
                   emptyLabel=""
                   clearButton={true}
+                  paginate={false}
+                  maxResults={10000}
                   open={openProductSearchResult}
                   isLoading={false}
                   isInvalid={errors.product_id ? true : false}
@@ -3919,7 +3947,7 @@ async function checkWarning(i) {
 
                         {/* Rows */}
                         {results.map((option, index) => {
-                          const onlyOneResult = results.length === 1;
+                          const onlyOneResult = results.length === 1 && productSearchTotalCount <= 100;
                           const isActive = state.activeIndex === index || onlyOneResult;
                           let checked = isProductAdded(option.id);
                           return (
@@ -4098,6 +4126,32 @@ async function checkWarning(i) {
                             </MenuItem>
                           );
                         })}
+                        {results.length < productSearchTotalCount && (
+                          <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                            <div
+                              style={{ display: 'flex', justifyContent: 'center', padding: '6px 8px', borderTop: '1px solid #ddd', pointerEvents: 'auto' }}
+                              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                            >
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                disabled={isLoadingMoreProducts}
+                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  loadMoreProducts();
+                                }}
+                              >
+                                {isLoadingMoreProducts
+                                  ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                  : <>Load {productSearchTotalCount - results.length} more</>
+                                }
+                              </button>
+                            </div>
+                          </MenuItem>
+                        )}
                       </Menu>
                     );
                   }}
