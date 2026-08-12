@@ -217,6 +217,9 @@ export function SalesType1Body({
     handleCreate,
     suggestCustomers,
     suggestProducts,
+    loadMoreProducts,
+    productSearchTotalCount,
+    isLoadingMoreProducts,
     getProductByBarCode,
     addProduct,
     removeProduct,
@@ -738,6 +741,8 @@ export function SalesType1Body({
                                     clearButton={false}
                                     open={openProductSearchResult}
                                     isLoading={false}
+                                    paginate={false}
+                                    maxResults={10000}
                                     disabled={isZatcaReported}
                                     isInvalid={!!errors.product_id}
                                     onChange={(selectedItems) => {
@@ -846,12 +851,12 @@ export function SalesType1Body({
                                                 {/* Rows */}
                                                 {results.map((option, index) => {
 
-                                                    const onlyOneResult = results.length === 1;
+                                                    const onlyOneResult = results.length === 1 && productSearchTotalCount <= 100;
                                                     const isActive = state.activeIndex === index || onlyOneResult;
 
                                                     let checked = isProductAdded(option.id);
                                                     return (
-                                                        <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
+                                                        <MenuItem option={option} position={index} key={option.id || index} style={{ padding: "0px" }}>
                                                             <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                 {searchProductsColumns.filter(c => c.visible).map((col) => {
                                                                     return (<React.Fragment key={col.key}>
@@ -1026,6 +1031,32 @@ export function SalesType1Body({
                                                         </MenuItem>
                                                     );
                                                 })}
+                                                {results.length < productSearchTotalCount && (
+                                                    <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                                                        <div
+                                                            style={{ display: 'flex', justifyContent: 'center', padding: '6px 8px', borderTop: '1px solid #ddd', pointerEvents: 'auto' }}
+                                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-outline-secondary btn-sm"
+                                                                disabled={isLoadingMoreProducts}
+                                                                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    loadMoreProducts();
+                                                                }}
+                                                            >
+                                                                {isLoadingMoreProducts
+                                                                    ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                                                    : <>Load {productSearchTotalCount - results.length} more</>
+                                                                }
+                                                            </button>
+                                                        </div>
+                                                    </MenuItem>
+                                                )}
                                             </Menu>
                                         );
                                     }}

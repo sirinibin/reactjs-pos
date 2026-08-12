@@ -770,6 +770,14 @@ const ProductCreate = forwardRef((props, ref) => {
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
+  const latestRequestRef = useRef(0);
+  const loadMoreRequestRef = useRef(0);
+  const productSearchTermRef = useRef("");
+  const productSearchTypeRef = useRef('');
+  const [productSearchTotalCount, setProductSearchTotalCount] = useState(0);
+  const [productSearchPage, setProductSearchPage] = useState(1);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
+
   const normalize = (str) => (str || '').toString().toLowerCase();
   const customFilter = useCallback((option, query) => {
     const q = normalize(query);
@@ -798,12 +806,22 @@ const ProductCreate = forwardRef((props, ref) => {
     return searchableNoSpace.includes(qNoSpace);
   }, []);
 
-  const suggestProducts = useCallback(async (searchTerm, type) => {
+  const suggestProducts = useCallback(async (searchTerm, type, page = 1) => {
     console.log("Inside handle suggestProducts");
-    if (type === "set") {
-      setProductSetOptions([]);
+    const requestId = Date.now();
+    if (page === 1) {
+      latestRequestRef.current = requestId;
+      productSearchTermRef.current = searchTerm;
+      productSearchTypeRef.current = type;
+      setProductSearchPage(1);
+      if (type === "set") {
+        setProductSetOptions([]);
+      } else {
+        setProductOptions([]);
+      }
     } else {
-      setProductOptions([]);
+      loadMoreRequestRef.current = requestId;
+      setProductSearchPage(page);
     }
 
 
@@ -849,20 +867,37 @@ const ProductCreate = forwardRef((props, ref) => {
     let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
     //setIsProductsLoading(true);
     let result = await fetch(
-      "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
+      "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name&page=" + page,
       requestOptions
     );
     let data = await result.json();
 
-    let products = data.result;
-    if (!products || products.length === 0) {
-      if (type === "set") {
-        setOpenProductSetSearchResult(false);
-      } else {
-        setOpenProductSearchResult(false);
-      }
+    if (page === 1) {
+      if (latestRequestRef.current !== requestId) return;
+    } else {
+      if (loadMoreRequestRef.current !== requestId) return;
+    }
 
+    let products = data.result;
+
+    setProductSearchTotalCount(data.total_count || 0);
+
+    if (!products || products.length === 0) {
+      if (page === 1) {
+        if (type === "set") {
+          setOpenProductSetSearchResult(false);
+        } else {
+          setOpenProductSearchResult(false);
+        }
+      }
       // setIsProductsLoading(false);
+      return;
+    }
+
+    if (page > 1) {
+      if (type === "set") {
+        setProductSetOptions(prev => [...prev, ...products]);
+      }
       return;
     }
 
@@ -915,6 +950,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
   }, [customFilter]);
 
+  async function loadMoreProductsForSet() {
+    setIsLoadingMoreProducts(true);
+    await suggestProducts(productSearchTermRef.current, productSearchTypeRef.current, productSearchPage + 1);
+    setIsLoadingMoreProducts(false);
+  }
 
   const ImageGalleryRef = useRef();
   /*
@@ -2607,6 +2647,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       <div className="col-md-9">
                         <Label>Add Products to SET</Label>
                         <Typeahead id="set_product_id" labelKey="search_label" emptyLabel="" ref={productSetSearchRef}
+                          paginate={false} maxResults={10000}
                           onChange={(selectedItems) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
                             if (selectedItems.length === 0) return;
@@ -2633,7 +2674,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                   </div>
                                 </MenuItem>
                                 {results.map((option, index) => {
-                                  const onlyOneResult = results.length === 1;
+                                  const onlyOneResult = results.length === 1 && productSearchTotalCount <= 100;
                                   const isActive = state.activeIndex === index || onlyOneResult;
                                   let checked = IsProductExistsInSet(option.id);
                                   return (
@@ -2654,6 +2695,32 @@ const ProductCreate = forwardRef((props, ref) => {
                                     </MenuItem>
                                   );
                                 })}
+                                {results.length < productSearchTotalCount && (
+                                  <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                                    <div
+                                      style={{ display: 'flex', justifyContent: 'center', padding: '6px 8px', borderTop: '1px solid #ddd', pointerEvents: 'auto' }}
+                                      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    >
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm"
+                                        disabled={isLoadingMoreProducts}
+                                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          loadMoreProductsForSet();
+                                        }}
+                                      >
+                                        {isLoadingMoreProducts
+                                          ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                          : <>Load {productSearchTotalCount - results.length} more</>
+                                        }
+                                      </button>
+                                    </div>
+                                  </MenuItem>
+                                )}
                               </Menu>
                             );
                           }}

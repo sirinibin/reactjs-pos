@@ -213,6 +213,9 @@ export function SalesVanStoreBody({
     checkErrors, checkWarnings,
     sendWhatsAppMessage,
     dateLocale,
+    loadMoreProducts,
+    productSearchTotalCount,
+    isLoadingMoreProducts,
 }) {
     const { t } = useTranslation("common");
 
@@ -476,6 +479,8 @@ export function SalesVanStoreBody({
                                 isLoading={false}
                                 emptyLabel=""
                                 clearButton={false}
+                                paginate={false}
+                                maxResults={10000}
                                 open={openProductSearchResult}
                                 ref={productSearchRef}
                                 onChange={items => {
@@ -570,6 +575,32 @@ export function SalesVanStoreBody({
                                                     </MenuItem>
                                                 );
                                             })}
+                                            {results.length < productSearchTotalCount && (
+                                                <MenuItem disabled style={{ padding: 0, margin: 0 }}>
+                                                    <div
+                                                        style={{ display: 'flex', justifyContent: 'center', padding: '6px 8px', borderTop: '1px solid #ddd', pointerEvents: 'auto' }}
+                                                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-secondary btn-sm"
+                                                            disabled={isLoadingMoreProducts}
+                                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                loadMoreProducts();
+                                                            }}
+                                                        >
+                                                            {isLoadingMoreProducts
+                                                                ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                                                : <>Load {productSearchTotalCount - results.length} more</>
+                                                            }
+                                                        </button>
+                                                    </div>
+                                                </MenuItem>
+                                            )}
                                         </Menu>
                                     );
                                 }}
