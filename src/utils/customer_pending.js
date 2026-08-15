@@ -239,7 +239,7 @@ const CustomerPending = forwardRef((props, ref) => {
                 keyboard={false}
                 centered={false}
                 enforceFocus={false}
-                className="above-sales-modal"
+                className="above-sales-modal customer-pending-modal"
                 dialogAs={props.size ? undefined : ({ children, ...dlgProps }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
