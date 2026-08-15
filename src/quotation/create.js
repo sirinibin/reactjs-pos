@@ -3379,7 +3379,6 @@ async function checkWarning(i) {
       <ProductCreate
         ref={ProductCreateFormRef}
         showToastMessage={props.showToastMessage}
-        openDetailsView={openProductDetails}
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
