@@ -12079,6 +12079,11 @@ body.balance-sheet-open.purchase-return-form-open .purchase-return-create-wrap {
 body.balance-sheet-open.sales-return-form-open .sales-return-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-form-open .quotation-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return-create-wrap { z-index: 1082 !important; }
+/* CustomerPending must appear above every form opened from the balance sheet.
+   Forms in that context reach at most z-index 1090 (purchase-create-wrap), so 1091 clears them all.
+   This rule has the same specificity (0,2,1) as the per-form rules above but appears later in the
+   file, so it wins by source order when balance-sheet-open is active. */
+body.balance-sheet-open .customer-pending-modal { z-index: 1091 !important; }
 /* When purchase history is opened from inside the product form (pw-modal-wrap = 1095),
    both the history modal and the purchase sub-form must float above it. */
 body.product-form-open.form-over-history .above-sales-modal { z-index: 1097 !important; }
