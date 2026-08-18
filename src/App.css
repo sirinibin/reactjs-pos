@@ -12084,6 +12084,9 @@ body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return
    This rule has the same specificity (0,2,1) as the per-form rules above but appears later in the
    file, so it wins by source order when balance-sheet-open is active. */
 body.balance-sheet-open .customer-pending-modal { z-index: 1091 !important; }
+/* Balance sheet opened from inside a pending modal must float above it (pending modal reaches 1091). */
+body.pending-balance-sheet-open .above-sales-modal { z-index: 1093 !important; }
+body.pending-balance-sheet-open .above-sales-modal + .modal-backdrop { z-index: 1092 !important; }
 /* When purchase history is opened from inside the product form (pw-modal-wrap = 1095),
    both the history modal and the purchase sub-form must float above it. */
 body.product-form-open.form-over-history .above-sales-modal { z-index: 1097 !important; }
@@ -12097,3 +12100,10 @@ body.product-form-open.form-over-history .from-history-form { z-index: 1099 !imp
    on top of it, regardless of which context the purchase form was opened from. */
 .purchase-search-settings-modal-wrap { z-index: 1150 !important; }
 .purchase-search-settings-modal-wrap + .modal-backdrop { z-index: 1149 !important; }
+/* Forms opened from PostingIndex inside a Customer/Vendor Pending modal appear behind the
+   pending modal because body.pending-balance-sheet-open .above-sales-modal (z-index 1093)
+   raises the pending modal itself alongside PostingIndex. Forms only reach 1090, so they
+   end up behind. This rule raises any non-above-sales-modal modal (i.e. form portals) to
+   1095 > 1093, fixing both customer-pending and vendor-pending flows.
+   Specificity (0,4,1) beats all existing rules; placed last wins source-order ties. */
+body.pending-balance-sheet-open.balance-sheet-open .modal:not(.above-sales-modal) { z-index: 1095 !important; }

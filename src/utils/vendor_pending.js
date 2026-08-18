@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
@@ -213,6 +213,16 @@ const VendorPending = forwardRef((props, ref) => {
     let [showBalanceSheet, setShowAccountBalanceSheet] = useState(false);
     const timerRef = useRef(null);
     const AccountBalanceSheetRef = useRef();
+
+    useEffect(() => {
+        if (showBalanceSheet) {
+            document.body.classList.add('pending-balance-sheet-open');
+        } else {
+            document.body.classList.remove('pending-balance-sheet-open');
+        }
+        return () => document.body.classList.remove('pending-balance-sheet-open');
+    }, [showBalanceSheet]);
+
     function openBalanceSheetDialogue(account) {
         setShowAccountBalanceSheet(true);
 
