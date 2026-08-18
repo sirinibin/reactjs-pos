@@ -252,7 +252,7 @@ const ProductView = forwardRef((props, ref) => {
 
         <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true} className="product-view-modal-wrap">
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button - always top right */}
