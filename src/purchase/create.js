@@ -4777,6 +4777,18 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     reCalculate(index);
                                                                 }, 100);
 
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (selectedProducts[index].purchase_unit_price) {
+                                                                    selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    CalCulateLineTotals(index);
+                                                                    reCalculate(index);
+                                                                    checkErrors(index);
+                                                                }
                                                             }} />
 
                                                     </div>
@@ -4883,6 +4895,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (selectedProducts[index].purchase_unit_price_with_vat) {
+                                                                    selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    CalCulateLineTotals(index);
+                                                                    reCalculate(index);
+                                                                    checkErrors(index);
+                                                                }
                                                             }} />
                                                     </div>
                                                     {(errors[`purchase_unit_price_with_vat_${index}`] || warnings[`purchase_unit_price_with_vat_${index}`]) && (
@@ -5836,6 +5861,18 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }}
+                                                            onBlur={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (selectedProducts[index].purchase_unit_price) {
+                                                                    selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    CalCulateLineTotals(index);
+                                                                    reCalculate(index);
+                                                                    checkErrors(index);
+                                                                }
+                                                            }}
                                                         />
                                                     </div>
                                                 </div>
@@ -5859,6 +5896,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (selectedProducts[index].purchase_unit_price_with_vat) {
+                                                                    selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    CalCulateLineTotals(index);
+                                                                    reCalculate(index);
+                                                                    checkErrors(index);
+                                                                }
                                                             }}
                                                         />
                                                     </div>
