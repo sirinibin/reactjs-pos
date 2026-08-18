@@ -3069,6 +3069,19 @@ async function reCalculate(productIndex) {
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                                         setSelectedProducts([...selectedProducts]);
                                                                         timerRef.current = setTimeout(() => { selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100))); selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100))); checkWarnings(index); checkErrors(index); CalCulateLineTotals(index); reCalculate(index); }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price) {
+                                                                            selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`purchasereturn_unit_price_${index}`] || warnings[`purchasereturn_unit_price_${index}`]) && (<i className={`bi bi-exclamation-circle-fill ${errors[`purchasereturn_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} data-bs-toggle="tooltip" data-bs-placement="top" data-error={errors[`purchasereturn_unit_price_${index}`] || ''} data-warning={warnings[`purchasereturn_unit_price_${index}`] || ''} title={errors[`purchasereturn_unit_price_${index}`] || warnings[`purchasereturn_unit_price_${index}`] || ''} style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}></i>)}
@@ -3088,6 +3101,20 @@ async function reCalculate(productIndex) {
                                                                         if (!e.target.value) { selectedProducts[index].purchase_unit_price_with_vat = ""; selectedProducts[index].purchase_unit_price = ""; setSelectedProducts([...selectedProducts]); timerRef.current = setTimeout(() => { checkErrors(index); checkWarnings(index); CalCulateLineTotals(index); reCalculate(index); }, 100); return; }
                                                                         selectedProducts[index].purchase_unit_price_with_vat = parseFloat(e.target.value);
                                                                         timerRef.current = setTimeout(() => { selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100))); selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100))); setSelectedProducts([...selectedProducts]); checkErrors(index); checkWarnings(index); CalCulateLineTotals(index); reCalculate(index); }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price_with_vat) {
+                                                                            selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`purchasereturn_unit_price_with_vat_${index}`] || warnings[`purchasereturn_unit_price_with_vat_${index}`]) && (<i className={`bi bi-exclamation-circle-fill ${errors[`purchasereturn_unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} data-bs-toggle="tooltip" data-bs-placement="top" data-error={errors[`purchasereturn_unit_price_with_vat_${index}`] || ''} data-warning={warnings[`purchasereturn_unit_price_with_vat_${index}`] || ''} title={errors[`purchasereturn_unit_price_with_vat_${index}`] || warnings[`purchasereturn_unit_price_with_vat_${index}`] || ''} style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}></i>)}
@@ -3925,6 +3952,19 @@ async function reCalculate(productIndex) {
                                                                             reCalculate(index);
                                                                         }, 100);
 
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price) {
+                                                                            selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
 
                                                             </div>
@@ -4041,6 +4081,20 @@ async function reCalculate(productIndex) {
                                                                             CalCulateLineTotals(index);
                                                                             reCalculate(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price_with_vat) {
+                                                                            selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`purchasereturn_unit_price_with_vat_${index}`] || warnings[`purchasereturn_unit_price_with_vat_${index}`]) && (
@@ -5216,6 +5270,19 @@ async function reCalculate(productIndex) {
                                                                             reCalculate(index);
                                                                         }, 100);
 
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price) {
+                                                                            selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
 
                                                             </div>
@@ -5332,6 +5399,20 @@ async function reCalculate(productIndex) {
                                                                             CalCulateLineTotals(index);
                                                                             reCalculate(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].purchase_unit_price_with_vat) {
+                                                                            selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`purchasereturn_unit_price_with_vat_${index}`] || warnings[`purchasereturn_unit_price_with_vat_${index}`]) && (

@@ -3238,6 +3238,18 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             CalCulateLineTotals(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price) {
+                                                                            selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            reCalculate(index);
+                                                                            CalCulateLineTotals(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
 
                                                             </div>
@@ -3353,6 +3365,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             reCalculate(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price_with_vat) {
+                                                                            selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
@@ -4633,6 +4658,18 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             CalCulateLineTotals(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price) {
+                                                                            selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            reCalculate(index);
+                                                                            CalCulateLineTotals(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
 
                                                             </div>
@@ -4734,6 +4771,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             reCalculate(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price_with_vat) {
+                                                                            selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
@@ -6554,6 +6604,18 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             CalCulateLineTotals(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price) {
+                                                                            selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            reCalculate(index);
+                                                                            CalCulateLineTotals(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
 
                                                             </div>
@@ -6669,6 +6731,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                             reCalculate(index);
                                                                             checkErrors(index);
                                                                         }, 100);
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (selectedProducts[index].unit_price_with_vat) {
+                                                                            selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                            checkErrors(index);
+                                                                        }
                                                                     }} />
                                                             </div>
                                                             {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (

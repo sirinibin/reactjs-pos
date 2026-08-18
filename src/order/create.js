@@ -7505,7 +7505,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     reCalculate(index);
                                                                                 }, 100);
                                                                             }}
-                                                                            onBlur={() => { checkErrors(index); }} />
+                                                                            onBlur={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                if (selectedProducts[index].unit_price) {
+                                                                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                                    setSelectedProducts([...selectedProducts]);
+                                                                                    CalCulateLineTotals(index);
+                                                                                    reCalculate(index);
+                                                                                    checkErrors(index);
+                                                                                }
+                                                                            }} />
 
                                                                     </div>
                                                                     {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
@@ -7613,7 +7624,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     reCalculate(index);
                                                                                 }, 100);
                                                                             }}
-                                                                            onBlur={() => { checkErrors(index); }} />
+                                                                            onBlur={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                if (selectedProducts[index].unit_price_with_vat) {
+                                                                                    selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                                    setSelectedProducts([...selectedProducts]);
+                                                                                    CalCulateLineTotals(index);
+                                                                                    reCalculate(index);
+                                                                                    checkErrors(index);
+                                                                                }
+                                                                            }} />
                                                                     </div>
                                                                     {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
                                                                         <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
@@ -9989,6 +10012,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                         reCalculate(index);
                                                                                         checkErrors(index);
                                                                                     }, 100);
+                                                                                }}
+                                                                                onBlur={() => {
+                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                    if (selectedProducts[index].unit_price) {
+                                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                                        selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                                        setSelectedProducts([...selectedProducts]);
+                                                                                        CalCulateLineTotals(index);
+                                                                                        reCalculate(index);
+                                                                                        checkErrors(index);
+                                                                                    }
                                                                                 }} />
 
                                                                         </div>
@@ -10099,6 +10134,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                         reCalculate(index);
                                                                                         checkErrors(index);
                                                                                     }, 100);
+                                                                                }}
+                                                                                onBlur={() => {
+                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                    if (selectedProducts[index].unit_price_with_vat) {
+                                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                                        selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                                        selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                                        setSelectedProducts([...selectedProducts]);
+                                                                                        CalCulateLineTotals(index);
+                                                                                        reCalculate(index);
+                                                                                        checkErrors(index);
+                                                                                    }
                                                                                 }} />
                                                                         </div>
                                                                         {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
