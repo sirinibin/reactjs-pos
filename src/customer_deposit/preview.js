@@ -311,6 +311,77 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     }, [getFileName, model, modelName]);
 
 
+    const handleDownload = useCallback(async () => {
+        setIsDownloading(true);
+        try {
+            const fileName = getFileName();
+
+            // Detect Tauri — walk up iframe parent chain to find the Tauri API.
+            let tauriRoot = null;
+            try {
+                let w = window;
+                while (w) {
+                    if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                    if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                    if (w === w.parent) break;
+                    w = w.parent;
+                }
+            } catch (_) { /* cross-origin guard */ }
+            const isInTauri = !!(tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null);
+
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation, save to ~/Downloads
+                const apiResponse = await fetch('/v1/receipt/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(errData?.errors?.chrome || errData?.errors?.pdf || `HTTP ${apiResponse.status}`);
+                }
+                const savedTo = apiResponse.headers.get('X-Saved-To');
+                alert(`Downloaded to: ${savedTo || `~/Downloads/${fileName}.pdf`}`);
+            } else {
+                // Web: use html2pdf() and trigger a browser download
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const pdfBlob = await html2pdf()
+                    .set({
+                        margin: 0,
+                        filename: `${fileName}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    })
+                    .from(element)
+                    .outputPdf('blob');
+
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${fileName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            alert('PDF download failed: ' + (err?.message || String(err)));
+        } finally {
+            setIsDownloading(false);
+        }
+    }, [getFileName, model, modelName]);
+
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations
     /*
     const autoPrint = useCallback(() => {
@@ -344,6 +415,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     const [defaultNumber, setDefaultNumber] = useState("");
     const [defaultMessage, setDefaultMessage] = useState("");
     let [isProcessing, setIsProcessing] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
     const handleChoice = ({ type, number, message }) => {
         let whatsappUrl = "";
@@ -1024,6 +1096,11 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                                         )}
                                     </>
                                 )}
+                            </Button>
+                            <Button size="sm" variant="primary" className="d-flex align-items-center gap-1" disabled={isDownloading} onClick={handleDownload}>
+                                {isDownloading
+                                    ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                    : <><i className="bi bi-file-earmark-arrow-down"></i> PDF</>}
                             </Button>
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
