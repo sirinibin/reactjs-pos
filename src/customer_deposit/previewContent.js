@@ -73,6 +73,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     backgroundImage: `url(${props.invoiceBackground ? props.invoiceBackground : ""})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    position: "relative",
+                    overflow: "hidden",
                 }}
 
             >
