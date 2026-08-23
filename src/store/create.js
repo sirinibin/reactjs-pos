@@ -5216,6 +5216,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Warehouse Module</span>
                                             </label>
+                                            {formData.settings.enable_warehouse_module && (
+                                                <label className="pw-check" htmlFor="show_warehouse_stock_in_selected_products" style={{ marginLeft: '16px' }}>
+                                                    <input type="checkbox" id="show_warehouse_stock_in_selected_products" checked={!!formData.settings.show_warehouse_stock_in_selected_products} value={formData.settings.show_warehouse_stock_in_selected_products} onChange={() => { formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products; setFormData({ ...formData }); }} />
+                                                    <span>Show Selected Warehouse Stock in Products Table</span>
+                                                </label>
+                                            )}
                                             <label className="pw-check" htmlFor="enable_purchase_order_module">
                                                 <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Purchase Order Module</span>
@@ -5497,6 +5503,24 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
+
+                                        {formData.settings.enable_warehouse_module && (
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_warehouse_stock_in_selected_products}
+                                                    checked={!!formData.settings.show_warehouse_stock_in_selected_products}
+                                                    onChange={() => {
+                                                        formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="show_warehouse_stock_in_selected_products"
+                                                /> &nbsp;Show Selected Warehouse Stock in Products Table
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+                                        )}
 
                                         <div className="col-md-2">
                                             <div className="input-group mb-3">

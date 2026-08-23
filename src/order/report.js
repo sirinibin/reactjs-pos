@@ -899,6 +899,42 @@ const ReportPreview = forwardRef((props, ref) => {
      
        }, [autoPrint, whatsAppShare, openWhatsAppShare]);*/
 
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = useCallback(async () => {
+        setIsDownloading(true);
+        try {
+            const fileName = getFileName();
+            const element = printAreaRef.current;
+            if (!element) return;
+
+            const elementsToHide = element.querySelectorAll('.no-print');
+            elementsToHide.forEach(el => el.style.display = 'none');
+
+            const pdfBlob = await html2pdf().from(element).set({
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).outputPdf('blob');
+
+            elementsToHide.forEach(el => el.style.display = '');
+
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+        } catch (e) {
+            alert('Download failed: ' + (e?.message || String(e)));
+        } finally {
+            setIsDownloading(false);
+        }
+    }, [getFileName]);
+
     const [showSlider, setShowSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
 
@@ -1299,8 +1335,19 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
 
-                    {/* Print & Close Buttons */}
+                    {/* Print, Download & Close Buttons */}
                     <div className="d-flex align-items-center">
+                        <Button
+                            variant="outline-secondary"
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                            className="me-2 d-flex align-items-center gap-1"
+                        >
+                            {isDownloading
+                                ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                : <><i className="bi bi-file-earmark-arrow-down"></i> {t("PDF")}</>
+                            }
+                        </Button>
                         <Button
                             variant={"primary"}
                             onClick={handlePrint}

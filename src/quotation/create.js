@@ -4793,7 +4793,9 @@ async function checkWarning(i) {
                               }
                             >
                               <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
-                                {selectedProducts[index].stock}
+                                {(store.settings?.enable_warehouse_module && store.settings?.show_warehouse_stock_in_selected_products)
+                                  ? (selectedProducts[index].warehouse_stocks?.[selectedProducts[index].warehouse_code || "main_store"] ?? selectedProducts[index].stock)
+                                  : selectedProducts[index].stock}
                               </span>
                             </OverlayTrigger>
                           </td>);
@@ -6309,7 +6311,9 @@ async function checkWarning(i) {
                               }
                             >
                               <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
-                                {selectedProducts[index].stock}
+                                {(store.settings?.enable_warehouse_module && store.settings?.show_warehouse_stock_in_selected_products)
+                                  ? (selectedProducts[index].warehouse_stocks?.[selectedProducts[index].warehouse_code || "main_store"] ?? selectedProducts[index].stock)
+                                  : selectedProducts[index].stock}
                               </span>
                             </OverlayTrigger>
                           </td>);
