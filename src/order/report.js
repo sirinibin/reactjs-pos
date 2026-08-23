@@ -8,8 +8,8 @@ import "./print.css";
 import { useTranslation } from 'react-i18next';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+//import jsPDF from "jspdf";
+//import html2canvas from "html2canvas";
 
 
 const ReportPreview = forwardRef((props, ref) => {
@@ -903,35 +903,34 @@ const ReportPreview = forwardRef((props, ref) => {
 
     const handleDownload = useCallback(async () => {
         setIsDownloading(true);
+        let elementsToHide = [];
         try {
             const fileName = getFileName();
             const element = printAreaRef.current;
             if (!element) return;
 
-            const elementsToHide = element.querySelectorAll('.no-print');
+            elementsToHide = Array.from(element.querySelectorAll('.no-print'));
             elementsToHide.forEach(el => { el.style.display = 'none'; });
 
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            // Use html2pdf for rendering (it correctly maps element width → A4 210mm).
+            // Then get the jsPDF instance and delete any blank trailing page that
+            // html2pdf's floating-point pagination may have added.
+            const pdf = await html2pdf().from(element).set({
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).toPdf().get('pdf');
 
-            elementsToHide.forEach(el => { el.style.display = ''; });
-
-            const imgData = canvas.toDataURL('image/jpeg', 0.98);
-
-            // A4 page dimensions in mm
-            const pdfWidthMm = 210;
-            const pdfHeightMm = 297;
-
-            // Map canvas pixels → mm at A4 width, then calculate exact page count.
-            // Using Math.ceil on actual pixel height means we never create a blank
-            // extra page regardless of content height.
-            const imgHeightMm = (canvas.height * pdfWidthMm) / canvas.width;
-            const pageCount = Math.ceil(imgHeightMm / pdfHeightMm);
-
-            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-            for (let i = 0; i < pageCount; i++) {
-                if (i > 0) pdf.addPage();
-                // Shift the full image up so the correct slice appears on this page
-                pdf.addImage(imgData, 'JPEG', 0, -(i * pdfHeightMm), pdfWidthMm, imgHeightMm);
+            const pageCount = pdf.internal.getNumberOfPages();
+            if (pageCount > 1) {
+                // html2pdf maps element width → 210mm, so content height in mm is:
+                const contentHeightMm = (element.scrollHeight / element.offsetWidth) * 210;
+                const expectedPages = Math.ceil(contentHeightMm / 297);
+                for (let i = pageCount; i > expectedPages; i--) {
+                    pdf.deletePage(i);
+                }
             }
 
             const pdfBlob = pdf.output('blob');
@@ -945,6 +944,7 @@ const ReportPreview = forwardRef((props, ref) => {
         } catch (e) {
             alert('Download failed: ' + (e?.message || String(e)));
         } finally {
+            elementsToHide.forEach(el => { el.style.display = ''; });
             setIsDownloading(false);
         }
     }, [getFileName]);
