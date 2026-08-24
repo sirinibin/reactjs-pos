@@ -1,0 +1,111 @@
+name: "⚡ Quick Deploy (Emergency — Tests Skipped)"
+
+# MANUAL TRIGGER ONLY — never runs on push.
+# Use only when a critical fix must ship immediately.
+# Go to Actions → "⚡ Quick Deploy (Emergency — Tests Skipped)" → Run workflow → pick branch.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm emergency deploy (tests will be skipped)'
+        required: true
+        default: ""
+
+jobs:
+  quick-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Abort if not confirmed
+        if: ${{ github.event.inputs.confirm != 'yes' }}
+        run: |
+          echo "ERROR: You must type exactly 'yes' to confirm. Got: '${{ github.event.inputs.confirm }}'"
+          exit 1
+
+      - name: Show emergency warning
+        run: |
+          echo "╔══════════════════════════════════════════════════════════════════════╗"
+          echo "║  ⚠  EMERGENCY QUICK DEPLOY — TESTS SKIPPED — branch: ${{ github.ref_name }}"
+          echo "╚══════════════════════════════════════════════════════════════════════╝"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 17.9.0
+
+      - name: Install dependencies
+        run: npm install
+
+      # ── Route: branch → API URL + deploy destination ──────────────────────────
+      - name: Set branch-specific variables
+        id: vars
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          case "$BRANCH" in
+            master)
+              echo "api_url=https://startpos-api.gulfunionozone.com" >> "$GITHUB_OUTPUT"
+              echo "dest_secret=AWS_DEST_PATH_PROD" >> "$GITHUB_OUTPUT"
+              echo "label=PRODUCTION" >> "$GITHUB_OUTPUT"
+              ;;
+            test)
+              echo "api_url=https://startpos-api-test.gulfunionozone.com" >> "$GITHUB_OUTPUT"
+              echo "dest_secret=AWS_DEST_PATH" >> "$GITHUB_OUTPUT"
+              echo "label=TEST" >> "$GITHUB_OUTPUT"
+              ;;
+            v2)
+              echo "api_url=https://startpos-api-v2.gulfunionozone.com" >> "$GITHUB_OUTPUT"
+              echo "dest_secret=AWS_DEST_PATH_V2" >> "$GITHUB_OUTPUT"
+              echo "label=V2" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "ERROR: Branch '$BRANCH' is not supported. Use master, test, or v2."
+              exit 1
+              ;;
+          esac
+
+      # ── Build (ESLint + tests SKIPPED) ─────────────────────────────────────────
+      - name: Build (no tests)
+        run: |
+          NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
+          DANGEROUSLY_DISABLE_HOST_CHECK=true \
+          REACT_APP_API_URL=${{ steps.vars.outputs.api_url }} \
+          GENERATE_SOURCEMAP=false \
+          DISABLE_ESLINT_PLUGIN=true \
+          npm run build 2>&1 | tee /tmp/build.log
+          if grep -qi "compiled with warnings" /tmp/build.log; then
+            echo "Build produced warnings — aborting."
+            exit 1
+          fi
+
+      # ── Deploy (atomic swap, near-zero downtime) ───────────────────────────────
+      - name: Deploy to AWS (atomic swap)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USER: ${{ secrets.AWS_USER }}
+          AWS_PORT: ${{ secrets.AWS_PORT }}
+          AWS_DEST_PATH: ${{ secrets[steps.vars.outputs.dest_secret] }}
+        run: |
+          set -e
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -i private_key.pem -p $AWS_PORT"
+          DEST="${AWS_DEST_PATH%/}"
+          TMP="${DEST}_new"
+          OLD="${DEST}_old"
+
+          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" "mkdir -p $TMP $DEST"
+
+          rsync -az --partial --timeout=60 \
+            -e "ssh $SSH_OPTS" \
+            build/ "$AWS_USER@$AWS_HOST:$TMP/"
+
+          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" \
+            "mv $DEST $OLD && mv $TMP $DEST && rm -rf $OLD"
+
+          rm -f private_key.pem
+          echo "[${{ steps.vars.outputs.label }}] Quick deploy complete. Run full deploy when stable."

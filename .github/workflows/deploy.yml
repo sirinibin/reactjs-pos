@@ -47,7 +47,7 @@ jobs:
           npm install --force
           export NODE_OPTIONS=--openssl-legacy-provider
           export DANGEROUSLY_DISABLE_HOST_CHECK=true
-          export REACT_APP_API_URL=https://startpos-api-test.startuptech.uk
+          export REACT_APP_API_URL=https://startpos-api-test.gulfunionozone.com
           export GENERATE_SOURCEMAP=false
           npm run build
 
