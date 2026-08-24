@@ -8,7 +8,7 @@ import Amount from "../utils/amount.js";
 
 const SalesReturnPreviewContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "٠١٢٣٤٥٦٧٨٩";
     let persianMap = persianDigits.split("");
 
     function convertToPersianNumber(input) {

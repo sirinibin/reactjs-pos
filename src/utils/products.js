@@ -4,10 +4,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import ProductIndex from "../product/index.js";
 import ServiceIndex from "../service/index.js";
+import ServiceCreate from "../service/create.js";
 
 
 const Products = forwardRef((props, ref) => {
     const dragRef = useRef(null);
+    const serviceCreateRef = useRef();
+    const [serviceRefreshKey, setServiceRefreshKey] = useState(0);
+    // ref to the Bootstrap Modal — .current.dialog is the outer .modal div
+    const selectionModalRef = useRef();
 
     const DraggableDialog = useCallback(({ children, ...dialogProps }) => (
         <Draggable handle=".modal-header" nodeRef={dragRef} defaultPosition={{ x: 0, y: 0 }}>
@@ -16,11 +21,10 @@ const Products = forwardRef((props, ref) => {
                 {...dialogProps}
                 className={`modal-dialog modal-xl ${dialogProps.className || ""}`}
                 style={{
-                    position: "fixed",
+                    position: "absolute",
                     top: "5%",
                     left: "15%",
                     margin: "0",
-                    zIndex: 1060,
                     width: "70%",
                     maxHeight: "90vh",
                 }}
@@ -29,8 +33,7 @@ const Products = forwardRef((props, ref) => {
             </div>
         </Draggable>
     ), []);
-    // let [selectedCustomers, setSelectedCustomers] = useState([]);
-    // let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
     let [enableSelection, setEnableSelection] = useState(false);
     let [type, setType] = useState("");
     let [product, setProduct] = useState({});
@@ -50,23 +53,23 @@ const Products = forwardRef((props, ref) => {
             isService = serviceOnly;
             setIsService(isService);
 
-            /*
-            if (selectedCustomersValue?.length > 0) {
-                selectedCustomers = selectedCustomersValue;
-                setSelectedCustomers([...selectedCustomers]);
-            }
-
-            if (selectedPaymentStatusListValue) {
-                selectedPaymentStatusList = selectedPaymentStatusListValue;
-                setSelectedPaymentStatusList([...selectedPaymentStatusList]);
-            }
-                */
-
             SetShow(true);
         },
     }));
 
     const [show, SetShow] = useState(false);
+
+    // Force the selection modal's outer div to z-index 1085 so pw-modal-wrap forms
+    // (z-index 1095 from App.css) always render on top of it.
+    useEffect(() => {
+        if (show) {
+            requestAnimationFrame(() => {
+                if (selectionModalRef.current?.dialog) {
+                    selectionModalRef.current.dialog.style.setProperty('z-index', '1085', 'important');
+                }
+            });
+        }
+    }, [show]);
 
     function handleClose() {
         SetShow(false);
@@ -96,7 +99,15 @@ const Products = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+            {/* Rendered outside the selection modal so ServiceCreate portals to body
+                as an independent sibling — not inside the selection modal's stacking context. */}
+            <ServiceCreate
+                ref={serviceCreateRef}
+                showToastMessage={props.showToastMessage}
+                refreshList={() => setServiceRefreshKey(k => k + 1)}
+            />
+
+            <Modal ref={selectionModalRef} show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
                 backdrop={false}                // ✅ Allow editing background
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
@@ -126,6 +137,8 @@ const Products = forwardRef((props, ref) => {
                             <ServiceIndex
                                 enableSelection={enableSelection}
                                 onSelectServices={handleSelected}
+                                onOpenCreate={() => serviceCreateRef.current?.open()}
+                                refreshTrigger={serviceRefreshKey}
                             />
                         ) : (
                             <ProductIndex
@@ -145,4 +158,3 @@ const Products = forwardRef((props, ref) => {
 });
 
 export default Products;
-

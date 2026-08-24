@@ -9,7 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
+    let persianDigits = "٠١٢٣٤٥٦٧٨٩";
     let persianMap = persianDigits.split("");
 
     function convertToArabicNumber(input) {

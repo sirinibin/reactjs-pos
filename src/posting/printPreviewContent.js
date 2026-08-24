@@ -8,7 +8,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 
 const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "٠١٢٣٤٥٦٧٨٩";
     let persianMap = persianDigits.split("");
 
     function convertToArabicNumber(input) {

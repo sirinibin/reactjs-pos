@@ -10,7 +10,7 @@ import Amount from "../utils/amount.js";
 
 const ReportContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
+    let persianDigits = "٠١٢٣٤٥٦٧٨٩";
     let persianMap = persianDigits.split("");
 
 

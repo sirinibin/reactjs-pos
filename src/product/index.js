@@ -115,6 +115,7 @@ function ProductIndex(props) {
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+    useEffect(() => { if (props.refreshTrigger) list(); }, [props.refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
     let [store, setStore] = useState({});

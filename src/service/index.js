@@ -80,6 +80,7 @@ function ServiceIndex(props) {
     const categorySearchRef = useRef();
 
     useEffect(() => { list(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { if (props.refreshTrigger) list(); }, [props.refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Helpers ──
 
@@ -242,7 +243,7 @@ function ServiceIndex(props) {
                 onRestoreDefaults={restoreSearchDefaults}
             />
 
-            <ServiceCreate ref={createFormRef} showToastMessage={props.showToastMessage} refreshList={list} />
+            {!props.onOpenCreate && <ServiceCreate ref={createFormRef} showToastMessage={props.showToastMessage} refreshList={list} />}
             <ServiceView ref={viewRef} showToastMessage={props.showToastMessage} />
 
             <div className="row mb-1">
@@ -250,7 +251,7 @@ function ServiceIndex(props) {
                     <h1 className="h3 mb-0">Services</h1>
                 </div>
                 <div className="col-auto">
-                    <Button variant="primary" onClick={() => createFormRef.current?.open()}>
+                    <Button variant="primary" onClick={() => props.onOpenCreate ? props.onOpenCreate() : createFormRef.current?.open()}>
                         <i className="bi bi-plus-lg"></i> Create
                     </Button>
                 </div>
