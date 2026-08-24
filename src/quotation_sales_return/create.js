@@ -423,6 +423,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     formData.phone = quotation.phone;
                     formData.vat_no = quotation.vat_no;
                     formData.enable_report_to_zatca = false;
+                    if (quotation.vat_percent !== undefined && quotation.vat_percent !== null) {
+                        formData.vat_percent = quotation.vat_percent;
+                    }
                     /*
                     formData.received_by = quotation.delivered_by;
                     formData.received_by_signature_id = quotation.delivered_by_signature_id;
@@ -1533,10 +1536,6 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                     if (formData.payments_input[0].amount > formData.cash_discount) {
                         formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
-                    }
-
-                    if (formData.payments_input[0].amount > quotation?.total_payment_received) {
-                        formData.payments_input[0].amount = quotation.total_payment_received;
                     }
                 }
             } else {
