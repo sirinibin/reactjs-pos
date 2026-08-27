@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { LANGUAGE_OPTIONS } from './i18n/config';
 import eventEmitter from './utils/eventEmitter';
+import StoreSettingsModal from './store/StoreSettingsModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -62,6 +63,7 @@ function Topbar(props) {
     const [storeCode, setStoreCode] = useState("");
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
 
     async function fetchStores() {
         if (stores.length > 0) return;
@@ -518,6 +520,10 @@ function Topbar(props) {
                                         <i className="bi bi-person me-2"></i>{localStorage.getItem("user_name")}
                                     </Dropdown.ItemText>
                                     <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => setStoreSettingsOpen(true)}>
+                                        <i className="bi bi-gear me-2"></i>Store Settings
+                                    </Dropdown.Item>
+                                    <Dropdown.Divider />
                                     <Dropdown.Item onClick={(e) => { logOut(e); }}>
                                         <i className="bi bi-box-arrow-right me-2"></i>{t('buttons.logout')}
                                     </Dropdown.Item>
@@ -608,6 +614,18 @@ function Topbar(props) {
                         {/* Drawer actions */}
                         <div style={{ flex: 1, padding: "8px 0" }}>
                             <button
+                                onClick={() => { setMobileMenuOpen(false); setStoreSettingsOpen(true); }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: "10px",
+                                    width: "100%", padding: "13px 18px",
+                                    background: "none", border: "none", cursor: "pointer",
+                                    fontSize: "14px", color: "#333", textAlign: "left",
+                                }}
+                            >
+                                <i className="bi bi-gear" style={{ fontSize: "18px" }}></i>
+                                Store Settings
+                            </button>
+                            <button
                                 onClick={() => { setMobileMenuOpen(false); logOut({ preventDefault: () => {} }); }}
                                 style={{
                                     display: "flex", alignItems: "center", gap: "10px",
@@ -623,6 +641,8 @@ function Topbar(props) {
                     </div>
                 </>
             )}
+
+            <StoreSettingsModal show={storeSettingsOpen} onHide={() => setStoreSettingsOpen(false)} />
         </>
     );
 }
