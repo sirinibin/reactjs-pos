@@ -12081,6 +12081,16 @@ body.balance-sheet-open.purchase-return-form-open .purchase-return-create-wrap {
 body.balance-sheet-open.sales-return-form-open .sales-return-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-form-open .quotation-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return-create-wrap { z-index: 1082 !important; }
+/* DraggableHistoryModal panels opened from the info-menu inside a quotation/sales-return form
+   that was itself opened from the balance sheet: the form sits at 1082 (rules above) while the
+   panels only reach 1081 via body.quotation-form-open .above-sales-modal, making them appear
+   behind the form. These (0,3,1) rules lift the panels one step above the form. */
+body.balance-sheet-open.quotation-form-open .draggable-history-modal { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .draggable-history-modal { z-index: 1083 !important; }
+/* QuotationType3Form (.qt3-modal-wrap) is overridden to 1070 by body.balance-sheet-open .modal
+   (spec 0,2,1 beats inline .qt3-modal-wrap spec 0,1,0). Lift type-3 above the balance sheet
+   (1081) so it is visible, then the panel rule above (1083) keeps history panels on top of it. */
+body.balance-sheet-open.quotation-form-open .qt3-modal-wrap { z-index: 1082 !important; }
 /* CustomerPending must appear above every form opened from the balance sheet.
    Forms in that context reach at most z-index 1090 (purchase-create-wrap), so 1091 clears them all.
    This rule has the same specificity (0,2,1) as the per-form rules above but appears later in the
