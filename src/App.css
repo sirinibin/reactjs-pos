@@ -12087,6 +12087,8 @@ body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return
    behind the form. These (0,3,1) rules lift the panels one step above the form. */
 body.balance-sheet-open.quotation-form-open .draggable-history-modal { z-index: 1083 !important; }
 body.balance-sheet-open.quotation-sales-return-form-open .draggable-history-modal { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-form-open .image-viewer-modal-wrap { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .image-viewer-modal-wrap { z-index: 1083 !important; }
 /* QuotationType3Form (.qt3-modal-wrap) is overridden to 1070 by body.balance-sheet-open .modal
    (spec 0,2,1 beats inline .qt3-modal-wrap spec 0,1,0). Lift type-3 above the balance sheet
    (1081) so it is visible, then the panel rule above (1083) keeps history panels on top of it. */
