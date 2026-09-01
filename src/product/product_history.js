@@ -1941,12 +1941,19 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 overlay={
                                                                                     <Tooltip id={`stock-tooltip-${history.id}`}>
                                                                                         ({details})
-
                                                                                     </Tooltip>
                                                                                 }
                                                                             >
-                                                                                <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                <span style={{ cursor: "pointer" }}>
                                                                                     <b>{totalStock}</b>
+                                                                                    {orderedEntries.length > 0 && (
+                                                                                        <div style={{ fontSize: "0.75em", color: "#555", marginTop: "2px", whiteSpace: "nowrap" }}>
+                                                                                            {orderedEntries.map(([key, value]) => {
+                                                                                                const name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                                return <div key={key}>{name}: {value}</div>;
+                                                                                            })}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </span>
                                                                             </OverlayTrigger>
                                                                         );
