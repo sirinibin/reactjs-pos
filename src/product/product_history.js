@@ -851,6 +851,7 @@ const ProductHistory = forwardRef((props, ref) => {
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
+                className="table-settings-in-history"
             />
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 

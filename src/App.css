@@ -12013,6 +12013,7 @@ span.flatpickr-weekday {
 .above-preview-modal { z-index: 1310 !important; }
 /* Update forms opened from within a history modal, and the print preview modal */
 .above-history-modal { z-index: 1090 !important; }
+.table-settings-in-history { z-index: 1160 !important; }
 .order-print-wrap { z-index: 1090 !important; }
 body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
