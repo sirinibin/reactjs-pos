@@ -146,23 +146,6 @@ function TitleRow({ label, value, onChange }) {
     );
 }
 
-function TripleRow({ label, data, path, onChange }) {
-    const val = path.reduce((o, k) => (o && o[k] !== undefined ? o[k] : ''), data);
-    return (
-        <div className="col-md-4 mb-3">
-            <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444', marginBottom: '4px' }}>{label}</label>
-            <input
-                type="text"
-                className="form-control form-control-sm"
-                value={val || ''}
-                onChange={e => onChange(path, e.target.value)}
-                placeholder="Invoice title"
-                style={{ fontSize: '12px' }}
-            />
-        </div>
-    );
-}
-
 function BankField({ label, value, onChange, placeholder }) {
     return (
         <div className="col-md-6 mb-3">
@@ -233,7 +216,7 @@ function StoreSettingsModal({ show, onHide }) {
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', Authorization: token },
                 body: JSON.stringify(formData),
             });
-            const data = await res.json();
+            await res.json();
             if (!res.ok) {
                 showFlash('Failed to save. Please check your inputs.', 'danger');
                 return;

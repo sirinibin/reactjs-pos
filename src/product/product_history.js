@@ -1939,7 +1939,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                             <OverlayTrigger
                                                                                 placement="top"
                                                                                 overlay={
-                                                                                    <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                    <Tooltip id={`stock-tooltip-${history.id}`}>
                                                                                         ({details})
 
                                                                                     </Tooltip>
