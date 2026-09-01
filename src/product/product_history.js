@@ -1945,7 +1945,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                     </Tooltip>
                                                                                 }
                                                                             >
-                                                                                <span style={{ cursor: "pointer" }}>
+                                                                                <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
                                                                                     <b>{totalStock}</b>
                                                                                     {orderedEntries.length > 0 && (
                                                                                         <div style={{ fontSize: "0.75em", color: "#555", marginTop: "2px", whiteSpace: "nowrap" }}>
