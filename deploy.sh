@@ -3,9 +3,10 @@
 # Mirrors what .github/workflows/deploy.yml (test) and deploy_production.yml (production) do.
 #
 # Usage:
-#   ./deploy.sh test        — build with test API URL and deploy to reactjs-pos-test
-#   ./deploy.sh production  — build with production API URL and deploy to reactjs-pos
-#   ./deploy.sh both        — deploy test first, then production
+#   ./deploy.sh              — run tests, then deploy to both test and production (default)
+#   ./deploy.sh both         — same as above
+#   ./deploy.sh test         — run tests, then deploy to test only
+#   ./deploy.sh production   — run tests, then deploy to production only
 
 set -e
 
@@ -60,12 +61,7 @@ deploy_to() {
 
 # ─── main ─────────────────────────────────────────────────────────────────────
 
-TARGET="${1:-}"
-
-if [[ -z "$TARGET" ]]; then
-    echo "Usage: $0 <test|production|both>"
-    exit 1
-fi
+TARGET="${1:-both}"
 
 case "$TARGET" in
     test)
