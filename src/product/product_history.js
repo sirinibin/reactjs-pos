@@ -136,9 +136,12 @@ const ProductHistory = forwardRef((props, ref) => {
 
 
 
+    const [store, setStore] = useState(null);
+
     async function getStore(id) {
         try {
-            await fetchStore(id);
+            const data = await fetchStore(id);
+            setStore(data);
         } catch (error) { }
     }
 
@@ -862,7 +865,7 @@ const ProductHistory = forwardRef((props, ref) => {
             {showQuotationForm && <QuotationCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationForm(false)} />}
             {showQuotationSalesReturnForm && <QuotationSalesReturnCreate fromHistory={true} modalClass={props.subFormModalClass} ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowQuotationSalesReturnForm(false)} />}
             {showDeliveryNoteForm && <DeliveryNoteCreate fromHistory={true} modalClass={props.subFormModalClass} ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowDeliveryNoteForm(false)} />}
-            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowStockTransferForm(false)} />}
+            {showStockTransferForm && <StockTransferCreate fromHistory={true} modalClass={props.subFormModalClass} ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} onClose={() => setShowStockTransferForm(false)} />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />
             <VendorCreate ref={VendorUpdateFormRef} />
@@ -1905,6 +1908,12 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                 {col.key === "stock" && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {(() => {
                                                                         const totalStock = history[col.key] ?? 0;
+                                                                        const warehouseEnabled = store?.settings?.enable_warehouse_module;
+
+                                                                        if (!warehouseEnabled) {
+                                                                            return <b>{totalStock}</b>;
+                                                                        }
+
                                                                         let warehouseStocks = history["warehouse_stocks"];
                                                                         if (!warehouseStocks) {
                                                                             warehouseStocks = { "main_store": totalStock };
