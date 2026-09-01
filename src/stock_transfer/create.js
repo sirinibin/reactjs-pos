@@ -3070,7 +3070,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
             <Modal show={show} size="xl" fullscreen id="stocktransfer_create_form"
-                onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
+                onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`${props.fromHistory ? 'from-history-form ' : ''}${props.modalClass || ''}`}>
                 <Modal.Header>
                     <Modal.Title>
                         {isUpdateForm ? "Update Stock Transfer #" + formData.code : "Create New Stock Transfer"}
