@@ -72,19 +72,20 @@ describe('user/create.js — handleCreate rejects Admin role in managerMode', ()
 
 // ── 4. suggestStores store restriction ───────────────────────────────────────
 
-describe('user/create.js — suggestStores restricted to Manager stores', () => {
-    test('4.1  managerMode restricts store search to Manager own store_id', () => {
+describe('user/create.js — loadAllStores restricted to Manager stores', () => {
+    test('4.1  managerMode restricts store list to Manager own store_id', () => {
         expect(SRC).toMatch(/managerMode[\s\S]{0,200}?store_id/);
     });
 
-    test('4.2  localStorage store_id used as restriction param', () => {
+    test('4.2  localStorage store_id used as restriction in loadAllStores', () => {
         const fn = SRC.match(/if\s*\(managerMode\)[\s\S]{0,400}/);
         expect(fn).not.toBeNull();
         expect(fn[0]).toMatch(/store_id/);
     });
 
-    test('4.3  store_ids param set on params object in managerMode', () => {
-        expect(SRC).toMatch(/params\.store_ids\s*=/);
+    test('4.3  loadAllStores appends store_ids query param in managerMode', () => {
+        // loadAllStores uses ObjectToSearchQueryParams({store_ids: myStoreId}) to restrict
+        expect(SRC).toMatch(/store_ids.*myStoreId|ObjectToSearchQueryParams.*store_ids/);
     });
 });
 

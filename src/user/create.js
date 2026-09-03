@@ -231,7 +231,7 @@ const UserCreate = forwardRef((props, ref) => {
 
 
     let [selectedStores, setSelectedStores] = useState([]);
-    let [storeOptions, setStoreOptions] = useState([]);
+
 
     let [selectedRoles, setSelectedRoles] = useState([]);
     let [roleOptions, setRoleOptions] = useState([]);
@@ -318,71 +318,6 @@ const UserCreate = forwardRef((props, ref) => {
 
     function removeStore(storeId) {
         setSelectedStores(prev => prev.filter(s => s.id !== storeId));
-    }
-
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggest stores");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-
-        // In managerMode, restrict store search to the Manager's own store IDs
-        if (managerMode) {
-            const myStoreId = localStorage.getItem('store_id');
-            if (myStoreId) params.store_ids = myStoreId;
-        }
-
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name,branch_name,code";
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-        console.log("data:", data);
-        if (data.result) {
-            for (var i = 0; i < data.result.length; i++) {
-                data.result[i].name = data.result[i].name + " - " + data.result[i].branch_name + " (" + data.result[i].code + ")";
-            }
-        }
-
-        if (formData.id) {
-            // data.result = data.result.filter(store => store.id !== formData.id);
-        }
-
-        let newStoreOptions = [];
-        for (let i = 0; i < data.result.length; i++) {
-            let storeSelected = false;
-            for (var j = 0; j < selectedStores.length; j++) {
-                if (data.result[i].id === selectedStores[j].id) {
-                    storeSelected = true;
-                    break
-                }
-            }
-            if (!storeSelected) {
-                newStoreOptions.push(data.result[i]);
-            }
-        }
-        // data.result = data.result.filter(store => store.id !== selectedStores.id);
-        setStoreOptions(newStoreOptions);
     }
 
     async function suggestRoles(searchTerm) {

@@ -66,7 +66,6 @@ function Topbar(props) {
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
-    const [changePasswordOpen, setChangePasswordOpen] = useState(false);
     const changePwRef = useRef(null);
     const manageUsersRef = useRef(null);
     const userRole = localStorage.getItem('user_role');
