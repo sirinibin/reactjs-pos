@@ -127,8 +127,8 @@ const ManageUsersModal = forwardRef((props, ref) => {
                 setLoading(false);
                 if (data.status && data.result) {
                     let result = data.result;
-                    if (isManager()) {
-                        result = result.filter(u => MANAGER_ALLOWED_ROLES.includes(u.role));
+                    if (!isAdmin()) {
+                        result = result.filter(u => u.role !== 'Admin' && !u.admin);
                     }
                     setUsers(result);
                 } else {

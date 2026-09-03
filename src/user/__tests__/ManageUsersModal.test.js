@@ -50,8 +50,9 @@ describe('ManageUsersModal.js — Manager role restrictions', () => {
         expect(roleOptionsBlock[0]).toMatch(/isAdmin|isManager/);
     });
 
-    test('2.3  list() filters users by MANAGER_ALLOWED_ROLES when isManager', () => {
-        expect(SRC).toMatch(/isManager\(\)[\s\S]{0,200}?MANAGER_ALLOWED_ROLES/);
+    test('2.3  list() client-side filters admin users out for non-admins', () => {
+        // Guard changed from isManager+MANAGER_ALLOWED_ROLES to !isAdmin+role/admin check
+        expect(SRC).toMatch(/!isAdmin\(\)[\s\S]{0,200}?role.*Admin|!isAdmin\(\)[\s\S]{0,200}?u\.admin/);
     });
 
     test('2.4  isManager() checks user_role === Manager', () => {
@@ -60,6 +61,14 @@ describe('ManageUsersModal.js — Manager role restrictions', () => {
 
     test('2.5  isAdmin() checks user_role === Admin', () => {
         expect(SRC).toMatch(/user_role.*Admin|Admin.*user_role/);
+    });
+
+    test('2.6  client-side filter excludes u.role === Admin', () => {
+        expect(SRC).toMatch(/u\.role\s*!==\s*['"]Admin['"]/);
+    });
+
+    test('2.7  client-side filter also excludes u.admin === true', () => {
+        expect(SRC).toMatch(/!u\.admin/);
     });
 });
 
@@ -250,5 +259,25 @@ describe('ManageUsersModal.js — table structure', () => {
     test('9.6  online indicator shown for online users', () => {
         expect(SRC).toMatch(/u\.online/);
         expect(SRC).toMatch(/Online/);
+    });
+});
+
+// ── 10. Admin-exclusion and store-scope guards ────────────────────────────────
+
+describe('ManageUsersModal.js — admin-exclusion and store-scope filtering', () => {
+    test('10.1  client-side admin exclusion runs for all non-admins (not just managers)', () => {
+        // Must use !isAdmin() as the guard, not isManager()
+        expect(SRC).toMatch(/!isAdmin\(\)/);
+    });
+
+    test('10.2  both role and admin flag are checked in the exclusion', () => {
+        const filterBlock = SRC.match(/!isAdmin\(\)[\s\S]{0,400}/);
+        expect(filterBlock).not.toBeNull();
+        expect(filterBlock[0]).toMatch(/role.*Admin|Admin.*role/);
+        expect(filterBlock[0]).toMatch(/u\.admin/);
+    });
+
+    test('10.3  search[role] is sent to backend in buildQuery', () => {
+        expect(SRC).toMatch(/search\[role\]/);
     });
 });
