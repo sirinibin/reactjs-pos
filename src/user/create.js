@@ -18,6 +18,9 @@ const UserCreate = forwardRef((props, ref) => {
             setFormData({});
             selectedRoles = [];
             setSelectedRoles([]);
+            selectedStores = [];
+            setSelectedStores([]);
+            setPickerSelected(new Set());
             if (id) {
                 getUser(id);
             }

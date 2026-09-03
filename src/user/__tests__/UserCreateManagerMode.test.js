@@ -269,3 +269,32 @@ describe('user/create.js — RBAC dynamic check', () => {
         expect(block[0]).toMatch(/setRbacEnabled\(false\)/);
     });
 });
+
+// ── 9. open() resets stores for new-user flow ─────────────────────────────────
+
+describe('user/create.js — open() clears stores when creating new user', () => {
+    test('9.1  open() resets selectedStores to empty array', () => {
+        // Grab the open() function body
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,600}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/selectedStores\s*=\s*\[\]/);
+        expect(openBlock[0]).toMatch(/setSelectedStores\(\s*\[\]\s*\)/);
+    });
+
+    test('9.2  open() resets pickerSelected to empty Set', () => {
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,600}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/setPickerSelected\(\s*new Set\(\)/);
+    });
+
+    test('9.3  stores are reset before getUser is called (create path is clean)', () => {
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,800}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        // setSelectedStores([]) must appear before getUser(id) in the open body
+        const resetPos = openBlock[0].indexOf('setSelectedStores([])');
+        const getUserPos = openBlock[0].indexOf('getUser(id)');
+        expect(resetPos).toBeGreaterThan(-1);
+        expect(getUserPos).toBeGreaterThan(-1);
+        expect(resetPos).toBeLessThan(getUserPos);
+    });
+});
