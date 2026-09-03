@@ -44,7 +44,28 @@ describe('App.css — .above-quotations-modal generic z-index rule', () => {
 });
 
 
-// ── 2. QuotationView modalClass ternary ───────────────────────────────────────
+// ── 2. QuotationView and OrderPreview always mounted in enableSelection context ─
+
+describe('quotation/index.js — QuotationView always mounted when enableSelection=true (fixes View button)', () => {
+    test('QuotationView render condition includes props.enableSelection', () => {
+        expect(Q_IDX).toMatch(
+            /\(pendingView\s*\|\|\s*props\.enableSelection\s*\|\|\s*showQuotationView\)\s*&&\s*<QuotationView/
+        );
+    });
+
+    test('OrderPreview always mounted when enableSelection=true', () => {
+        expect(Q_IDX).toMatch(
+            /\(showOrderPreview\s*\|\|\s*pendingView\s*\|\|\s*props\.enableSelection\)\s*&&\s*<OrderPreview/
+        );
+    });
+
+    test('pendingView alone still mounts QuotationView (existing working path unchanged)', () => {
+        expect(Q_IDX).toMatch(/pendingView\s*\|\|\s*props\.enableSelection\s*\|\|\s*showQuotationView/);
+    });
+});
+
+
+// ── 3. QuotationView modalClass ternary ───────────────────────────────────────
 
 describe('quotation/index.js — QuotationView gets elevated modalClass when enableSelection=true', () => {
     test('QuotationView uses above-pending-modal when pendingView', () => {

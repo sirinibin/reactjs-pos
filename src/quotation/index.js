@@ -975,7 +975,7 @@ function QuotationIndex(props) {
       <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
       {showOrderPrint && <OrderPrint ref={PrintRef} />}
-      {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+      {(showOrderPreview || pendingView || props.enableSelection) && <OrderPreview ref={PreviewRef} />}
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
         setShowPrintTypeSelection(showPrintTypeSelection);
@@ -1024,7 +1024,7 @@ function QuotationIndex(props) {
         : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
-      {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
+      {(pendingView || props.enableSelection || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
