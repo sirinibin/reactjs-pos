@@ -61,7 +61,7 @@ function drawHeader(doc, title, store) {
     const parts = [
         store?.branch_name,
         store?.vat_no  ? `VAT: ${store.vat_no}` : '',
-        store?.address,
+        store?.national_address ? [store.national_address.building_no, store.national_address.street_name, store.national_address.district_name, store.national_address.city_name].filter(Boolean).join(', ') : '',
     ].filter(Boolean).map(S);
     if (parts.length) {
         doc.setFont('helvetica', 'normal');

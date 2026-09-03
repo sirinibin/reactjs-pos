@@ -3,8 +3,8 @@ import PreviewContent from './previewContent.js';
 import PreviewContentWithSellerInfo from './previewContentWithSellerInfo.js';
 import PreviewContentType2 from './previewContentType2.js';
 import PreviewContentType3 from './previewContentType3.js';
-import MBDIInvoiceBackground from './../INVOICE.jpg';
-import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+import { resolveImageUrl } from '../utils/imageUtils.js';
+
 
 function InvoicePrintPage() {
     // InvoicePrintPage – rendered by headless Chrome via the Go backend's
@@ -36,17 +36,9 @@ function InvoicePrintPage() {
                 const mn = data.modelName;
                 const fs = data.fontSizes;
 
-                let bg = '';
-                if (m?.store?.code === 'MBDI') {
-                    bg = MBDIInvoiceBackground;
-                } else if (
-                    m?.store?.code === 'LGK-SIMULATION' ||
-                    m?.store?.code === 'LGK' ||
-                    m?.store?.code === 'PH2'
-                ) {
-                    bg = LGKInvoiceBackground;
-                }
-
+                const bg = m?.store?.invoice_background
+                    ? resolveImageUrl(m.store.invoice_background, m.store.id, 'store')
+                    : '';
                 setInvoiceBackground(bg);
                 setModelName(mn);
                 setFontSizes(fs || {});

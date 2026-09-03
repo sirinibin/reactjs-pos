@@ -3,8 +3,8 @@ import { Modal, Button, Spinner } from 'react-bootstrap';
 import CustomerDepositPreviewContent from './previewContent.js';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
-import MBDIInvoiceBackground from './../INVOICE.jpg';
-import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+
+import { resolveImageUrl } from '../utils/imageUtils.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 
@@ -44,10 +44,8 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                     await getStore(localStorage.getItem("store_id"));
 
                     InvoiceBackground = "";
-                    if (model.store?.code === "MBDI") {
-                        InvoiceBackground = MBDIInvoiceBackground;
-                    } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
-                        InvoiceBackground = LGKInvoiceBackground;
+                    if (model.store?.invoice_background) {
+                        InvoiceBackground = resolveImageUrl(model.store.invoice_background, model.store.id, "store");
                     }
                     setInvoiceBackground(InvoiceBackground);
 

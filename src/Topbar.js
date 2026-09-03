@@ -5,6 +5,8 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import { LANGUAGE_OPTIONS } from './i18n/config';
 import eventEmitter from './utils/eventEmitter';
 import StoreSettingsModal from './store/StoreSettingsModal';
+import ChangePasswordModal from './user/ChangePasswordModal';
+import ManageUsersModal from './user/ManageUsersModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -64,6 +66,11 @@ function Topbar(props) {
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
+    const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+    const changePwRef = useRef(null);
+    const manageUsersRef = useRef(null);
+    const userRole = localStorage.getItem('user_role');
+    const canManageUsers = userRole === 'Admin' || userRole === 'Manager';
 
     async function fetchStores() {
         if (stores.length > 0) return;
@@ -523,6 +530,21 @@ function Topbar(props) {
                                     <Dropdown.Item onClick={() => setStoreSettingsOpen(true)}>
                                         <i className="bi bi-gear me-2"></i>Store Settings
                                     </Dropdown.Item>
+                                    <Dropdown.Item onClick={() => changePwRef.current?.open(
+                                        localStorage.getItem('user_id'),
+                                        localStorage.getItem('user_name'),
+                                        false
+                                    )}>
+                                        <i className="bi bi-shield-lock me-2"></i>Change Password
+                                    </Dropdown.Item>
+                                    {canManageUsers && (
+                                        <>
+                                            <Dropdown.Divider />
+                                            <Dropdown.Item onClick={() => manageUsersRef.current?.open()}>
+                                                <i className="bi bi-people me-2"></i>Manage Users
+                                            </Dropdown.Item>
+                                        </>
+                                    )}
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={(e) => { logOut(e); }}>
                                         <i className="bi bi-box-arrow-right me-2"></i>{t('buttons.logout')}
@@ -626,6 +648,39 @@ function Topbar(props) {
                                 Store Settings
                             </button>
                             <button
+                                onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    changePwRef.current?.open(
+                                        localStorage.getItem('user_id'),
+                                        localStorage.getItem('user_name'),
+                                        false
+                                    );
+                                }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: "10px",
+                                    width: "100%", padding: "13px 18px",
+                                    background: "none", border: "none", cursor: "pointer",
+                                    fontSize: "14px", color: "#333", textAlign: "left",
+                                }}
+                            >
+                                <i className="bi bi-shield-lock" style={{ fontSize: "18px" }}></i>
+                                Change Password
+                            </button>
+                            {canManageUsers && (
+                                <button
+                                    onClick={() => { setMobileMenuOpen(false); manageUsersRef.current?.open(); }}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: "10px",
+                                        width: "100%", padding: "13px 18px",
+                                        background: "none", border: "none", cursor: "pointer",
+                                        fontSize: "14px", color: "#333", textAlign: "left",
+                                    }}
+                                >
+                                    <i className="bi bi-people" style={{ fontSize: "18px" }}></i>
+                                    Manage Users
+                                </button>
+                            )}
+                            <button
                                 onClick={() => { setMobileMenuOpen(false); logOut({ preventDefault: () => {} }); }}
                                 style={{
                                     display: "flex", alignItems: "center", gap: "10px",
@@ -643,6 +698,8 @@ function Topbar(props) {
             )}
 
             <StoreSettingsModal show={storeSettingsOpen} onHide={() => setStoreSettingsOpen(false)} />
+            <ChangePasswordModal ref={changePwRef} showToastMessage={props.showToastMessage} />
+            <ManageUsersModal ref={manageUsersRef} showToastMessage={props.showToastMessage} />
         </>
     );
 }

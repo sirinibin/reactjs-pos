@@ -11,8 +11,8 @@ import html2pdf from 'html2pdf.js';
 import "./print.css";
 import WhatsAppModal from './../utils/WhatsAppModal';
 import WhatsAppAPIModal from './../utils/WhatsAppAPIModal';
-import MBDIInvoiceBackground from './../INVOICE.jpg';
-import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+
+import { resolveImageUrl } from '../utils/imageUtils.js';
 //import jsPDF from "jspdf";
 import { PDFDocument } from 'pdf-lib';
 //import "jspdf-attachfiles";
@@ -87,10 +87,8 @@ const Preview = forwardRef((props, ref) => {
                 if (model.store_id) {
                     await getStore(model.store_id);
 
-                    if (model.store?.code === "MBDI") {
-                        InvoiceBackground = MBDIInvoiceBackground;
-                    } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
-                        InvoiceBackground = LGKInvoiceBackground;
+                    if (model.store?.invoice_background) {
+                        InvoiceBackground = resolveImageUrl(model.store.invoice_background, model.store.id, "store");
                     }
 
 
@@ -1104,10 +1102,8 @@ const Preview = forwardRef((props, ref) => {
 
             if (isInTauri) {
                 // Tauri: use Go chromedp PDF generation (correct Arabic text, saves to ~/Downloads)
-                if (model.store?.code === "MBDI") {
-                    InvoiceBackground = MBDIInvoiceBackground;
-                } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
-                    InvoiceBackground = LGKInvoiceBackground;
+                if (model.store?.invoice_background) {
+                    InvoiceBackground = resolveImageUrl(model.store.invoice_background, model.store.id, "store");
                 }
 
                 model.printing = false;
