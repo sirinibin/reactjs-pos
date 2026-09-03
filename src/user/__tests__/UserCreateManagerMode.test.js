@@ -30,9 +30,9 @@ describe('user/create.js — managerMode prop', () => {
 
 // ── 2. Role dropdown restriction ─────────────────────────────────────────────
 
-describe('user/create.js — role dropdown hides Admin for Manager', () => {
-    test('2.1  Admin option is conditionally rendered (not managerMode)', () => {
-        expect(SRC).toMatch(/!managerMode.*Admin|Admin.*!managerMode/);
+describe('user/create.js — role dropdown hides Admin for non-admins', () => {
+    test('2.1  Admin option is gated on currentUserIsAdmin (not managerMode)', () => {
+        expect(SRC).toMatch(/currentUserIsAdmin[\s\S]{0,50}Admin|Admin[\s\S]{0,50}currentUserIsAdmin/);
     });
 
     test('2.2  Manager option still present unconditionally', () => {
@@ -41,6 +41,13 @@ describe('user/create.js — role dropdown hides Admin for Manager', () => {
 
     test('2.3  SalesMan option still present unconditionally', () => {
         expect(SRC).toMatch(/<option value=["']SalesMan["']>/);
+    });
+
+    test('2.4  Admin option NOT gated on !managerMode (replaced by currentUserIsAdmin)', () => {
+        // The old !managerMode guard is superseded; currentUserIsAdmin is the sole gate
+        // Ensure the Admin option render line uses currentUserIsAdmin, not !managerMode
+        const adminOptionLine = SRC.match(/currentUserIsAdmin[\s\S]{0,80}<option value=["']Admin["']>|<option value=["']Admin["']>[\s\S]{0,80}currentUserIsAdmin/);
+        expect(adminOptionLine).not.toBeNull();
     });
 });
 
@@ -296,5 +303,52 @@ describe('user/create.js — open() clears stores when creating new user', () =>
         expect(resetPos).toBeGreaterThan(-1);
         expect(getUserPos).toBeGreaterThan(-1);
         expect(resetPos).toBeLessThan(getUserPos);
+    });
+});
+
+// ── 10. Self-role-change prevention ──────────────────────────────────────────
+
+describe('user/create.js — non-admin cannot change own role', () => {
+    test('10.1  currentUserId read from localStorage user_id', () => {
+        expect(SRC).toMatch(/localStorage\.getItem\(['"]user_id['"]\)/);
+    });
+
+    test('10.2  currentUserIsAdmin checks user_role === Admin and admin === true', () => {
+        expect(SRC).toMatch(/user_role.*===.*['"]Admin['"]|['"]Admin['"].*user_role/);
+        expect(SRC).toMatch(/admin.*===.*['"]true['"]|['"]true['"].*admin/);
+    });
+
+    test('10.3  isEditingSelf is true only when editing an existing user (formData.id exists) matching currentUserId', () => {
+        expect(SRC).toMatch(/isEditingSelf\s*=\s*!!formData\.id.*currentUserId|isEditingSelf.*formData\.id.*===.*currentUserId/);
+    });
+
+    test('10.4  roleDisabled = isEditingSelf && !currentUserIsAdmin', () => {
+        expect(SRC).toMatch(/roleDisabled\s*=\s*isEditingSelf\s*&&\s*!currentUserIsAdmin/);
+    });
+
+    test('10.5  role <select> has disabled={roleDisabled}', () => {
+        expect(SRC).toMatch(/disabled=\{roleDisabled\}/);
+    });
+
+    test('10.6  hint message shown when roleDisabled', () => {
+        // A hint/note is shown under the role field when disabled
+        expect(SRC).toMatch(/roleDisabled[\s\S]{0,200}cannot change your own role|cannot change your own role[\s\S]{0,200}roleDisabled/);
+    });
+
+    test('10.7  admins are NOT blocked — currentUserIsAdmin allows role change', () => {
+        // roleDisabled must include !currentUserIsAdmin (not just isEditingSelf alone)
+        const line = SRC.match(/roleDisabled\s*=[\s\S]{0,80}/);
+        expect(line).not.toBeNull();
+        expect(line[0]).toMatch(/!currentUserIsAdmin/);
+    });
+
+    test('10.8  managers editing OTHER users are NOT blocked — isEditingSelf guards on formData.id match', () => {
+        // isEditingSelf must compare formData.id to currentUserId (not just !!formData.id)
+        expect(SRC).toMatch(/isEditingSelf.*formData\.id.*===.*currentUserId|formData\.id.*===.*currentUserId.*isEditingSelf/);
+    });
+
+    test('10.9  new-user form (no formData.id) never blocks role — !!formData.id is false', () => {
+        // The !!formData.id guard ensures create-mode is never locked
+        expect(SRC).toMatch(/isEditingSelf\s*=\s*!!formData\.id/);
     });
 });

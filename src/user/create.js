@@ -240,6 +240,12 @@ const UserCreate = forwardRef((props, ref) => {
     const managerMode = !!props.managerMode;
     const MANAGER_ALLOWED_ROLES = ['Manager', 'SalesMan'];
 
+    // Non-admin users may not change their own role.
+    const currentUserId = localStorage.getItem('user_id');
+    const currentUserIsAdmin = localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('admin') === 'true';
+    const isEditingSelf = !!formData.id && formData.id === currentUserId;
+    const roleDisabled = isEditingSelf && !currentUserIsAdmin;
+
     // RBAC Roles section: shown only when the selected store has enable_rbac_module=true.
     // Re-fetches store settings whenever the store selection changes.
     const [rbacEnabled, setRbacEnabled] = useState(false);
@@ -724,6 +730,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                         <Label required>Role</Label>
                                                         <select
                                                             value={formData.role}
+                                                            disabled={roleDisabled}
                                                             onChange={(e) => {
                                                                 if (!e.target.value) {
                                                                     formData.role = "";
@@ -741,8 +748,11 @@ const UserCreate = forwardRef((props, ref) => {
                                                         >
                                                             <option value="Manager">Manager</option>
                                                             <option value="SalesMan">Sales Man</option>
-                                                            {!managerMode && <option value="Admin">Admin</option>}
+                                                            {currentUserIsAdmin && <option value="Admin">Admin</option>}
                                                         </select>
+                                                        {roleDisabled && (
+                                                            <small style={{ color: '#6b7280', fontSize: '11px' }}>You cannot change your own role.</small>
+                                                        )}
                                                         {errors.role && <ErrMsg>{errors.role}</ErrMsg>}
                                                     </div>
 
