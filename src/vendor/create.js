@@ -12,6 +12,8 @@ import ImageGallery from '../utils/ImageGallery.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import VendorCategoryCreate from '../vendor_category/create.js';
+import VendorCategoryIndex from '../vendor_category/index.js';
 
 const VendorCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
@@ -25,6 +27,9 @@ const VendorCreate = forwardRef((props, ref) => {
                 vat_percent: 15.00,
             };
             setFormData({ ...formData });
+
+            selectedCategories = [];
+            setSelectedCategories(selectedCategories);
 
             if (id) {
                 await getVendor(id);
@@ -48,6 +53,10 @@ const VendorCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
+
+    let [selectedCategories, setSelectedCategories] = useState([]);
+    let [categoryOptions, setCategoryOptions] = useState([]);
+    const categorySearchRef = useRef();
 
     let [store, setStore] = useState({});
 
@@ -157,6 +166,17 @@ const VendorCreate = forwardRef((props, ref) => {
                 }
                 setSelectedCountries(selectedCountries);
 
+                selectedCategories = [];
+                if (data.result.category_id && data.result.category_name) {
+                    for (var i = 0; i < data.result.category_id.length; i++) {
+                        selectedCategories.push({
+                            id: data.result.category_id[i],
+                            name: data.result.category_name[i],
+                        });
+                    }
+                }
+                setSelectedCategories([...selectedCategories]);
+
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -172,6 +192,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
         formData.vat_percent = parseFloat(formData.vat_percent);
+
+        formData.category_id = selectedCategories.map(c => c.id);
 
         if (formData.phone) {
             formData.phone_in_arabic = convertToArabicNumber(formData.phone.toString());
@@ -327,9 +349,28 @@ const VendorCreate = forwardRef((props, ref) => {
 
     const countrySearchRef = useRef();
 
+    // ── Vendor Category ────────────────────────────────────────────────────
+    const VendorCategoryCreateRef = useRef();
+    const VendorCategoryIndexRef = useRef();
+
+    async function suggestVendorCategories(searchTerm) {
+        if (!searchTerm) return;
+        const params = { name: searchTerm };
+        if (localStorage.getItem("store_id")) { params.store_id = localStorage.getItem("store_id"); }
+        const queryString = ObjectToSearchQueryParams(params);
+        const result = await fetch("/v1/vendor-category?select=id,name" + (queryString ? "&" + queryString : ""), {
+            method: "GET",
+            headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
+        });
+        const data = await result.json();
+        setCategoryOptions(data.result || []);
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // ── Design tokens ──────────────────────────────────────────────────────
     const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
     const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
+    const ICON_BTN = { background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '7px 10px', fontSize: '13px', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center' };
 
     const Label = ({ children, required }) => (
         <label style={{ display: 'block', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>
@@ -706,6 +747,88 @@ const VendorCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Categories Card */}
+                                        <div className="pw-card" style={CARD}>
+                                            <SectionTitle icon="bi-tag">Categories</SectionTitle>
+                                            <div className="row g-3">
+                                                <div className="col-md-8">
+                                                    <Label>Categories (Optional)</Label>
+                                                    <div className="d-flex gap-1">
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <Typeahead
+                                                                id="vendor_category_id"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    if (selectedItems.length === 0) return;
+                                                                    const item = selectedItems[0];
+                                                                    const isDuplicate = selectedCategories.some(c => c.id === item.id);
+                                                                    if (!isDuplicate) {
+                                                                        selectedCategories = [...selectedCategories, { id: item.id, name: item.name }];
+                                                                        setSelectedCategories(selectedCategories);
+                                                                    }
+                                                                    setCategoryOptions([]);
+                                                                    categorySearchRef.current?.clear();
+                                                                }}
+                                                                options={categoryOptions}
+                                                                placeholder="Search and add category"
+                                                                selected={[]}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm) => { suggestVendorCategories(searchTerm); }}
+                                                                ref={categorySearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCategoryOptions([]);
+                                                                        categorySearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <button type="button" style={ICON_BTN} onClick={() => VendorCategoryCreateRef.current.open()} title="New Category">
+                                                            <i className="bi bi-plus-lg"></i>
+                                                        </button>
+                                                        <button type="button" style={{ ...ICON_BTN, background: '#434655' }} onClick={() => VendorCategoryIndexRef.current.open()} title="Manage Categories">
+                                                            <i className="bi bi-list-ul"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {selectedCategories && selectedCategories.length > 0 && (
+                                                <div style={{ marginTop: '20px', overflowX: 'auto' }}>
+                                                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                                                        <thead>
+                                                            <tr style={{ background: '#eceef0' }}>
+                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</th>
+                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {selectedCategories.map((cat, index) => (
+                                                                <tr key={cat.id || index} style={{ borderBottom: '1px solid #c3c6d7' }}>
+                                                                    <td style={{ padding: '8px 12px', fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#191c1e', verticalAlign: 'middle' }}>
+                                                                        {cat.name}
+                                                                    </td>
+                                                                    <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
+                                                                        <button
+                                                                            type="button"
+                                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ba1a1a', fontSize: '14px', padding: '2px 6px' }}
+                                                                            onClick={() => {
+                                                                                const updated = selectedCategories.filter((_, i) => i !== index);
+                                                                                setSelectedCategories(updated);
+                                                                            }}
+                                                                            title="Remove"
+                                                                        >
+                                                                            <i className="bi bi-x-lg"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
                                 </>
 
                                 {/* ===== ADDRESS ===== */}
@@ -1039,6 +1162,14 @@ const VendorCreate = forwardRef((props, ref) => {
 
             </Modal>
 
+            <VendorCategoryCreate
+                ref={VendorCategoryCreateRef}
+                showToastMessage={props.showToastMessage}
+            />
+            <VendorCategoryIndex
+                ref={VendorCategoryIndexRef}
+                showToastMessage={props.showToastMessage}
+            />
 
         </>
     );
