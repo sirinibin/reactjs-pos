@@ -1636,6 +1636,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
                 enableSelection={enableSelection}
+                className={props.pendingView ? "above-pending-modal" : ""}
             />
 
             {showPrint && <OrderPrint ref={PrintRef} />}

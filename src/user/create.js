@@ -69,6 +69,20 @@ const UserCreate = forwardRef((props, ref) => {
         }
     });
 
+    // Fetch the logged-in user's role from the server every time the modal opens.
+    // Never rely on localStorage for security gates — the server is the source of truth.
+    useEffect(() => {
+        if (!show) return;
+        fetch('/v1/me', { headers: { Authorization: localStorage.getItem('access_token') } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.result) {
+                    setCurrentUserRole(data.result.role || 'Manager');
+                }
+            })
+            .catch(() => {});
+    }, [show]);
+
 
     function getUser(id) {
         console.log("inside get User");
@@ -251,9 +265,13 @@ const UserCreate = forwardRef((props, ref) => {
     const managerMode = !!props.managerMode;
     const MANAGER_ALLOWED_ROLES = ['Manager', 'SalesMan'];
 
-    // Non-admin users may not change their own role.
+    // Server-fetched role — populated from /v1/me whenever the form opens.
+    // Default null = non-admin until server confirms. Never read from localStorage for security gates.
+    const [currentUserRole, setCurrentUserRole] = useState(null);
+
     const currentUserId = localStorage.getItem('user_id');
-    const currentUserIsAdmin = localStorage.getItem('user_role') === 'Admin' || localStorage.getItem('admin') === 'true';
+    const currentUserIsAdmin = currentUserRole === 'Admin';
+    const currentUserCanAssignAdmin = currentUserRole === 'Admin';
     const isEditingSelf = !!formData.id && formData.id === currentUserId;
     const roleDisabled = isEditingSelf && !currentUserIsAdmin;
 
@@ -571,7 +589,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                         {errors.email && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.email}</ErrMsg>}
                                                     </div>
 
-                                                    {(!formData.id || currentUserIsAdmin) && (
+                                                    {!formData.id && (
                                                     <div className="col-md-6">
                                                         <Label required={!formData.id}>Password</Label>
                                                         <input
@@ -696,7 +714,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                         >
                                                             <option value="Manager">Manager</option>
                                                             <option value="SalesMan">Sales Man</option>
-                                                            {currentUserIsAdmin && <option value="Admin">Admin</option>}
+                                                            {currentUserCanAssignAdmin && <option value="Admin">Admin</option>}
                                                         </select>
                                                         {roleDisabled && (
                                                             <small style={{ color: '#6b7280', fontSize: '11px' }}>You cannot change your own role.</small>

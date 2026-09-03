@@ -2685,12 +2685,16 @@ const OrderCreate = forwardRef((props, ref) => {
             quantity: product.quantity,
             //  product_stores: product.product_stores,
             unit_price: product.unit_price ? product.unit_price : 0,
-            unit_price_with_vat: product.unit_price_with_vat ? product.unit_price_with_vat : 0,
+            unit_price_with_vat: product.unit_price
+                ? parseFloat(trimTo2Decimals(product.unit_price * (1 + ((formData.vat_percent || 0) / 100))))
+                : 0,
             unit: product.unit ? product.unit : "",
             purchase_unit_price: product.purchase_unit_price ? product.purchase_unit_price : 0,
             purchase_unit_price_with_vat: product.purchase_unit_price_with_vat ? product.purchase_unit_price_with_vat : 0,
             unit_discount: product.unit_discount ? product.unit_discount : 0,
-            unit_discount_with_vat: product.unit_discount_with_vat ? product.unit_discount_with_vat : 0,
+            unit_discount_with_vat: product.unit_discount
+                ? parseFloat(trimTo2Decimals(product.unit_discount * (1 + ((formData.vat_percent || 0) / 100))))
+                : 0,
             unit_discount_percent: product.unit_discount_percent ? product.unit_discount_percent : 0,
             unit_discount_percent_vat: product.unit_discount_percent_with_vat ? product.unit_discount_percent_with_vat : 0,
         });
@@ -6812,7 +6816,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                                                             <i className="bi bi-download" />
                                                         </Dropdown.Toggle>
-                                                        <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                        <Dropdown.Menu style={{ zIndex: 9999 }}>
                                                             <Dropdown.Item onClick={() => openQuotations()}>
                                                                 <i className="bi bi-file-earmark-text" /> {t('From Quotations')}
                                                             </Dropdown.Item>
@@ -7112,7 +7116,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
                                                                         <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
                                                                     </Dropdown.Toggle>
-                                                                    <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                    <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }}>
                                                                         <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
                                                                             <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t("Linked Products")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
                                                                         </Dropdown.Item>
@@ -9369,7 +9373,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     <Dropdown.Toggle variant="success" id="dropdown-import" className="px-3 rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px', backgroundColor: '#10b981' }}>
                                                         <i className="bi bi-download text-[16px]"></i> {t('Import')}
                                                     </Dropdown.Toggle>
-                                                    <Dropdown.Menu align="end" style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                    <Dropdown.Menu align="end" style={{ zIndex: 9999 }}>
                                                         <Dropdown.Item onClick={openQuotations}>
                                                             <i className="bi bi-file-earmark-text mr-1"></i> {t('From Quotations')}
                                                         </Dropdown.Item>
@@ -9600,7 +9604,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
                                                                             <i className="bi bi-info"></i>
                                                                         </Dropdown.Toggle>
-                                                                        <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                        <Dropdown.Menu style={{ zIndex: 9999 }}>
                                                                             <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                                 <i className="bi bi-link"></i>&nbsp;
                                                                                 {t("Linked Products")} ({getShortcut('linkedProducts')})

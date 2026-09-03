@@ -957,7 +957,7 @@ function QuotationIndex(props) {
         </Modal.Body>
       </Modal>}
 
-      {enableSalesInQuotation && showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
+      {enableSalesInQuotation && showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
 
       {/* ⚙️ Settings Modal */}
       <TableSettingsModal
@@ -969,7 +969,7 @@ function QuotationIndex(props) {
           onDragEnd={handleDisplayDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
           enableSelection={enableSelection}
-          className={props.pendingView ? "above-pending-modal" : ""}
+          className={(props.pendingView || props.enableSelection) ? "above-pending-modal" : ""}
       />
 
       <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
@@ -979,7 +979,7 @@ function QuotationIndex(props) {
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
         setShowPrintTypeSelection(showPrintTypeSelection);
-      }} centered className={pendingView ? "above-pending-modal-dialog" : ""}>
+      }} centered className={pendingView ? "above-pending-modal-dialog" : props.enableSelection ? "above-quotations-modal" : ""}>
         <Modal.Header closeButton>
           <Modal.Title>Select Print Type</Modal.Title>
         </Modal.Header>
@@ -1024,7 +1024,7 @@ function QuotationIndex(props) {
         : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
-      {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
+      {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">

@@ -105,7 +105,11 @@ function Login() {
 
                 localStorage.setItem("user_name", data.result.name);
                 localStorage.setItem("user_id", data.result.id);
-                localStorage.setItem("user_role", data.result.role);
+                // role may be omitted from API response (omitempty) for old users with empty role in DB.
+                // Always default to 'Manager' — never infer from the admin flag,
+                // as some records have admin=true with empty role (data issue).
+                const resolvedRole = data.result.role || 'Manager';
+                localStorage.setItem("user_role", resolvedRole);
                 //localStorage.setItem("id", JSON.stringify({ id: data.result.id, changedAt: Date.now() }));
 
 
@@ -126,7 +130,7 @@ function Login() {
                         headers: { Authorization: localStorage.getItem('access_token') },
                     });
                     const permData = await permRes.json();
-                    if (permData.result) {
+                    if (permData.result && permData.result.length > 0) {
                         localStorage.setItem("user_permissions", JSON.stringify(permData.result));
                     } else {
                         localStorage.removeItem("user_permissions");

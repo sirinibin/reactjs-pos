@@ -3333,7 +3333,7 @@ async function checkWarning(i) {
           onRestoreDefaults={restoreCustomerColDefaults}
       />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
-      <ImageViewerModal ref={imageViewerRef} images={productImages} />
+      <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
       <InfoDialog
         show={showInfo}
         message={infoMessage}
@@ -3341,7 +3341,7 @@ async function checkWarning(i) {
       />
       <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
-      <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} />
+      <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
       <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />

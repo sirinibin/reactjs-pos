@@ -146,10 +146,17 @@ describe('App.css — DraggableHistoryModal z-index rule in pending mode', () =>
         );
     });
 
-    test('OLD rule targeting .above-sales-modal for quotation-form-pending-open is GONE', () => {
-        expect(APP_CSS).not.toMatch(
-            /body\.quotation-form-pending-open\s+\.above-sales-modal/
+    test('body.quotation-form-pending-open .above-sales-modal:not(.customer-pending-modal) raised to z-index 1096', () => {
+        expect(APP_CSS).toMatch(
+            /body\.quotation-form-pending-open\s+\.above-sales-modal:not\(\.customer-pending-modal\)\s*\{[^}]*z-index\s*:\s*1096\s*!important/
         );
+    });
+
+    test('CustomerPending is excluded from the sub-modal boost via :not(.customer-pending-modal)', () => {
+        const rule = APP_CSS.match(
+            /body\.quotation-form-pending-open\s+(\.above-sales-modal[^{]*)\{/
+        )?.[1] || '';
+        expect(rule).toMatch(/:not\(\.customer-pending-modal\)/);
     });
 
     test('body.quotation-form-open .above-sales-modal still exists at z-index 1081 (non-pending rule)', () => {

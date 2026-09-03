@@ -43,10 +43,10 @@ describe('user/create.js — role dropdown hides Admin for non-admins', () => {
         expect(SRC).toMatch(/<option value=["']SalesMan["']>/);
     });
 
-    test('2.4  Admin option NOT gated on !managerMode (replaced by currentUserIsAdmin)', () => {
-        // The old !managerMode guard is superseded; currentUserIsAdmin is the sole gate
-        // Ensure the Admin option render line uses currentUserIsAdmin, not !managerMode
-        const adminOptionLine = SRC.match(/currentUserIsAdmin[\s\S]{0,80}<option value=["']Admin["']>|<option value=["']Admin["']>[\s\S]{0,80}currentUserIsAdmin/);
+    test('2.4  Admin option gated on currentUserCanAssignAdmin (user_role === Admin only)', () => {
+        // currentUserCanAssignAdmin = user_role === 'Admin' only (not the admin flag)
+        // Ensures users with admin=true but role!==Admin cannot assign Admin role
+        const adminOptionLine = SRC.match(/currentUserCanAssignAdmin[\s\S]{0,80}<option value=["']Admin["']>|<option value=["']Admin["']>[\s\S]{0,80}currentUserCanAssignAdmin/);
         expect(adminOptionLine).not.toBeNull();
     });
 });
@@ -314,9 +314,10 @@ describe('user/create.js — non-admin cannot change own role', () => {
         expect(SRC).toMatch(/localStorage\.getItem\(['"]user_id['"]\)/);
     });
 
-    test('10.2  currentUserIsAdmin checks user_role === Admin and admin === true', () => {
-        expect(SRC).toMatch(/user_role.*===.*['"]Admin['"]|['"]Admin['"].*user_role/);
-        expect(SRC).toMatch(/admin.*===.*['"]true['"]|['"]true['"].*admin/);
+    test('10.2  currentUserIsAdmin derived from server-fetched currentUserRole === Admin', () => {
+        // Role is now fetched from /v1/me on form open — not from localStorage admin flag
+        expect(SRC).toMatch(/currentUserRole\s*===\s*['"]Admin['"]/);
+        expect(SRC).toMatch(/\/v1\/me/);
     });
 
     test('10.3  isEditingSelf is true only when editing an existing user (formData.id exists) matching currentUserId', () => {
@@ -385,16 +386,16 @@ describe('user/create.js — open() shows Update immediately and defaults role',
     });
 });
 
-// ── 12. Password field — create: always visible; update: admins only ──────────
+// ── 12. Password field — create only (update form never shows it) ─────────────
 
 describe('user/create.js — password field rules', () => {
-    test('12.1  condition is !formData.id || currentUserIsAdmin', () => {
-        // Create mode (no id): always show. Update mode: admins only.
-        expect(SRC).toMatch(/!formData\.id\s*\|\|\s*currentUserIsAdmin/);
+    test('12.1  password shown only in create form — condition is !formData.id', () => {
+        // Create mode (no id): show. Update mode: never show; use Change Password instead.
+        expect(SRC).toMatch(/!formData\.id/);
     });
 
     test('12.2  password condition appears before the type=password input', () => {
-        const condPos = SRC.indexOf('!formData.id || currentUserIsAdmin');
+        const condPos = SRC.indexOf('!formData.id');
         const pwPos = SRC.indexOf('type="password"');
         expect(condPos).toBeGreaterThan(-1);
         expect(pwPos).toBeGreaterThan(-1);
@@ -407,5 +408,68 @@ describe('user/create.js — password field rules', () => {
 
     test('12.4  non-admins in update mode use Change Password option instead', () => {
         expect(SRC).toMatch(/Change password|Change Password/);
+    });
+});
+
+// ── 13. Server-fetched role — never trust localStorage for Admin gate ──────────
+
+describe('user/create.js — currentUserRole fetched from server, not localStorage', () => {
+    test('13.1  currentUserRole state declared with null default', () => {
+        expect(SRC).toMatch(/currentUserRole.*useState\(null\)|useState\(null\).*currentUserRole/);
+    });
+
+    test('13.2  setCurrentUserRole is the setter companion', () => {
+        expect(SRC).toMatch(/\[currentUserRole,\s*setCurrentUserRole\]/);
+    });
+
+    test('13.3  useEffect fetches /v1/me when show becomes true', () => {
+        // Guard: if (!show) return; ensures fetch only fires when modal opens
+        expect(SRC).toMatch(/if\s*\(!show\)\s*return/);
+        expect(SRC).toMatch(/\/v1\/me/);
+    });
+
+    test('13.4  /v1/me fetch depends on show in useEffect deps', () => {
+        const meBlock = SRC.match(/\/v1\/me[\s\S]{0,400}?\[show\]/);
+        expect(meBlock).not.toBeNull();
+    });
+
+    test('13.5  setCurrentUserRole called with data.result.role fallback to Manager', () => {
+        // Falsy role from server (omitempty empty) defaults to Manager — never null
+        expect(SRC).toMatch(/setCurrentUserRole\([\s\S]{0,60}['"]Manager['"]/);
+    });
+
+    test('13.6  currentUserIsAdmin derived from currentUserRole, not localStorage', () => {
+        // Must NOT read user_role or admin from localStorage for the admin gate
+        const isAdminLine = SRC.match(/currentUserIsAdmin\s*=[\s\S]{0,80}/);
+        expect(isAdminLine).not.toBeNull();
+        expect(isAdminLine[0]).not.toMatch(/localStorage/);
+        expect(isAdminLine[0]).toMatch(/currentUserRole/);
+    });
+
+    test('13.7  currentUserCanAssignAdmin derived from currentUserRole, not localStorage', () => {
+        const canAssignLine = SRC.match(/currentUserCanAssignAdmin\s*=[\s\S]{0,80}/);
+        expect(canAssignLine).not.toBeNull();
+        expect(canAssignLine[0]).not.toMatch(/localStorage/);
+        expect(canAssignLine[0]).toMatch(/currentUserRole/);
+    });
+
+    test('13.8  Admin option hidden by default (null role = non-admin) until server responds', () => {
+        // currentUserRole starts null; null === Admin = false → option hidden
+        // Verified by the useState(null) default on currentUserRole
+        expect(SRC).toMatch(/useState\(null\)/);
+        expect(SRC).toMatch(/currentUserCanAssignAdmin[\s\S]{0,80}<option value=["']Admin["']>/);
+    });
+
+    test('13.9  Admin option only rendered when currentUserCanAssignAdmin is true', () => {
+        const optionLine = SRC.match(/currentUserCanAssignAdmin[\s\S]{0,80}<option value=["']Admin["']>/);
+        expect(optionLine).not.toBeNull();
+    });
+
+    test('13.10  localStorage admin flag NOT used anywhere for admin role gate', () => {
+        // Security: admin flag in localStorage can be stale or manipulated
+        // The form must not check localStorage admin for showing Admin option
+        const adminOptionLine = SRC.match(/currentUserCanAssignAdmin\s*=[\s\S]{0,100}/);
+        expect(adminOptionLine).not.toBeNull();
+        expect(adminOptionLine[0]).not.toMatch(/localStorage.*admin|admin.*localStorage/);
     });
 });

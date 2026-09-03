@@ -99,3 +99,40 @@ describe('Topbar — StoreSettingsModal rendered in the component', () => {
         expect(SRC).toMatch(/setStoreSettingsOpen\(false\)/);
     });
 });
+
+// ── 6. Role-based access: SalesMan cannot see Store Settings ──────────────────
+
+describe('Topbar — canAccessStoreSettings role guard', () => {
+    test('6.1  canAccessStoreSettings is declared', () => {
+        expect(SRC).toMatch(/canAccessStoreSettings/);
+    });
+
+    test('6.2  canAccessStoreSettings grants access to Admin role', () => {
+        expect(SRC).toMatch(/canAccessStoreSettings[\s\S]{0,50}Admin/);
+    });
+
+    test('6.3  canAccessStoreSettings grants access to Manager role', () => {
+        expect(SRC).toMatch(/canAccessStoreSettings[\s\S]{0,80}Manager/);
+    });
+
+    test('6.4  canAccessStoreSettings does NOT mention SalesMan (SalesMan is excluded by absence)', () => {
+        // Guard is an allowlist (Admin|Manager) — SalesMan must not appear in the expression
+        const guardMatch = SRC.match(/const canAccessStoreSettings\s*=\s*[^\n]+/);
+        expect(guardMatch).not.toBeNull();
+        expect(guardMatch[0]).not.toMatch(/SalesMan/);
+    });
+
+    test('6.5  desktop Store Settings item is conditionally rendered with canAccessStoreSettings', () => {
+        expect(SRC).toMatch(/\{canAccessStoreSettings[\s\S]{0,200}Store Settings/);
+    });
+
+    test('6.6  mobile Store Settings button is conditionally rendered with canAccessStoreSettings', () => {
+        // canAccessStoreSettings must guard at least 2 blocks (desktop + mobile)
+        const matches = SRC.match(/canAccessStoreSettings/g) || [];
+        expect(matches.length).toBeGreaterThanOrEqual(3); // declaration + 2 guards
+    });
+
+    test('6.7  userRole is read from localStorage', () => {
+        expect(SRC).toMatch(/localStorage\.getItem\(['"]user_role['"]\)/);
+    });
+});

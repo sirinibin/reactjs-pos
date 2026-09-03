@@ -101,6 +101,14 @@ const ManageUsersModal = forwardRef((props, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [show, roleFilter, showInactive]);
 
+    // Poll online status silently every 15 s while the modal is open.
+    useEffect(() => {
+        if (!show) return;
+        const interval = setInterval(() => silentRefresh(), 15000);
+        return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [show, roleFilter, showInactive, searchName]);
+
     useEffect(() => {
         if (!show) return;
         const timer = setTimeout(() => list(), 300);
@@ -117,26 +125,29 @@ const ManageUsersModal = forwardRef((props, ref) => {
         return params.toString();
     }
 
-    function list() {
-        setLoading(true);
+    function fetchUsers(showSpinner) {
+        if (showSpinner) setLoading(true);
         fetch(`/v1/user?${buildQuery()}`, {
             headers: { Authorization: localStorage.getItem('access_token') },
         })
             .then(r => r.json())
             .then(data => {
-                setLoading(false);
+                if (showSpinner) setLoading(false);
                 if (data.status && data.result) {
                     let result = data.result;
                     if (!isAdmin()) {
                         result = result.filter(u => u.role !== 'Admin' && !u.admin);
                     }
                     setUsers(result);
-                } else {
+                } else if (showSpinner) {
                     setUsers([]);
                 }
             })
-            .catch(() => { setLoading(false); setUsers([]); });
+            .catch(() => { if (showSpinner) { setLoading(false); setUsers([]); } });
     }
+
+    function list() { fetchUsers(true); }
+    function silentRefresh() { fetchUsers(false); }
 
     function openCreate() {
         if (userCreateRef.current) userCreateRef.current.open();

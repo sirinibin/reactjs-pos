@@ -69,7 +69,9 @@ function Topbar(props) {
     const changePwRef = useRef(null);
     const manageUsersRef = useRef(null);
     const userRole = localStorage.getItem('user_role');
-    const canManageUsers = userRole === 'Admin' || userRole === 'Manager';
+    const isAdminFlag = localStorage.getItem('admin') === 'true';
+    const canManageUsers = userRole === 'Admin' || userRole === 'Manager' || isAdminFlag;
+    const canAccessStoreSettings = userRole === 'Admin' || userRole === 'Manager';
 
     async function fetchStores() {
         if (stores.length > 0) return;
@@ -526,9 +528,11 @@ function Topbar(props) {
                                         <i className="bi bi-person me-2"></i>{localStorage.getItem("user_name")}
                                     </Dropdown.ItemText>
                                     <Dropdown.Divider />
+                                    {canAccessStoreSettings && (
                                     <Dropdown.Item onClick={() => setStoreSettingsOpen(true)}>
                                         <i className="bi bi-gear me-2"></i>Store Settings
                                     </Dropdown.Item>
+                                    )}
                                     <Dropdown.Item onClick={() => changePwRef.current?.open(
                                         localStorage.getItem('user_id'),
                                         localStorage.getItem('user_name'),
@@ -634,6 +638,7 @@ function Topbar(props) {
 
                         {/* Drawer actions */}
                         <div style={{ flex: 1, padding: "8px 0" }}>
+                            {canAccessStoreSettings && (
                             <button
                                 onClick={() => { setMobileMenuOpen(false); setStoreSettingsOpen(true); }}
                                 style={{
@@ -646,6 +651,7 @@ function Topbar(props) {
                                 <i className="bi bi-gear" style={{ fontSize: "18px" }}></i>
                                 Store Settings
                             </button>
+                            )}
                             <button
                                 onClick={() => {
                                     setMobileMenuOpen(false);

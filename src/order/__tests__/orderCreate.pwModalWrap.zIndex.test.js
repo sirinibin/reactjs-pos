@@ -43,11 +43,13 @@ describe('OrderCreate inline style — source contains the style line', () => {
 });
 
 
-// ─── 2. pw-modal-wrap z-index raised to 1096 ─────────────────────────────────
+// ─── 2. pw-modal-wrap z-index raised to 1096/1097 (conditional) ──────────────
 
-describe('OrderCreate inline style — pw-modal-wrap z-index is 1096', () => {
-    test('.pw-modal-wrap z-index is 1096', () => {
-        expect(STYLE_LINE).toMatch(/\.pw-modal-wrap\s*\{\s*z-index\s*:\s*1096\s*!important/);
+describe('OrderCreate inline style — pw-modal-wrap z-index is 1097 (pending) / 1096 (normal)', () => {
+    test('.pw-modal-wrap z-index is conditional: 1097 in pending mode, 1096 in normal mode', () => {
+        expect(STYLE_LINE).toContain(
+            "props.modalClass === 'above-pending-modal' ? 1097 : 1096"
+        );
     });
 
     test('.pw-modal-wrap z-index is NOT the old value 1085', () => {
@@ -95,9 +97,9 @@ describe('OrderCreate inline style — other z-index values unchanged', () => {
         );
     });
 
-    test('.above-sales-modal z-index is still 1082', () => {
-        expect(STYLE_LINE).toMatch(
-            /\.above-sales-modal\s*\{\s*z-index\s*:\s*1082\s*!important/
+    test('.above-sales-modal z-index is conditional: 1096 in pending mode, 1082 in normal mode', () => {
+        expect(STYLE_LINE).toContain(
+            "props.modalClass === 'above-pending-modal' ? 1096 : 1082"
         );
     });
 

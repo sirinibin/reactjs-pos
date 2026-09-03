@@ -1302,6 +1302,7 @@ function QuotationSalesReturnIndex(props) {
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
                 enableSelection={enableSelection}
+                className={props.pendingView ? "above-pending-modal" : ""}
             />
 
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />

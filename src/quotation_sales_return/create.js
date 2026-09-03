@@ -2236,9 +2236,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 <QuotationSalesUpdateForm ref={QuotationSalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
             </>}
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
-            <ImageViewerModal ref={imageViewerRef} images={productImages} />
+            <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
             <ProductView ref={ProductDetailsViewRef} />
-            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 

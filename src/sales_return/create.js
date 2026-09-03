@@ -717,9 +717,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     useEffect(() => {
         if (!show || props.fromHistory) return;
         document.body.classList.add('sales-return-form-open');
-        return () => document.body.classList.remove('sales-return-form-open');
+        if (props.modalClass === 'above-pending-modal') {
+            document.body.classList.add('sales-return-form-pending-open');
+        }
+        return () => {
+            document.body.classList.remove('sales-return-form-open');
+            document.body.classList.remove('sales-return-form-pending-open');
+        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [show, props.fromHistory]);
+    }, [show, props.fromHistory, props.modalClass]);
 
     function handleClose() {
         selectedProducts = [];
@@ -2452,9 +2458,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
-            <ImageViewerModal ref={imageViewerRef} images={productImages} />
+            <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
             <ProductView ref={ProductDetailsViewRef} />
-            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 

@@ -1504,7 +1504,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     return (
         <>
-            {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} />}
+            {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} modalClass={props.pendingView ? "above-pending-modal" : ""} />}
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={() => list()} />}
             {/* ⚙️ Settings Modal */}
             <TableSettingsModal
@@ -1516,6 +1516,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
                 enableSelection={enableSelection}
+                className={props.pendingView ? "above-pending-modal" : ""}
             />
 
 

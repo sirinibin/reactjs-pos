@@ -28,7 +28,7 @@ run_tests() {
     echo ""
     echo "==> Running tests..."
     cd "$FRONTEND_DIR"
-    CI=true npm test -- --watchAll=false
+    CI=true npm test -- --watchAll=false --runInBand
     echo "==> All tests passed."
 }
 

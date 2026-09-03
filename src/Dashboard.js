@@ -95,16 +95,19 @@ function RouteGuard() {
         if (!permsRaw) { setBlocked(false); return; }
 
         const perms = (() => { try { return JSON.parse(permsRaw); } catch (_) { return []; } })();
+        if (perms.length === 0) { setBlocked(false); return; }
+
         const permMap = {};
         perms.forEach(p => { permMap[p.resource] = p; });
 
         const menuItem = DEFAULT_MENU.find(m => pathname === m.path || pathname.startsWith(m.path + "/"));
         if (!menuItem || !menuItem.resource) { setBlocked(false); return; }
 
-        const rbacGrantsRead = !!permMap[menuItem.resource]?.read;
-
-        if (menuItem.adminOnly && !rbacGrantsRead) { setBlocked(true); return; }
-        if (!rbacGrantsRead) { setBlocked(true); return; }
+        const perm = permMap[menuItem.resource];
+        // Only block when this resource is explicitly in the user's permission set and read is denied.
+        // If the resource has no entry in the map, allow through (no explicit restriction).
+        if (perm && !perm.read) { setBlocked(true); return; }
+        if (menuItem.adminOnly && (!perm || !perm.read)) { setBlocked(true); return; }
 
         setBlocked(false);
     }, [pathname]);
