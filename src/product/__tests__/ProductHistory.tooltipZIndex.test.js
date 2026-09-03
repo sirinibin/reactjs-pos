@@ -175,18 +175,21 @@ describe('StoreSettingsModal.js — unused code removed', () => {
         expect(STORE_SETTINGS).not.toMatch(/TripleRow/);
     });
 
-    test('save handler does not bind unused data variable', () => {
-        // After the fix: `await res.json()` — no `const data =`
-        // Check the save/PUT block does not assign the json response to a variable
+    test('save handler binds data variable and uses it to check zatca reconnect status', () => {
+        // data is now used to check data.result?.zatca?.zatca_reconnect_required
         const putBlock = STORE_SETTINGS.slice(
             STORE_SETTINGS.indexOf("method: 'PUT'"),
             STORE_SETTINGS.indexOf("if (!res.ok)")
         );
-        expect(putBlock).not.toMatch(/const\s+data\s*=/);
+        expect(putBlock).toMatch(/const\s+data\s*=/);
     });
 
-    test('res.json() is still called (response body consumed even if not used)', () => {
+    test('res.json() is still called (response body consumed)', () => {
         expect(STORE_SETTINGS).toMatch(/await\s+res\.json\(\)/);
+    });
+
+    test('data.result.zatca.zatca_reconnect_required is checked in save handler', () => {
+        expect(STORE_SETTINGS).toMatch(/zatca_reconnect_required/);
     });
 
     test('BankField function is still present (was adjacent to removed TripleRow)', () => {

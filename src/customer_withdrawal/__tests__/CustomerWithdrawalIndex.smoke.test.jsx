@@ -38,6 +38,15 @@ jest.mock('../../customer_deposit/preview.js', () => {
   return { __esModule: true, default: React.forwardRef((_p, _r) => null) };
 });
 
+// ── ZatcaConnect (added to index.js for reconnect gate) ───────────────────
+jest.mock('../../store/zatca_connect.js', () => {
+  const mockReact = require('react');
+  return mockReact.forwardRef((_props, ref) => {
+    mockReact.useImperativeHandle(ref, () => ({ open: () => {} }));
+    return null;
+  });
+});
+
 // ── Utility component mocks ────────────────────────────────────────────────
 jest.mock('../../utils/OverflowTooltip.js', () => () => null);
 jest.mock('../../utils/amount.js', () => () => null);

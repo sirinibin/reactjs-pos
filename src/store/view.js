@@ -187,22 +187,6 @@ const StoreView = forwardRef((props, ref) => {
                                             <span style={{ fontSize: '14px', color: '#191c1e' }}>{model.branch_name || '—'}</span>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{model.address || '—'}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address (Arabic)</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e', direction: 'rtl' }}>{model.address_in_arabic || '—'}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Zipcode</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{model.zipcode || '—'}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Zipcode (Arabic)</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e', direction: 'rtl' }}>{model.zipcode_in_arabic || '—'}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone (Arabic)</span>
                                             <span style={{ fontSize: '14px', color: '#191c1e', direction: 'rtl' }}>{model.phone_in_arabic || '—'}</span>
                                         </div>

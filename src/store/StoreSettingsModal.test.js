@@ -13,6 +13,13 @@
  * 10.  Combined module flag interactions
  * 11.  Always-visible document title fields (Quotation, Delivery Note, etc.)
  * 12.  Save — API call, flash messages
+ * 13.  Tab navigation
+ * 14.  General Info tab fields
+ * 15.  National Address tab fields
+ * 16.  Contact tab fields
+ * 17.  Validation — required fields
+ * 18.  Trim on save
+ * 19.  ZATCA Reconnect Required banner
  */
 
 import React from 'react';
@@ -38,6 +45,30 @@ jest.mock('../utils/timezone.js', () => ({
     fromStoreLocalDate: jest.fn(() => null),
 }));
 
+jest.mock('./zatca_connect.js', () =>
+    // eslint-disable-next-line react/display-name
+    require('react').forwardRef((_props, _ref) => null)
+);
+
+jest.mock('react-bootstrap-typeahead', () => ({
+    Typeahead: ({ onChange, selected, placeholder }) => (
+        <input
+            data-testid="country-typeahead"
+            placeholder={placeholder}
+            value={selected && selected[0] ? selected[0].label : ''}
+            onChange={e => onChange(e.target.value ? [{ value: e.target.value, label: e.target.value }] : [])}
+        />
+    ),
+}));
+
+jest.mock('react-select-country-list', () => () => ({
+    getData: () => [
+        { value: 'SA', label: 'Saudi Arabia' },
+        { value: 'AE', label: 'United Arab Emirates' },
+        { value: 'US', label: 'United States' },
+    ],
+}));
+
 import StoreSettingsModal from './StoreSettingsModal';
 
 // ── fixture helpers ───────────────────────────────────────────────────────────
@@ -56,8 +87,27 @@ function deepMerge(base, override) {
 function makeStore(overrides = {}) {
     return deepMerge({
         id: 'store-1',
+        name: 'Test Company Ltd',
+        name_in_arabic: 'شركة الاختبار',
+        code: 'BRANCH-01',
+        branch_name: 'Main Branch',
+        registration_number: 'CRN001',
+        vat_no: '300000000000003',
+        vat_percent: 15,
+        phone: '+966500000000',
+        email: 'test@example.com',
         country_code: 'SA',
         currency_code: 'SAR',
+        national_address: {
+            building_no: '1234',
+            street_name: 'King Road',
+            street_name_arabic: '',
+            district_name: 'Al-Olaya',
+            district_name_arabic: '',
+            city_name: 'Riyadh',
+            city_name_arabic: '',
+            zipcode: '12345',
+        },
         zatca: { phase: '1' },
         bank_account: { bank_name: '', customer_no: '', iban: '', account_name: '', account_no: '' },
         settings: {
@@ -115,14 +165,30 @@ function stubFetch(store, { loadOk = true, saveOk = true } = {}) {
         });
 }
 
-// Renders the modal and waits until store data is loaded (PURCHASE TITLES always
-// appears on the invoice tab once formData is set).
+// Renders the modal and waits until store data is loaded.
+// Default active tab is 'general'; this helper navigates to 'invoice_titles'
+// so that legacy tests (3-12) that assert invoice tab content still pass.
 async function renderLoaded(storeOverrides = {}) {
     const store = makeStore(storeOverrides);
     stubFetch(store);
     const onHide = jest.fn();
     render(<StoreSettingsModal show={true} onHide={onHide} />);
+    // Wait for General Info tab to load (default tab)
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument());
+    // Navigate to Invoice Titles so legacy tests still see PURCHASE TITLES
+    const invoiceBtn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Invoice Titles');
+    fireEvent.click(invoiceBtn);
     await waitFor(() => expect(screen.getByText('PURCHASE TITLES')).toBeInTheDocument());
+    return { onHide, store };
+}
+
+// Renders the modal and waits until General Info tab is loaded (does NOT navigate away).
+async function renderOnGeneral(storeOverrides = {}) {
+    const store = makeStore(storeOverrides);
+    stubFetch(store);
+    const onHide = jest.fn();
+    render(<StoreSettingsModal show={true} onHide={onHide} />);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument());
     return { onHide, store };
 }
 
@@ -678,7 +744,7 @@ describe('11. Always-visible document title fields', () => {
 describe('12. Save — API call and flash messages', () => {
     test('12.1  Save sends PUT to correct URL', async () => {
         await renderLoaded();
-        fireEvent.click(screen.getByText('Save Changes'));
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() => {
             const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
             expect(putCall).toBeDefined();
@@ -688,7 +754,7 @@ describe('12. Save — API call and flash messages', () => {
 
     test('12.2  PUT includes Authorization header', async () => {
         await renderLoaded();
-        fireEvent.click(screen.getByText('Save Changes'));
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() => {
             const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
             expect(putCall[1].headers.Authorization).toBe('tok-abc');
@@ -697,7 +763,7 @@ describe('12. Save — API call and flash messages', () => {
 
     test('12.3  PUT body is valid JSON', async () => {
         await renderLoaded();
-        fireEvent.click(screen.getByText('Save Changes'));
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() => {
             const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
             expect(() => JSON.parse(putCall[1].body)).not.toThrow();
@@ -706,7 +772,7 @@ describe('12. Save — API call and flash messages', () => {
 
     test('12.4  success flash shown after successful save', async () => {
         await renderLoaded();
-        fireEvent.click(screen.getByText('Save Changes'));
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() =>
             expect(screen.getByText('Store settings saved successfully!')).toBeInTheDocument()
         );
@@ -716,8 +782,10 @@ describe('12. Save — API call and flash messages', () => {
         const store = makeStore();
         stubFetch(store, { saveOk: false });
         render(<StoreSettingsModal show={true} onHide={jest.fn()} />);
-        await waitFor(() => screen.getByText('PURCHASE TITLES'));
-        fireEvent.click(screen.getByText('Save Changes'));
+        await waitFor(() =>
+            expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument()
+        );
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() =>
             expect(screen.getByText('Failed to save. Please check your inputs.')).toBeInTheDocument()
         );
@@ -729,8 +797,10 @@ describe('12. Save — API call and flash messages', () => {
             .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue({ result: store }) })
             .mockRejectedValueOnce(new Error('Network failure'));
         render(<StoreSettingsModal show={true} onHide={jest.fn()} />);
-        await waitFor(() => screen.getByText('PURCHASE TITLES'));
-        fireEvent.click(screen.getByText('Save Changes'));
+        await waitFor(() =>
+            expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument()
+        );
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
         await waitFor(() =>
             expect(screen.getByText('Network error. Please try again.')).toBeInTheDocument()
         );
@@ -743,12 +813,14 @@ describe('12. Save — API call and flash messages', () => {
             .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue({ result: store }) })
             .mockReturnValueOnce(new Promise(resolve => { resolveSave = resolve; }));
         render(<StoreSettingsModal show={true} onHide={jest.fn()} />);
-        await waitFor(() => screen.getByText('PURCHASE TITLES'));
-        fireEvent.click(screen.getByText('Save Changes'));
         await waitFor(() =>
-            expect(screen.getByText('Saving…')).toBeInTheDocument()
+            expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument()
         );
-        const saveBtn = screen.getByText('Saving…').closest('button');
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getAllByText('Saving…')[0]).toBeInTheDocument()
+        );
+        const saveBtn = screen.getAllByText('Saving…')[0].closest('button');
         expect(saveBtn).toBeDisabled();
         resolveSave({ ok: true, json: jest.fn().mockResolvedValue({ result: store }) });
     });
@@ -759,8 +831,356 @@ describe('12. Save — API call and flash messages', () => {
         stubFetch(store);
         render(<StoreSettingsModal show={true} onHide={jest.fn()} />);
         // Component will not load (no store_id), but even if it did we click save
-        fireEvent.click(screen.queryByText('Save Changes') || document.body);
+        fireEvent.click(screen.queryAllByText('Save Changes')[0] || document.body);
         // fetch should only have been called zero times (no load, no save)
         expect(global.fetch.mock.calls.filter(([, o]) => o?.method === 'PUT')).toHaveLength(0);
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 13. Tab navigation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('13. Tab navigation', () => {
+    test('13.1  General Info tab shown by default after load (section header visible)', async () => {
+        await renderOnGeneral();
+        expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument();
+    });
+
+    test('13.2  clicking "National Address" tab shows National Address content', async () => {
+        await renderOnGeneral();
+        const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
+        fireEvent.click(btn);
+        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+    });
+
+    test('13.3  clicking "Contact" tab shows Contact content', async () => {
+        await renderOnGeneral();
+        const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Contact');
+        fireEvent.click(btn);
+        await waitFor(() => expect(screen.getByText('Phone*')).toBeInTheDocument());
+    });
+
+    test('13.4  clicking "Invoice Titles" tab shows Invoice Titles content', async () => {
+        await renderOnGeneral();
+        const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Invoice Titles');
+        fireEvent.click(btn);
+        await waitFor(() => expect(screen.getByText('PURCHASE TITLES')).toBeInTheDocument());
+    });
+
+    test('13.5  clicking back to "General Info" from another tab shows General Info', async () => {
+        await renderOnGeneral();
+        // Navigate away first
+        const addrBtn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
+        fireEvent.click(addrBtn);
+        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+        // Navigate back
+        const genBtn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'General Info');
+        fireEvent.click(genBtn);
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'General Info' })).toBeInTheDocument());
+    });
+
+    test('13.6  sidebar shows all 6 tab labels: General Info, National Address, Contact, Invoice Titles, Bank Account, Opening Balances', async () => {
+        await renderOnGeneral();
+        const btns = screen.getAllByRole('button');
+        const tabLabels = ['General Info', 'National Address', 'Contact', 'Invoice Titles', 'Bank Account', 'Opening Balances'];
+        for (const label of tabLabels) {
+            expect(btns.some(b => b.textContent.trim() === label)).toBe(true);
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 14. General Info tab fields
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('14. General Info tab fields', () => {
+    test('14.1  "Registered Company Name" label visible on general tab', async () => {
+        await renderOnGeneral();
+        // Field renders: <label>text<span> *</span></label>
+        // RTL getByText can't match text split across child elements; use a function matcher.
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Registered Company Name *'
+            )
+        ).toBeInTheDocument();
+    });
+
+    test('14.2  "Branch Code" label visible on general tab', async () => {
+        await renderOnGeneral();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Branch Code *'
+            )
+        ).toBeInTheDocument();
+    });
+
+    test('14.3  "VAT NO. (15 digits)" label visible on general tab', async () => {
+        await renderOnGeneral();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'VAT NO. (15 digits) *'
+            )
+        ).toBeInTheDocument();
+    });
+
+    test('14.4  Business Category select visible on general tab', async () => {
+        await renderOnGeneral();
+        expect(screen.getByText('Business Category*')).toBeInTheDocument();
+    });
+
+    test('14.5  store.name value appears in the name input', async () => {
+        await renderOnGeneral({ name: 'Unique Name ABC' });
+        expect(screen.getByDisplayValue('Unique Name ABC')).toBeInTheDocument();
+    });
+
+    test('14.6  store.code value appears in the code input', async () => {
+        await renderOnGeneral({ code: 'UNIQUE-CODE-XYZ' });
+        expect(screen.getByDisplayValue('UNIQUE-CODE-XYZ')).toBeInTheDocument();
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 15. National Address tab fields
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('15. National Address tab fields', () => {
+    async function renderOnAddress(storeOverrides = {}) {
+        await renderOnGeneral(storeOverrides);
+        const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
+        fireEvent.click(btn);
+        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+    }
+
+    test('15.1  "Building Number (4 digits)*" label visible on address tab', async () => {
+        await renderOnAddress();
+        expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument();
+    });
+
+    test('15.2  "Street Name*" label visible on address tab', async () => {
+        await renderOnAddress();
+        expect(screen.getByText('Street Name*')).toBeInTheDocument();
+    });
+
+    test('15.3  "Zipcode (5 digits)*" label visible on address tab', async () => {
+        await renderOnAddress();
+        expect(screen.getByText('Zipcode (5 digits)*')).toBeInTheDocument();
+    });
+
+    test('15.4  Country typeahead visible on address tab', async () => {
+        await renderOnAddress();
+        expect(screen.getByTestId('country-typeahead')).toBeInTheDocument();
+    });
+
+    test('15.5  store.national_address.street_name value appears in the input', async () => {
+        await renderOnAddress({ national_address: { street_name: 'King Road' } });
+        expect(screen.getByDisplayValue('King Road')).toBeInTheDocument();
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 16. Contact tab fields
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('16. Contact tab fields', () => {
+    async function renderOnContact(storeOverrides = {}) {
+        await renderOnGeneral(storeOverrides);
+        const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Contact');
+        fireEvent.click(btn);
+        await waitFor(() => expect(screen.getByText('Phone*')).toBeInTheDocument());
+    }
+
+    test('16.1  "Phone*" label visible on contact tab', async () => {
+        await renderOnContact();
+        expect(screen.getByText('Phone*')).toBeInTheDocument();
+    });
+
+    test('16.2  "Email*" label visible on contact tab', async () => {
+        await renderOnContact();
+        expect(screen.getByText('Email*')).toBeInTheDocument();
+    });
+
+    test('16.3  store.phone value appears in the phone input', async () => {
+        await renderOnContact({ phone: '+966500000000' });
+        expect(screen.getByDisplayValue('+966500000000')).toBeInTheDocument();
+    });
+
+    test('16.4  store.email value appears in the email input', async () => {
+        await renderOnContact({ email: 'contact@example.com' });
+        expect(screen.getByDisplayValue('contact@example.com')).toBeInTheDocument();
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 17. Validation — required fields
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('17. Validation — required fields', () => {
+    test('17.1  missing name → error "Registered Company Name is required" shown', async () => {
+        await renderOnGeneral({ name: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Registered Company Name is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.2  missing name_in_arabic → error "Registered Company Name in Arabic is required" shown', async () => {
+        await renderOnGeneral({ name_in_arabic: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Registered Company Name in Arabic is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.3  missing code → error "Branch Code is required" shown', async () => {
+        await renderOnGeneral({ code: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Branch Code is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.4  missing branch_name → error "Branch Name is required" shown', async () => {
+        await renderOnGeneral({ branch_name: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Branch Name is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.5  missing registration_number → error "Registration Number (CRN) is required" shown', async () => {
+        await renderOnGeneral({ registration_number: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Registration Number (CRN) is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.6  missing vat_no → error "VAT No. is required" shown', async () => {
+        await renderOnGeneral({ vat_no: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('VAT No. is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.7  missing phone → error "Phone is required" shown in error summary', async () => {
+        await renderOnGeneral({ phone: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Phone is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.8  missing email → error "Email is required" shown in error summary', async () => {
+        await renderOnGeneral({ email: '' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Email is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.9  missing national_address.building_no → error "Building Number is required" shown', async () => {
+        await renderOnGeneral({ national_address: { building_no: '' } });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() =>
+            expect(screen.getByText('Building Number is required')).toBeInTheDocument()
+        );
+    });
+
+    test('17.10  all required fields present → no validation errors, PUT is called', async () => {
+        await renderOnGeneral();
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() => {
+            const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
+            expect(putCall).toBeDefined();
+        });
+        // No validation error messages shown
+        expect(screen.queryByText('Registered Company Name is required')).not.toBeInTheDocument();
+        expect(screen.queryByText('Phone is required')).not.toBeInTheDocument();
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 18. Trim on save
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('18. Trim on save', () => {
+    test('18.1  trailing spaces in name are trimmed before PUT', async () => {
+        await renderOnGeneral({ name: 'Test Co   ' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() => {
+            const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
+            expect(putCall).toBeDefined();
+            const body = JSON.parse(putCall[1].body);
+            expect(body.name).toBe('Test Co');
+        });
+    });
+
+    test('18.2  trailing spaces in national_address.street_name are trimmed before PUT', async () => {
+        await renderOnGeneral({ national_address: { street_name: 'King Road   ' } });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() => {
+            const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
+            expect(putCall).toBeDefined();
+            const body = JSON.parse(putCall[1].body);
+            expect(body.national_address.street_name).toBe('King Road');
+        });
+    });
+
+    test('18.3  all string values have trimEnd() applied (PUT body has no trailing spaces)', async () => {
+        await renderOnGeneral({ name: 'Acme Corp   ', code: 'B-01  ', branch_name: 'Main   ' });
+        fireEvent.click(screen.getAllByText('Save Changes')[0]);
+        await waitFor(() => {
+            const putCall = global.fetch.mock.calls.find(([, opts]) => opts?.method === 'PUT');
+            expect(putCall).toBeDefined();
+            const body = JSON.parse(putCall[1].body);
+            function hasNoTrailingSpaces(obj) {
+                if (!obj || typeof obj !== 'object') return;
+                for (const v of Object.values(obj)) {
+                    if (typeof v === 'string') expect(v).toBe(v.trimEnd());
+                    else if (typeof v === 'object') hasNoTrailingSpaces(v);
+                }
+            }
+            hasNoTrailingSpaces(body);
+        });
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 19. ZATCA Reconnect Required banner
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('19. ZATCA Reconnect Required banner', () => {
+    test('19.1  zatca.zatca_reconnect_required=false → banner NOT shown', async () => {
+        await renderOnGeneral({ zatca: { phase: '1', zatca_reconnect_required: false } });
+        expect(screen.queryByText('ZATCA Reconnection Required')).not.toBeInTheDocument();
+    });
+
+    test('19.2  zatca.zatca_reconnect_required=true → "ZATCA Reconnection Required" banner shown', async () => {
+        await renderOnGeneral({ zatca: { phase: '1', zatca_reconnect_required: true } });
+        expect(screen.getByText('ZATCA Reconnection Required')).toBeInTheDocument();
+    });
+
+    test('19.3  zatca.zatca_reconnect_required=true → "Reconnect to ZATCA" button shown', async () => {
+        await renderOnGeneral({ zatca: { phase: '1', zatca_reconnect_required: true } });
+        // The banner description also contains "reconnect to ZATCA" (lowercase), so
+        // getByText(/Reconnect to ZATCA/i) matches multiple elements. Use getByRole instead.
+        expect(screen.getByRole('button', { name: /Reconnect to ZATCA/i })).toBeInTheDocument();
+    });
+
+    test('19.4  zatca.zatca_reconnect_required=undefined → banner NOT shown', async () => {
+        await renderOnGeneral({ zatca: { phase: '1', zatca_reconnect_required: undefined } });
+        expect(screen.queryByText('ZATCA Reconnection Required')).not.toBeInTheDocument();
+    });
+
+    test('19.5  zatca.zatca_reconnect_required=null → banner NOT shown (null is falsy)', async () => {
+        await renderOnGeneral({ zatca: { phase: '1', zatca_reconnect_required: null } });
+        expect(screen.queryByText('ZATCA Reconnection Required')).not.toBeInTheDocument();
+    });
+
+    test('19.6  zatca.zatca_reconnect_required=true + phase "2" + connected → banner shown', async () => {
+        await renderOnGeneral({ zatca: { phase: '2', connected: true, zatca_reconnect_required: true } });
+        expect(screen.getByText('ZATCA Reconnection Required')).toBeInTheDocument();
     });
 });

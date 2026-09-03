@@ -81,6 +81,7 @@ const QuotationSalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col">
                         <ul className="list-unstyled text-left">
+                            {props.model.store?.store_name && <li><h4 style={{ fontSize: "5mm", fontWeight: 700 }}>{props.model.store.store_name}</h4></li>}
                             <li><h4 style={{ fontSize: "3.5mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
                             <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                             {/*<!-- <li><hr /></li> --> */}
@@ -90,11 +91,12 @@ const QuotationSalesReturnPreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
+                            {props.model.store && props.model.store.logo ? <img width="70" height="70" style={{ objectFit: 'contain', objectPosition: 'center' }} src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
                         <ul className="list-unstyled text-end">
+                            {props.model.store?.store_name_in_arabic && <h4 style={{ fontSize: "5mm", fontWeight: 700 }}><strong>{props.model.store.store_name_in_arabic}</strong></h4>}
                             <li>
                                 <h4 style={{ fontSize: "3.5mm" }}>
                                     <strong>
@@ -561,12 +563,12 @@ const QuotationSalesReturnPreviewContent = forwardRef((props, ref) => {
                         <ul className="list-unstyled mb0 text-center">
                             <li>
                                 <b
-                                > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
+                                > {props.model.store?.national_address ? [props.model.store.national_address.building_no_arabic, props.model.store.national_address.street_name_arabic, props.model.store.national_address.district_name_arabic, props.model.store.national_address.city_name_arabic].filter(Boolean).join('، ') : "<STORE_ADDRESS_ARABIC>"}
                                 </b>
                             </li>
                             <li>
                                 <strong
-                                >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
+                                >{props.model.store?.national_address ? [props.model.store.national_address.building_no, props.model.store.national_address.street_name, props.model.store.national_address.district_name, props.model.store.national_address.city_name].filter(Boolean).join(', ') : "<STORE_ADDRESS>"}
                                 </strong>
                             </li>
 
@@ -579,7 +581,7 @@ const QuotationSalesReturnPreviewContent = forwardRef((props, ref) => {
                                 </strong>
                             </li>
                             <li>
-                                <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
+                                <strong>الرمز البريدي:</strong>{props.model.store ? (props.model.store.national_address?.zipcode_arabic || props.model.store.national_address?.zipcode || '') : "<STORE_ZIPCODE_ARABIC>"},
                                 <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
 
                             </li>

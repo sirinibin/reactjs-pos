@@ -10,6 +10,7 @@ import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 import { PDFDocument } from 'pdf-lib';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import { resolveImageUrl } from '../utils/imageUtils.js';
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
@@ -46,7 +47,9 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
 
                 InvoiceBackground = "";
-                if (model.store?.code === "MBDI") {
+                if (model.store?.invoice_background) {
+                    InvoiceBackground = resolveImageUrl(model.store.invoice_background, model.store.id, "store");
+                } else if (model.store?.code === "MBDI") {
                     InvoiceBackground = MBDIInvoiceBackground;
                 } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
                     InvoiceBackground = LGKInvoiceBackground;

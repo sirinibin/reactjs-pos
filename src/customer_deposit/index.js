@@ -18,6 +18,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 function CustomerDepositIndex(props) {
     //Date filter
@@ -98,8 +99,13 @@ function CustomerDepositIndex(props) {
                 const data = await response.json();
                 setReportingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
                 if (!response.ok || !data.status) {
-                    const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
-                    if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                    if (data?.errors?.zatca_reconnect) {
+                        setStore(prev => ({ ...prev, zatca: { ...prev.zatca, zatca_reconnect_required: true } }));
+                        zatcaConnectRef.current?.open(localStorage.getItem("store_id"), true);
+                    } else {
+                        const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
+                        if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                    }
                     return;
                 }
                 if (data.result) {
@@ -579,6 +585,7 @@ function CustomerDepositIndex(props) {
     const customerSearchRef = useRef();
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
     const idSearchRef = useRef();
     const netTotalSearchRef = useRef();
@@ -1031,7 +1038,7 @@ function CustomerDepositIndex(props) {
                                                                                 <Button
                                                                                     className={`btn btn-sm ${customerdeposit.zatca?.reporting_failed_count > 0 ? "btn-outline-warning" : "btn-warning"}`}
                                                                                     disabled={reportingIds.has(customerdeposit.id)}
-                                                                                    onClick={() => ReportDepositToZatca(customerdeposit.id, index)}
+                                                                                    onClick={() => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } ReportDepositToZatca(customerdeposit.id, index); }}
                                                                                 >
                                                                                     {reportingIds.has(customerdeposit.id)
                                                                                         ? <Spinner animation="border" size="sm" />
@@ -1069,6 +1076,7 @@ function CustomerDepositIndex(props) {
                     </div>
                 </div>
             </div>
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem("store_id"))} />
         </>
     );
 }

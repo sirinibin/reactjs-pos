@@ -34,6 +34,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -221,13 +222,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 setReportingInProgress(false);
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
-                setShowErrors(true);
-                //console.log("Inside catch");
-                //console.log(error);
                 setErrors({ ...error });
-                // setErrors({ ...error });
-                //console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
+                if (error?.zatca_reconnect) {
+                    getStore(store.id);
+                    zatcaConnectRef.current?.open(store.id, true);
+                } else {
+                    setShowErrors(true);
+                    if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
+                }
                 list();
             });
     }
@@ -1380,6 +1382,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
 
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
@@ -2285,6 +2288,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                         {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                        if (store.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                                         ReportInvoiceToZatca(salesReturn.id, index);
                                                                     }}>
                                                                         {!salesReturn.zatca?.reportingInProgress && (salesReturn.zatca?.reporting_failed_count > 0 || salesReturn.zatca?.compliance_check_failed_count > 0) ? <i className="bi bi-bootstrap-reboot"></i> : ""}
@@ -2395,6 +2399,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     {showSalesReturnPaymentHistory && <SalesReturnPaymentIndex ref={SalesReturnPaymentListRef} showToastMessage={props.showToastMessage} salesReturn={selectedSalesReturn} refreshSalesReturnList={list} />}
                 </Modal.Body>
             </Modal>
+
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(store.id)} />
         </>
     );
 });

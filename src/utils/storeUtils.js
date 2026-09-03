@@ -1,10 +1,10 @@
 const STORE_SELECT = [
-    "id", "name", "name_in_arabic", "code", "branch_name",
+    "id", "name", "name_in_arabic", "store_name", "store_name_in_arabic", "code", "branch_name",
     "title", "title_in_arabic",
     "registration_number", "registration_number_in_arabic",
     "email", "phone", "phone_in_arabic",
-    "address", "address_in_arabic", "zipcode", "zipcode_in_arabic",
-    "vat_no", "vat_no_in_arabic", "vat_percent", "logo",
+
+    "vat_no", "vat_no_in_arabic", "vat_percent", "logo", "invoice_background",
     "country_code", "settings", "zatca",
     "bank_account", "national_address",
     "business_category",

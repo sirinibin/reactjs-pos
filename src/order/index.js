@@ -35,6 +35,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
@@ -741,7 +742,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id + "?select=id,name,code,zatca.phase,zatca.connected,settings", requestOptions)
+        fetch('/v1/store/' + id + "?select=id,name,code,zatca.phase,zatca.connected,zatca.zatca_reconnect_required,settings", requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -1370,6 +1371,7 @@ const OrderIndex = forwardRef((props, ref) => {
     //Sales Return
     let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const SalesReturnCreateRef = useRef();
+    const zatcaConnectRef = useRef();
     function openSalesReturnCreateForm(id) {
         showSalesReturnCreateForm = true;
         setShowSalesReturnCreateForm(true);
@@ -1447,13 +1449,14 @@ const OrderIndex = forwardRef((props, ref) => {
                 setReportingInProgress(false);
                 orderList[index].zatca.reportingInProgress = false;
                 setOrderList([...orderList]);
-                setShowErrors(true);
-                console.log("Inside catch");
-                console.log(error);
                 setErrors({ ...error });
-                // setErrors({ ...error });
-                console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                if (error?.zatca_reconnect) {
+                    getStore(store.id);
+                    zatcaConnectRef.current?.open(store.id, true);
+                } else {
+                    setShowErrors(true);
+                    if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                }
                 list();
             });
     }
@@ -2429,6 +2432,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                        if (store.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                                         ReportInvoiceToZatca(order.id, index);
                                                                     }}>
                                                                         {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i className="bi bi-bootstrap-reboot"></i> : ""}
@@ -2625,6 +2629,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(store.id)} />
         </>
     );
 });

@@ -8,7 +8,127 @@ import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import { toStoreLocalDate, fromStoreLocalDate } from '../utils/timezone.js';
+import ZatcaConnect from './zatca_connect.js';
+import { resolveImageUrl } from '../utils/imageUtils.js';
+import SampleInvoiceBg1 from '../INVOICE.jpg';
+import SampleInvoiceBg2 from '../LGK_WHATSAPP.png';
 //import { DebounceInput } from 'react-debounce-input';
+
+const DROPZONE_ACCENT = '#004ac6';
+
+function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, compact = false }) {
+    const inputRef = React.useRef(null);
+    const [dragging, setDragging] = React.useState(false);
+
+    const displaySrc = previewSrc || currentSrc;
+    const isNew = !!previewSrc;
+
+    function handleFiles(files) {
+        if (!files || !files[0]) return;
+        onFile(files[0]);
+    }
+
+    function openPicker() { inputRef.current?.click(); }
+    function onDragOver(e) { e.preventDefault(); setDragging(true); }
+    function onDragLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }
+    function onDrop(e) { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }
+
+    const zoneStyle = {
+        border: `2px dashed ${dragging ? DROPZONE_ACCENT : '#c8d8f5'}`,
+        borderRadius: '10px',
+        padding: compact ? '18px 14px' : '36px 20px',
+        textAlign: 'center',
+        cursor: 'pointer',
+        background: dragging ? '#eef3ff' : '#f8faff',
+        transition: 'all 0.15s',
+        userSelect: 'none',
+    };
+
+    return (
+        <div>
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => handleFiles(e.target.files)}
+            />
+            {displaySrc ? (
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: compact ? '12px' : '16px', background: '#fafbff', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img
+                            src={displaySrc}
+                            alt={label}
+                            title="Click to enlarge"
+                            style={{
+                                maxHeight: compact ? '64px' : '180px',
+                                maxWidth: compact ? '120px' : '240px',
+                                objectFit: 'contain',
+                                borderRadius: '6px',
+                                border: '1px solid #e9ecef',
+                                display: 'block',
+                                cursor: compact ? 'default' : 'pointer',
+                            }}
+                            onClick={compact ? undefined : (e => { const w = window.open(); w.document.write(`<img src="${e.target.src}" style="max-width:100%;max-height:100vh;display:block;margin:auto;">`); })}
+                        />
+                        {!compact && (
+                            <span
+                                style={{ position: 'absolute', bottom: '5px', right: '5px', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                                onClick={e => { const src = e.currentTarget.previousSibling.src; const w = window.open(); w.document.write(`<img src="${src}" style="max-width:100%;max-height:100vh;display:block;margin:auto;">`); }}
+                            >
+                                <i className="bi bi-zoom-in"></i> Enlarge
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ marginBottom: '8px' }}>
+                            {isNew ? (
+                                <span style={{ fontSize: '10px', fontWeight: 700, background: '#fff8e1', color: '#7a5800', border: '1px solid #ffe082', borderRadius: '4px', padding: '2px 7px' }}>
+                                    <i className="bi bi-clock me-1"></i>Not saved yet
+                                </span>
+                            ) : (
+                                <span style={{ fontSize: '10px', fontWeight: 700, background: '#e6f4ea', color: '#137333', border: '1px solid #a8d5b0', borderRadius: '4px', padding: '2px 7px' }}>
+                                    <i className="bi bi-check-circle me-1"></i>Saved
+                                </span>
+                            )}
+                        </div>
+                        {hint && <div style={{ fontSize: '11px', color: '#888', lineHeight: 1.5, marginBottom: '10px' }}>{hint}</div>}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={openPicker}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: `1px solid ${DROPZONE_ACCENT}`, background: '#eef3ff', color: DROPZONE_ACCENT, cursor: 'pointer' }}
+                            >
+                                <i className="bi bi-arrow-repeat"></i> Change
+                            </button>
+                            {onRemove && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!window.confirm(`Remove this ${label} image? This will delete it when you save.`)) return;
+                                        onRemove();
+                                    }}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #dc3545', background: '#fff5f5', color: '#dc3545', cursor: 'pointer' }}
+                                >
+                                    <i className="bi bi-trash3"></i> Remove
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div style={zoneStyle} onClick={openPicker} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+                    <i className="bi bi-cloud-upload" style={{ fontSize: compact ? '24px' : '36px', color: dragging ? DROPZONE_ACCENT : '#b0bec5', display: 'block' }}></i>
+                    <div style={{ fontWeight: 600, color: '#444', fontSize: '13px', marginTop: '8px' }}>
+                        {dragging ? 'Drop image here' : 'Click to upload or drag & drop'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>PNG, JPG, WEBP</div>
+                    {hint && <div style={{ fontSize: '11px', color: '#aaa', marginTop: '6px' }}>{hint}</div>}
+                </div>
+            )}
+        </div>
+    );
+}
 
 // Formats a UTC ISO string as a datetime-local input value (YYYY-MM-DDTHH:mm)
 // in the store's country timezone.
@@ -303,6 +423,8 @@ const StoreCreate = forwardRef((props, ref) => {
     }
     const [populating, setPopulating] = useState(false);
     const [clearing, setClearing] = useState(false);
+    const [serialLocks, setSerialLocks] = useState({});
+    const zatcaConnectRef = useRef();
 
     async function populateTestData() {
         if (!formData.id) return;
@@ -525,6 +647,14 @@ const StoreCreate = forwardRef((props, ref) => {
             } else {
                 setSelectedCountries([]);
             }
+            // Load serial locks to disable "Counting start from" once records exist
+            try {
+                const locksRes = await fetch(`/v1/store/${id}/serial-locks`, {
+                    headers: { Authorization: localStorage.getItem('access_token') },
+                });
+                const locksData = locksRes.ok ? await locksRes.json() : null;
+                if (locksData?.result) setSerialLocks(locksData.result);
+            } catch (_) {}
         } catch (error) { }
     }
 
@@ -562,6 +692,23 @@ const StoreCreate = forwardRef((props, ref) => {
         return regex.test(str);
     }
 
+    function trimStringFields(obj) {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(trimStringFields);
+        const result = {};
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            if (typeof val === 'string') {
+                result[key] = val.trimEnd();
+            } else if (typeof val === 'object' && val !== null) {
+                result[key] = trimStringFields(val);
+            } else {
+                result[key] = val;
+            }
+        }
+        return result;
+    }
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -587,10 +734,6 @@ const StoreCreate = forwardRef((props, ref) => {
 
         if (formData.vat_no) {
             formData.vat_no_in_arabic = convertToArabicNumber(formData.vat_no.toString());
-        }
-
-        if (formData.zipcode) {
-            formData.zipcode_in_arabic = convertToArabicNumber(formData.zipcode.toString());
         }
 
         if (formData.registration_number) {
@@ -702,18 +845,6 @@ const StoreCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        if (!formData.address) {
-            errors["address"] = "Address is required";
-            haveErrors = true;
-        }
-
-        if (!formData.address_in_arabic) {
-            errors["address_in_arabic"] = "Address in arabic is required";
-            haveErrors = true;
-        }
-
-
-
 
         if (!formData.national_address?.building_no) {
             errors["national_address_building_no"] = "Building number is required";
@@ -792,7 +923,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 "Content-Type": "application/json",
                 Authorization: localStorage.getItem("access_token"),
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(trimStringFields(formData)),
         };
 
         console.log("formData:", formData);
@@ -832,9 +963,14 @@ const StoreCreate = forwardRef((props, ref) => {
                     }
                 }
 
-                handleClose();
-                if (props.openDetailsView)
-                    props.openDetailsView(data.result.id);
+                if (data.result?.zatca?.zatca_reconnect_required) {
+                    showFlash("ZATCA-sensitive fields changed. Please reconnect to ZATCA.", "warning");
+                    setTimeout(() => zatcaConnectRef.current?.open(data.result.id), 600);
+                } else {
+                    handleClose();
+                    if (props.openDetailsView)
+                        props.openDetailsView(data.result.id);
+                }
             })
             .catch((error) => {
                 setProcessing(false);
@@ -848,14 +984,17 @@ const StoreCreate = forwardRef((props, ref) => {
     }
 
 
-    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
-
-        let ratio = parseFloat(originaleWidth / originalHeight);
-
-        targetWidth = parseInt(targetHeight * ratio);
-        targetHeight = parseInt(targetWidth * ratio);
-
-        return { targetWidth: targetWidth, targetHeight: targetHeight };
+    function getTargetDimension(originaleWidth, originalHeight, maxWidth, maxHeight) {
+        const ratio = originaleWidth / originalHeight;
+        let targetWidth, targetHeight;
+        if (ratio > maxWidth / maxHeight) {
+            targetWidth = Math.min(originaleWidth, maxWidth);
+            targetHeight = Math.round(targetWidth / ratio);
+        } else {
+            targetHeight = Math.min(originalHeight, maxHeight);
+            targetWidth = Math.round(targetHeight * ratio);
+        }
+        return { targetWidth, targetHeight };
     }
 
     //let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
@@ -880,20 +1019,31 @@ const StoreCreate = forwardRef((props, ref) => {
     const NAV_TABS = [
         { id: 'general', label: 'General Info', icon: 'bi-building' },
         { id: 'address', label: 'National Address', icon: 'bi-geo-alt' },
+        { id: 'contact', label: 'Contact', icon: 'bi-telephone' },
         { id: 'invoice_titles', label: 'Invoice Titles', icon: 'bi-file-earmark-text' },
         { id: 'serial_numbers', label: 'Serial Numbers', icon: 'bi-hash' },
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
         { id: 'designs', label: 'Designs', icon: 'bi-palette' },
+        { id: 'logo', label: 'Logo', icon: 'bi-image-fill' },
+        { id: 'invoice_background', label: 'Invoice BG Image', icon: 'bi-image' },
         { id: 'opening_balances', label: 'Opening Balances', icon: 'bi-wallet2' },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
+    const createZatcaReportingScope = () => {
+        const parts = ['sales', 'sales returns'];
+        if (formData.settings?.enable_zatca_reporting_for_receivables) parts.push('receivables');
+        if (formData.settings?.enable_zatca_reporting_for_payables) parts.push('payables');
+        return parts.join(', ');
+    };
     const ERROR_TAB_MAP = {
         business_category: 'general', name: 'general', name_in_arabic: 'general',
-        code: 'general', branch_name: 'general', phone: 'general', vat_no: 'general',
-        vat_percent: 'general', email: 'general', address: 'general', address_in_arabic: 'general',
-        country_code: 'general', registration_number: 'general', zipcode: 'general',
-        logo_content: 'general',
+        code: 'general', branch_name: 'general', vat_no: 'general',
+        vat_percent: 'general',
+        phone: 'contact', email: 'contact',
+        registration_number: 'general',
+        logo_content: 'logo',
+        country_code: 'address',
         national_address_building_no: 'address', national_address_street_name: 'address',
         national_address_district_name: 'address', national_address_city_name: 'address',
         national_address_zipcode: 'address',
@@ -929,9 +1079,28 @@ const StoreCreate = forwardRef((props, ref) => {
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                         <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
                     </button>
-                    <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Store — ${formData.name}` : 'Create New Store'}
-                    </Modal.Title>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em' }}>
+                                {formData.id ? `Update Store — ${formData.name}` : 'Create New Store'}
+                            </div>
+                            {flash && flash.type === 'success' && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', animation: 'fadeInDown 0.2s ease' }}>
+                                    <i className="bi bi-check-circle-fill" style={{ fontSize: '12px' }}></i>
+                                    {flash.text}
+                                </span>
+                            )}
+                        </div>
+                        {formData.zatca?.phase === '2' && formData.zatca?.connected && formData.zatca?.last_connected_at && (
+                            <div style={{ fontSize: '11px', color: '#137333', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="bi bi-clock-history" style={{ fontSize: '10px' }}></i>
+                                ZATCA last connected: {(() => {
+                                    const d = toStoreLocalDate(formData.zatca.last_connected_at, formData.country_code);
+                                    return d ? d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                                })()}
+                            </div>
+                        )}
+                    </div>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <>
@@ -962,7 +1131,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? 'Save Changes' : 'Create'}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -1150,8 +1319,61 @@ const StoreCreate = forwardRef((props, ref) => {
                                         })}
                                     </div>
                                 </div>
+                                {formData.zatca?.zatca_reconnect_required && (
+                                    <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                        <i className="bi bi-exclamation-triangle-fill" style={{ color: '#856404', fontSize: '18px', flexShrink: 0 }}></i>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                            <div style={{ fontWeight: 700, color: '#856404', fontSize: '13px' }}>ZATCA Reconnection Required</div>
+                                            <div style={{ color: '#856404', fontSize: '12px', marginTop: '2px' }}>
+                                                Key store details have changed. You must reconnect to ZATCA before reporting {createZatcaReportingScope()}.
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            style={{ background: '#856404', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                                            onClick={() => zatcaConnectRef.current?.open(formData.id)}
+                                        >
+                                            <i className="bi bi-plug-fill me-1"></i>Reconnect to ZATCA
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{ background: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                                            onClick={() => {
+                                                fetch(`/v1/store/${formData.id}/zatca/clear-reconnect`, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        Authorization: localStorage.getItem('access_token'),
+                                                    },
+                                                })
+                                                    .then(async (res) => {
+                                                        const data = await res.json();
+                                                        if (data.status) {
+                                                            formData.zatca.zatca_reconnect_required = false;
+                                                            setFormData({ ...formData });
+                                                            if (props.showToastMessage) props.showToastMessage("Store relieved from ZATCA re-connect requirement.", "success");
+                                                        } else {
+                                                            if (props.showToastMessage) props.showToastMessage("Failed to relieve store from ZATCA re-connect requirement.", "danger");
+                                                        }
+                                                    })
+                                                    .catch(() => {
+                                                        if (props.showToastMessage) props.showToastMessage("Failed to relieve store from ZATCA re-connect requirement.", "danger");
+                                                    });
+                                            }}
+                                        >
+                                            <i className="bi bi-x-circle me-1"></i>Relieve from Re-Connect Prompt
+                                        </button>
+                                    </div>
+                                )}
                                 {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
+                                    {formData.zatca?.phase === '2' && (
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
+                                            <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
+                                            <span><strong>ZATCA Re-Connection Required:</strong> Changing any of these fields will require you to <strong>Re-Connect</strong> this store to ZATCA. Until re-connected, you will not be able to report {createZatcaReportingScope()} to ZATCA.</span>
+                                        </div>
+                                    )}
                                     <div className="row g-3">
 
                                         <div className="col-md-3">
@@ -1249,24 +1471,36 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div> : ""}
 
-                                        <div className="col-md-2">
+                                        <div className="col-md-3">
                                             <label className="form-label">Business category*</label>
 
                                             <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.business_category}
-                                                    type='string'
+                                                <select
+                                                    value={formData.business_category || ""}
                                                     onChange={(e) => {
                                                         errors["business_category"] = "";
                                                         setErrors({ ...errors });
                                                         formData.business_category = e.target.value;
                                                         setFormData({ ...formData });
-                                                        console.log(formData);
                                                     }}
                                                     className="form-control"
                                                     id="business_category"
-                                                    placeholder="Business category"
-                                                />
+                                                >
+                                                    <option value="">-- Select category --</option>
+                                                    <option value="Supply Activities">Supply Activities</option>
+                                                    <option value="Service Activities">Service Activities</option>
+                                                    <option value="Retail">Retail</option>
+                                                    <option value="Food and Beverages">Food and Beverages</option>
+                                                    <option value="Trading">Trading</option>
+                                                    <option value="Manufacturing">Manufacturing</option>
+                                                    <option value="Healthcare">Healthcare</option>
+                                                    <option value="Real Estate">Real Estate</option>
+                                                    <option value="Construction">Construction</option>
+                                                    <option value="Transportation">Transportation</option>
+                                                    <option value="Technology">Technology</option>
+                                                    <option value="Education">Education</option>
+                                                    <option value="Financial Services">Financial Services</option>
+                                                </select>
                                             </div>
                                             {errors.business_category && (
                                                 <div className="pw-err">
@@ -1277,7 +1511,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Name*</label>
+                                            <label className="form-label">Registered Company Name*</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1292,7 +1526,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="name"
-                                                    placeholder="Name"
+                                                    placeholder="Registered Company Name"
                                                 />
                                             </div>
                                             {errors.name && (
@@ -1303,7 +1537,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Name In Arabic*</label>
+                                            <label className="form-label">Registered Company Name In Arabic*</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1318,7 +1552,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="name_in_arabic"
-                                                    placeholder="Name In Arabic"
+                                                    placeholder="Registered Company Name In Arabic"
                                                 />
                                             </div>
                                             {errors.name_in_arabic && (
@@ -1326,6 +1560,42 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     {errors.name_in_arabic}
                                                 </div>
                                             )}
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Store Name</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.store_name ? formData.store_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.store_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="store_name"
+                                                    placeholder="Store Name (optional)"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">Store Name In Arabic</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.store_name_in_arabic ? formData.store_name_in_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.store_name_in_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="store_name_in_arabic"
+                                                    placeholder="Store Name In Arabic (optional)"
+                                                />
+                                            </div>
                                         </div>
 
 
@@ -1530,62 +1800,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <div className="col-md-2">
-                                            <label className="form-label">Zipcode*(5 digits)</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.zipcode ? formData.zipcode : ""}
-                                                    type='number'
-                                                    onChange={(e) => {
-                                                        errors["zipcode"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.zipcode = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="zipcode"
-                                                    placeholder="Zipcode"
-                                                />
-
-
-                                            </div>
-                                            {errors.zipcode && (
-                                                <div className="pw-err">
-                                                    {errors.zipcode}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-md-2">
-                                            <label className="form-label">Phone* ( 05.. / +966..)</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.phone ? formData.phone : ""}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["phone"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.phone = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="phone"
-                                                    placeholder="Phone"
-                                                />
-
-
-                                            </div>
-                                            {errors.phone && (
-                                                <div className="pw-err">
-
-                                                    {errors.phone}
-                                                </div>
-                                            )}
-                                        </div>
 
 
                                         <div className="col-md-2">
@@ -1654,93 +1868,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <div className="col-md-3">
-                                            <label className="form-label">Email*</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.email ? formData.email : ""}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["email"] = "";
-
-                                                        formData.email = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="email"
-                                                    placeholder="Email"
-                                                />
 
 
-
-                                            </div>
-                                            {errors.email && (
-                                                <div className="pw-err">
-
-                                                    {errors.email}
-                                                </div>
-                                            )}
+                                    </div></div></div>)}
+                                {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
+                                    {formData.zatca?.phase === '2' && (
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
+                                            <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
+                                            <span><strong>ZATCA Re-Connection Required:</strong> Changing any of these fields will require you to <strong>Re-Connect</strong> this store to ZATCA. Until re-connected, you will not be able to report {createZatcaReportingScope()} to ZATCA.</span>
                                         </div>
-
-                                        <div className="col-md-3">
-                                            <label className="form-label">Address*</label>
-
-                                            <div className="input-group mb-3">
-                                                <textarea
-                                                    value={formData.address}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["address"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.address = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="address"
-                                                    placeholder="Address"
-                                                />
-
-                                            </div>
-                                            {errors.address && (
-                                                <div className="pw-err">
-
-                                                    {errors.address}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-md-3">
-                                            <label className="form-label">Address In Arabic*</label>
-
-                                            <div className="input-group mb-3">
-                                                <textarea
-                                                    value={formData.address_in_arabic}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["address_in_arabic"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.address_in_arabic = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="address_in_arabic"
-                                                    placeholder="Address In Arabic"
-                                                />
-
-                                            </div>
-                                            {errors.address_in_arabic && (
-                                                <div className="pw-err">
-
-                                                    {errors.address_in_arabic}
-                                                </div>
-                                            )}
-
-                                        </div>
-
+                                    )}
+                                    <div className="row g-3">
                                         <div className="col-md-3">
                                             <label className="form-label">Country*</label>
 
@@ -1786,86 +1925,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
-
-                                        <div className="col-md-2">
-                                            <label className="form-label">Logo</label>
-
-                                            {formData.logo && !formData.logo_content && (
-                                                <div className="mb-2">
-                                                    <img src={formData.logo} alt="Current logo" style={{ maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} />
-                                                </div>
-                                            )}
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    type='file'
-                                                    onChange={(e) => {
-                                                        errors["logo_content"] = "";
-                                                        setErrors({ ...errors });
-
-                                                        if (!e.target.value) {
-                                                            errors["logo_content"] = "Invalid Logo File";
-                                                            setErrors({ ...errors });
-                                                            return;
-                                                        }
-
-                                                        formData.logo = e.target.value;
-
-                                                        let file = document.querySelector('#logo').files[0];
-
-                                                        let targetHeight = 100;
-                                                        let targetWidth = 100;
-
-
-                                                        let url = URL.createObjectURL(file);
-                                                        let img = new Image();
-
-                                                        img.onload = function () {
-                                                            let originaleWidth = img.width;
-                                                            let originalHeight = img.height;
-
-                                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
-                                                            targetWidth = targetDimensions.targetWidth;
-                                                            targetHeight = targetDimensions.targetHeight;
-
-                                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
-                                                                formData.logo_content = result;
-                                                                setFormData({ ...formData });
-
-                                                                console.log("formData.logo_content:", formData.logo_content);
-                                                            });
-                                                        };
-                                                        img.src = url;
-
-                                                        /*
-                                                        resizeFIle(file, (result) => {
-                                                            formData.logo_content = result;
-                
-                                                            console.log("formData.logo_content:", formData.logo_content);
-                
-                                                            setFormData({ ...formData });
-                                                        });
-                                                        */
-                                                    }}
-                                                    className="form-control"
-                                                    id="logo"
-                                                    placeholder="Logo"
-                                                />
-
-
-                                            </div>
-                                            {errors.logo_content && (
-                                                <div className="pw-err">
-
-                                                    {errors.logo_content}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                    </div></div></div>)}
-                                {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
-                                    <div className="row g-3">
                                         <div className="col-md-2">
                                             <label className="form-label">Short code</label>
 
@@ -2196,8 +2255,55 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                     </div></div></div>)}
+                                {activeTab === 'contact' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-telephone" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Contact</h3></div>
+                                    <div className="row g-3">
+                                        <div className="col-md-4">
+                                            <label className="form-label">Phone*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.phone ? formData.phone : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["phone"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.phone = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="phone"
+                                                    placeholder="e.g. +1 555 123 4567"
+                                                />
+                                            </div>
+                                            {errors.phone && (
+                                                <div className="pw-err">{errors.phone}</div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">Email*</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.email ? formData.email : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["email"] = "";
+                                                        formData.email = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="email"
+                                                    placeholder="Email"
+                                                />
+                                            </div>
+                                            {errors.email && (
+                                                <div className="pw-err">{errors.email}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div></div>)}
                                 {activeTab === 'invoice_titles' && (<div className="pw-tab-wrap"><div className="pw-card">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Titles</h3></div>
+                                    {formData?.zatca?.phase === '1' && <>
                                     <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
                                     <h6><b>Sales</b></h6>
                                     <div className="row">
@@ -2503,8 +2609,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                     </div>
+                                    </>}
 
-
+                                    {formData?.zatca?.phase === '2' && <>
                                     <h6><b>Zatca Phase 2 Invoice Titles</b></h6>
                                     <h6><b>Sales</b></h6>
                                     <div className="row">
@@ -3030,6 +3137,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                     </div>
+                                    </>}
 
                                     <h6><b>Other Invoice Titles</b></h6>
                                     <div className="row">
@@ -3582,6 +3690,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input
                                                     value={formData.sales_serial_number?.start_from_count ? formData.sales_serial_number.start_from_count : ""}
                                                     type='number'
+                                                    disabled={!!serialLocks.sales_locked}
+                                                    title={serialLocks.sales_locked ? "Cannot change: sales records already exist" : ""}
                                                     onChange={(e) => {
 
                                                         errors["formData.sales_serial_number.start_from_count"] = "";
@@ -3666,6 +3776,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input
                                                     value={formData.sales_return_serial_number.start_from_count}
                                                     type='number'
+                                                    disabled={!!serialLocks.sales_return_locked}
+                                                    title={serialLocks.sales_return_locked ? "Cannot change: sales return records already exist" : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.sales_return_serial_number.start_from_count = e.target.value;
@@ -4685,8 +4797,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.customer_deposit_serial_number.start_from_count}
-
                                                     type='number'
+                                                    disabled={!!serialLocks.customer_deposit_locked}
+                                                    title={serialLocks.customer_deposit_locked ? "Cannot change: receivable records already exist" : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.customer_deposit_serial_number.start_from_count = e.target.value;
@@ -4770,8 +4883,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.customer_withdrawal_serial_number.start_from_count}
-
                                                     type='number'
+                                                    disabled={!!serialLocks.customer_withdrawal_locked}
+                                                    title={serialLocks.customer_withdrawal_locked ? "Cannot change: payable records already exist" : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.customer_withdrawal_serial_number.start_from_count = e.target.value;
@@ -5216,12 +5330,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Warehouse Module</span>
                                             </label>
-                                            {formData.settings.enable_warehouse_module && (
-                                                <label className="pw-check" htmlFor="show_warehouse_stock_in_selected_products" style={{ marginLeft: '16px' }}>
-                                                    <input type="checkbox" id="show_warehouse_stock_in_selected_products" checked={!!formData.settings.show_warehouse_stock_in_selected_products} value={formData.settings.show_warehouse_stock_in_selected_products} onChange={() => { formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products; setFormData({ ...formData }); }} />
-                                                    <span>Show Selected Warehouse Stock in Products Table</span>
-                                                </label>
-                                            )}
                                             <label className="pw-check" htmlFor="enable_purchase_order_module">
                                                 <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
                                                 <span>Enable Purchase Order Module</span>
@@ -5503,24 +5611,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {formData.settings.enable_warehouse_module && (
-                                        <div className="col-md-2">
-                                            <div className="input-group mb-3">
-                                                <input type="checkbox"
-                                                    value={formData.settings.show_warehouse_stock_in_selected_products}
-                                                    checked={!!formData.settings.show_warehouse_stock_in_selected_products}
-                                                    onChange={() => {
-                                                        formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products;
-                                                        setFormData({ ...formData });
-                                                    }}
-                                                    className=""
-                                                    id="show_warehouse_stock_in_selected_products"
-                                                /> &nbsp;Show Selected Warehouse Stock in Products Table
-                                            </div>
-                                            <label className="form-label"></label>
-                                        </div>
-                                        )}
 
                                         <div className="col-md-2">
                                             <div className="input-group mb-3">
@@ -6487,6 +6577,82 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                 </div>)}
 
+                                {activeTab === 'logo' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-image-fill" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Logo</h3></div>
+                                    <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>Logo Guidelines</div>
+                                        <div>• <strong>Recommended size:</strong> 300 × 100 px</div>
+                                        <div>• <strong>Format:</strong> transparent PNG preferred</div>
+                                        <div>• <strong>Max file size:</strong> 500 KB</div>
+                                        <div>• Used in the invoice header</div>
+                                    </div>
+                                    <ImageDropzone
+                                        label="Logo"
+                                        currentSrc={formData.logo ? resolveImageUrl(formData.logo, formData.id, 'store') : null}
+                                        previewSrc={formData.logo_content || null}
+                                        hint="Recommended 300×100 px · transparent PNG · max 500 KB · used in invoice header"
+                                        onFile={file => {
+                                            errors["logo_content"] = "";
+                                            setErrors({ ...errors });
+                                            const url = URL.createObjectURL(file);
+                                            const img = new Image();
+                                            img.onload = function () {
+                                                const dims = getTargetDimension(img.width, img.height, 100, 100);
+                                                resizeFIle(file, dims.targetWidth, dims.targetHeight, (result) => {
+                                                    formData.logo_content = result;
+                                                    setFormData({ ...formData });
+                                                });
+                                            };
+                                            img.src = url;
+                                        }}
+                                        onRemove={() => { formData.logo = ''; formData.logo_content = ''; formData.remove_logo = true; setFormData({ ...formData }); }}
+                                    />
+                                    {errors.logo_content && (
+                                        <div className="pw-err">{errors.logo_content}</div>
+                                    )}
+                                </div></div>)}
+
+                                {activeTab === 'invoice_background' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-image" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Background Image</h3></div>
+                                    <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>Background Image Guidelines</div>
+                                        <div>• <strong>Recommended size:</strong> A4 at 150 dpi — <strong>1240 × 1754 px</strong></div>
+                                        <div>• Acceptable: A4 at 72 dpi — 595 × 842 px (lower quality on high-DPI screens)</div>
+                                        <div>• <strong>Format:</strong> PNG (transparent areas stay clear) or JPG</div>
+                                        <div>• The image is stretched to fill the entire invoice page — keep important content centred or near edges</div>
+                                        <div>• <strong>Max file size:</strong> 2 MB</div>
+                                        <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #c8d8f5' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: '8px' }}><i className="bi bi-download me-1"></i>Sample backgrounds — download to see how it should look:</div>
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                <a href={SampleInvoiceBg1} download="sample-invoice-background-1.jpg"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
+                                                    <i className="bi bi-file-earmark-image"></i> Sample 1 (JPG)
+                                                </a>
+                                                <a href={SampleInvoiceBg2} download="sample-invoice-background-2.png"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
+                                                    <i className="bi bi-file-earmark-image"></i> Sample 2 (PNG)
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <ImageDropzone
+                                        label="Invoice Background"
+                                        currentSrc={formData.invoice_background ? resolveImageUrl(formData.invoice_background, formData.id, 'store') : null}
+                                        previewSrc={formData.invoice_background_content || null}
+                                        hint="Recommended 1240×1754 px (A4 @ 150 dpi) · PNG or JPG · max 2 MB"
+                                        onFile={file => {
+                                            const reader = new FileReader();
+                                            reader.onload = ev => {
+                                                formData.invoice_background_content = ev.target.result;
+                                                setFormData({ ...formData });
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }}
+                                        onRemove={() => { formData.invoice_background = ''; formData.remove_invoice_background = true; setFormData({ ...formData }); }}
+                                    />
+                                </div></div>)}
+
                                 {activeTab === 'opening_balances' && (<div className="pw-tab-wrap">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-wallet2" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Opening Balances</h3></div>
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -6625,6 +6791,13 @@ const StoreCreate = forwardRef((props, ref) => {
 
             </Modal>
 
+            <ZatcaConnect
+                ref={zatcaConnectRef}
+                refreshList={() => {
+                    if (props.refreshList) props.refreshList();
+                    showFlash('Successfully connected to ZATCA!', 'success');
+                }}
+            />
 
         </>
     );

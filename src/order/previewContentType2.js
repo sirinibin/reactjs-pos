@@ -239,6 +239,11 @@ const PreviewContentType2 = forwardRef((props, ref) => {
                                 }}>
                                     {/* Left — English */}
                                     <div>
+                                        {st?.store_name && (
+                                            <div style={{ color: C.white, fontSize: "19px", fontWeight: 800, lineHeight: "1.2" }}>
+                                                {st.store_name}
+                                            </div>
+                                        )}
                                         <div className="clickable-text"
                                             onClick={() => props.selectText("storeName")}
                                             style={{
@@ -304,6 +309,11 @@ const PreviewContentType2 = forwardRef((props, ref) => {
                                         alignItems: "flex-start",
                                         gap: "2px",
                                     }}>
+                                        {st?.store_name_in_arabic && (
+                                            <div style={{ color: C.white, fontSize: "19px", fontWeight: 800, lineHeight: "1.2", fontFamily: arFont }}>
+                                                {st.store_name_in_arabic}
+                                            </div>
+                                        )}
                                         <div className="clickable-text"
                                             onClick={() => props.selectText("storeNameArabic")}
                                             style={{

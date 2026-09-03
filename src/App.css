@@ -12017,6 +12017,9 @@ span.flatpickr-weekday {
 .order-print-wrap { z-index: 1090 !important; }
 body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
+/* ZATCA reconnect modal must always appear above every other form modal (highest in-app z-index is 1310 for above-preview-modal) */
+.zatca-connect-modal { z-index: 1400 !important; }
+.zatca-connect-backdrop { z-index: 1399 !important; }
 /* Lower history/picker modals when a create-form is opened on top of them */
 body.form-over-history .above-sales-modal { z-index: 1072 !important; }
 /* Inner history modals opened from within an OrderCreate form (which itself is inside a history modal) need z-index above the OrderCreate form (1093) */

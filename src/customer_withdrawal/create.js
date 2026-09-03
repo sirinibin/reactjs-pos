@@ -29,6 +29,7 @@ import Draggable from "react-draggable";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 const columnStyle = {
     width: '20%',
@@ -661,6 +662,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
+                if (error?.zatca_reconnect) {
+                    zatcaConnectRef.current?.open(store.id, true);
+                    return;
+                }
                 setErrors({ ...error });
                 console.error("There was an error!", error);
                 if (props.showToastMessage) props.showToastMessage("Error Creating!", "danger");
@@ -1184,6 +1189,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     }, []);
 
     const dragRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
     // ── Attachments state & helpers ────────────────────────────────────────
     const [pendingAttachments, setPendingAttachments] = useState([]);
@@ -2477,6 +2483,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                 id="enable_report_to_zatca_withdrawal"
                                                 checked={!!formData.enable_report_to_zatca}
                                                 onChange={() => {
+                                                    if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                     formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                                     setFormData({ ...formData });
                                                 }}
@@ -2578,6 +2585,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             </Modal>
 
 
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem('store_id'))} />
         </>
     );
 });

@@ -18,6 +18,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 function CustomerWithdrawalIndex(props) {
 
@@ -101,11 +102,16 @@ function CustomerWithdrawalIndex(props) {
                 const data = await response.json();
                 setReportingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
                 if (!response.ok || !data.status) {
-                    const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
-                    if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
-                    let updated = [...customerwithdrawalList];
-                    updated[index] = { ...updated[index], _zatcaError: errMsg };
-                    setCustomerWithdrawalList(updated);
+                    if (data?.errors?.zatca_reconnect) {
+                        setStore(prev => ({ ...prev, zatca: { ...prev.zatca, zatca_reconnect_required: true } }));
+                        zatcaConnectRef.current?.open(localStorage.getItem("store_id"), true);
+                    } else {
+                        const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
+                        if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                        let updated = [...customerwithdrawalList];
+                        updated[index] = { ...updated[index], _zatcaError: errMsg };
+                        setCustomerWithdrawalList(updated);
+                    }
                     return;
                 }
                 if (data.result) {
@@ -580,6 +586,7 @@ function CustomerWithdrawalIndex(props) {
     const customerSearchRef = useRef();
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
     const idSearchRef = useRef();
     const netTotalSearchRef = useRef();
@@ -1020,7 +1027,7 @@ function CustomerWithdrawalIndex(props) {
                                                                                 <Button
                                                                                     className={`btn btn-sm ${customerwithdrawal.zatca?.reporting_failed_count > 0 ? "btn-outline-warning" : "btn-warning"}`}
                                                                                     disabled={reportingIds.has(customerwithdrawal.id)}
-                                                                                    onClick={() => ReportWithdrawalToZatca(customerwithdrawal.id, index)}
+                                                                                    onClick={() => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } ReportWithdrawalToZatca(customerwithdrawal.id, index); }}
                                                                                 >
                                                                                     {reportingIds.has(customerwithdrawal.id)
                                                                                         ? <Spinner animation="border" size="sm" />
@@ -1070,6 +1077,7 @@ function CustomerWithdrawalIndex(props) {
                     </div>
                 </div>
             </div>
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem("store_id"))} />
         </>
     );
 }

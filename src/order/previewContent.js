@@ -104,6 +104,13 @@ const PreviewContent = forwardRef((props, ref) => {
                         {props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? < div className="row">
                             <div className="col">
                                 <ul className="list-unstyled text-left">
+                                    {props.model.store?.store_name && (
+                                        <li>
+                                            <h4 style={{ fontSize: "18px", fontWeight: 700 }}>
+                                                {props.model.store.store_name}
+                                            </h4>
+                                        </li>
+                                    )}
                                     <li>
                                         <h4 className="clickable-text" onClick={() => {
                                             props.selectText("storeName");
@@ -125,11 +132,18 @@ const PreviewContent = forwardRef((props, ref) => {
                             </div>
                             <div className="col">
                                 <div className="invoice-logo text-center">
-                                    {props.model?.store?.logo ? <img width="70" height="70" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
+                                    {props.model?.store?.logo ? <img width="70" height="70" style={{ objectFit: 'contain', objectPosition: 'center' }} src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
                                 </div>
                             </div>
                             <div className="col">
                                 <ul className="list-unstyled text-end">
+                                    {props.model.store?.store_name_in_arabic && (
+                                        <li>
+                                            <h4 style={{ fontSize: "18px", fontWeight: 700 }}>
+                                                <strong>{props.model.store.store_name_in_arabic}</strong>
+                                            </h4>
+                                        </li>
+                                    )}
                                     <li>
                                         <h4 className="clickable-text" onClick={() => {
                                             props.selectText("storeNameArabic");
@@ -147,10 +161,10 @@ const PreviewContent = forwardRef((props, ref) => {
                                     {/* <!-- <li><hr /></li> --> */}
                                     <li className="clickable-text" onClick={() => {
                                         props.selectText("storeCRArabic");
-                                    }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"}</li>
+                                    }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}><span dir="rtl">س.ت / {props.model.store?.registration_number_in_arabic ? props.model.store.registration_number_in_arabic : (props.model.store?.registration_number ? convertToArabicNumber(props.model.store.registration_number) : "<STORE_CR_NO_ARABIC>")}</span></li>
                                     <li className="clickable-text" onClick={() => {
                                         props.selectText("storeVATArabic");
-                                    }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"}</li>
+                                    }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }}><span dir="rtl">الرقم الضريبي / {props.model.store?.vat_no_in_arabic ? props.model.store.vat_no_in_arabic : (props.model.store?.vat_no ? convertToArabicNumber(props.model.store.vat_no) : "<STORE_VAT_NO_ARABIC>")}</span></li>
                                 </ul>
                             </div>
                         </div> : ""}
@@ -1169,39 +1183,28 @@ const PreviewContent = forwardRef((props, ref) => {
                             </div>
                         </div>
                         {
-                            props.model.store?.settings?.show_address_in_invoice_footer && <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
+                            props.model.store?.settings?.show_address_in_invoice_footer && <div className="clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, borderTop: "1px solid #ddd", padding: "5px 8px 3px", marginTop: "2px" }} onClick={() => {
                                 props.selectText("footer");
                             }}>
-                                <div className="col-md-2 text-start">
-                                    {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
+                                <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                                    <div dir="ltr" style={{ flex: 1, textAlign: "left" }}>
+                                        <div><b>{[props.model.store?.national_address?.building_no, props.model.store?.national_address?.street_name].filter(Boolean).join(', ')}{props.model.store?.national_address?.unit_no ? `, Unit #${props.model.store.national_address.unit_no}` : ""}</b></div>
+                                        <div>{[props.model.store?.national_address?.district_name, props.model.store?.national_address?.city_name].filter(Boolean).join(', ')}</div>
+                                        {(props.model.store?.national_address?.zipcode || props.model.store?.national_address?.additional_no) && <div>ZIP: {props.model.store?.national_address?.zipcode}{props.model.store?.national_address?.additional_no ? ` | Additional No: ${props.model.store.national_address.additional_no}` : ""}</div>}
+                                    </div>
+                                    <div style={{ width: "1px", alignSelf: "stretch", background: "#ccc", flexShrink: 0 }}></div>
+                                    <div dir="rtl" style={{ flex: 1, textAlign: "right" }}>
+                                        <div><b>{[props.model.store?.national_address?.building_no_arabic, props.model.store?.national_address?.street_name_arabic].filter(Boolean).join('، ')}{props.model.store?.national_address?.unit_no_arabic ? `، رقم الوحدة ${props.model.store.national_address.unit_no_arabic}` : ""}</b></div>
+                                        <div>{[props.model.store?.national_address?.district_name_arabic, props.model.store?.national_address?.city_name_arabic].filter(Boolean).join('، ')}</div>
+                                        {(props.model.store?.national_address?.zipcode_arabic || props.model.store?.national_address?.zipcode || props.model.store?.national_address?.additional_no_arabic) && <div>الرمز البريدي: {props.model.store?.national_address?.zipcode_arabic || props.model.store?.national_address?.zipcode}{props.model.store?.national_address?.additional_no_arabic ? ` | الرقم الإضافي: ${props.model.store.national_address.additional_no_arabic}` : ""}</div>}
+                                    </div>
                                 </div>
-                                <div className="col-md-8 text-center">
-                                    <ul className="list-unstyled mb0 text-center">
-                                        <li>
-                                            <b
-                                            > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
-                                            </b>
-                                        </li>
-                                        <li>
-                                            <strong
-                                            >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
-                                            </strong>
-                                        </li>
-
-                                        <li>
-                                            هاتف:<b
-                                            > {props.model.store ? props.model.store.phone_in_arabic : "<STORE_PHONE_ARABIC>"}
-                                            </b>,
-                                            Phone:<strong
-                                            >{props.model.store ? props.model.store.phone : "<STORE_PHONE>"}
-                                            </strong>
-                                        </li>
-                                        <li>
-                                            <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
-                                            <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
-
-                                        </li>
-                                    </ul>
+                                <div style={{ textAlign: "center", borderTop: "1px solid #eee", marginTop: "3px", paddingTop: "2px" }}>
+                                    {props.model.store?.phone_in_arabic && <span>هاتف: <b>{props.model.store.phone_in_arabic}</b></span>}
+                                    {props.model.store?.phone_in_arabic && props.model.store?.phone && <span style={{ margin: "0 5px", opacity: 0.4 }}>|</span>}
+                                    {props.model.store?.phone && <span>Phone: <b>{props.model.store.phone}</b></span>}
+                                    {(props.model.store?.phone_in_arabic || props.model.store?.phone) && props.model.store?.email && <span style={{ margin: "0 5px", opacity: 0.4 }}>|</span>}
+                                    {props.model.store?.email && <span>Email: <b>{props.model.store.email}</b></span>}
                                 </div>
                             </div>
                         }

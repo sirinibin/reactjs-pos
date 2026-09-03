@@ -30,6 +30,7 @@ import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 const columnStyle = {
     width: '20%',
@@ -659,6 +660,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
+                if (error?.zatca_reconnect) {
+                    zatcaConnectRef.current?.open(store.id, true);
+                    return;
+                }
                 setErrors({ ...error });
                 console.error("There was an error!", error);
                 if (props.showToastMessage) props.showToastMessage("Error Creating!", "danger");
@@ -1147,6 +1152,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }
 
     const QuotationSalesRef = useRef();
+    const zatcaConnectRef = useRef();
     function openQuotationSales() {
         showInvoiceTypeSelection = false;
         setShowInvoiceTypeSelection(showInvoiceTypeSelection);
@@ -2459,6 +2465,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                 id="enable_report_to_zatca_deposit"
                                                 checked={!!formData.enable_report_to_zatca}
                                                 onChange={() => {
+                                                    if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                     formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                                     setFormData({ ...formData });
                                                 }}
@@ -2572,6 +2579,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem('store_id'))} />
         </>
     );
 });

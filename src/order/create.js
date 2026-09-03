@@ -70,6 +70,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -2321,10 +2322,11 @@ const OrderCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setIsSubmitting(false);
-                //console.log("Inside catch");
-                //console.log(error);
+                if (error?.zatca_reconnect) {
+                    zatcaConnectRef.current?.open(store.id, true);
+                    return;
+                }
                 setErrors({ ...error });
-                //console.error("There was an error!", error);
                 if (props.showToastMessage) {
                     if (props.showToastMessage) props.showToastMessage("Failed to process sale!", "danger");
                 }
@@ -5482,6 +5484,7 @@ const OrderCreate = forwardRef((props, ref) => {
     let [showCustomerPending, setShowCustomerPending] = useState(false);
 
     const CustomerPendingRef = useRef();
+    const zatcaConnectRef = useRef();
     function openCustomerPending(customer) {
         setShowCustomerPending(true);
 
@@ -5889,7 +5892,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </h1>
                             {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#434655', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                    <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
+                                    <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
                                     {t("Report to Zatca")}
                                 </label>
                             )}
@@ -6023,6 +6026,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     name="report_to_zatca"
                                     checked={formData.enable_report_to_zatca}
                                     onChange={(e) => {
+                                        if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                         formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                         setFormData({ ...formData });
                                     }}
@@ -11321,6 +11325,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 );
             })()}
 
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem('store_id'))} />
         </>
     );
 });
