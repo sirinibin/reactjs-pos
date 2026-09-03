@@ -139,6 +139,7 @@ const OrderCreate = forwardRef((props, ref) => {
             isUpdateForm = true;
             setIsUpdateForm(true);
             setIsZatcaLocked(false);
+            setOrderZatcaReported(false);
             errors = {};
             setErrors({ ...errors });
             warnings = {};
@@ -189,6 +190,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setIsResumingDraft(false);
             setIsUpdateForm(isUpdateForm)
             setIsZatcaLocked(false);
+            setOrderZatcaReported(false);
             //ResetFormData();
             errors = {};
             setErrors({ ...errors });
@@ -365,6 +367,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setIsUpdateForm(isUpdateForm)
         setIsZatcaLocked(false);
+        setOrderZatcaReported(false);
         //ResetFormData();
         errors = {};
         setErrors({ ...errors });
@@ -469,8 +472,10 @@ const OrderCreate = forwardRef((props, ref) => {
     // eslint-disable-next-line no-unused-vars
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
+    const [orderZatcaReported, setOrderZatcaReported] = useState(false);
     const prevIsUpdateFormRef = useRef(false);
     const pendingOrderIdRef = useRef(null);
+
     useEffect(() => {
         if (prevIsUpdateFormRef.current === true && isUpdateForm === false) {
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -511,6 +516,13 @@ const OrderCreate = forwardRef((props, ref) => {
     let [oldProducts, setOldProducts] = useState([]);
 
     let [store, setStore] = useState({});
+
+    // Re-evaluate ZATCA edit lock when store settings finish loading (store may load after the order).
+    useEffect(() => {
+        if (!orderZatcaReported) return;
+        const shouldLock = store.settings?.disable_sales_edit_once_reported_to_zatca !== false;
+        setIsZatcaLocked(shouldLock);
+    }, [store.settings?.disable_sales_edit_once_reported_to_zatca, orderZatcaReported]); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function getStore(id) {
         try {
@@ -667,7 +679,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
                 if (data.result?.zatca?.reporting_passed) {
-                    setIsZatcaLocked(true);
+                    setOrderZatcaReported(true);
+                    if (store.settings?.disable_sales_edit_once_reported_to_zatca !== false) {
+                        setIsZatcaLocked(true);
+                    }
                 }
 
                 checkWarnings();
@@ -5559,7 +5574,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: 1096 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1097 : 1096} !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: ${props.modalClass === 'above-pending-modal' ? 1096 : 1082} !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5814,7 +5829,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <DeliveryNote ref={DeliveryNoteRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
-            <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 

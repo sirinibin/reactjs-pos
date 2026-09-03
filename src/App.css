@@ -12034,6 +12034,8 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 /* Sub-forms that can be opened from history modals — must appear above history (1072 with form-over-history active) */
 .sales-return-create-wrap { z-index: 1080 !important; }
 .quotation-create-wrap { z-index: 1080 !important; }
+/* Opened from the "Select Quotation" modal (above-sales-modal = 1082 → drops to 1081 when form opens) */
+.quotation-create-wrap.above-quotations-modal { z-index: 1085 !important; }
 .quotation-sales-return-create-wrap { z-index: 1080 !important; }
 /* Delivery Note form modal — one step above above-sales-modal (1065) */
 .delivery-note-create-wrap { z-index: 1066 !important; }
@@ -12125,3 +12127,12 @@ body.product-form-open.form-over-history .from-history-form { z-index: 1099 !imp
    1095 > 1093, fixing both customer-pending and vendor-pending flows.
    Specificity (0,4,1) beats all existing rules; placed last wins source-order ties. */
 body.pending-balance-sheet-open.balance-sheet-open .modal:not(.above-sales-modal) { z-index: 1095 !important; }
+
+/* Sub-modals (Products, ImageViewer) opened from edit forms in pendingView context.
+   Forms with above-pending-modal add a *-form-pending-open body class; these rules
+   ensure the sub-modals (1096) appear above the form (1090/1095).
+   Specificity (0,2,1) — same as peer body+class rules; placed last wins source-order. */
+body.sales-return-form-pending-open .above-sales-modal { z-index: 1096 !important; }
+body.sales-return-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }
+body.quotation-form-pending-open .above-sales-modal { z-index: 1096 !important; }
+body.quotation-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }

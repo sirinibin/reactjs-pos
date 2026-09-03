@@ -5253,6 +5253,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_zatca_reporting_for_payables" checked={!!formData.settings.enable_zatca_reporting_for_payables} value={formData.settings.enable_zatca_reporting_for_payables} onChange={() => { formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables; setFormData({ ...formData }); }} />
                                                 <span>Enable ZATCA Reporting for Payables (Credit Note)</span>
                                             </label>
+                                            {formData.zatca?.phase === '2' && (
+                                            <label className="pw-check" htmlFor="disable_sales_edit_once_reported_to_zatca">
+                                                <input type="checkbox" id="disable_sales_edit_once_reported_to_zatca" checked={formData.settings.disable_sales_edit_once_reported_to_zatca !== false} value={formData.settings.disable_sales_edit_once_reported_to_zatca} onChange={() => { formData.settings.disable_sales_edit_once_reported_to_zatca = !(formData.settings.disable_sales_edit_once_reported_to_zatca !== false); setFormData({ ...formData }); }} />
+                                                <span>Disable Sales Edit once Reported to ZATCA</span>
+                                            </label>
+                                            )}
                                             <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
                                                 <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
                                                 <span>Auto Prompt Advance Payment Linking in Sales Payments</span>
@@ -6185,6 +6191,23 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                             <label className="form-label"></label>
                                         </div>
+
+                                        {formData.zatca?.phase === '2' && (
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.disable_sales_edit_once_reported_to_zatca}
+                                                    checked={formData.settings.disable_sales_edit_once_reported_to_zatca !== false}
+                                                    onChange={() => {
+                                                        formData.settings.disable_sales_edit_once_reported_to_zatca = !(formData.settings.disable_sales_edit_once_reported_to_zatca !== false);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    id="formData.disable_sales_edit_once_reported_to_zatca"
+                                                /> &nbsp;Disable Sales Edit once Reported to ZATCA
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+                                        )}
 
                                         <div className="col-md-2">
                                             <div className="input-group mb-3">

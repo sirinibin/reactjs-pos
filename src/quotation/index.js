@@ -969,6 +969,7 @@ function QuotationIndex(props) {
           onDragEnd={handleDisplayDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
           enableSelection={enableSelection}
+          className={props.pendingView ? "above-pending-modal" : ""}
       />
 
       <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
@@ -1019,8 +1020,8 @@ function QuotationIndex(props) {
       <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       {(pendingView || showQuotationCreate) && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={createFormCallbackRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
-        : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+        ? <QuotationType3Form ref={createFormCallbackRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+        : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
       {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
