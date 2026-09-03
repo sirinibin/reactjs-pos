@@ -283,20 +283,20 @@ describe('user/create.js — RBAC dynamic check', () => {
 describe('user/create.js — open() clears stores when creating new user', () => {
     test('9.1  open() resets selectedStores to empty array', () => {
         // Grab the open() function body
-        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,600}SetShow\(true\)/);
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1500}SetShow\(true\)/);
         expect(openBlock).not.toBeNull();
         expect(openBlock[0]).toMatch(/selectedStores\s*=\s*\[\]/);
         expect(openBlock[0]).toMatch(/setSelectedStores\(\s*\[\]\s*\)/);
     });
 
     test('9.2  open() resets pickerSelected to empty Set', () => {
-        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,600}SetShow\(true\)/);
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1500}SetShow\(true\)/);
         expect(openBlock).not.toBeNull();
         expect(openBlock[0]).toMatch(/setPickerSelected\(\s*new Set\(\)/);
     });
 
     test('9.3  stores are reset before getUser is called (create path is clean)', () => {
-        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,800}SetShow\(true\)/);
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1500}SetShow\(true\)/);
         expect(openBlock).not.toBeNull();
         // setSelectedStores([]) must appear before getUser(id) in the open body
         const resetPos = openBlock[0].indexOf('setSelectedStores([])');
@@ -351,5 +351,61 @@ describe('user/create.js — non-admin cannot change own role', () => {
     test('10.9  new-user form (no formData.id) never blocks role — !!formData.id is false', () => {
         // The !!formData.id guard ensures create-mode is never locked
         expect(SRC).toMatch(/isEditingSelf\s*=\s*!!formData\.id/);
+    });
+});
+
+// ── 11. open() — Update button and default role ───────────────────────────────
+
+describe('user/create.js — open() shows Update immediately and defaults role', () => {
+    test('11.1  edit path pre-sets formData.id so header shows Update without waiting for fetch', () => {
+        // open(id) must set formData = { id: id } (or similar) before SetShow
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1200}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/formData\s*=\s*\{[^}]*id\s*:/);
+    });
+
+    test('11.2  edit path calls setFormData with id immediately', () => {
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1200}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/setFormData\(\{\s*id\s*:/);
+    });
+
+    test('11.3  create path initializes role to Manager (prevents undefined role submission)', () => {
+        // Without a default role, formData.role stays undefined even though the
+        // dropdown visually shows Manager — user gets stored with no role.
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1200}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/role\s*:\s*['"]Manager['"]/);
+    });
+
+    test('11.4  create path sets admin: false as default', () => {
+        const openBlock = SRC.match(/open\(id\)\s*\{[\s\S]{0,1200}SetShow\(true\)/);
+        expect(openBlock).not.toBeNull();
+        expect(openBlock[0]).toMatch(/admin\s*:\s*false/);
+    });
+});
+
+// ── 12. Password field — create: always visible; update: admins only ──────────
+
+describe('user/create.js — password field rules', () => {
+    test('12.1  condition is !formData.id || currentUserIsAdmin', () => {
+        // Create mode (no id): always show. Update mode: admins only.
+        expect(SRC).toMatch(/!formData\.id\s*\|\|\s*currentUserIsAdmin/);
+    });
+
+    test('12.2  password condition appears before the type=password input', () => {
+        const condPos = SRC.indexOf('!formData.id || currentUserIsAdmin');
+        const pwPos = SRC.indexOf('type="password"');
+        expect(condPos).toBeGreaterThan(-1);
+        expect(pwPos).toBeGreaterThan(-1);
+        expect(condPos).toBeLessThan(pwPos);
+    });
+
+    test('12.3  password input type is password', () => {
+        expect(SRC).toMatch(/type="password"/);
+    });
+
+    test('12.4  non-admins in update mode use Change Password option instead', () => {
+        expect(SRC).toMatch(/Change password|Change Password/);
     });
 });

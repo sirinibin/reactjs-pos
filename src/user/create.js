@@ -14,8 +14,19 @@ const UserCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            formData = {};
-            setFormData({});
+            if (id) {
+                // Pre-set id so header and button show "Update" immediately
+                // while the async getUser fetch is still in flight.
+                formData = { id: id };
+                setFormData({ id: id });
+            } else {
+                // Default role to Manager so the dropdown value is always defined.
+                // Without this, formData.role stays undefined even though the
+                // first <option> shows "Manager", and submitting creates a user
+                // with no role stored in the database.
+                formData = { admin: false, role: 'Manager' };
+                setFormData({ admin: false, role: 'Manager' });
+            }
             selectedRoles = [];
             setSelectedRoles([]);
             selectedStores = [];
@@ -560,6 +571,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                         {errors.email && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.email}</ErrMsg>}
                                                     </div>
 
+                                                    {(!formData.id || currentUserIsAdmin) && (
                                                     <div className="col-md-6">
                                                         <Label required={!formData.id}>Password</Label>
                                                         <input
@@ -578,6 +590,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                         />
                                                         {errors.password && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.password}</ErrMsg>}
                                                     </div>
+                                                    )}
 
                                                     <div className="col-md-6">
                                                         <Label required>Phone</Label>
