@@ -115,7 +115,8 @@ describe('StoreSettingsModal.js — ImageDropzone confirm prompt', () => {
     });
 
     test('4.2  confirm message references the image label', () => {
-        expect(SRC).toMatch(/window\.confirm\(`Remove this \$\{label\}/);
+        // The confirm message uses i18n t() with {{label}} placeholder
+        expect(SRC).toMatch(/window\.confirm\(t\(.*label.*\)/s);
     });
 
     test('4.3  confirm message mentions deletion happens on save', () => {

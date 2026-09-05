@@ -69,6 +69,13 @@ jest.mock('react-select-country-list', () => () => ({
     ],
 }));
 
+jest.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => key,
+        i18n: { changeLanguage: jest.fn(), language: 'en' },
+    }),
+}));
+
 import StoreSettingsModal from './StoreSettingsModal';
 
 // ── fixture helpers ───────────────────────────────────────────────────────────
@@ -851,14 +858,14 @@ describe('13. Tab navigation', () => {
         await renderOnGeneral();
         const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
         fireEvent.click(btn);
-        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'National Address' })).toBeInTheDocument());
     });
 
     test('13.3  clicking "Contact" tab shows Contact content', async () => {
         await renderOnGeneral();
         const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Contact');
         fireEvent.click(btn);
-        await waitFor(() => expect(screen.getByText('Phone*')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'Contact' })).toBeInTheDocument());
     });
 
     test('13.4  clicking "Invoice Titles" tab shows Invoice Titles content', async () => {
@@ -873,7 +880,7 @@ describe('13. Tab navigation', () => {
         // Navigate away first
         const addrBtn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
         fireEvent.click(addrBtn);
-        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'National Address' })).toBeInTheDocument());
         // Navigate back
         const genBtn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'General Info');
         fireEvent.click(genBtn);
@@ -926,7 +933,12 @@ describe('14. General Info tab fields', () => {
 
     test('14.4  Business Category select visible on general tab', async () => {
         await renderOnGeneral();
-        expect(screen.getByText('Business Category*')).toBeInTheDocument();
+        // Label text is split: t('Business Category') + <span>*</span> — use function matcher
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Business Category*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('14.5  store.name value appears in the name input', async () => {
@@ -949,22 +961,34 @@ describe('15. National Address tab fields', () => {
         await renderOnGeneral(storeOverrides);
         const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'National Address');
         fireEvent.click(btn);
-        await waitFor(() => expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'National Address' })).toBeInTheDocument());
     }
 
     test('15.1  "Building Number (4 digits)*" label visible on address tab', async () => {
         await renderOnAddress();
-        expect(screen.getByText('Building Number (4 digits)*')).toBeInTheDocument();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Building Number (4 digits)*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('15.2  "Street Name*" label visible on address tab', async () => {
         await renderOnAddress();
-        expect(screen.getByText('Street Name*')).toBeInTheDocument();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Street Name*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('15.3  "Zipcode (5 digits)*" label visible on address tab', async () => {
         await renderOnAddress();
-        expect(screen.getByText('Zipcode (5 digits)*')).toBeInTheDocument();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Zipcode (5 digits)*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('15.4  Country typeahead visible on address tab', async () => {
@@ -987,17 +1011,25 @@ describe('16. Contact tab fields', () => {
         await renderOnGeneral(storeOverrides);
         const btn = screen.getAllByRole('button').find(b => b.textContent.trim() === 'Contact');
         fireEvent.click(btn);
-        await waitFor(() => expect(screen.getByText('Phone*')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByRole('heading', { name: 'Contact' })).toBeInTheDocument());
     }
 
     test('16.1  "Phone*" label visible on contact tab', async () => {
         await renderOnContact();
-        expect(screen.getByText('Phone*')).toBeInTheDocument();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Phone*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('16.2  "Email*" label visible on contact tab', async () => {
         await renderOnContact();
-        expect(screen.getByText('Email*')).toBeInTheDocument();
+        expect(
+            screen.getByText((_, el) =>
+                el?.tagName === 'LABEL' && el.textContent.trim() === 'Email*'
+            )
+        ).toBeInTheDocument();
     });
 
     test('16.3  store.phone value appears in the phone input', async () => {

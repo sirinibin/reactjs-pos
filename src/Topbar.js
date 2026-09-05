@@ -59,6 +59,7 @@ function Topbar(props) {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
     const storeName = localStorage.getItem("store_name") || "";
+    const storeNameArabic = localStorage.getItem("store_name_in_arabic") || "";
     const branchName = localStorage.getItem("branch_name") || "";
     const [stores, setStores] = useState([]);
     const [storesLoading, setStoresLoading] = useState(false);
@@ -66,6 +67,8 @@ function Topbar(props) {
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
+    const [, setDirTick] = useState(0);
+    const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
     const changePwRef = useRef(null);
     const manageUsersRef = useRef(null);
     const userRole = localStorage.getItem('user_role');
@@ -78,7 +81,7 @@ function Topbar(props) {
         setStoresLoading(true);
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch('/v1/store?select=id,name,code,branch_name,zatca&limit=10000', { headers: { Authorization: "Bearer " + token } });
+            const res = await fetch('/v1/store?select=id,name,name_in_arabic,code,branch_name,zatca&limit=10000', { headers: { Authorization: "Bearer " + token } });
             const data = res.ok && await res.json();
             if (data && Array.isArray(data.result)) setStores(data.result);
         } catch (_) {}
@@ -89,6 +92,7 @@ function Topbar(props) {
         const token = localStorage.getItem("access_token");
         localStorage.setItem("store_id", store.id);
         localStorage.setItem("store_name", store.name);
+        localStorage.setItem("store_name_in_arabic", store.name_in_arabic || "");
         const userId = localStorage.getItem("user_id");
         if (userId) localStorage.setItem("last_store_" + userId, store.id);
         try {
@@ -108,7 +112,7 @@ function Topbar(props) {
         const storeId = localStorage.getItem("store_id");
         const token = localStorage.getItem("access_token");
         if (!storeId || !token) return;
-        fetch(`/v1/store/${storeId}?select=id,code,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
+        fetch(`/v1/store/${storeId}?select=id,code,name_in_arabic,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
             .then(async res => {
                 const data = res.ok && await res.json();
                 if (data && data.result) {
@@ -118,10 +122,24 @@ function Topbar(props) {
                     }
                     if (data.result.code) setStoreCode(data.result.code);
                     if (data.result.zatca) setStoreZatca(data.result.zatca);
+                    if (data.result.name_in_arabic !== undefined) {
+                        localStorage.setItem("store_name_in_arabic", data.result.name_in_arabic || "");
+                    }
                 }
             })
             .catch(() => { });
     }, []);
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => setDirTick(n => n + 1));
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
+        return () => observer.disconnect();
+    }, []);
+
+    const ZATCA_ENV_AR = { Production: 'إنتاج', NonProduction: 'غير إنتاج', Simulation: 'محاكاة' };
+    function zatcaEnvLabel(env) {
+        return (isRTL && ZATCA_ENV_AR[env]) ? ZATCA_ENV_AR[env] : env;
+    }
 
     function onTrigger(event) {
         props.parentCallback();
@@ -337,7 +355,7 @@ function Topbar(props) {
                     <i className="hamburger align-self-center"></i>
                 </a>
 
-                <div className="navbar-collapse collapse">
+                <div className="navbar-collapse collapse" style={isRTL ? { direction: 'ltr', flexDirection: 'row-reverse', justifyContent: 'space-between' } : { direction: 'ltr' }}>
                     <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2" style={{ flex: "0 1 auto", minWidth: 0 }}>
                         <Dropdown.Toggle
                             as="span"
@@ -353,7 +371,7 @@ function Topbar(props) {
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                                 flexShrink: 1,
-                            }}>{storeName}</span>
+                            }}>{(isRTL && storeNameArabic) ? storeNameArabic : storeName}</span>
                             {storeCode && (
                                 <span className="d-none d-sm-inline text-muted" style={{ fontWeight: 400, fontSize: "12px", flexShrink: 0 }}>({storeCode})</span>
                             )}
@@ -365,7 +383,7 @@ function Topbar(props) {
                                     fontSize: "11px", fontWeight: 600, padding: "1px 6px",
                                     borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
                                     flexShrink: 0, whiteSpace: "nowrap",
-                                }}>{storeZatca.env}</span>
+                                }}>{zatcaEnvLabel(storeZatca.env)}</span>
                             )}
                             <i className="bi bi-chevron-down" style={{ fontSize: "11px", flexShrink: 0 }}></i>
                         </Dropdown.Toggle>
@@ -384,14 +402,14 @@ function Topbar(props) {
                                             active={isActive}
                                             onClick={() => switchStore(s)}
                                         >
-                                            <strong>{s.name}</strong>
+                                            <strong>{(isRTL && s.name_in_arabic) ? s.name_in_arabic : s.name}</strong>
                                             {s.code && <span style={{ fontSize: "12px", marginLeft: "4px", color: mutedColor }}>({s.code})</span>}
                                             {s.branch_name && <span style={{ marginLeft: "4px", color: mutedColor }}>· {s.branch_name}</span>}
                                             {s.zatca?.phase === "2" && s.zatca?.env && (
                                                 <span style={{
                                                     fontSize: "11px", fontWeight: 600, padding: "1px 6px", marginLeft: "6px",
                                                     borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
-                                                }}>{s.zatca.env}</span>
+                                                }}>{zatcaEnvLabel(s.zatca.env)}</span>
                                             )}
                                         </Dropdown.Item>
                                     );
@@ -411,7 +429,7 @@ function Topbar(props) {
                     </button>
 
                     {/* Desktop nav items — hidden on mobile */}
-                    <ul className="navbar-nav navbar-align d-none d-sm-flex">
+                    <ul className="navbar-nav navbar-align d-none d-sm-flex" style={{ columnGap: '12px', ...(isRTL ? { marginLeft: 0 } : {}) }}>
 
                         {(storeSettings?.enable_notification === true || storeSettings?.enable_purchase_request_module === true || prNotifications.length > 0) && (
                             <li className="nav-item dropdown me-2">

@@ -3,9 +3,11 @@ import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import DeliveryNoteIndex from "./../delivery_note/index.js";
+import { useTranslation } from 'react-i18next';
 
 
 const DeliveryNotes = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const dragRef = useRef(null);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     let [enableSelection, setEnableSelection] = useState(false);
@@ -66,7 +68,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Delivery Note" : "Delivery Notes"}</Modal.Title>
+                    <Modal.Title>{enableSelection ? t("Select Delivery Note") : t("Delivery Notes")}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"

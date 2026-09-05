@@ -67,15 +67,13 @@
   transform: translateY(-50%);
 }
 
-/* Reorder navbar items in RTL using flex order (more reliable than flex-direction
-   because Bootstrap's .navbar-expand .navbar-collapse has equal specificity).
-   - nav items (language/user) get order:-1 → appear FIRST = LEFT side
-   - store switcher (.ms-2, first child of collapse) gets margin-left:auto → pushed RIGHT */
-[dir="rtl"] .navbar-collapse .navbar-nav {
-  order: -1;
-}
-[dir="rtl"] .navbar-collapse > .ms-2 {
-  margin-left: auto;
+/* Reorder navbar in RTL by reversing the collapse flex container.
+   [dir="rtl"] .navbar-expand .navbar-collapse has specificity [0,3,0] which
+   beats Bootstrap's .navbar-expand .navbar-collapse at [0,2,0], so this wins.
+   DOM order [store, mobile-btn, nav] becomes visual [nav, mobile-btn, store]. */
+[dir="rtl"] .navbar-expand .navbar-collapse {
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
 
 /* Sidebar menu items - reverse icon and text order */
@@ -104,21 +102,28 @@
 }
 
 [dir="rtl"] .navbar-align {
-  flex-direction: row-reverse;
+  margin-left: 0;
 }
 
-/* Dropdown menu positioning */
-/* Default: right-anchor dropdowns in RTL (correct for the store switcher on the right) */
-[dir="rtl"] .dropdown-menu {
-  left: auto;
-  right: 0;
+/* Navbar dropdown positioning in RTL.
+   Popper.js positions via transform: translate(...) inline style; CSS left/right alone cannot
+   override it even with !important. We nullify the transform and use plain absolute CSS instead.
+   Bootstrap's .dropdown is already position:relative, so top:100% lands correctly. */
+[dir="rtl"] .navbar .dropdown-menu {
+  transform: none !important;
+  top: 100% !important;
 }
 
-/* Navbar nav dropdowns (user, language, bell) are on the LEFT in RTL — open left-anchored.
-   Higher specificity wins over the rule above. */
+/* Store switcher (right side of navbar) — right-anchored */
+[dir="rtl"] .navbar-collapse > .ms-2 .dropdown-menu {
+  right: 0 !important;
+  left: auto !important;
+}
+
+/* Nav dropdowns (lang / user / bell on left side) — left-anchored */
 [dir="rtl"] .navbar-nav .dropdown-menu {
-  left: 0;
-  right: auto;
+  left: 0 !important;
+  right: auto !important;
   text-align: left;
 }
 
@@ -214,16 +219,11 @@
 [dir="ltr"] .text-start {
   text-align: left !important;
 }
-[dir="ltr"] .navbar-collapse .navbar-nav {
-  order: initial;
-}
-[dir="ltr"] .navbar-collapse > .ms-2 {
-  margin-left: initial;
+[dir="ltr"] .navbar-expand .navbar-collapse {
+  flex-direction: row;
+  justify-content: initial;
 }
 [dir="ltr"] .navbar-align {
   flex-direction: row;
 }
-[dir="ltr"] .dropdown-menu {
-  left: initial;
-  right: initial;
-}
+/* No transform reset needed for LTR — Popper.js works correctly when [dir="rtl"] rules are inactive */

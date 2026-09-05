@@ -4,6 +4,7 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 import countryList from 'react-select-country-list';
 import { toStoreLocalDate, fromStoreLocalDate } from '../utils/timezone.js';
 import ZatcaConnect from './zatca_connect.js';
+import { useTranslation } from 'react-i18next';
 import { resolveImageUrl } from '../utils/imageUtils.js';
 import SampleInvoiceBg1 from '../INVOICE.jpg';
 import SampleInvoiceBg2 from '../LGK_WHATSAPP.png';
@@ -144,6 +145,7 @@ const tabBtnActive = {
 };
 
 function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, compact = false }) {
+    const { t } = useTranslation('common');
     const inputRef = React.useRef(null);
     const [dragging, setDragging] = React.useState(false);
 
@@ -187,7 +189,7 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
                         <img
                             src={displaySrc}
                             alt={label}
-                            title="Click to enlarge"
+                            title={t('Click to enlarge')}
                             style={{
                                 maxHeight: compact ? '64px' : '180px',
                                 maxWidth: compact ? '120px' : '240px',
@@ -204,7 +206,7 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
                                 style={{ position: 'absolute', bottom: '5px', right: '5px', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}
                                 onClick={e => { const src = e.currentTarget.previousSibling.src; const w = window.open(); w.document.write(`<img src="${src}" style="max-width:100%;max-height:100vh;display:block;margin:auto;">`); }}
                             >
-                                <i className="bi bi-zoom-in"></i> Enlarge
+                                <i className="bi bi-zoom-in"></i> {t('Enlarge')}
                             </span>
                         )}
                     </div>
@@ -212,11 +214,11 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
                         <div style={{ marginBottom: '8px' }}>
                             {isNew ? (
                                 <span style={{ fontSize: '10px', fontWeight: 700, background: '#fff8e1', color: '#7a5800', border: '1px solid #ffe082', borderRadius: '4px', padding: '2px 7px' }}>
-                                    <i className="bi bi-clock me-1"></i>Not saved yet
+                                    <i className="bi bi-clock me-1"></i>{t('Not saved yet')}
                                 </span>
                             ) : (
                                 <span style={{ fontSize: '10px', fontWeight: 700, background: '#e6f4ea', color: '#137333', border: '1px solid #a8d5b0', borderRadius: '4px', padding: '2px 7px' }}>
-                                    <i className="bi bi-check-circle me-1"></i>Saved
+                                    <i className="bi bi-check-circle me-1"></i>{t('Saved')}
                                 </span>
                             )}
                         </div>
@@ -227,18 +229,18 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
                                 onClick={openPicker}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: `1px solid ${ACCENT}`, background: '#eef3ff', color: ACCENT, cursor: 'pointer' }}
                             >
-                                <i className="bi bi-arrow-repeat"></i> Change
+                                <i className="bi bi-arrow-repeat"></i> {t('Change')}
                             </button>
                             {onRemove && (
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        if (!window.confirm(`Remove this ${label} image? This will delete it when you save.`)) return;
+                                        if (!window.confirm(t(`Remove this {{label}} image? This will delete it when you save.`, { label }))) return;
                                         onRemove();
                                     }}
                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #dc3545', background: '#fff5f5', color: '#dc3545', cursor: 'pointer' }}
                                 >
-                                    <i className="bi bi-trash3"></i> Remove
+                                    <i className="bi bi-trash3"></i> {t('Remove')}
                                 </button>
                             )}
                         </div>
@@ -248,9 +250,9 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
                 <div style={zoneStyle} onClick={openPicker} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
                     <i className="bi bi-cloud-upload" style={{ fontSize: compact ? '24px' : '36px', color: dragging ? ACCENT : '#b0bec5', display: 'block' }}></i>
                     <div style={{ fontWeight: 600, color: '#444', fontSize: '13px', marginTop: '8px' }}>
-                        {dragging ? 'Drop image here' : 'Click to upload or drag & drop'}
+                        {dragging ? t('Drop image here') : t('Click to upload or drag & drop')}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>PNG, JPG, WEBP</div>
+                    <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>{t('PNG, JPG, WEBP')}</div>
                     {hint && <div style={{ fontSize: '11px', color: '#aaa', marginTop: '6px' }}>{hint}</div>}
                 </div>
             )}
@@ -278,6 +280,7 @@ function GroupTitle({ title }) {
 }
 
 function TitleRow({ label, value, onChange }) {
+    const { t } = useTranslation('common');
     return (
         <div className="col-md-4 mb-3">
             <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444', marginBottom: '4px' }}>{label}</label>
@@ -286,7 +289,7 @@ function TitleRow({ label, value, onChange }) {
                 className="form-control form-control-sm"
                 value={value || ''}
                 onChange={e => onChange(e.target.value)}
-                placeholder="Invoice title"
+                placeholder={t('Invoice title')}
                 style={{ fontSize: '12px' }}
             />
         </div>
@@ -309,10 +312,11 @@ function BankField({ label, value, onChange, placeholder }) {
 }
 
 function Field({ label, value, onChange, placeholder, error, type = 'text', required = false, optional = false }) {
+    const { t } = useTranslation('common');
     return (
         <div className="col-md-4 mb-3">
             <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444', marginBottom: '4px' }}>
-                {label}{required && <span style={{ color: '#ba1a1a' }}> *</span>}{optional && <span style={{ fontWeight: 400, color: '#888', fontSize: '11px' }}> (Optional)</span>}
+                {label}{required && <span style={{ color: '#ba1a1a' }}> *</span>}{optional && <span style={{ fontWeight: 400, color: '#888', fontSize: '11px' }}> {t('(Optional)')}</span>}
             </label>
             <input
                 type={type}
@@ -327,6 +331,7 @@ function Field({ label, value, onChange, placeholder, error, type = 'text', requ
 }
 
 function StoreSettingsModal({ show, onHide }) {
+    const { t } = useTranslation('common');
     const [formData, setFormData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -397,21 +402,21 @@ function StoreSettingsModal({ show, onHide }) {
 
     function validate(fd) {
         const errs = {};
-        if (!fd.name) errs.name = 'Registered Company Name is required';
-        if (!fd.name_in_arabic) errs.name_in_arabic = 'Registered Company Name in Arabic is required';
-        if (!fd.code) errs.code = 'Branch Code is required';
-        if (!fd.branch_name) errs.branch_name = 'Branch Name is required';
-        if (!fd.registration_number) errs.registration_number = 'Registration Number (CRN) is required';
-        if (!fd.vat_no) errs.vat_no = 'VAT No. is required';
-        if (!fd.vat_percent) errs.vat_percent = 'VAT % is required';
-        if (!fd.phone) errs.phone = 'Phone is required';
-        if (!fd.email) errs.email = 'Email is required';
-        else if (!validateEmail(fd.email)) errs.email = 'Email is not valid';
-        if (!fd.national_address?.building_no) errs.national_address_building_no = 'Building Number is required';
-        if (!fd.national_address?.street_name) errs.national_address_street_name = 'Street Name is required';
-        if (!fd.national_address?.district_name) errs.national_address_district_name = 'District Name is required';
-        if (!fd.national_address?.city_name) errs.national_address_city_name = 'City Name is required';
-        if (!fd.national_address?.zipcode) errs.national_address_zipcode = 'Zipcode is required';
+        if (!fd.name) errs.name = t('Registered Company Name is required');
+        if (!fd.name_in_arabic) errs.name_in_arabic = t('Registered Company Name in Arabic is required');
+        if (!fd.code) errs.code = t('Branch Code is required');
+        if (!fd.branch_name) errs.branch_name = t('Branch Name is required');
+        if (!fd.registration_number) errs.registration_number = t('Registration Number (CRN) is required');
+        if (!fd.vat_no) errs.vat_no = t('VAT No. is required');
+        if (!fd.vat_percent) errs.vat_percent = t('VAT % is required');
+        if (!fd.phone) errs.phone = t('Phone is required');
+        if (!fd.email) errs.email = t('Email is required');
+        else if (!validateEmail(fd.email)) errs.email = t('Email is not valid');
+        if (!fd.national_address?.building_no) errs.national_address_building_no = t('Building Number is required');
+        if (!fd.national_address?.street_name) errs.national_address_street_name = t('Street Name is required');
+        if (!fd.national_address?.district_name) errs.national_address_district_name = t('District Name is required');
+        if (!fd.national_address?.city_name) errs.national_address_city_name = t('City Name is required');
+        if (!fd.national_address?.zipcode) errs.national_address_zipcode = t('Zipcode is required');
         return errs;
     }
 
@@ -460,10 +465,10 @@ function StoreSettingsModal({ show, onHide }) {
             const data = await res.json();
             if (!res.ok) {
                 if (data.errors) setErrors(data.errors);
-                showFlash('Failed to save. Please check your inputs.', 'danger');
+                showFlash(t('Failed to save. Please check your inputs.'), 'danger');
                 return;
             }
-            showFlash('Store settings saved successfully!', 'success');
+            showFlash(t('Store settings saved successfully!'), 'success');
             // Reload to get updated zatca.reconnect_required
             await loadStore();
             // Suppress success flash when reconnect is required (banner is shown instead)
@@ -471,7 +476,7 @@ function StoreSettingsModal({ show, onHide }) {
                 setFlash(null);
             }
         } catch (_) {
-            showFlash('Network error. Please try again.', 'danger');
+            showFlash(t('Network error. Please try again.'), 'danger');
         } finally {
             setSaving(false);
         }
@@ -532,9 +537,9 @@ function StoreSettingsModal({ show, onHide }) {
                             <i className="bi bi-gear-fill" style={{ fontSize: '18px', color: ACCENT }}></i>
                         </span>
                         <div>
-                            <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1d23', lineHeight: 1.2 }}>Store Settings</div>
+                            <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1d23', lineHeight: 1.2 }}>{t('Store Settings')}</div>
                             <div style={{ fontSize: '12px', color: '#888', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                {localStorage.getItem('store_name') || 'Current Store'}
+                                {localStorage.getItem('store_name') || t('Current Store')}
                                 {formData?.zatca?.phase && (
                                     <span style={{
                                         display: 'inline-flex', alignItems: 'center', gap: '3px',
@@ -551,7 +556,7 @@ function StoreSettingsModal({ show, onHide }) {
                                 {isPhase2 && formData?.zatca?.connected && formData.zatca.last_connected_at && (
                                     <span style={{ fontSize: '10px', color: '#137333', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                         <i className="bi bi-clock-history" style={{ fontSize: '9px' }}></i>
-                                        Last connected: {(() => {
+                                        {t('Last connected:')} {(() => {
                                             const d = toStoreLocalDate(formData.zatca.last_connected_at, countryCode);
                                             return d ? d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
                                         })()}
@@ -575,8 +580,8 @@ function StoreSettingsModal({ show, onHide }) {
                                     }}
                                 >
                                     {saving
-                                        ? <><Spinner animation="border" size="sm" className="me-1" />Saving…</>
-                                        : <><i className="bi bi-floppy2-fill" style={{ fontSize: '13px' }}></i> Save Changes</>
+                                        ? <><Spinner animation="border" size="sm" className="me-1" />{t('Saving…')}</>
+                                        : <><i className="bi bi-floppy2-fill" style={{ fontSize: '13px' }}></i> {t('Save Changes')}</>
                                     }
                                 </button>
                                 {flash && flash.type === 'success' && (
@@ -618,7 +623,7 @@ function StoreSettingsModal({ show, onHide }) {
                                     }}
                                 >
                                     <i className={`bi bi-${formData.zatca?.connected ? 'arrow-repeat' : 'plug-fill'}`} style={{ fontSize: '13px' }}></i>
-                                    {formData.zatca?.connected ? 'Reconnect to ZATCA' : 'Connect to ZATCA'}
+                                    {formData.zatca?.connected ? t('Reconnect to ZATCA') : t('Connect to ZATCA')}
                                 </button>
                             )}
                         </div>
@@ -629,7 +634,7 @@ function StoreSettingsModal({ show, onHide }) {
                     {/* Left sidebar */}
                     <div style={sidebarStyle}>
                         <div style={{ padding: '0 16px 12px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#aaa' }}>
-                            Settings
+                            {t('Settings')}
                         </div>
                         {TABS.map(tab => (
                             <button
@@ -638,7 +643,7 @@ function StoreSettingsModal({ show, onHide }) {
                                 onClick={() => setActiveTab(tab.id)}
                             >
                                 <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', width: '18px', textAlign: 'center' }}></i>
-                                <span style={{ flex: 1 }}>{tab.label}</span>
+                                <span style={{ flex: 1 }}>{t(tab.label)}</span>
                                 {tabErrorCounts[tab.id] > 0 && (
                                     <span style={{ background: '#ba1a1a', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         {tabErrorCounts[tab.id]}
@@ -653,7 +658,7 @@ function StoreSettingsModal({ show, onHide }) {
                         {loading && (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', gap: '12px', color: '#888' }}>
                                 <Spinner animation="border" size="sm" style={{ color: ACCENT }} />
-                                <span style={{ fontSize: '14px' }}>Loading store data…</span>
+                                <span style={{ fontSize: '14px' }}>{t('Loading store data…')}</span>
                             </div>
                         )}
 
@@ -662,9 +667,9 @@ function StoreSettingsModal({ show, onHide }) {
                             <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                 <i className="bi bi-exclamation-triangle-fill" style={{ color: '#856404', fontSize: '18px', flexShrink: 0 }}></i>
                                 <div style={{ flex: 1, minWidth: '200px' }}>
-                                    <div style={{ fontWeight: 700, color: '#856404', fontSize: '13px' }}>ZATCA Reconnection Required</div>
+                                    <div style={{ fontWeight: 700, color: '#856404', fontSize: '13px' }}>{t('ZATCA Reconnection Required')}</div>
                                     <div style={{ color: '#856404', fontSize: '12px', marginTop: '2px' }}>
-                                        Key store details have changed. You must reconnect to ZATCA before reporting {zatcaReportingScope()}.
+                                        {t('Key store details have changed. You must reconnect to ZATCA before reporting')} {zatcaReportingScope()}.
                                     </div>
                                 </div>
                                 <button
@@ -672,7 +677,7 @@ function StoreSettingsModal({ show, onHide }) {
                                     style={{ background: '#856404', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
                                     onClick={() => zatcaConnectRef.current?.open(formData.id)}
                                 >
-                                    <i className="bi bi-plug-fill me-1"></i>Reconnect to ZATCA
+                                    <i className="bi bi-plug-fill me-1"></i>{t('Reconnect to ZATCA')}
                                 </button>
                             </div>
                         )}
@@ -682,7 +687,7 @@ function StoreSettingsModal({ show, onHide }) {
                             <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px' }}>
                                 <div style={{ fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                    {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                    {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                 </div>
                                 {TABS.map(tab => {
                                     const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
@@ -690,7 +695,7 @@ function StoreSettingsModal({ show, onHide }) {
                                     return (
                                         <div key={tab.id} style={{ marginBottom: '6px' }}>
                                             <button type="button" onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', padding: 0, fontWeight: 700, color: ACCENT, cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
-                                                {tab.label}:
+                                                {t(tab.label)}:
                                             </button>
                                             {tabErrs.map(([k, v]) => (
                                                 <div key={k} style={{ fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
@@ -704,51 +709,51 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── GENERAL INFO ── */}
                         {!loading && formData && activeTab === 'general' && (
                             <div>
-                                <SectionHeader icon="bi-building" title="General Info" />
+                                <SectionHeader icon="bi-building" title={t('General Info')} />
                                 {isPhase2 && (
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
                                         <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
-                                        <span><strong>ZATCA Re-Connection Required:</strong> Changing any of these fields will require you to <strong>Re-Connect</strong> this store to ZATCA. Until re-connected, you will not be able to report {zatcaReportingScope()} to ZATCA.</span>
+                                        <span><strong>{t('ZATCA Re-Connection Required:')}</strong> {t('Changing any of these fields will require you to')} <strong>{t('Re-Connect')}</strong> {t('this store to ZATCA. Until re-connected, you will not be able to report')} {zatcaReportingScope()} {t('to ZATCA.')}</span>
                                     </div>
                                 )}
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                     <div className="row g-3">
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Business Category*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Business Category')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <select
                                                 className={`form-control form-control-sm${errors.business_category ? ' is-invalid' : ''}`}
                                                 value={formData.business_category || ''}
                                                 onChange={e => setField('business_category', e.target.value)}
                                             >
-                                                <option value="">-- Select category --</option>
-                                                <option value="Supply Activities">Supply Activities</option>
-                                                <option value="Service Activities">Service Activities</option>
-                                                <option value="Retail">Retail</option>
-                                                <option value="Food and Beverages">Food and Beverages</option>
-                                                <option value="Trading">Trading</option>
-                                                <option value="Manufacturing">Manufacturing</option>
-                                                <option value="Healthcare">Healthcare</option>
-                                                <option value="Real Estate">Real Estate</option>
-                                                <option value="Construction">Construction</option>
-                                                <option value="Transportation">Transportation</option>
-                                                <option value="Technology">Technology</option>
-                                                <option value="Education">Education</option>
-                                                <option value="Financial Services">Financial Services</option>
+                                                <option value="">{t('-- Select category --')}</option>
+                                                <option value="Supply Activities">{t('Supply Activities')}</option>
+                                                <option value="Service Activities">{t('Service Activities')}</option>
+                                                <option value="Retail">{t('Retail')}</option>
+                                                <option value="Food and Beverages">{t('Food and Beverages')}</option>
+                                                <option value="Trading">{t('Trading')}</option>
+                                                <option value="Manufacturing">{t('Manufacturing')}</option>
+                                                <option value="Healthcare">{t('Healthcare')}</option>
+                                                <option value="Real Estate">{t('Real Estate')}</option>
+                                                <option value="Construction">{t('Construction')}</option>
+                                                <option value="Transportation">{t('Transportation')}</option>
+                                                <option value="Technology">{t('Technology')}</option>
+                                                <option value="Education">{t('Education')}</option>
+                                                <option value="Financial Services">{t('Financial Services')}</option>
                                             </select>
                                             {errors.business_category && <div className="invalid-feedback">{errors.business_category}</div>}
                                         </div>
 
-                                        <Field label="Registered Company Name" value={formData.name} onChange={v => setField('name', v)} error={errors.name} required />
-                                        <Field label="Registered Company Name In Arabic" value={formData.name_in_arabic} onChange={v => setField('name_in_arabic', v)} error={errors.name_in_arabic} required />
-                                        <Field label="Branch Code" value={formData.code} onChange={v => setField('code', v)} error={errors.code} required />
-                                        <Field label="Branch Name" value={formData.branch_name} onChange={v => setField('branch_name', v)} error={errors.branch_name} required />
-                                        <Field label="Registration Number (CRN)" value={formData.registration_number} onChange={v => setField('registration_number', v)} error={errors.registration_number} required />
-                                        <Field label="VAT NO. (15 digits)" value={formData.vat_no} onChange={v => setField('vat_no', v)} error={errors.vat_no} required />
+                                        <Field label={t('Registered Company Name')} value={formData.name} onChange={v => setField('name', v)} error={errors.name} required />
+                                        <Field label={t('Registered Company Name In Arabic')} value={formData.name_in_arabic} onChange={v => setField('name_in_arabic', v)} error={errors.name_in_arabic} required />
+                                        <Field label={t('Branch Code')} value={formData.code} onChange={v => setField('code', v)} error={errors.code} required />
+                                        <Field label={t('Branch Name')} value={formData.branch_name} onChange={v => setField('branch_name', v)} error={errors.branch_name} required />
+                                        <Field label={t('Registration Number (CRN)')} value={formData.registration_number} onChange={v => setField('registration_number', v)} error={errors.registration_number} required />
+                                        <Field label={t('VAT NO. (15 digits)')} value={formData.vat_no} onChange={v => setField('vat_no', v)} error={errors.vat_no} required />
 
-                                        <Field label="Store Name" value={formData.store_name} onChange={v => setField('store_name', v)} optional />
-                                        <Field label="Store Name In Arabic" value={formData.store_name_in_arabic} onChange={v => setField('store_name_in_arabic', v)} optional />
-                                        <Field label="Title (Optional)" value={formData.title} onChange={v => setField('title', v)} placeholder="Title" />
-                                        <Field label="Title In Arabic (Optional)" value={formData.title_in_arabic} onChange={v => setField('title_in_arabic', v)} placeholder="Title In Arabic" />
+                                        <Field label={t('Store Name')} value={formData.store_name} onChange={v => setField('store_name', v)} optional />
+                                        <Field label={t('Store Name In Arabic')} value={formData.store_name_in_arabic} onChange={v => setField('store_name_in_arabic', v)} optional />
+                                        <Field label={t('Title (Optional)')} value={formData.title} onChange={v => setField('title', v)} placeholder="Title" />
+                                        <Field label={t('Title In Arabic (Optional)')} value={formData.title_in_arabic} onChange={v => setField('title_in_arabic', v)} placeholder="Title In Arabic" />
 
                                     </div>
                                 </div>
@@ -758,17 +763,17 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── NATIONAL ADDRESS ── */}
                         {!loading && formData && activeTab === 'address' && (
                             <div>
-                                <SectionHeader icon="bi-geo-alt" title="National Address" />
+                                <SectionHeader icon="bi-geo-alt" title={t('National Address')} />
                                 {isPhase2 && (
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
                                         <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
-                                        <span><strong>ZATCA Re-Connection Required:</strong> Changing any of these fields will require you to <strong>Re-Connect</strong> this store to ZATCA. Until re-connected, you will not be able to report {zatcaReportingScope()} to ZATCA.</span>
+                                        <span><strong>{t('ZATCA Re-Connection Required:')}</strong> {t('Changing any of these fields will require you to')} <strong>{t('Re-Connect')}</strong> {t('this store to ZATCA. Until re-connected, you will not be able to report')} {zatcaReportingScope()} {t('to ZATCA.')}</span>
                                     </div>
                                 )}
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                     <div className="row g-3">
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Country*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Country')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <Typeahead
                                                 id="sm_country_code"
                                                 labelKey="label"
@@ -785,7 +790,7 @@ function StoreSettingsModal({ show, onHide }) {
                                                     if (errors.country_code) setErrors(prev => ({ ...prev, country_code: '' }));
                                                 }}
                                                 options={countryOptions}
-                                                placeholder="Country name"
+                                                placeholder={t('Country name')}
                                                 selected={selectedCountries}
                                                 highlightOnlyResult={true}
                                                 ref={countrySearchRef}
@@ -794,62 +799,62 @@ function StoreSettingsModal({ show, onHide }) {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Short Code</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Short Code')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.short_code || ''} onChange={e => setNationalAddress('short_code', e.target.value)} placeholder="Short Code" />
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Building Number (4 digits)*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Building Number (4 digits)')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input type="text" className={`form-control form-control-sm${errors.national_address_building_no ? ' is-invalid' : ''}`} value={formData.national_address?.building_no || ''} onChange={e => setNationalAddress('building_no', e.target.value)} placeholder="Building Number" />
                                             {errors.national_address_building_no && <div className="invalid-feedback">{errors.national_address_building_no}</div>}
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Street Name*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Street Name')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input type="text" className={`form-control form-control-sm${errors.national_address_street_name ? ' is-invalid' : ''}`} value={formData.national_address?.street_name || ''} onChange={e => setNationalAddress('street_name', e.target.value)} placeholder="Street Name" />
                                             {errors.national_address_street_name && <div className="invalid-feedback">{errors.national_address_street_name}</div>}
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Street Name (Arabic)</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Street Name (Arabic)')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.street_name_arabic || ''} onChange={e => setNationalAddress('street_name_arabic', e.target.value)} placeholder="Street Name (Arabic)" />
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>District Name*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('District Name')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input type="text" className={`form-control form-control-sm${errors.national_address_district_name ? ' is-invalid' : ''}`} value={formData.national_address?.district_name || ''} onChange={e => setNationalAddress('district_name', e.target.value)} placeholder="District Name" />
                                             {errors.national_address_district_name && <div className="invalid-feedback">{errors.national_address_district_name}</div>}
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>District Name (Arabic)</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('District Name (Arabic)')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.district_name_arabic || ''} onChange={e => setNationalAddress('district_name_arabic', e.target.value)} placeholder="District Name (Arabic)" />
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>City Name*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('City Name')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input type="text" className={`form-control form-control-sm${errors.national_address_city_name ? ' is-invalid' : ''}`} value={formData.national_address?.city_name || ''} onChange={e => setNationalAddress('city_name', e.target.value)} placeholder="City Name" />
                                             {errors.national_address_city_name && <div className="invalid-feedback">{errors.national_address_city_name}</div>}
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>City Name (Arabic)</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('City Name (Arabic)')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.city_name_arabic || ''} onChange={e => setNationalAddress('city_name_arabic', e.target.value)} placeholder="City Name (Arabic)" />
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Zipcode (5 digits)*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Zipcode (5 digits)')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input type="text" className={`form-control form-control-sm${errors.national_address_zipcode ? ' is-invalid' : ''}`} value={formData.national_address?.zipcode || ''} onChange={e => setNationalAddress('zipcode', e.target.value)} placeholder="Zipcode" />
                                             {errors.national_address_zipcode && <div className="invalid-feedback">{errors.national_address_zipcode}</div>}
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Additional Number</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Additional Number')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.additional_no || ''} onChange={e => setNationalAddress('additional_no', e.target.value)} placeholder="Additional Number" />
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Unit Number</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Unit Number')}</label>
                                             <input type="text" className="form-control form-control-sm" value={formData.national_address?.unit_no || ''} onChange={e => setNationalAddress('unit_no', e.target.value)} placeholder="Unit Number" />
                                         </div>
                                     </div>
@@ -860,28 +865,28 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── CONTACT ── */}
                         {!loading && formData && activeTab === 'contact' && (
                             <div>
-                                <SectionHeader icon="bi-telephone" title="Contact" />
+                                <SectionHeader icon="bi-telephone" title={t('Contact')} />
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                     <div className="row g-3">
                                         <div className="col-md-6">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Phone*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Phone')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input
                                                 type="text"
                                                 className={`form-control form-control-sm${errors.phone ? ' is-invalid' : ''}`}
                                                 value={formData.phone || ''}
                                                 onChange={e => { setField('phone', e.target.value); }}
-                                                placeholder="e.g. +1 555 123 4567"
+                                                placeholder={t('e.g. +1 555 123 4567')}
                                             />
                                             {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
                                         </div>
                                         <div className="col-md-6">
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>Email*</label>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: '#444' }}>{t('Email')}<span style={{ color: '#ba1a1a' }}>*</span></label>
                                             <input
                                                 type="text"
                                                 className={`form-control form-control-sm${errors.email ? ' is-invalid' : ''}`}
                                                 value={formData.email || ''}
                                                 onChange={e => { setField('email', e.target.value); }}
-                                                placeholder="Email"
+                                                placeholder={t('Email')}
                                             />
                                             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                                         </div>
@@ -893,24 +898,24 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── INVOICE TITLES ── */}
                         {!loading && formData && activeTab === 'invoice_titles' && (
                             <div>
-                                <SectionHeader icon="bi-file-earmark-text" title="Invoice Titles" />
+                                <SectionHeader icon="bi-file-earmark-text" title={t('Invoice Titles')} />
 
                                 {isPhase1 && (
                                     <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <span style={{ background: '#004ac6', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>ZATCA PHASE 1</span>
+                                            <span style={{ background: '#004ac6', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>{t('ZATCA PHASE 1')}</span>
                                         </div>
-                                        <GroupTitle title="Sales" />
+                                        <GroupTitle title={t('Sales')} />
                                         <div className="row">
-                                            <TitleRow label="Paid" value={inv.phase1?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit" value={inv.phase1?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash" value={inv.phase1?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid')} value={inv.phase1?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit')} value={inv.phase1?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash')} value={inv.phase1?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_titles', 'cash'], v)} />
                                         </div>
-                                        <GroupTitle title="Sales Return" />
+                                        <GroupTitle title={t('Sales Return')} />
                                         <div className="row">
-                                            <TitleRow label="Paid" value={inv.phase1?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit" value={inv.phase1?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash" value={inv.phase1?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid')} value={inv.phase1?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit')} value={inv.phase1?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash')} value={inv.phase1?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'sales_return_titles', 'cash'], v)} />
                                         </div>
                                     </div>
                                 )}
@@ -918,19 +923,19 @@ function StoreSettingsModal({ show, onHide }) {
                                 {isPhase2 && (
                                     <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <span style={{ background: '#0066cc', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>ZATCA PHASE 2 · B2C</span>
+                                            <span style={{ background: '#0066cc', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>{t('ZATCA PHASE 2 · B2C')}</span>
                                         </div>
-                                        <GroupTitle title="Sales" />
+                                        <GroupTitle title={t('Sales')} />
                                         <div className="row">
-                                            <TitleRow label="Paid B2C" value={inv.phase2?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit B2C" value={inv.phase2?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash B2C" value={inv.phase2?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid B2C')} value={inv.phase2?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit B2C')} value={inv.phase2?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash B2C')} value={inv.phase2?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_titles', 'cash'], v)} />
                                         </div>
-                                        <GroupTitle title="Sales Return" />
+                                        <GroupTitle title={t('Sales Return')} />
                                         <div className="row">
-                                            <TitleRow label="Paid" value={inv.phase2?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit" value={inv.phase2?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash" value={inv.phase2?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid')} value={inv.phase2?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit')} value={inv.phase2?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash')} value={inv.phase2?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'sales_return_titles', 'cash'], v)} />
                                         </div>
                                     </div>
                                 )}
@@ -938,68 +943,68 @@ function StoreSettingsModal({ show, onHide }) {
                                 {isPhase2 && (
                                     <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <span style={{ background: '#1a3a6b', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>ZATCA PHASE 2 · B2B</span>
+                                            <span style={{ background: '#1a3a6b', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>{t('ZATCA PHASE 2 · B2B')}</span>
                                         </div>
-                                        <GroupTitle title="Sales" />
+                                        <GroupTitle title={t('Sales')} />
                                         <div className="row">
-                                            <TitleRow label="Paid B2B" value={inv.phase2_b2b?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit B2B" value={inv.phase2_b2b?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash B2B" value={inv.phase2_b2b?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid B2B')} value={inv.phase2_b2b?.sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit B2B')} value={inv.phase2_b2b?.sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash B2B')} value={inv.phase2_b2b?.sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_titles', 'cash'], v)} />
                                         </div>
-                                        <GroupTitle title="Sales Return" />
+                                        <GroupTitle title={t('Sales Return')} />
                                         <div className="row">
-                                            <TitleRow label="Paid" value={inv.phase2_b2b?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'paid'], v)} />
-                                            <TitleRow label="Credit" value={inv.phase2_b2b?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'credit'], v)} />
-                                            <TitleRow label="Cash" value={inv.phase2_b2b?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'cash'], v)} />
+                                            <TitleRow label={t('Paid')} value={inv.phase2_b2b?.sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'paid'], v)} />
+                                            <TitleRow label={t('Credit')} value={inv.phase2_b2b?.sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'credit'], v)} />
+                                            <TitleRow label={t('Cash')} value={inv.phase2_b2b?.sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'sales_return_titles', 'cash'], v)} />
                                         </div>
                                     </div>
                                 )}
 
                                 {(isPhase1 || isPhase2) && <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                        <span style={{ background: '#6c757d', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>PURCHASE TITLES</span>
+                                        <span style={{ background: '#6c757d', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>{t('PURCHASE TITLES')}</span>
                                     </div>
                                     {isPhase1 && (
                                         <>
-                                            <GroupTitle title="Purchase" />
+                                            <GroupTitle title={t('Purchase')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase1?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase1?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase1?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase1?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase1?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase1?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Purchase Return" />
+                                            <GroupTitle title={t('Purchase Return')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase1?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase1?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase1?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase1?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase1?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase1?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase1', 'purchase_return_titles', 'cash'], v)} />
                                             </div>
                                         </>
                                     )}
                                     {isPhase2 && (
                                         <>
-                                            <GroupTitle title="Purchase · B2C" />
+                                            <GroupTitle title={t('Purchase · B2C')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase2?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase2?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase2?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase2?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase2?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase2?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Purchase Return · B2C" />
+                                            <GroupTitle title={t('Purchase Return · B2C')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase2?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase2?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase2?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase2?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase2?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase2?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2', 'purchase_return_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Purchase · B2B" />
+                                            <GroupTitle title={t('Purchase · B2B')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase2_b2b?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase2_b2b?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase2_b2b?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase2_b2b?.purchase_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase2_b2b?.purchase_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase2_b2b?.purchase_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Purchase Return · B2B" />
+                                            <GroupTitle title={t('Purchase Return · B2B')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.phase2_b2b?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.phase2_b2b?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.phase2_b2b?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.phase2_b2b?.purchase_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.phase2_b2b?.purchase_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.phase2_b2b?.purchase_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'phase2_b2b', 'purchase_return_titles', 'cash'], v)} />
                                             </div>
                                         </>
                                     )}
@@ -1007,50 +1012,50 @@ function StoreSettingsModal({ show, onHide }) {
 
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '20px', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                        <span style={{ background: '#495057', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>OTHER INVOICE TITLES</span>
+                                        <span style={{ background: '#495057', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.4px' }}>{t('OTHER INVOICE TITLES')}</span>
                                     </div>
-                                    <GroupTitle title="Document Titles" />
+                                    <GroupTitle title={t('Document Titles')} />
                                     <div className="row">
-                                        <TitleRow label="Quotation" value={inv.quotation_title} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_title'], v)} />
-                                        <TitleRow label="Delivery Note" value={inv.delivery_note_title} onChange={v => setNestedPath(['settings', 'invoice', 'delivery_note_title'], v)} />
+                                        <TitleRow label={t('Quotation')} value={inv.quotation_title} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_title'], v)} />
+                                        <TitleRow label={t('Delivery Note')} value={inv.delivery_note_title} onChange={v => setNestedPath(['settings', 'invoice', 'delivery_note_title'], v)} />
                                         {formData.settings?.enable_warehouse_module && (
-                                            <TitleRow label="Stock Transfer" value={inv.stock_transfer_title} onChange={v => setNestedPath(['settings', 'invoice', 'stock_transfer_title'], v)} />
+                                            <TitleRow label={t('Stock Transfer')} value={inv.stock_transfer_title} onChange={v => setNestedPath(['settings', 'invoice', 'stock_transfer_title'], v)} />
                                         )}
                                         {formData.settings?.enable_purchase_order_module && (
-                                            <TitleRow label="Purchase Order" value={inv.purchase_order_title} onChange={v => setNestedPath(['settings', 'invoice', 'purchase_order_title'], v)} />
+                                            <TitleRow label={t('Purchase Order')} value={inv.purchase_order_title} onChange={v => setNestedPath(['settings', 'invoice', 'purchase_order_title'], v)} />
                                         )}
-                                        <TitleRow label="Payable" value={inv.payable_title} onChange={v => setNestedPath(['settings', 'invoice', 'payable_title'], v)} />
-                                        <TitleRow label="Receivable" value={inv.receivable_title} onChange={v => setNestedPath(['settings', 'invoice', 'receivable_title'], v)} />
+                                        <TitleRow label={t('Payable')} value={inv.payable_title} onChange={v => setNestedPath(['settings', 'invoice', 'payable_title'], v)} />
+                                        <TitleRow label={t('Receivable')} value={inv.receivable_title} onChange={v => setNestedPath(['settings', 'invoice', 'receivable_title'], v)} />
                                     </div>
                                     {formData.settings?.enable_sales_in_quotation && (
                                         <>
-                                            <GroupTitle title="Quotation Sales" />
+                                            <GroupTitle title={t('Quotation Sales')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.quotation_sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.quotation_sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.quotation_sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.quotation_sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.quotation_sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.quotation_sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Quotation Sales Return" />
+                                            <GroupTitle title={t('Quotation Sales Return')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.quotation_sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.quotation_sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.quotation_sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.quotation_sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.quotation_sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.quotation_sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'quotation_sales_return_titles', 'cash'], v)} />
                                             </div>
                                         </>
                                     )}
                                     {formData.settings?.non_vat_sales && (
                                         <>
-                                            <GroupTitle title="Non-VAT Sales" />
+                                            <GroupTitle title={t('Non-VAT Sales')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.non_vat_sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.non_vat_sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.non_vat_sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.non_vat_sales_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.non_vat_sales_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.non_vat_sales_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_titles', 'cash'], v)} />
                                             </div>
-                                            <GroupTitle title="Non-VAT Sales Return" />
+                                            <GroupTitle title={t('Non-VAT Sales Return')} />
                                             <div className="row">
-                                                <TitleRow label="Paid" value={inv.non_vat_sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'paid'], v)} />
-                                                <TitleRow label="Credit" value={inv.non_vat_sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'credit'], v)} />
-                                                <TitleRow label="Cash" value={inv.non_vat_sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'cash'], v)} />
+                                                <TitleRow label={t('Paid')} value={inv.non_vat_sales_return_titles?.paid} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'paid'], v)} />
+                                                <TitleRow label={t('Credit')} value={inv.non_vat_sales_return_titles?.credit} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'credit'], v)} />
+                                                <TitleRow label={t('Cash')} value={inv.non_vat_sales_return_titles?.cash} onChange={v => setNestedPath(['settings', 'invoice', 'non_vat_sales_return_titles', 'cash'], v)} />
                                             </div>
                                         </>
                                     )}
@@ -1061,17 +1066,17 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── BANK ACCOUNT ── */}
                         {!loading && formData && activeTab === 'bank_account' && (
                             <div>
-                                <SectionHeader icon="bi-bank" title="Bank Account" />
+                                <SectionHeader icon="bi-bank" title={t('Bank Account')} />
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '24px' }}>
                                     <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-                                        Bank account details printed on your invoices and payment receipts.
+                                        {t('Bank account details printed on your invoices and payment receipts.')}
                                     </p>
                                     <div className="row">
-                                        <BankField label="Bank Name" value={formData.bank_account?.bank_name} onChange={v => setNestedPath(['bank_account', 'bank_name'], v)} />
-                                        <BankField label="Customer No." value={formData.bank_account?.customer_no} onChange={v => setNestedPath(['bank_account', 'customer_no'], v)} placeholder="Customer Number" />
-                                        <BankField label="IBAN" value={formData.bank_account?.iban} onChange={v => setNestedPath(['bank_account', 'iban'], v)} placeholder="International Bank Account Number" />
-                                        <BankField label="Account Name" value={formData.bank_account?.account_name} onChange={v => setNestedPath(['bank_account', 'account_name'], v)} />
-                                        <BankField label="Account No." value={formData.bank_account?.account_no} onChange={v => setNestedPath(['bank_account', 'account_no'], v)} placeholder="Account Number" />
+                                        <BankField label={t('Bank Name')} value={formData.bank_account?.bank_name} onChange={v => setNestedPath(['bank_account', 'bank_name'], v)} />
+                                        <BankField label={t('Customer No.')} value={formData.bank_account?.customer_no} onChange={v => setNestedPath(['bank_account', 'customer_no'], v)} placeholder="Customer Number" />
+                                        <BankField label={t('IBAN')} value={formData.bank_account?.iban} onChange={v => setNestedPath(['bank_account', 'iban'], v)} placeholder="International Bank Account Number" />
+                                        <BankField label={t('Account Name')} value={formData.bank_account?.account_name} onChange={v => setNestedPath(['bank_account', 'account_name'], v)} />
+                                        <BankField label={t('Account No.')} value={formData.bank_account?.account_no} onChange={v => setNestedPath(['bank_account', 'account_no'], v)} placeholder="Account Number" />
                                     </div>
                                 </div>
                             </div>
@@ -1080,20 +1085,20 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── OPENING BALANCES ── */}
                         {!loading && formData && activeTab === 'opening_balances' && (
                             <div>
-                                <SectionHeader icon="bi-wallet2" title="Opening Balances" />
+                                <SectionHeader icon="bi-wallet2" title={t('Opening Balances')} />
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '24px' }}>
                                     <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-                                        Enter the cash and bank balances already held when you joined this system.
+                                        {t('Enter the cash and bank balances already held when you joined this system.')}
                                     </p>
                                     <div className="row">
                                         <div className="col-md-6 mb-4">
                                             <div style={{ background: '#f8f9fb', borderRadius: '8px', padding: '16px', border: '1px solid #e9ecef' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                                                     <i className="bi bi-cash-coin" style={{ color: ACCENT, fontSize: '16px' }}></i>
-                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#333' }}>Cash Account</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#333' }}>{t('Cash Account')}</span>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>Opening Balance</label>
+                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{t('Opening Balance')}</label>
                                                     <div className="input-group input-group-sm">
                                                         <span className="input-group-text" style={{ background: '#eef3ff', border: '1px solid #c8d8f5', color: ACCENT, fontWeight: 600, fontSize: '12px' }}>
                                                             {formData.currency_code || 'SAR'}
@@ -1102,7 +1107,7 @@ function StoreSettingsModal({ show, onHide }) {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>As of Date &amp; Time</label>
+                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{t('As of Date & Time')}</label>
                                                     <input type="datetime-local" className="form-control form-control-sm" value={toDatetimeLocalValue(formData.settings?.cash_opening_balance_date, countryCode)} onChange={e => setNestedPath(['settings', 'cash_opening_balance_date'], fromDatetimeLocalValue(e.target.value, countryCode))} />
                                                 </div>
                                             </div>
@@ -1111,10 +1116,10 @@ function StoreSettingsModal({ show, onHide }) {
                                             <div style={{ background: '#f8f9fb', borderRadius: '8px', padding: '16px', border: '1px solid #e9ecef' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                                                     <i className="bi bi-bank" style={{ color: ACCENT, fontSize: '16px' }}></i>
-                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#333' }}>Bank Account</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#333' }}>{t('Bank Account')}</span>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>Opening Balance</label>
+                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{t('Opening Balance')}</label>
                                                     <div className="input-group input-group-sm">
                                                         <span className="input-group-text" style={{ background: '#eef3ff', border: '1px solid #c8d8f5', color: ACCENT, fontWeight: 600, fontSize: '12px' }}>
                                                             {formData.currency_code || 'SAR'}
@@ -1123,7 +1128,7 @@ function StoreSettingsModal({ show, onHide }) {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>As of Date &amp; Time</label>
+                                                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{t('As of Date & Time')}</label>
                                                     <input type="datetime-local" className="form-control form-control-sm" value={toDatetimeLocalValue(formData.settings?.bank_opening_balance_date, countryCode)} onChange={e => setNestedPath(['settings', 'bank_opening_balance_date'], fromDatetimeLocalValue(e.target.value, countryCode))} />
                                                 </div>
                                             </div>
@@ -1135,14 +1140,14 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── LOGO ── */}
                         {!loading && formData && activeTab === 'logo' && (
                             <div>
-                                <SectionHeader icon="bi-image-fill" title="Logo" />
+                                <SectionHeader icon="bi-image-fill" title={t('Logo')} />
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '24px', marginBottom: '16px' }}>
                                     <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
-                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>Logo Guidelines</div>
-                                        <div>• <strong>Recommended size:</strong> 300 × 100 px</div>
-                                        <div>• <strong>Format:</strong> transparent PNG preferred</div>
-                                        <div>• <strong>Max file size:</strong> 500 KB</div>
-                                        <div>• Used in the invoice header</div>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>{t('Logo Guidelines')}</div>
+                                        <div>• <strong>{t('Recommended size:')} </strong> 300 × 100 px</div>
+                                        <div>• <strong>{t('Format:')} </strong> {t('transparent PNG preferred')}</div>
+                                        <div>• <strong>{t('Max file size:')} </strong> 500 KB</div>
+                                        <div>{t('• Used in the invoice header')}</div>
                                     </div>
                                     <ImageDropzone
                                         label="Logo"
@@ -1163,25 +1168,25 @@ function StoreSettingsModal({ show, onHide }) {
                         {/* ── INVOICE BACKGROUND ── */}
                         {!loading && formData && activeTab === 'invoice_background' && (
                             <div>
-                                <SectionHeader icon="bi-image" title="Invoice Background Image" />
+                                <SectionHeader icon="bi-image" title={t('Invoice Background Image')} />
                                 <div style={{ background: '#fff', border: '1px solid #e9ecef', borderRadius: '10px', padding: '24px', marginBottom: '16px' }}>
                                     <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
-                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>Background Image Guidelines</div>
-                                        <div>• <strong>Recommended size:</strong> A4 at 150 dpi — <strong>1240 × 1754 px</strong></div>
-                                        <div>• Acceptable: A4 at 72 dpi — 595 × 842 px (lower quality on high-DPI screens)</div>
-                                        <div>• <strong>Format:</strong> PNG (transparent areas stay clear) or JPG</div>
-                                        <div>• The image is stretched to fill the entire invoice page — keep important content centred or near edges</div>
-                                        <div>• <strong>Max file size:</strong> 2 MB</div>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>{t('Background Image Guidelines')}</div>
+                                        <div>• <strong>{t('Recommended size:')} </strong> A4 at 150 dpi — <strong>1240 × 1754 px</strong></div>
+                                        <div>• {t('Acceptable: A4 at 72 dpi — 595 × 842 px (lower quality on high-DPI screens)')}</div>
+                                        <div>• <strong>{t('Format:')} </strong> {t('PNG (transparent areas stay clear) or JPG')}</div>
+                                        <div>• {t('The image is stretched to fill the entire invoice page — keep important content centred or near edges')}</div>
+                                        <div>• <strong>{t('Max file size:')} </strong> 2 MB</div>
                                         <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #c8d8f5' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: '8px' }}><i className="bi bi-download me-1"></i>Sample backgrounds — download to see how it should look:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: '8px' }}><i className="bi bi-download me-1"></i>{t('Sample backgrounds — download to see how it should look:')}</div>
                                             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                 <a href={SampleInvoiceBg1} download="sample-invoice-background-1.jpg"
                                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
-                                                    <i className="bi bi-file-earmark-image"></i> Sample 1 (JPG)
+                                                    <i className="bi bi-file-earmark-image"></i> {t('Sample 1 (JPG)')}
                                                 </a>
                                                 <a href={SampleInvoiceBg2} download="sample-invoice-background-2.png"
                                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
-                                                    <i className="bi bi-file-earmark-image"></i> Sample 2 (PNG)
+                                                    <i className="bi bi-file-earmark-image"></i> {t('Sample 2 (PNG)')}
                                                 </a>
                                             </div>
                                         </div>
@@ -1220,7 +1225,7 @@ function StoreSettingsModal({ show, onHide }) {
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <Button variant="outline-secondary" size="sm" onClick={onHide} disabled={saving} style={{ padding: '7px 18px', fontWeight: 500 }}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button
                             size="sm"
@@ -1229,9 +1234,9 @@ function StoreSettingsModal({ show, onHide }) {
                             style={{ padding: '7px 20px', fontWeight: 600, background: ACCENT, borderColor: ACCENT }}
                         >
                             {saving ? (
-                                <><Spinner animation="border" size="sm" className="me-2" />Saving…</>
+                                <><Spinner animation="border" size="sm" className="me-2" />{t('Saving…')}</>
                             ) : (
-                                <><i className="bi bi-check2 me-1"></i>Save Changes</>
+                                <><i className="bi bi-check2 me-1"></i>{t('Save Changes')}</>
                             )}
                         </Button>
                     </div>
@@ -1242,7 +1247,7 @@ function StoreSettingsModal({ show, onHide }) {
                 ref={zatcaConnectRef}
                 refreshList={() => {
                     loadStore();
-                    showConnectFlash('Successfully connected to ZATCA!');
+                    showConnectFlash(t('Successfully connected to ZATCA!'));
                 }}
             />
         </>

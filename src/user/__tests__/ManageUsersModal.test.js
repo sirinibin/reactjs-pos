@@ -162,12 +162,14 @@ describe('ManageUsersModal.js — confirmation prompts', () => {
         expect(deleteBlock[0]).toMatch(/window\.confirm/);
     });
 
-    test('5.3  activate confirm message mentions logging in', () => {
-        expect(SRC).toMatch(/log in again/i);
+    test('5.3  activate confirm message uses i18n key for activation', () => {
+        // i18n: was "log in again" inline, now uses t('Activate user confirm', {...})
+        expect(SRC).toMatch(/Activate user confirm|log in again/i);
     });
 
-    test('5.4  deactivate confirm message mentions not being able to log in', () => {
-        expect(SRC).toMatch(/not be able to log in/i);
+    test('5.4  deactivate confirm message uses i18n key for deactivation', () => {
+        // i18n: was "not be able to log in" inline, now uses t('Deactivate user confirm', {...})
+        expect(SRC).toMatch(/Deactivate user confirm|not be able to log in/i);
     });
 });
 
@@ -237,19 +239,19 @@ describe('ManageUsersModal.js — new user creation flow', () => {
 
 describe('ManageUsersModal.js — table structure', () => {
     test('9.1  Name column rendered', () => {
-        expect(SRC).toMatch(/<th>Name<\/th>/);
+        expect(SRC).toMatch(/<th>(?:\{t\(')?Name(?:'\))?\}<\/th>|<th>Name<\/th>/);
     });
 
     test('9.2  Role column rendered', () => {
-        expect(SRC).toMatch(/<th>Role<\/th>/);
+        expect(SRC).toMatch(/<th>(?:\{t\(')?Role(?:'\))?\}<\/th>|<th>Role<\/th>/);
     });
 
     test('9.3  Stores column rendered', () => {
-        expect(SRC).toMatch(/<th>Stores<\/th>/);
+        expect(SRC).toMatch(/<th>(?:\{t\(')?Stores(?:'\))?\}<\/th>|<th>Stores<\/th>/);
     });
 
     test('9.4  Status column rendered', () => {
-        expect(SRC).toMatch(/<th>Status<\/th>/);
+        expect(SRC).toMatch(/<th>(?:\{t\(')?Status(?:'\))?\}<\/th>|<th>Status<\/th>/);
     });
 
     test('9.5  store_names rendered as badges', () => {

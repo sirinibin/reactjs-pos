@@ -4,6 +4,13 @@
 // --- CSS / asset mocks ---
 jest.mock('react-datepicker/dist/react-datepicker.css', () => ({}));
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key) => key,
+    i18n: { changeLanguage: jest.fn(), language: 'en' },
+  }),
+}));
+
 // --- react-bootstrap ---
 jest.mock('react-bootstrap', () => ({
   Modal: Object.assign(
@@ -96,7 +103,7 @@ describe('PurchaseReturns (smoke)', () => {
     );
   });
 
-  it('open(false) shows "PurchaseReturns" title', () => {
+  it('open(false) shows "Purchase Returns" title', () => {
     const ref = createRef();
     render(
       <MemoryRouter>
@@ -104,10 +111,10 @@ describe('PurchaseReturns (smoke)', () => {
       </MemoryRouter>
     );
     act(() => ref.current.open(false, []));
-    expect(screen.getByText('PurchaseReturns')).toBeInTheDocument();
+    expect(screen.getByText('Purchase Returns')).toBeInTheDocument();
   });
 
-  it('open(true) shows "Select PurchaseReturn" title', () => {
+  it('open(true) shows "Select Purchase Return" title', () => {
     const ref = createRef();
     render(
       <MemoryRouter>
@@ -115,7 +122,7 @@ describe('PurchaseReturns (smoke)', () => {
       </MemoryRouter>
     );
     act(() => ref.current.open(true, []));
-    expect(screen.getByText('Select PurchaseReturn')).toBeInTheDocument();
+    expect(screen.getByText('Select Purchase Return')).toBeInTheDocument();
   });
 
   it('selecting a purchase return calls onSelectPurchaseReturn and closes the modal', () => {
