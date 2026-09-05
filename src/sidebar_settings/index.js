@@ -1,24 +1,68 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { DEFAULT_MENU, loadSidebarConfig, saveSidebarConfig } from "../sidebar_menu_config";
 
 export default function SidebarSettings() {
     const [items, setItems]       = useState([]);
     const [saved, setSaved]       = useState(false);
+    const [serverLoading, setServerLoading] = useState(false);
     const dragIndex               = useRef(null);
     const [draggingId, setDraggingId] = useState(null);
 
+    const { t } = useTranslation('common');
     const isAdmin = localStorage.getItem("user_role") === "Admin";
     const storeSettings = (() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     })();
+    const serverSyncEnabled = !!storeSettings?.save_sidebar_config_to_server;
     const warehouseEnabled   = !!storeSettings?.enable_warehouse_module;
     const automobileEnabled  = !!storeSettings?.enable_automobile_module;
     const employeeEnabled    = !!storeSettings?.enable_employee_module;
     const servicesEnabled        = !!storeSettings?.enable_services;
     const purchaseOrderEnabled   = !!storeSettings?.enable_purchase_order_module;
     const purchaseRequestEnabled = !!storeSettings?.enable_purchase_request_module;
+    const aiRFQBotEnabled        = !!storeSettings?.enable_ai_rfq_bot;
 
-    useEffect(() => { setItems(loadSidebarConfig()); }, []);
+    useEffect(() => {
+        // Always start with localStorage (fast, synchronous)
+        setItems(loadSidebarConfig());
+
+        // If server sync is enabled, fetch from server and override
+        if (serverSyncEnabled) {
+            const storeId = localStorage.getItem('store_id');
+            const token = localStorage.getItem('access_token');
+            if (storeId && token) {
+                setServerLoading(true);
+                fetch('/v1/store/' + storeId, { headers: { 'Authorization': token } })
+                    .then(r => r.json())
+                    .then(data => {
+                        const serverConfig = data?.result?.settings?.sidebar_config;
+                        if (serverConfig && serverConfig.length > 0) {
+                            // Merge server config with DEFAULT_MENU metadata
+                            const mapped = serverConfig
+                                .map(s => DEFAULT_MENU.find(m => m.id === s.id) ? { ...DEFAULT_MENU.find(m => m.id === s.id), visible: s.visible } : null)
+                                .filter(Boolean);
+                            const savedIds = new Set(serverConfig.map(s => s.id));
+                            DEFAULT_MENU.filter(m => !savedIds.has(m.id)).forEach(newItem => {
+                                const defaultIdx = DEFAULT_MENU.findIndex(m => m.id === newItem.id);
+                                let insertAt = mapped.length;
+                                for (let i = mapped.length - 1; i >= 0; i--) {
+                                    const existingIdx = DEFAULT_MENU.findIndex(m => m.id === mapped[i].id);
+                                    if (existingIdx < defaultIdx) { insertAt = i + 1; break; }
+                                    if (i === 0) insertAt = 0;
+                                }
+                                mapped.splice(insertAt, 0, { ...newItem, visible: true });
+                            });
+                            setItems(mapped);
+                            // Update localStorage cache so Sidebar renders correctly
+                            localStorage.setItem('sidebar_config', JSON.stringify(mapped.map(({ id, visible }) => ({ id, visible }))));
+                        }
+                    })
+                    .catch(() => {})
+                    .finally(() => setServerLoading(false));
+            }
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Drag handlers (HTML5 native, no library) ────────────────────────────
     function onDragStart(e, index) {
@@ -85,27 +129,30 @@ export default function SidebarSettings() {
             <div className="d-flex align-items-center justify-content-between mb-1">
                 <h5 className="mb-0 fw-bold">
                     <i className="bi bi-list-ul me-2 text-primary" />
-                    Menu Settings
+                    {t('Menu Settings')}
                 </h5>
                 <div className="d-flex gap-2">
                     <button className="btn btn-sm btn-outline-secondary" onClick={handleReset}>
-                        <i className="bi bi-arrow-counterclockwise me-1" />Reset
+                        <i className="bi bi-arrow-counterclockwise me-1" />{t('Reset')}
                     </button>
                     <button
                         className={`btn btn-sm ${saved ? "btn-success" : "btn-primary"}`}
                         onClick={handleSave}
+                        disabled={serverLoading}
                     >
-                        <i className={`bi bi-${saved ? "check2" : "floppy"} me-1`} />
-                        {saved ? "Saved!" : "Save & Apply"}
+                        {serverLoading
+                            ? <><span className="spinner-border spinner-border-sm me-1" />{t('Loading...')}</>
+                            : <><i className={`bi bi-${saved ? "check2" : "floppy"} me-1`} />{saved ? t('Saved!') : t('Save & Apply')}</>
+                        }
                     </button>
                 </div>
             </div>
             <p className="text-muted small mb-3">
-                Drag <i className="bi bi-grip-vertical" /> to reorder · toggle to show/hide · the first
+                {t('Drag to reorder, toggle to show/hide, the first')} <i className="bi bi-grip-vertical" />
                 <span className="badge bg-success ms-1 me-1" style={{ fontSize: "0.65rem" }}>
-                    <i className="bi bi-house-fill me-1" />Landing
+                    <i className="bi bi-house-fill me-1" />{t('Landing')}
                 </span>
-                visible item opens after login.
+                {t('visible item opens after login.')}
             </p>
 
             {/* Item list */}
@@ -120,6 +167,7 @@ export default function SidebarSettings() {
                     if (meta.requiresServices && !servicesEnabled) return null;
                     if (meta.requiresPurchaseOrderModule && !purchaseOrderEnabled) return null;
                     if (meta.purchaseRequestOnly && !purchaseRequestEnabled) return null;
+                    if (meta.requiresAIRFQBot && !aiRFQBotEnabled) return null;
                     const isLanding  = item.id === landingId && item.visible;
                     const isDragging = draggingId === item.id;
 
@@ -151,31 +199,32 @@ export default function SidebarSettings() {
                             {meta.parentId && <span style={{ color: "#adb5bd", fontSize: "0.85rem", marginLeft: "8px" }}>↳</span>}
                             <i className={`bi ${meta.icon} text-secondary`} style={{ flexShrink: 0 }} />
                             <span className="flex-grow-1" style={{ fontSize: "0.9rem", fontWeight: item.visible ? 500 : 400, color: item.visible ? "#212529" : "#adb5bd" }}>
-                                {meta.label}
+                                {t(meta.label)}
                             </span>
 
                             {/* Badges */}
                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                                {meta.adminOnly                && <span className="badge bg-warning text-dark" style={{ fontSize: "0.6rem" }}>Admin</span>}
-                                {meta.warehouseOnly            && <span className="badge bg-info text-dark"    style={{ fontSize: "0.6rem" }}>Warehouse</span>}
-                                {meta.requiresAutomobileModule && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Automobiles</span>}
-                                {meta.requiresEmployeeModule   && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Employees</span>}
-                                {meta.requiresServices             && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Services</span>}
-                                {meta.requiresPurchaseOrderModule  && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Purchase Orders</span>}
-                                {meta.purchaseRequestOnly          && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>Purchase Requests</span>}
+                                {meta.adminOnly                && <span className="badge bg-warning text-dark" style={{ fontSize: "0.6rem" }}>{t('Admin')}</span>}
+                                {meta.warehouseOnly            && <span className="badge bg-info text-dark"    style={{ fontSize: "0.6rem" }}>{t('Warehouse')}</span>}
+                                {meta.requiresAutomobileModule && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>{t('Automobiles')}</span>}
+                                {meta.requiresEmployeeModule   && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>{t('Employees')}</span>}
+                                {meta.requiresServices             && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>{t('Services')}</span>}
+                                {meta.requiresPurchaseOrderModule  && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>{t('Purchase Orders')}</span>}
+                                {meta.purchaseRequestOnly          && <span className="badge bg-secondary text-white" style={{ fontSize: "0.6rem" }}>{t('Purchase Requests')}</span>}
+                                {meta.requiresAIRFQBot             && <span className="badge bg-primary text-white"    style={{ fontSize: "0.6rem" }}><i className="bi bi-robot me-1" />{t('AI RFQ Bot')}</span>}
                                 {isLanding && (
                                     <span className="badge bg-success" style={{ fontSize: "0.6rem" }}>
-                                        <i className="bi bi-house-fill me-1" />Landing
+                                        <i className="bi bi-house-fill me-1" />{t('Landing')}
                                     </span>
                                 )}
                                 {!isLanding && item.visible && (
                                     <button
                                         className="btn btn-xs btn-outline-success py-0 px-1"
                                         style={{ fontSize: "0.65rem", lineHeight: 1.4 }}
-                                        title="Set as landing page after login"
+                                        title={t('Set as landing page after login')}
                                         onClick={() => setAsLanding(item.id)}
                                     >
-                                        <i className="bi bi-house me-1" />Set Landing
+                                        <i className="bi bi-house me-1" />{t('Set Landing')}
                                     </button>
                                 )}
                             </div>
@@ -200,13 +249,15 @@ export default function SidebarSettings() {
             {visibleCount === 0 && (
                 <div className="alert alert-warning mt-3 small">
                     <i className="bi bi-exclamation-triangle-fill me-2" />
-                    At least one item must be visible.
+                    {t('At least one item must be visible.')}
                 </div>
             )}
 
             <p className="text-muted small mt-3 mb-0">
                 <i className="bi bi-info-circle me-1" />
-                Changes apply immediately after saving. Your settings are stored in this browser.
+                {serverSyncEnabled
+                    ? t('Changes apply immediately after saving. Your settings are synced to the server and shared across devices.')
+                    : t('Changes apply immediately after saving. Your settings are stored in this browser.')}
             </p>
         </div>
     );

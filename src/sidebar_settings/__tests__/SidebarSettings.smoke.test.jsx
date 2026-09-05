@@ -254,3 +254,108 @@ describe('SidebarSettings smoke test', () => {
     expect(screen.getByText('↳')).toBeInTheDocument();
   });
 });
+
+// ── Server-sync tests ─────────────────────────────────────────────────────────
+describe('SidebarSettings server sync', () => {
+  const SERVER_CONFIG = [
+    { id: 'sales', visible: true },
+    { id: 'dashboard', visible: false },
+  ];
+
+  beforeEach(() => {
+    localStorage.setItem('store_id', 'store123');
+    localStorage.setItem('access_token', 'tok123');
+  });
+
+  test('does NOT call fetch when save_sidebar_config_to_server flag is absent', async () => {
+    global.fetch.mockClear();
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('does NOT call fetch when save_sidebar_config_to_server is false', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: false }));
+    global.fetch.mockClear();
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('calls fetch with correct URL when save_sidebar_config_to_server is true', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockClear();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).toHaveBeenCalledWith('/v1/store/store123', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'tok123' }),
+    }));
+  });
+
+  test('updates items from server sidebar_config when server has data', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        result: { settings: { sidebar_config: SERVER_CONFIG } },
+      }),
+    });
+    await act(async () => { renderComponent(); });
+    // SERVER_CONFIG orders: sales (visible:true), dashboard (visible:false)
+    // Both items are rendered in DOM; visibility is reflected via the switch checked state.
+    // After server merge, first two switches map to [sales=checked, dashboard=unchecked].
+    const switches = screen.getAllByRole('switch');
+    expect(switches[0].checked).toBe(true);   // sales → visible
+    expect(switches[1].checked).toBe(false);  // dashboard → hidden
+    expect(screen.getByText('Sales')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('keeps localStorage items when server returns empty sidebar_config', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    // Falls back to localStorage which has Dashboard visible
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('keeps localStorage items when fetch fails', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockRejectedValueOnce(new Error('network error'));
+    await act(async () => { renderComponent(); });
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('shows server-sync note when flag is enabled', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    expect(screen.getByText(/synced to the server/i)).toBeInTheDocument();
+  });
+
+  test('shows browser-only note when flag is disabled', () => {
+    renderComponent();
+    expect(screen.getByText(/stored in this browser/i)).toBeInTheDocument();
+  });
+
+  test('updates localStorage cache after loading from server', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        result: { settings: { sidebar_config: SERVER_CONFIG } },
+      }),
+    });
+    await act(async () => { renderComponent(); });
+    const cached = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
+    expect(Array.isArray(cached)).toBe(true);
+    expect(cached.length).toBeGreaterThan(0);
+  });
+});

@@ -6495,6 +6495,34 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls toolbar style for the balance sheet preview modal')}</div>
                                             </div>
                                             <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Save Sidebar Config to Server')}</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="save_sidebar_config_to_server"
+                                                        checked={!!formData.settings?.save_sidebar_config_to_server}
+                                                        onChange={() => { formData.settings.save_sidebar_config_to_server = !formData.settings.save_sidebar_config_to_server; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="save_sidebar_config_to_server">{t('Enable')}</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Saves sidebar menu order and visibility to the server so it is shared across browsers/devices. Default: localStorage only.')}</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Save Print Settings to Server')}</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="save_print_settings_to_server"
+                                                        checked={!!formData.settings?.save_print_settings_to_server}
+                                                        onChange={() => { formData.settings.save_print_settings_to_server = !formData.settings.save_print_settings_to_server; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="save_print_settings_to_server">{t('Enable')}</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Saves font, font size, show store header, margin top, and page size settings to the server so they are shared across browsers/devices')}</div>
+                                            </div>
+                                            <div className="col-md-4">
                                                 <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Auto Refresh on New Version')}</label>
                                                 <div className="form-check form-switch mt-1">
                                                     <input

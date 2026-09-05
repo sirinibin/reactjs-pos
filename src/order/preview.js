@@ -1873,11 +1873,29 @@ const Preview = forwardRef((props, ref) => {
 
     const saveToLocalStorage = useCallback((key, obj) => {
         localStorage.setItem(key, JSON.stringify(obj));
-    }, []);
+        if (key === "fontSizes") savePrintSettingsToServerDebounced(obj);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const getFromLocalStorage = useCallback((key) => {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : null;
+    }, []);
+
+    const printSettingsSaveTimer = useRef(null);
+    const savePrintSettingsToServerDebounced = useCallback((fontSizesData) => {
+        const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+        if (!storeSettings?.save_print_settings_to_server) return;
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        if (printSettingsSaveTimer.current) clearTimeout(printSettingsSaveTimer.current);
+        printSettingsSaveTimer.current = setTimeout(() => {
+            fetch('/v1/store/' + storeId + '/print-settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                body: JSON.stringify({ print_settings: fontSizesData }),
+            }).catch(() => {});
+        }, 1500);
     }, []);
 
 
@@ -1930,6 +1948,25 @@ const Preview = forwardRef((props, ref) => {
         }
         setFontSizes({ ...storedFontSizes });
         saveToLocalStorage("fontSizes", storedFontSizes);
+
+        // Load from server if flag is enabled (server wins, falls back to local)
+        const _storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+        if (_storeSettings?.save_print_settings_to_server) {
+            const _storeId = localStorage.getItem('store_id');
+            const _token = localStorage.getItem('access_token');
+            if (_storeId && _token) {
+                fetch('/v1/store/' + _storeId, { headers: { 'Authorization': _token } })
+                    .then(r => r.json())
+                    .then(data => {
+                        const serverPS = data?.result?.settings?.print_settings;
+                        if (serverPS && Object.keys(serverPS).length > 0) {
+                            const merged = { ...storedFontSizes, ...serverPS };
+                            setFontSizes({ ...merged });
+                            localStorage.setItem('fontSizes', JSON.stringify(merged));
+                        }
+                    }).catch(() => {});
+            }
+        }
     }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
 

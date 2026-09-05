@@ -263,6 +263,74 @@ describe('getLandingPath()', () => {
 });
 
 // ---------------------------------------------------------------------------
+// AI RFQ Bot menu entries (requiresAIRFQBot flag)
+// ---------------------------------------------------------------------------
+
+describe('AI RFQ Bot menu entries', () => {
+    test('18. rfq_received entry exists in DEFAULT_MENU', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_received');
+        expect(entry).toBeDefined();
+    });
+
+    test('19. rfq_suppliers entry exists in DEFAULT_MENU', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_suppliers');
+        expect(entry).toBeDefined();
+    });
+
+    test('20. rfq_received has correct path and icon', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_received');
+        expect(entry.path).toBe('/dashboard/rfq-received');
+        expect(entry.icon).toBe('bi-inbox-fill');
+    });
+
+    test('21. rfq_suppliers has correct path and icon', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_suppliers');
+        expect(entry.path).toBe('/dashboard/rfq-suppliers');
+        expect(entry.icon).toBe('bi-building-fill');
+    });
+
+    test('22. rfq_received has requiresAIRFQBot: true', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_received');
+        expect(entry.requiresAIRFQBot).toBe(true);
+    });
+
+    test('23. rfq_suppliers has requiresAIRFQBot: true', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_suppliers');
+        expect(entry.requiresAIRFQBot).toBe(true);
+    });
+
+    test('24. only rfq_received and rfq_suppliers have requiresAIRFQBot set', () => {
+        const flagged = DEFAULT_MENU.filter(m => m.requiresAIRFQBot);
+        const flaggedIds = flagged.map(m => m.id).sort();
+        expect(flaggedIds).toEqual(['rfq_received', 'rfq_suppliers'].sort());
+    });
+
+    test('25. rfq_received resource field matches its id', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_received');
+        expect(entry.resource).toBe('rfq_received');
+    });
+
+    test('26. rfq_suppliers resource field matches its id', () => {
+        const entry = DEFAULT_MENU.find(m => m.id === 'rfq_suppliers');
+        expect(entry.resource).toBe('rfq_suppliers');
+    });
+
+    test('27. loadSidebarConfig() preserves requiresAIRFQBot flag on rfq_received', () => {
+        const result = loadSidebarConfig();
+        const entry = result.find(m => m.id === 'rfq_received');
+        expect(entry).toBeDefined();
+        expect(entry.requiresAIRFQBot).toBe(true);
+    });
+
+    test('28. loadSidebarConfig() preserves requiresAIRFQBot flag on rfq_suppliers', () => {
+        const result = loadSidebarConfig();
+        const entry = result.find(m => m.id === 'rfq_suppliers');
+        expect(entry).toBeDefined();
+        expect(entry.requiresAIRFQBot).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
 // applyAutomobileMenuOrder()
 // ---------------------------------------------------------------------------
 
@@ -312,5 +380,100 @@ describe('applyAutomobileMenuOrder()', () => {
     test('17b. does not crash when called after a prior saveSidebarConfig()', () => {
         saveSidebarConfig(DEFAULT_MENU.map(m => ({ ...m, visible: true })));
         expect(() => applyAutomobileMenuOrder()).not.toThrow();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// saveSidebarConfig – server sync
+// ---------------------------------------------------------------------------
+
+describe('saveSidebarConfig server sync', () => {
+    const ITEMS = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2', path: '/dashboard/business-dashboard', visible: true },
+        { id: 'sales', label: 'Sales', icon: 'bi-receipt', path: '/dashboard/sales', visible: false },
+    ];
+
+    beforeEach(() => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ status: true }),
+        });
+        localStorage.setItem('store_id', 'store123');
+        localStorage.setItem('access_token', 'tok123');
+    });
+
+    afterEach(() => {
+        delete global.fetch;
+        localStorage.clear();
+    });
+
+    test('always saves to localStorage regardless of flag', () => {
+        saveSidebarConfig(ITEMS);
+        const stored = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
+        expect(stored).toHaveLength(2);
+        expect(stored[0]).toEqual({ id: 'dashboard', visible: true });
+        expect(stored[1]).toEqual({ id: 'sales', visible: false });
+    });
+
+    test('only saves id and visible to localStorage (strips metadata)', () => {
+        saveSidebarConfig(ITEMS);
+        const stored = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
+        stored.forEach(item => {
+            expect(Object.keys(item).sort()).toEqual(['id', 'visible']);
+        });
+    });
+
+    test('does NOT call fetch when save_sidebar_config_to_server flag is absent', () => {
+        saveSidebarConfig(ITEMS);
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('does NOT call fetch when save_sidebar_config_to_server is false', () => {
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: false }));
+        saveSidebarConfig(ITEMS);
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('calls fetch with PUT /v1/store/{id}/sidebar-config when flag is true', () => {
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        saveSidebarConfig(ITEMS);
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(global.fetch).toHaveBeenCalledWith(
+            '/v1/store/store123/sidebar-config',
+            expect.objectContaining({ method: 'PUT' })
+        );
+    });
+
+    test('sends Authorization header when flag is true', () => {
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        saveSidebarConfig(ITEMS);
+        const [, opts] = global.fetch.mock.calls[0];
+        expect(opts.headers).toMatchObject({ Authorization: 'tok123' });
+    });
+
+    test('sends correct JSON body when flag is true', () => {
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        saveSidebarConfig(ITEMS);
+        const [, opts] = global.fetch.mock.calls[0];
+        const body = JSON.parse(opts.body);
+        expect(body).toHaveProperty('sidebar_config');
+        expect(body.sidebar_config).toEqual([
+            { id: 'dashboard', visible: true },
+            { id: 'sales', visible: false },
+        ]);
+    });
+
+    test('does NOT call fetch when store_id is missing', () => {
+        localStorage.removeItem('store_id');
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        saveSidebarConfig(ITEMS);
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('does NOT call fetch when access_token is missing', () => {
+        localStorage.removeItem('access_token');
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        saveSidebarConfig(ITEMS);
+        expect(global.fetch).not.toHaveBeenCalled();
     });
 });

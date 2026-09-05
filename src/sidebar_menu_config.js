@@ -8,6 +8,8 @@ export const DEFAULT_MENU = [
     { id: "purchases", resource: "purchases", label: "Purchases", path: "/dashboard/purchases", icon: "bi-cart4", productsOnly: true },
     { id: "purchase_orders", resource: "purchase_orders", label: "Purchase Orders", path: "/dashboard/purchase-orders", icon: "bi-file-earmark-text", requiresPurchaseOrderModule: true },
     { id: "purchase_requests", resource: "purchase_requests", label: "Purchase Requests", path: "/dashboard/purchase-requests", icon: "bi-clipboard2-pulse", purchaseRequestOnly: true },
+    { id: "rfq_received", resource: "rfq_received", label: "RFQ Contents Received", path: "/dashboard/rfq-received", icon: "bi-inbox-fill", requiresAIRFQBot: true },
+    { id: "rfq_suppliers", resource: "rfq_suppliers", label: "RFQ Suppliers", path: "/dashboard/rfq-suppliers", icon: "bi-building-fill", requiresAIRFQBot: true },
     { id: "purchase_return", resource: "purchase_return", label: "Purchase Returns", path: "/dashboard/purchasereturn", icon: "bi-cart-x", productsOnly: true },
     { id: "delivery_notes", resource: "delivery_notes", label: "Delivery Notes", path: "/dashboard/delivery-notes", icon: "bi-truck" },
     { id: "quotations", resource: "quotations", label: "Quotations", path: "/dashboard/quotations", icon: "bi-clipboard2-check" },
@@ -103,7 +105,23 @@ export function applyAutomobileMenuOrder() {
 }
 
 export function saveSidebarConfig(items) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.map(({ id, visible }) => ({ id, visible }))));
+    const slim = items.map(({ id, visible }) => ({ id, visible }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+    // When flag is enabled, also persist to server (fire-and-forget)
+    try {
+        const storeSettings = JSON.parse(localStorage.getItem('_store_settings_cache') || 'null');
+        if (storeSettings?.save_sidebar_config_to_server) {
+            const storeId = localStorage.getItem('store_id');
+            const token = localStorage.getItem('access_token');
+            if (storeId && token) {
+                fetch('/v1/store/' + storeId + '/sidebar-config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify({ sidebar_config: slim }),
+                }).catch(() => {});
+            }
+        }
+    } catch (_) {}
 }
 
 // Returns the path the app should navigate to after login —
