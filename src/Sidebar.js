@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { loadSidebarConfig } from './sidebar_menu_config';
+import { applyDocumentDirection } from './i18n/config';
 
 function Sidebar(props) {
     const { t } = useTranslation('common');
@@ -49,7 +50,13 @@ function Sidebar(props) {
                 'Authorization': localStorage.getItem('access_token'),
             },
         }).then(r => r.json()).catch(() => ({}));
-        if (res?.result) setStore(res.result);
+        if (res?.result) {
+            setStore(res.result);
+            // Sync RTL flag to localStorage so i18n/config can read it on language change
+            const useRTL = !!res.result?.settings?.use_rtl_for_arabic;
+            localStorage.setItem('use_rtl_for_arabic', useRTL ? 'true' : 'false');
+            applyDocumentDirection();
+        }
     }, []);
 
     useEffect(() => {
@@ -63,6 +70,7 @@ function Sidebar(props) {
         function onStorage(e) {
             if (e.key === "sidebar_config") setMenuItems(loadSidebarConfig());
             if (e.key === "rbac_role_updated") setRbacVersion(v => v + 1);
+            if (e.key === "store_settings_updated") getStore(storeId);
         }
         function onRbacUpdated() { setRbacVersion(v => v + 1); }
         window.addEventListener("storage", onStorage);
@@ -71,7 +79,7 @@ function Sidebar(props) {
             window.removeEventListener("storage", onStorage);
             window.removeEventListener("rbac_role_updated", onRbacUpdated);
         };
-    }, []);
+    }, [getStore, storeId]);
 
     function toggleActive(path) {
         setActiveTab(path);
@@ -101,6 +109,7 @@ function Sidebar(props) {
         if (item.requiresCommonDashboard && store?.settings?.enable_common_dashboard === false) return false;
         if (item.requiresAutomobileDashboard && !store?.settings?.enable_automobile_dashboard) return false;
         if (item.requiresSalesInQuotation && !store?.settings?.enable_sales_in_quotation) return false;
+        if (item.requiresAIRFQBot && !store?.settings?.enable_ai_rfq_bot) return false;
         // productsOnly: hide only when services mode is active but products are not enabled.
         // Backward compat: if neither flag is set (old stores), show everything.
         if (item.productsOnly && store?.settings?.enable_services && !store?.settings?.enable_products) return false;

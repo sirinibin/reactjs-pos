@@ -5377,6 +5377,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
                                                 <span>{t('Enable Auto Translation to Arabic')}</span>
                                             </label>
+                                            <label className="pw-check" htmlFor="use_rtl_for_arabic">
+                                                <input type="checkbox" id="use_rtl_for_arabic" checked={!!formData.settings.use_rtl_for_arabic} value={formData.settings.use_rtl_for_arabic} onChange={() => { formData.settings.use_rtl_for_arabic = !formData.settings.use_rtl_for_arabic; setFormData({ ...formData }); }} />
+                                                <span>{t('Use RTL for Arabic')}</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="enable_arabic_names_list">
                                                 <input type="checkbox" id="enable_arabic_names_list" checked={!!formData.settings.enable_arabic_names_list} value={formData.settings.enable_arabic_names_list} onChange={() => { formData.settings.enable_arabic_names_list = !formData.settings.enable_arabic_names_list; setFormData({ ...formData }); }} />
                                                 <span>{t('Enable Arabic Names List (Product Form)')}</span>
