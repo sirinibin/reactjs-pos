@@ -159,3 +159,50 @@
 [dir="rtl"] .text-start {
   text-align: right !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LTR RESET — undo every RTL override for content inside a dir="ltr"
+   element (invoice / receipt / balance-sheet preview modals).
+   All selectors below have the same specificity as their [dir="rtl"]
+   counterpart; placing them AFTER ensures they win for LTR subtrees.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[dir="ltr"] {
+  text-align: initial;
+}
+[dir="ltr"] .form-label {
+  text-align: initial;
+}
+[dir="ltr"] .input-group {
+  flex-direction: row;
+}
+[dir="ltr"] .modal-header .btn-close {
+  margin: initial;
+}
+[dir="ltr"] .modal-footer {
+  flex-direction: row;
+}
+[dir="ltr"] table {
+  text-align: initial;
+}
+[dir="ltr"] th,
+[dir="ltr"] td {
+  text-align: initial;
+}
+[dir="ltr"] .bi {
+  margin-left: initial;
+  margin-right: initial;
+}
+[dir="ltr"] .text-end {
+  text-align: right !important;
+}
+[dir="ltr"] .text-start {
+  text-align: left !important;
+}
+[dir="ltr"] .navbar-align {
+  flex-direction: row;
+}
+[dir="ltr"] .dropdown-menu {
+  left: initial;
+  right: initial;
+}
