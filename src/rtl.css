@@ -67,9 +67,10 @@
   transform: translateY(-50%);
 }
 
+/* Reverse the navbar-collapse so nav items (language/user) land on the LEFT
+   and the store switcher lands on the RIGHT (adjacent to the right-side hamburger). */
 [dir="rtl"] .navbar-collapse {
-  margin-left: 0;
-  margin-right: 0;
+  flex-direction: row-reverse;
 }
 
 /* Sidebar menu items - reverse icon and text order */
@@ -91,9 +92,9 @@
   margin-left: 0.75rem;
 }
 
-/* Navbar adjustments */
+/* Navbar adjustments — no auto-margin needed; collapse reversal handles positioning */
 [dir="rtl"] .navbar-nav {
-  margin-left: auto;
+  margin-left: 0;
   margin-right: 0;
 }
 
@@ -198,6 +199,9 @@
 }
 [dir="ltr"] .text-start {
   text-align: left !important;
+}
+[dir="ltr"] .navbar-collapse {
+  flex-direction: row;
 }
 [dir="ltr"] .navbar-align {
   flex-direction: row;
