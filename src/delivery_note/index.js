@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import DeliveryNoteCreate from "./create.js";
 import DeliveryNoteView from "./view.js";
 import OrderCreate from "./../order/create.js";
@@ -22,6 +23,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function DeliveryNoteIndex(props) {
+  const { t } = useTranslation('common');
   let [enableSelection, setEnableSelection] = useState(false);
 
   const ReportPreviewRef = useRef();
@@ -483,18 +485,18 @@ function DeliveryNoteIndex(props) {
   const [successMessage, setSuccessMessage] = useState(false);
 
   const defaultColumns = useMemo(() => [
-    { key: "actions", label: "Actions", fieldName: "actions", visible: true },
-    { key: "select", label: "Select", fieldName: "select", visible: true },
+    { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
+    { key: "select", label: t("Select"), fieldName: "select", visible: true },
     { key: "id", label: "ID", fieldName: "code", visible: true },
-    { key: "date", label: "Date", fieldName: "date", visible: true },
-    { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
-    { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-    { key: "invoiced", label: "Invoiced", fieldName: "invoiced", visible: true },
-    { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
-    { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
-    { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
-    { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
-  ], []);
+    { key: "date", label: t("Date"), fieldName: "date", visible: true },
+    { key: "customer", label: t("Customer"), fieldName: "customer_name", visible: true },
+    { key: "net_total", label: t("Net Total"), fieldName: "net_total", visible: true },
+    { key: "invoiced", label: t("Invoiced"), fieldName: "invoiced", visible: true },
+    { key: "order_code", label: t("Sales ID"), fieldName: "order_code", visible: true },
+    { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
+    { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+    { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
+  ], [t]);
 
 
   const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "delivery_note_table_settings", selectStorageKey: "select_delivery_note_table_settings", defaultColumns, enableSelection });
@@ -502,7 +504,7 @@ function DeliveryNoteIndex(props) {
   function RestoreDefaultSettings() {
       restoreDefaults();
       setShowSuccess(true);
-      setSuccessMessage("Successfully restored to default settings!");
+      setSuccessMessage(t("Successfully restored to default settings!"));
   }
 
 
@@ -524,7 +526,7 @@ function DeliveryNoteIndex(props) {
       <TableSettingsModal
           show={showSettings}
           onHide={() => setShowSettings(false)}
-          title="Delivery Note Settings"
+          title={t("Delivery Note Settings")}
           columns={columns}
           onToggleColumn={handleToggleColumn}
           onDragEnd={onDragEnd}
@@ -541,7 +543,7 @@ function DeliveryNoteIndex(props) {
         setShowPrintTypeSelection(showPrintTypeSelection);
       }} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Select Print Type</Modal.Title>
+          <Modal.Title>{t('Select Print Type')}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="d-flex justify-content-around">
           <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -555,7 +557,7 @@ function DeliveryNoteIndex(props) {
               }, 100);
             }
           }}>
-            <i className="bi bi-printer"></i> Print
+            <i className="bi bi-printer"></i> {t('Print')}
           </Button>
 
           <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -571,7 +573,7 @@ function DeliveryNoteIndex(props) {
               }
             }}
           >
-            <i className="bi bi-printer"></i> Print A4 Invoice
+            <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
           </Button>
         </Modal.Body>
       </Modal>
@@ -585,23 +587,23 @@ function DeliveryNoteIndex(props) {
           <div className="col">
             <span className="text-end">
               <StatsSummary
-                title={'Delivery Note Summary'}
+                title={t('Delivery Note Summary')}
                 filters={{
-                  ...(dateValue ? { 'Date': dateValue } : {}),
-                  ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                  ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                  ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
-                  ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
-                  ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
-                  ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
-                  ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                  ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                  ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                  ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                  ...(createdAtValue ? { [t('Created At')]: createdAtValue } : {}),
+                  ...(createdAtFromValue ? { [t('Created From')]: createdAtFromValue } : {}),
+                  ...(createdAtToValue ? { [t('Created To')]: createdAtToValue } : {}),
+                  ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
+                  ...(selectedCreatedByUsers.length > 0 ? { [t('Created By')]: selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
                 }}
                 stats={{
-                  "Total Delivery Note": totalDeliveryNote,
-                  "Invoiced Count": invoicedCount,
-                  "VAT": vatPrice,
-                  "Discount": totalDiscount,
-                  "Shipping/Handling Fees": totalShippingFees,
+                  [t("Total Delivery Note")]: totalDeliveryNote,
+                  [t("Invoiced Count")]: invoicedCount,
+                  [t("VAT")]: vatPrice,
+                  [t("Discount")]: totalDiscount,
+                  [t("Shipping/Handling Fees")]: totalShippingFees,
                 }}
                 onToggle={handleSummaryToggle}
               />
@@ -611,7 +613,7 @@ function DeliveryNoteIndex(props) {
 
         <div className="row">
           <div className="col">
-            <h1 className="h3">Delivery Notes</h1>
+            <h1 className="h3">{t('Delivery Notes')}</h1>
           </div>
 
           <div className="col text-end">
@@ -620,7 +622,7 @@ function DeliveryNoteIndex(props) {
               openReportPreview();
             }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
               <i className="bi bi-printer"></i>&nbsp;
-              Print Report
+              {t('Print Report')}
             </Button>
 
             <Button
@@ -629,7 +631,7 @@ function DeliveryNoteIndex(props) {
               className="btn btn-primary mb-1"
               onClick={openCreateForm}
             >
-              <i className="bi bi-plus-lg"></i> Create
+              <i className="bi bi-plus-lg"></i> {t('Create')}
             </Button>
           </div>
         </div>
@@ -646,7 +648,7 @@ function DeliveryNoteIndex(props) {
                 <div className="row">
                   {totalItems === 0 && (
                     <div className="col">
-                      <p className="text-start">No Delivery Notes to display</p>
+                      <p className="text-start">{t('No Delivery Notes to display')}</p>
                     </div>
                   )}
                 </div>
@@ -661,7 +663,7 @@ function DeliveryNoteIndex(props) {
                     ) : (
                       <i className="fa fa-refresh"></i>
                     )}
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t('Loading...')}</span>
                   </Button>
 
                   <PaginationControls
@@ -705,8 +707,8 @@ function DeliveryNoteIndex(props) {
                       <tr className="text-center">
                         {columns.filter(c => c.visible).map((col) => {
                           return (<React.Fragment key={col.key}>
-                            {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                            {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                            {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                            {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                             {col.key !== "actions" && col.key !== "select" && <th>
                               <b
                                 style={{
@@ -717,7 +719,7 @@ function DeliveryNoteIndex(props) {
                                   sort(col.fieldName);
                                 }}
                               >
-                                {col.label}
+                                {t(col.label)}
                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                   <i className="bi bi-sort-alpha-up-alt"></i>
                                 ) : null}
@@ -844,9 +846,9 @@ function DeliveryNoteIndex(props) {
                                   searchByFieldValue("invoiced", e.target.value)
                                 }
                               >
-                                <option value="">ALL</option>
-                                <option value="1">YES</option>
-                                <option value="0">NO</option>
+                                <option value="">{t('ALL')}</option>
+                                <option value="1">{t('YES')}</option>
+                                <option value="0">{t('NO')}</option>
                               </select>
                             </th>}
                             {col.key !== "actions" &&
@@ -878,7 +880,7 @@ function DeliveryNoteIndex(props) {
                                   );
                                 }}
                                 options={userOptions}
-                                placeholder="Select Users"
+                                placeholder={t("Select Users")}
                                 selected={selectedCreatedByUsers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
@@ -917,12 +919,12 @@ function DeliveryNoteIndex(props) {
                                   setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                 }
                               >
-                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                {showCreatedAtDateRange ? t("Less..") : t("More..")}
                               </small>
                               <br />
                               {showCreatedAtDateRange ? (
                                 <span className="text-left">
-                                  From:{" "}
+                                  {t('From:')}{" "}
                                   <DatePicker
                                     id="created_at_from"
                                     value={createdAtFromValue}
@@ -941,7 +943,7 @@ function DeliveryNoteIndex(props) {
                                       setSelectedCreatedAtFromDate(date);
                                     }}
                                   />
-                                  To:{" "}
+                                  {t('To:')}{" "}
                                   <DatePicker
                                     id="created_at_to"
                                     value={createdAtToValue}
@@ -976,7 +978,7 @@ function DeliveryNoteIndex(props) {
                                   );
                                 }}
                                 options={customerOptions}
-                                placeholder="Customer Name / Mob / VAT # / ID"
+                                placeholder={t("Customer Name / Mob / VAT # / ID")}
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
@@ -1024,13 +1026,13 @@ function DeliveryNoteIndex(props) {
                                   }}
                                   onClick={(e) => setShowDateRange(!showDateRange)}
                                 >
-                                  {showDateRange ? "Less.." : "More.."}
+                                  {showDateRange ? t("Less..") : t("More..")}
                                 </small>
                                 <br />
 
                                 {showDateRange ? (
                                   <span className="text-left">
-                                    From:{" "}
+                                    {t('From:')}{" "}
                                     <DatePicker
                                       id="from_date"
                                       value={fromDateValue}
@@ -1049,7 +1051,7 @@ function DeliveryNoteIndex(props) {
                                         setSelectedFromDate(date);
                                       }}
                                     />
-                                    To:{" "}
+                                    {t('To:')}{" "}
                                     <DatePicker
                                       id="to_date"
                                       value={toDateValue}
@@ -1117,7 +1119,7 @@ function DeliveryNoteIndex(props) {
                               }}
                               onClick={(e) => setShowDateRange(!showDateRange)}
                             >
-                              {showDateRange ? "Less.." : "More.."}
+                              {showDateRange ? t("Less..") : t("More..")}
                             </small>
                             <br />
 
@@ -1248,7 +1250,7 @@ function DeliveryNoteIndex(props) {
                               setShowCreatedAtDateRange(!showCreatedAtDateRange)
                             }
                           >
-                            {showCreatedAtDateRange ? "Less.." : "More.."}
+                            {showCreatedAtDateRange ? t("Less..") : t("More..")}
                           </small>
                           <br />
 
@@ -1340,7 +1342,7 @@ function DeliveryNoteIndex(props) {
                                   <Button className="btn btn-success btn-sm" onClick={() => {
                                     handleSelected(deliverynote);
                                   }}>
-                                    Select
+                                    {t('Select')}
                                   </Button>
                                 </td >}
                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -1363,8 +1365,8 @@ function DeliveryNoteIndex(props) {
                                 </td>}
                                 {(col.fieldName === "invoiced") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
                                   {deliverynote.order_id && deliverynote.order_id !== "000000000000000000000000"
-                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>YES</span>
-                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>NO</span>
+                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>{t('YES')}</span>
+                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>{t('NO')}</span>
                                   }
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

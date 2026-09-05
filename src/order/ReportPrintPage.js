@@ -13,12 +13,6 @@ function ReportPrintPage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const prev = document.documentElement.getAttribute('dir');
-        document.documentElement.setAttribute('dir', 'ltr');
-        return () => { if (prev) document.documentElement.setAttribute('dir', prev); };
-    }, []);
-
-    useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const key = params.get('key');
         if (!key) {

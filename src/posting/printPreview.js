@@ -1129,7 +1129,7 @@ const handlePrint = useCallback(async () => {
             defaultNumber={defaultNumber}
             defaultMessage={defaultMessage}
         />
-        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false} dir="ltr">
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             {model?.store?.settings?.balance_sheet_header_design === 'type2' ? (
                 /* ── TYPE 2: Modern grouped toolbar ── */
                 <div style={{ background: 'linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%)', borderBottom: '1px solid #15304e', flexShrink: 0 }}>

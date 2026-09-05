@@ -2170,7 +2170,6 @@ const Preview = forwardRef((props, ref) => {
             className="order-preview-wrap"
             backdrop={silentMode ? false : true}
             style={silentMode ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
-            dir="ltr"
         >
             {downloadFlash && (
                 <div

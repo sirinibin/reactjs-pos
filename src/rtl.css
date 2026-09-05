@@ -1,5 +1,12 @@
 /* RTL-specific overrides */
 
+/* Bootstrap .row is a flex container. Browsers don't auto-reverse flex main-axis
+   from the dir attribute alone, so we force row-reverse explicitly for all Bootstrap
+   grid rows — this puts the first DOM column on the RIGHT in RTL (correct). */
+[dir="rtl"] .row {
+  flex-direction: row-reverse;
+}
+
 /* Sidebar positioning for RTL — layout is flex-based (no position:fixed),
    so we only need to pin the flex size and handle the show/hide margin. */
 [dir="rtl"] .sidebar {
