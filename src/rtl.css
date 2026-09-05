@@ -1,18 +1,16 @@
 /* RTL-specific overrides */
 
-/* Sidebar positioning for RTL */
+/* Sidebar positioning for RTL — layout is flex-based (no position:fixed),
+   so we only need to pin the flex size and handle the show/hide margin. */
 [dir="rtl"] .sidebar {
-  left: auto;
-  right: 0;
+  flex: 0 0 260px;
   width: 260px !important;
   max-width: 260px !important;
   min-width: 260px !important;
+  overflow: hidden;
 }
 
-[dir="rtl"] .main {
-  margin-right: 260px;
-  margin-left: 0;
-}
+/* .main already fills the remaining flex space; no margin needed in flex layout. */
 
 /* Sidebar content wrapper */
 [dir="rtl"] .sidebar-content {
@@ -26,13 +24,6 @@
   margin-left: 0;
 }
 
-/* Main content adjustment when sidebar is collapsed in RTL */
-[dir="rtl"] .sidebar.collapsed ~ .main,
-[dir="rtl"] .sidebar.collapsed + .main {
-  margin-right: 0;
-  margin-left: 0;
-}
-
 /* Mobile RTL - sidebar hidden by default, shown when collapsed class is present */
 @media (min-width: 1px) and (max-width: 991.98px) {
   [dir="rtl"] .sidebar {
@@ -41,11 +32,6 @@
   }
 
   [dir="rtl"] .sidebar.collapsed {
-    margin-right: 0;
-    margin-left: 0;
-  }
-
-  [dir="rtl"] .main {
     margin-right: 0;
     margin-left: 0;
   }
