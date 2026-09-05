@@ -67,10 +67,15 @@
   transform: translateY(-50%);
 }
 
-/* Reverse the navbar-collapse so nav items (language/user) land on the LEFT
-   and the store switcher lands on the RIGHT (adjacent to the right-side hamburger). */
-[dir="rtl"] .navbar-collapse {
-  flex-direction: row-reverse;
+/* Reorder navbar items in RTL using flex order (more reliable than flex-direction
+   because Bootstrap's .navbar-expand .navbar-collapse has equal specificity).
+   - nav items (language/user) get order:-1 → appear FIRST = LEFT side
+   - store switcher (.ms-2, first child of collapse) gets margin-left:auto → pushed RIGHT */
+[dir="rtl"] .navbar-collapse .navbar-nav {
+  order: -1;
+}
+[dir="rtl"] .navbar-collapse > .ms-2 {
+  margin-left: auto;
 }
 
 /* Sidebar menu items - reverse icon and text order */
@@ -209,8 +214,11 @@
 [dir="ltr"] .text-start {
   text-align: left !important;
 }
-[dir="ltr"] .navbar-collapse {
-  flex-direction: row;
+[dir="ltr"] .navbar-collapse .navbar-nav {
+  order: initial;
+}
+[dir="ltr"] .navbar-collapse > .ms-2 {
+  margin-left: initial;
 }
 [dir="ltr"] .navbar-align {
   flex-direction: row;
