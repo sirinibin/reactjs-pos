@@ -103,9 +103,18 @@
 }
 
 /* Dropdown menu positioning */
+/* Default: right-anchor dropdowns in RTL (correct for the store switcher on the right) */
 [dir="rtl"] .dropdown-menu {
   left: auto;
   right: 0;
+}
+
+/* Navbar nav dropdowns (user, language, bell) are on the LEFT in RTL — open left-anchored.
+   Higher specificity wins over the rule above. */
+[dir="rtl"] .navbar-nav .dropdown-menu {
+  left: 0;
+  right: auto;
+  text-align: left;
 }
 
 /* Form labels and inputs */
