@@ -107,21 +107,34 @@ export function applyAutomobileMenuOrder() {
 export function saveSidebarConfig(items) {
     const slim = items.map(({ id, visible }) => ({ id, visible }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-    // When flag is enabled, also persist to server (fire-and-forget)
-    try {
-        const storeSettings = JSON.parse(localStorage.getItem('_store_settings_cache') || 'null');
-        if (storeSettings?.save_sidebar_config_to_server) {
-            const storeId = localStorage.getItem('store_id');
-            const token = localStorage.getItem('access_token');
-            if (storeId && token) {
-                fetch('/v1/store/' + storeId + '/sidebar-config', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                    body: JSON.stringify({ sidebar_config: slim }),
-                }).catch(() => {});
-            }
+
+    let storeSettings = null;
+    try { storeSettings = JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) {}
+
+    if (!storeSettings?.save_sidebar_config_to_server) return Promise.resolve({ synced: false });
+
+    const storeId = localStorage.getItem('store_id');
+    const token   = localStorage.getItem('access_token');
+    if (!storeId || !token) return Promise.resolve({ synced: false });
+
+    return fetch('/v1/store/' + storeId + '/sidebar-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ sidebar_config: slim }),
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().catch(() => ({})).then(d => {
+                console.error('[Sidebar] Server sync failed', res.status, d);
+                return { synced: false, status: res.status, error: d };
+            });
         }
-    } catch (_) {}
+        return { synced: true };
+    })
+    .catch(err => {
+        console.error('[Sidebar] Server sync network error:', err);
+        return { synced: false, error: err.message };
+    });
 }
 
 // Returns the path the app should navigate to after login —

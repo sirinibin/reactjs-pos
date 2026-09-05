@@ -407,36 +407,36 @@ describe('saveSidebarConfig server sync', () => {
         localStorage.clear();
     });
 
-    test('always saves to localStorage regardless of flag', () => {
-        saveSidebarConfig(ITEMS);
+    test('always saves to localStorage regardless of flag', async () => {
+        await saveSidebarConfig(ITEMS);
         const stored = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
         expect(stored).toHaveLength(2);
         expect(stored[0]).toEqual({ id: 'dashboard', visible: true });
         expect(stored[1]).toEqual({ id: 'sales', visible: false });
     });
 
-    test('only saves id and visible to localStorage (strips metadata)', () => {
-        saveSidebarConfig(ITEMS);
+    test('only saves id and visible to localStorage (strips metadata)', async () => {
+        await saveSidebarConfig(ITEMS);
         const stored = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
         stored.forEach(item => {
             expect(Object.keys(item).sort()).toEqual(['id', 'visible']);
         });
     });
 
-    test('does NOT call fetch when save_sidebar_config_to_server flag is absent', () => {
-        saveSidebarConfig(ITEMS);
+    test('does NOT call fetch when save_sidebar_config_to_server flag is absent', async () => {
+        await saveSidebarConfig(ITEMS);
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    test('does NOT call fetch when save_sidebar_config_to_server is false', () => {
+    test('does NOT call fetch when save_sidebar_config_to_server is false', async () => {
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: false }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    test('calls fetch with PUT /v1/store/{id}/sidebar-config when flag is true', () => {
+    test('calls fetch with PUT /v1/store/{id}/sidebar-config when flag is true', async () => {
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         expect(global.fetch).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
             '/v1/store/store123/sidebar-config',
@@ -444,16 +444,16 @@ describe('saveSidebarConfig server sync', () => {
         );
     });
 
-    test('sends Authorization header when flag is true', () => {
+    test('sends Authorization header when flag is true', async () => {
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         const [, opts] = global.fetch.mock.calls[0];
         expect(opts.headers).toMatchObject({ Authorization: 'tok123' });
     });
 
-    test('sends correct JSON body when flag is true', () => {
+    test('sends correct JSON body when flag is true', async () => {
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         const [, opts] = global.fetch.mock.calls[0];
         const body = JSON.parse(opts.body);
         expect(body).toHaveProperty('sidebar_config');
@@ -463,17 +463,48 @@ describe('saveSidebarConfig server sync', () => {
         ]);
     });
 
-    test('does NOT call fetch when store_id is missing', () => {
+    test('does NOT call fetch when store_id is missing', async () => {
         localStorage.removeItem('store_id');
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    test('does NOT call fetch when access_token is missing', () => {
+    test('does NOT call fetch when access_token is missing', async () => {
         localStorage.removeItem('access_token');
         localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
-        saveSidebarConfig(ITEMS);
+        await saveSidebarConfig(ITEMS);
         expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('returns { synced: false } when flag is absent', async () => {
+        const result = await saveSidebarConfig(ITEMS);
+        expect(result).toEqual({ synced: false });
+    });
+
+    test('returns { synced: true } when server responds ok', async () => {
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        const result = await saveSidebarConfig(ITEMS);
+        expect(result).toEqual({ synced: true });
+    });
+
+    test('returns { synced: false, status, error } when server returns non-ok', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: false,
+            status: 401,
+            json: () => Promise.resolve({ status: false, errors: { access_token: 'Invalid' } }),
+        });
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        const result = await saveSidebarConfig(ITEMS);
+        expect(result.synced).toBe(false);
+        expect(result.status).toBe(401);
+    });
+
+    test('returns { synced: false, error } on network failure', async () => {
+        global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+        localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+        const result = await saveSidebarConfig(ITEMS);
+        expect(result.synced).toBe(false);
+        expect(result.error).toBe('Network error');
     });
 });

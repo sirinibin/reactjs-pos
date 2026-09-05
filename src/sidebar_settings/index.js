@@ -6,6 +6,7 @@ export default function SidebarSettings() {
     const [items, setItems]       = useState([]);
     const [saved, setSaved]       = useState(false);
     const [serverLoading, setServerLoading] = useState(false);
+    const [syncError, setSyncError] = useState(null);
     const dragIndex               = useRef(null);
     const [draggingId, setDraggingId] = useState(null);
 
@@ -107,12 +108,21 @@ export default function SidebarSettings() {
     }
 
     function handleSave() {
-        saveSidebarConfig(items);
+        setSyncError(null);
+        const result = saveSidebarConfig(items);
         setSaved(true);
         window.dispatchEvent(new StorageEvent('storage', { key: 'sidebar_config' }));
+        if (result && typeof result.then === 'function') {
+            result.then(r => {
+                if (r && !r.synced && r.error !== undefined) {
+                    setSyncError(typeof r.error === 'string' ? r.error : JSON.stringify(r.error));
+                }
+            });
+        }
     }
 
     function handleReset() {
+        setSyncError(null);
         const defaults = DEFAULT_MENU.map(m => ({ ...m, visible: true }));
         saveSidebarConfig(defaults);
         setItems(defaults);
@@ -253,6 +263,12 @@ export default function SidebarSettings() {
                 </div>
             )}
 
+            {syncError && (
+                <div className="alert alert-danger mt-3 small py-2 px-3">
+                    <i className="bi bi-exclamation-triangle-fill me-2" />
+                    {t('Server sync failed')}: {syncError}
+                </div>
+            )}
             <p className="text-muted small mt-3 mb-0">
                 <i className="bi bi-info-circle me-1" />
                 {serverSyncEnabled

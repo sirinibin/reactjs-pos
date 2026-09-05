@@ -359,3 +359,56 @@ describe('SidebarSettings server sync', () => {
     expect(cached.length).toBeGreaterThan(0);
   });
 });
+
+describe('SidebarSettings save error visibility', () => {
+  test('shows sync error alert when saveSidebarConfig resolves with synced:false and error', async () => {
+    saveSidebarConfig.mockResolvedValue({ synced: false, error: 'Unauthorized' });
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+    });
+    // Wait for async state update
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
+  });
+
+  test('does not show sync error when saveSidebarConfig resolves with synced:true', async () => {
+    saveSidebarConfig.mockResolvedValue({ synced: true });
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+    });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('does not show sync error when saveSidebarConfig returns undefined (no server sync)', async () => {
+    saveSidebarConfig.mockReturnValue(undefined);
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+    });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('sync error clears on next save attempt', async () => {
+    // First save: fails
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false, error: 'Timeout' });
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+    });
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+
+    // Second save: succeeds — error should disappear
+    saveSidebarConfig.mockResolvedValueOnce({ synced: true });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /saved!/i }));
+    });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+});
