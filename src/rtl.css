@@ -7,6 +7,14 @@
   flex-direction: row-reverse;
 }
 
+/* Rows inside an explicitly LTR container (e.g. invoice/receipt/balance-sheet
+   preview modals that carry dir="ltr") must stay in normal order.
+   Both rules have the same specificity, so placing this one AFTER the rtl rule
+   means it wins for descendants of any dir="ltr" element. */
+[dir="ltr"] .row {
+  flex-direction: row;
+}
+
 /* Sidebar positioning for RTL — layout is flex-based (no position:fixed),
    so we only need to pin the flex size and handle the show/hide margin. */
 [dir="rtl"] .sidebar {
