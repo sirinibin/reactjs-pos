@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
+import ProcurementEmailWidget from './ProcurementEmailWidget';
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -6760,6 +6761,25 @@ const StoreCreate = forwardRef((props, ref) => {
                                             label="Bot WhatsApp"
                                             phone={formData.settings.bot_whatsapp_phone || ''}
                                             onPhoneChange={v => { formData.settings.bot_whatsapp_phone = v; setFormData({ ...formData }); }}
+                                        />
+                                    </div>
+
+                                    {/* 1b. Email Source (receives RFQs) */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-envelope-at text-primary me-2"></i>
+                                            {t('Email Source')} <small className="text-muted fw-normal">({t('receive RFQs via email')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Connect an email inbox to receive RFQs by email. Each incoming email is examined by the LLM to decide whether it is an RFQ, then processed the same way as WhatsApp messages.')}
+                                        </p>
+                                        <ProcurementEmailWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
                                         />
                                     </div>
 
