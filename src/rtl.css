@@ -15,17 +15,22 @@
   flex-direction: row;
 }
 
-/* Sidebar positioning for RTL — layout is flex-based (no position:fixed),
-   so we only need to pin the flex size and handle the show/hide margin. */
+/* Sidebar: fixed at 260px, no shrink/grow. */
 [dir="rtl"] .sidebar {
-  flex: 0 0 260px;
+  flex: 0 0 260px !important;
   width: 260px !important;
   max-width: 260px !important;
   min-width: 260px !important;
   overflow: hidden;
 }
 
-/* .main already fills the remaining flex space; no margin needed in flex layout. */
+/* .main: use flex: 1 so it reliably fills the remaining space in the RTL flex container
+   instead of relying on width:100% which can misbehave with direction:rtl on the parent. */
+[dir="rtl"] .main {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+}
 
 /* Sidebar content wrapper */
 [dir="rtl"] .sidebar-content {
