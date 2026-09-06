@@ -1,8 +1,8 @@
 export function loadKanbanLists() {
     try { const s = localStorage.getItem('repair_job_kanban_lists'); if (s) return JSON.parse(s); } catch (e) { }
     return [
-        { id: 'todo', name: 'ToDo', color: '#0052cc' },
-        { id: 'in_progress', name: 'In Progress', color: '#ff8b00' },
+        { id: 'todo', name: 'TO DO', color: '#0052cc' },
+        { id: 'in_progress', name: 'IN PROGRESS', color: '#ff8b00' },
         { id: 'done', name: 'DONE', color: '#00875a' },
     ];
 }

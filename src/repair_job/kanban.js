@@ -7,8 +7,8 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 const PAGE_SIZE = 5;
 
 const DEFAULT_LISTS = [
-    { id: 'todo', name: 'ToDo', color: '#0052cc' },
-    { id: 'in_progress', name: 'In Progress', color: '#ff8b00' },
+    { id: 'todo', name: 'TO DO', color: '#0052cc' },
+    { id: 'in_progress', name: 'IN PROGRESS', color: '#ff8b00' },
     { id: 'done', name: 'DONE', color: '#00875a' },
 ];
 
@@ -1253,7 +1253,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                                         onDoubleClick={(e) => { e.stopPropagation(); startEditList(list); }}
                                         title={t('Double-click to rename • Drag to reorder')}
                                     >
-                                        {list.name}
+                                        {t(list.name)}
                                     </span>
                                 )}
                                 <span style={{ fontSize: 11, background: '#dfe1e6', borderRadius: 10, padding: '1px 7px', fontWeight: 600, color: '#5e6c84', flexShrink: 0 }}>{listJobs.length}</span>
@@ -1629,7 +1629,7 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                             onChange={e => setNewJobListId(e.target.value)}
                             style={{ width: '100%', border: '2px solid #dfe1e6', borderRadius: 5, padding: '8px 12px', fontSize: 13, outline: 'none', marginBottom: 20, boxSizing: 'border-box', background: '#fff', color: '#172b4d' }}
                         >
-                            {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                            {lists.map(l => <option key={l.id} value={l.id}>{t(l.name)}</option>)}
                         </select>
 
                         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

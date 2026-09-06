@@ -750,7 +750,7 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
                                                 style={{ fontSize: 11, fontWeight: 700, color: currentList?.color || '#0052cc', background: '#fff', border: '1px solid #dfe1e6', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', outline: 'none' }}
                                             >
                                                 {kanbanLists.map(l => (
-                                                    <option key={l.id} value={l.id} style={{ color: '#172b4d' }}>{l.name}</option>
+                                                    <option key={l.id} value={l.id} style={{ color: '#172b4d' }}>{t(l.name)}</option>
                                                 ))}
                                             </select>
                                             {saveStatus === 'saving' && <span style={{ fontSize: 11, color: '#5e6c84', display: 'flex', alignItems: 'center', gap: 4 }}><Spinner as="span" animation="border" size="sm" />{t('Saving...')}</span>}
