@@ -81,12 +81,17 @@
   justify-content: space-between;
 }
 
-/* Sidebar menu items - reverse icon and text order */
+/* Sidebar menu items — flex in both LTR and RTL for consistent icon-text alignment */
+.sidebar-link {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* RTL: reverse icon and text order */
 [dir="rtl"] .sidebar-link {
-  display: flex;
   flex-direction: row-reverse;
   justify-content: flex-start;
-  align-items: center;
 }
 
 /* Sidebar icons spacing in RTL */
