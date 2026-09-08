@@ -3474,6 +3474,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const VendorPendingRef = useRef();
     const paymentValidationTimer = useRef(null);
+    const purchaseDragIndexRef = useRef(null);
+    const purchaseDragOverIndexRef = useRef(null);
+
+    function handlePurchaseDragStart(index) { purchaseDragIndexRef.current = index; }
+    function handlePurchaseDragOver(e, index) { e.preventDefault(); purchaseDragOverIndexRef.current = index; }
+    function handlePurchaseDrop() {
+        const from = purchaseDragIndexRef.current;
+        const to = purchaseDragOverIndexRef.current;
+        if (from === null || to === null || from === to) return;
+        const reordered = [...selectedProducts];
+        const [moved] = reordered.splice(from, 1);
+        reordered.splice(to, 0, moved);
+        setSelectedProducts(reordered);
+        purchaseDragIndexRef.current = null;
+        purchaseDragOverIndexRef.current = null;
+        setTimeout(() => reCalculate(), 50);
+    }
+
     function openVendorPending(vendor) {
         setShowVendorPending(true);
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -4290,8 +4308,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     .filter(i => i !== -1);
                                 const duplicateCount = duplicateIndexes.length;
                                 return (
-                                    <tr className="text-center fixed-row " key={index}
-                                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
+                                    <tr className="text-center fixed-row" key={index}
+                                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s', cursor: 'grab' }}
+                                        draggable
+                                        onDragStart={() => handlePurchaseDragStart(index)}
+                                        onDragOver={(e) => handlePurchaseDragOver(e, index)}
+                                        onDrop={handlePurchaseDrop}
                                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
                                         {purchaseSPColumns.filter(c => c.visible).map(col => {
@@ -4305,7 +4327,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     <i className="bi bi-trash"> </i>
                                                 </div>
                                             </td>);
-                                            if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>);
+                                            if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <i className="bi bi-grip-vertical" style={{ color: '#aaa', fontSize: '14px', cursor: 'grab' }} />
+                                                    {index + 1}
+                                                </span>
+                                            </td>);
                                             // eslint-disable-next-line no-lone-blocks
                                             {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                                     <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
@@ -8161,7 +8188,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleTogglePurchaseSPColumn(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>
@@ -8201,7 +8228,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                         <input type="checkbox" className="form-check-input mt-0" checked={col.visible}
                                                             onChange={() => handleTogglePurchaseSPType3Column(col.key)} />
-                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                     </li>
                                                 )}
                                             </Draggable>

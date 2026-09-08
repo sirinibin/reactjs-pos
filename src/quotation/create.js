@@ -361,6 +361,23 @@ const QuotationCreate = forwardRef((props, ref) => {
   clearDraftRef.current = clearQuotationDraft;
   const pendingQuotationIdRef = useRef(null);
   const quotationDragRef = useRef(null);
+  const dragIndexRef = useRef(null);
+  const dragOverIndexRef = useRef(null);
+
+  function handleProductDragStart(index) { dragIndexRef.current = index; }
+  function handleProductDragOver(e, index) { e.preventDefault(); dragOverIndexRef.current = index; }
+  function handleProductDrop() {
+    const from = dragIndexRef.current;
+    const to = dragOverIndexRef.current;
+    if (from === null || to === null || from === to) return;
+    const reordered = [...selectedProducts];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    setSelectedProducts(reordered);
+    dragIndexRef.current = null;
+    dragOverIndexRef.current = null;
+    setTimeout(() => reCalculate(), 50);
+  }
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -4482,7 +4499,11 @@ async function checkWarning(i) {
                     const duplicateCount = duplicateIndexes.length;
                     return (
                       <tr key={index}
-                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
+                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s', cursor: 'grab' }}
+                        draggable
+                        onDragStart={() => handleProductDragStart(index)}
+                        onDragOver={(e) => handleProductDragOver(e, index)}
+                        onDrop={handleProductDrop}
                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
                         {quotationSPColumns.filter(c => c.visible).map(col => {
@@ -4503,7 +4524,12 @@ async function checkWarning(i) {
                               onChange={() => handleSelect(product.product_id)}
                             />
                           </td>) : null;
-                          if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>);
+                          if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem', whiteSpace: 'nowrap' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <i className="bi bi-grip-vertical" style={{ color: '#aaa', fontSize: '14px', cursor: 'grab' }} />
+                              {index + 1}
+                            </span>
+                          </td>);
                           // eslint-disable-next-line no-lone-blocks
                           {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                           <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
