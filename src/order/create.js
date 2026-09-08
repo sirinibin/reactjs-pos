@@ -2497,6 +2497,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         const newWarnings = { ...warnings };
         snap.forEach((sp, i) => {
+            if (sp.is_service) return;
             const product = productMap[sp.product_id];
             if (!product || !product.product_stores || !product.product_stores[storeId]) return;
             const storeData = product.product_stores[storeId];
@@ -2527,6 +2528,7 @@ const OrderCreate = forwardRef((props, ref) => {
     async function checkWarning(i, selectedProduct, skipUpdate) {
         const productId = selectedProducts[i]?.product_id;
         if (!productId) return;
+        if (selectedProducts[i]?.is_service) return;
         let product = null;
         // if (selectedProduct) {
         // product = selectedProduct;
