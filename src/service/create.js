@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
