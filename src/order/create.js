@@ -2516,7 +2516,7 @@ const OrderCreate = forwardRef((props, ref) => {
         const capturedFormVersion = formVersionRef.current;
         warningValidationTimer.current = setTimeout(async () => {
             if (formVersionRef.current !== capturedFormVersion) return;
-            if (index) {
+            if (index !== undefined && index !== null) {
                 checkWarning(index);
             } else {
                 fetchAllProductStocks();
@@ -2855,7 +2855,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
 
             CalCulateLineTotals(index);
-            checkWarnings(index);
+            checkWarning(index);
             checkErrors(index);
             reCalculate(index);
         }, 100);

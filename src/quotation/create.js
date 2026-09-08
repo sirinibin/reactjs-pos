@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useDraft } from '../utils/useDraft';
 import Preview from "./../order/preview.js";
 import { Modal, Button, } from "react-bootstrap";
@@ -90,6 +91,7 @@ const columnStyle = {
 };
 
 const QuotationCreate = forwardRef((props, ref) => {
+  const { t } = useTranslation('common');
   //const [operationType, setoperationType] = useState("")
 
   function ResetForm() {
@@ -208,6 +210,38 @@ const QuotationCreate = forwardRef((props, ref) => {
         getQuotation(id);
       } else {
         getStore(localStorage.getItem("store_id"));
+        // Apply RFQ prefill if present (set by RFQ index page before navigating here)
+        try {
+          const raw = sessionStorage.getItem('rfq_quotation_prefill_active');
+          if (raw) {
+            sessionStorage.removeItem('rfq_quotation_prefill_active');
+            const prefill = JSON.parse(raw);
+            if (prefill.customer_name) {
+              formData.customer_name = prefill.customer_name;
+              formData.customer_phone_number = prefill.customer_phone || '';
+            }
+            if (prefill.rfq_code) {
+              formData.remarks = `RFQ: ${prefill.rfq_code}`;
+            }
+            if (Array.isArray(prefill.items) && prefill.items.length > 0) {
+              const newProducts = prefill.items.map(item => ({
+                name: item.product_name,
+                part_number: item.part_no || '',
+                quantity: item.quantity || 1,
+                unit_price: item.unit_price || 0,
+                purchase_unit_price: item.cost_price || 0,
+                discount: 0,
+                discount_percent: 0,
+                is_discount_percent: false,
+                _rfq_prefill: true,
+              }));
+              selectedProducts = newProducts;
+              setSelectedProducts([...newProducts]);
+              formData.products = newProducts;
+            }
+            setFormData({ ...formData });
+          }
+        } catch (_) {}
       }
 
       getStore(localStorage.getItem("store_id"));
@@ -1438,7 +1472,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
 
       CalCulateLineTotals(index);
-      checkWarnings(index);
+      checkWarning(index);
       checkErrors(index);
       reCalculate(index);
     }, 100);
@@ -2617,6 +2651,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     const newWarnings = { ...warnings };
     snap.forEach((sp, i) => {
+      if (sp.is_service) return;
       const product = productMap[sp.product_id];
       if (!product || !product.product_stores || !product.product_stores[storeId]) return;
       const storeData = product.product_stores[storeId];
@@ -2633,7 +2668,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   async function checkWarnings(index) {
     if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
     warningValidationTimer.current = setTimeout(async () => {
-      if (index) {
+      if (index !== undefined && index !== null) {
         checkWarning(index);
       } else {
         fetchAllProductStocks();
@@ -2645,6 +2680,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   async function checkWarning(i, selectedProduct, skipUpdate) {
     const productId = selectedProducts[i]?.product_id;
     if (!productId) return;
+    if (selectedProducts[i]?.is_service) return;
     let product = null;
     //if (selectedProduct) {
     //  product = selectedProduct;
@@ -2686,13 +2722,21 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
     }
 
-    if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-      warnings["quantity_" + i] = "Warning: Available stock is " + (selectedProducts[i].stock);
-    } else {
-      delete warnings["quantity_" + i];
-    }
+    const qty = selectedProducts[i]?.quantity ?? 0;
+    const stockVal2 = stock;
+    const shouldWarn = !formData.id && qty > stockVal2;
 
-    if (!skipUpdate) setWarnings({ ...warnings });
+    if (!skipUpdate) {
+      setWarnings(prev => {
+        const updated = { ...prev };
+        if (shouldWarn) {
+          updated["quantity_" + i] = "Warning: Available stock is " + stockVal2;
+        } else {
+          delete updated["quantity_" + i];
+        }
+        return updated;
+      });
+    }
 
     /*
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
@@ -3416,16 +3460,16 @@ async function checkWarning(i) {
         <Modal.Header>
           <Modal.Title>
             {!enableProductSelection && isResumingDraft
-              ? "Create New Quotation 📝 Draft"
+              ? t('Create New Quotation 📝 Draft')
               : !enableProductSelection && formData.id
-              ? "Update Quotation #" + formData.code
-              : !enableProductSelection ? "Create New Quotation" : ""}
-            {enableProductSelection ? "Select products from quotation #" + formData.code : ""}
+              ? t('Update Quotation #') + formData.code
+              : !enableProductSelection ? t('Create New Quotation') : ""}
+            {enableProductSelection ? t('Select products from quotation #') + formData.code : ""}
           </Modal.Title>
 
           <div className="col align-self-end text-end">
             <Button variant="primary" onClick={openPreview}>
-              <i className="bi bi-printer"></i> Print Full Quotation
+              <i className="bi bi-printer"></i> {t('Print Full Quotation')}
             </Button>
             &nbsp;&nbsp;
             &nbsp;&nbsp;
@@ -3441,13 +3485,13 @@ async function checkWarning(i) {
 
                 : ""
               }
-              {(formData.id && !isResumingDraft) && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+              {(formData.id && !isResumingDraft) && !isProcessing ? t('Update') : !isProcessing ? t('Create') : ""}
             </Button>
             <button
               type="button"
               className="btn-close"
               onClick={handleClose}
-              aria-label="Close"
+              aria-label={t('Close')}
             ></button>
           </div>
         </Modal.Header>
@@ -3463,7 +3507,7 @@ async function checkWarning(i) {
             {!enableProductSelection && <>
               <div className="row">
                 <div className="col-md-2">
-                  <label className="form-label">Type*</label>
+                  <label className="form-label">{t('Type*')}</label>
 
                   <div className="input-group mb-3">
                     <select
@@ -3504,8 +3548,8 @@ async function checkWarning(i) {
                       }}
                       className="form-control"
                     >
-                      <option value="quotation">Quotation</option>
-                      <option value="invoice">Invoice</option>
+                      <option value="quotation">{t('Quotation')}</option>
+                      <option value="invoice">{t('Invoice')}</option>
 
                     </select>
                   </div>
@@ -3570,7 +3614,7 @@ async function checkWarning(i) {
                               setOpenCustomerSearchResult(false);
                             }}
                             options={customerOptions}
-                            placeholder="Customer Name / Mob / VAT # / ID"
+                            placeholder={t('Customer Name / Mob / VAT # / ID')}
                             selected={selectedCustomers}
                             highlightOnlyResult={true}
                             ref={customerSearchRef}
@@ -3703,7 +3747,7 @@ async function checkWarning(i) {
                             type="text"
                             onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
                             className="form-control"
-                            placeholder="Phone"
+                            placeholder={t('Phone')}
                           />
                           <Button className="btn btn-success btn-sm" onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
@@ -3723,7 +3767,7 @@ async function checkWarning(i) {
                           type="text"
                           onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
                           className="form-control"
-                          placeholder="VAT NO."
+                          placeholder={t('VAT NO.')}
                         />
                         {errors.vat_no && <div style={{ color: "red" }}>{errors.vat_no}</div>}
                       </div>
@@ -3734,7 +3778,7 @@ async function checkWarning(i) {
                         <DebounceInput
                           minLength={3}
                           debounceTimeout={100}
-                          placeholder="Scan Barcode"
+                          placeholder={t('Scan Barcode')}
                           className="form-control barcode"
                           value={formData.barcode}
                           onChange={event => getProductByBarCode(event.target.value)}
@@ -3750,7 +3794,7 @@ async function checkWarning(i) {
                           onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
                           className="form-control"
                           id="address"
-                          placeholder="Address"
+                          placeholder={t('Address')}
                           style={{ width: '100%' }}
                         />
                         {errors.address && <div style={{ color: "red" }}>{errors.address}</div>}
@@ -3764,7 +3808,7 @@ async function checkWarning(i) {
                           onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
                           className="form-control"
                           id="remarks"
-                          placeholder="Remarks"
+                          placeholder={t('Remarks')}
                           style={{ width: '100%' }}
                         />
                         {errors.remarks && <div style={{ color: "red" }}>{errors.remarks}</div>}
@@ -4144,8 +4188,9 @@ async function checkWarning(i) {
                                 }}
                               >
                                 {isLoadingMoreProducts
-                                  ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
-                                  : <>Load {productSearchTotalCount - results.length} more</>
+                                  ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> {t('Loading...')}</>
+                                  : <>{t('Load ')} {productSearchTotalCount - results.length} {t('more')}</>
+
                                 }
                               </button>
                             </div>
@@ -4163,8 +4208,8 @@ async function checkWarning(i) {
                       <i className="bi bi-list"></i>
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
-                      <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
+                      <Dropdown.Item onClick={openProducts}>{t('Products')}</Dropdown.Item>
+                      <Dropdown.Item onClick={openServices}>{t('Services')}</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 ) : (
@@ -4175,20 +4220,20 @@ async function checkWarning(i) {
                 {store?.settings?.enable_services && store?.settings?.enable_products ? (
                   <Dropdown>
                     <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
-                      <i className="bi bi-plus-lg"></i> New
+                      <i className="bi bi-plus-lg"></i> {t('New')}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
-                      <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
+                      <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>{t('Product')}</Dropdown.Item>
+                      <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>{t('Service')}</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 ) : (
                   <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button">
-                    <i className="bi bi-plus-lg"></i> New
+                    <i className="bi bi-plus-lg"></i> {t('New')}
                   </Button>
                 )}
                 </div>
-                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
+                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />{t('From P.O.')}</button>}
                 </div>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
@@ -4245,7 +4290,7 @@ async function checkWarning(i) {
                                 setOpenCustomerSearchResult(false);
                               }}
                               options={customerOptions}
-                              placeholder="Customer Name / Mob / VAT # / ID"
+                              placeholder={t('Customer Name / Mob / VAT # / ID')}
                               selected={selectedCustomers}
                               highlightOnlyResult={true}
                               ref={customerSearchRef}
@@ -4310,7 +4355,7 @@ async function checkWarning(i) {
                         type="text"
                         onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
                         className="form-control form-control-lg"
-                        placeholder="Phone"
+                        placeholder={t('Phone')}
                         style={{ width: '154px', flexShrink: 0 }}
                       />
                       <input
@@ -4318,7 +4363,7 @@ async function checkWarning(i) {
                         type="text"
                         onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
                         className="form-control form-control-lg"
-                        placeholder="VAT NO."
+                        placeholder={t('VAT NO.')}
                         style={{ width: '180px', flexShrink: 0 }}
                       />
                     </div>
@@ -4329,7 +4374,7 @@ async function checkWarning(i) {
                         onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
                         className="form-control"
-                        placeholder="Remarks"
+                        placeholder={t('Remarks')}
                         style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
                       />
                     </div>
@@ -4380,7 +4425,7 @@ async function checkWarning(i) {
                 disabled={selectedIds.length === 0}
                 onClick={handleSendSelected}
               >
-                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+                {t('Select')} {selectedIds.length} {selectedIds.length !== 1 ? t('Products') : t('Product')}
               </button>}
               <table className="sc-type2-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', tableLayout: 'fixed' }}>
                 <colgroup>
@@ -4406,7 +4451,7 @@ async function checkWarning(i) {
                       <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
                         {quotationSPColumns.filter(c => c.visible).map(col => {
                           if (col.key === 'delete') return <th key="delete" style={thStyle}>{resizeHandle('delete')}</th>;
-                          if (col.key === 'select') return enableProductSelection ? <th key="select" style={thStyle}><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> Select All{resizeHandle('select')}</th> : null;
+                          if (col.key === 'select') return enableProductSelection ? <th key="select" style={thStyle}><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> {t('Select All')}{resizeHandle('select')}</th> : null;
                           if (col.key === 'si_no') return <th key="si_no" style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
                           if (col.key === 'part_number') return <th key="part_number" style={thStyle}>Part No.{resizeHandle('part_number')}</th>;
                           if (col.key === 'name') return <th key="name" style={thStyle}>Name{resizeHandle('name')}</th>;
@@ -4474,7 +4519,7 @@ async function checkWarning(i) {
                               onKeyDown={(e) => {
                                 RunKeyActions(e, product);
                               }}
-                              placeholder="Part No." onChange={(e) => {
+                              placeholder={t('Part No.')} onChange={(e) => {
                                 delete errors["part_number_" + index];
                                 setErrors({ ...errors });
 
@@ -4513,7 +4558,7 @@ async function checkWarning(i) {
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
                                 }}
-                                placeholder="Name" onChange={(e) => {
+                                placeholder={t('Name')} onChange={(e) => {
                                   delete errors["name_" + index];
                                   setErrors({ ...errors });
 
@@ -4608,57 +4653,57 @@ async function checkWarning(i) {
                                 <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                   <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                     <i className="bi bi-link"></i>&nbsp;
-                                    Linked Products ({getShortcut('linkedProducts')})
+                                    {t('Linked Products')} ({getShortcut('linkedProducts')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openProductHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    History ({getShortcut('productHistory')})
+                                    {t('History')} ({getShortcut('productHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openSalesHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales History ({getShortcut('salesHistory')})
+                                    {t('Sales History')} ({getShortcut('salesHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales Return History ({getShortcut('salesReturnHistory')})
+                                    {t('Sales Return History')} ({getShortcut('salesReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase History ({getShortcut('purchaseHistory')})
+                                    {t('Purchase History')} ({getShortcut('purchaseHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                    {t('Purchase Return History')} ({getShortcut('purchaseReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                    {t('Delivery Note History')} ({getShortcut('deliveryNoteHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Quotation History ({getShortcut('quotationHistory')})
+                                    {t('Quotation History')} ({getShortcut('quotationHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                    {t('Qtn. Sales History')} ({getShortcut('quotationSalesHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                    {t('Qtn. Sales Return History')} ({getShortcut('quotationSalesReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Images ({getShortcut('images')})
+                                    {t('Images')} ({getShortcut('images')})
                                   </Dropdown.Item>
                                 </Dropdown.Menu>
                               </Dropdown>
@@ -4673,7 +4718,7 @@ async function checkWarning(i) {
                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={product.purchase_unit_price}
-                                placeholder="Purchase Unit Price"
+                                placeholder={t('Purchase Unit Price')}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                   inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`] = el;
@@ -4858,7 +4903,7 @@ async function checkWarning(i) {
                                   className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                   onWheel={(e) => e.target.blur()}
                                   value={product.quantity}
-                                  placeholder="Quantity"
+                                  placeholder={t('Quantity')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_quantity_" + index}`] = el;
@@ -4971,7 +5016,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price}
                                   className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Unit Price(without VAT)"
+                                  placeholder={t('Unit Price(without VAT)')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_unit_price_" + index}`] = el;
@@ -5106,7 +5151,7 @@ async function checkWarning(i) {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`] = el;
                                   }}
-                                  placeholder="Unit Price(with VAT)"
+                                  placeholder={t('Unit Price(with VAT)')}
 
                                   onFocus={() => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -5668,7 +5713,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].line_total}
                                   className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Line total"
+                                  placeholder={t('Line total')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_line_total_" + index}`] = el;
@@ -5787,7 +5832,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].line_total_with_vat}
                                   className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Line total with VAT"
+                                  placeholder={t('Line total with VAT')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_line_total_with_vat" + index}`] = el;
@@ -5910,7 +5955,7 @@ async function checkWarning(i) {
             <div style={{ position: "relative", marginTop: "32px" }}>
                 <span
                     onClick={() => setShowQuotationSPSettings(true)}
-                    title="Table Settings"
+                    title={t('Table Settings')}
                     style={{ position: "absolute", top: "-9px", right: "24px", zIndex: 10, cursor: "pointer", fontSize: "0.75rem", color: "#6b7280", userSelect: "none", background: "#fff", paddingLeft: "4px", paddingRight: "4px" }}
                 >
                     <i className="bi bi-gear-fill" />
@@ -5922,14 +5967,14 @@ async function checkWarning(i) {
                 disabled={selectedIds.length === 0}
                 onClick={handleSendSelected}
               >
-                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+                {t('Select')} {selectedIds.length} {selectedIds.length !== 1 ? t('Products') : t('Product')}
               </button>}
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
                     {quotationSPColumns.filter(c => c.visible).map(col => {
                       if (col.key === 'delete') return <th key="delete"></th>;
-                      if (col.key === 'select') return enableProductSelection ? <th key="select"><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> Select All</th> : null;
+                      if (col.key === 'select') return enableProductSelection ? <th key="select"><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> {t('Select All')}</th> : null;
                       if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
                       if (col.key === 'part_number') return <th key="part_number">Part No.</th>;
                       if (col.key === 'name') return <th key="name" style={{ minWidth: window.innerWidth > 1920 ? "375px" : "250px" }}>Name</th>;
@@ -5992,7 +6037,7 @@ async function checkWarning(i) {
                               onKeyDown={(e) => {
                                 RunKeyActions(e, product);
                               }}
-                              placeholder="Part No." onChange={(e) => {
+                              placeholder={t('Part No.')} onChange={(e) => {
                                 delete errors["part_number_" + index];
                                 setErrors({ ...errors });
 
@@ -6031,7 +6076,7 @@ async function checkWarning(i) {
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
                                 }}
-                                placeholder="Name" onChange={(e) => {
+                                placeholder={t('Name')} onChange={(e) => {
                                   delete errors["name_" + index];
                                   setErrors({ ...errors });
 
@@ -6126,57 +6171,57 @@ async function checkWarning(i) {
                                 <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                   <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                     <i className="bi bi-link"></i>&nbsp;
-                                    Linked Products ({getShortcut('linkedProducts')})
+                                    {t('Linked Products')} ({getShortcut('linkedProducts')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openProductHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    History ({getShortcut('productHistory')})
+                                    {t('History')} ({getShortcut('productHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openSalesHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales History ({getShortcut('salesHistory')})
+                                    {t('Sales History')} ({getShortcut('salesHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales Return History ({getShortcut('salesReturnHistory')})
+                                    {t('Sales Return History')} ({getShortcut('salesReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase History ({getShortcut('purchaseHistory')})
+                                    {t('Purchase History')} ({getShortcut('purchaseHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                    {t('Purchase Return History')} ({getShortcut('purchaseReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                    {t('Delivery Note History')} ({getShortcut('deliveryNoteHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Quotation History ({getShortcut('quotationHistory')})
+                                    {t('Quotation History')} ({getShortcut('quotationHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                    {t('Qtn. Sales History')} ({getShortcut('quotationSalesHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                    {t('Qtn. Sales Return History')} ({getShortcut('quotationSalesReturnHistory')})
                                   </Dropdown.Item>
 
                                   <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                    Images ({getShortcut('images')})
+                                    {t('Images')} ({getShortcut('images')})
                                   </Dropdown.Item>
                                 </Dropdown.Menu>
                               </Dropdown>
@@ -6191,7 +6236,7 @@ async function checkWarning(i) {
                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={product.purchase_unit_price}
-                                placeholder="Purchase Unit Price"
+                                placeholder={t('Purchase Unit Price')}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                   inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`] = el;
@@ -6376,7 +6421,7 @@ async function checkWarning(i) {
                                   className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                   onWheel={(e) => e.target.blur()}
                                   value={product.quantity}
-                                  placeholder="Quantity"
+                                  placeholder={t('Quantity')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_quantity_" + index}`] = el;
@@ -6489,7 +6534,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price}
                                   className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Unit Price(without VAT)"
+                                  placeholder={t('Unit Price(without VAT)')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_unit_price_" + index}`] = el;
@@ -6624,7 +6669,7 @@ async function checkWarning(i) {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`] = el;
                                   }}
-                                  placeholder="Unit Price(with VAT)"
+                                  placeholder={t('Unit Price(with VAT)')}
 
                                   onFocus={() => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -7177,7 +7222,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].line_total}
                                   className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Line total"
+                                  placeholder={t('Line total')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_line_total_" + index}`] = el;
@@ -7296,7 +7341,7 @@ async function checkWarning(i) {
                                   onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].line_total_with_vat}
                                   className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
-                                  placeholder="Line total with VAT"
+                                  placeholder={t('Line total with VAT')}
                                   ref={(el) => {
                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                     inputRefs.current[index][`${"quotation_product_line_total_with_vat" + index}`] = el;
@@ -8186,15 +8231,15 @@ async function checkWarning(i) {
                                   console.log(formData);
                                 }}
                               >
-                                <option value="">Select</option>
-                                <option value="cash">Cash</option>
-                                <option value="debit_card">Debit Card</option>
-                                <option value="credit_card">Credit Card</option>
-                                <option value="bank_card">Bank Card</option>
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="bank_cheque">Bank Cheque</option>
-                                <option value="quotation_sales_return">Qtn. Sales Return</option>
-                                <option value="customer_account">Customer Account</option>
+                                <option value="">{t('Select')}</option>
+                                <option value="cash">{t('Cash')}</option>
+                                <option value="debit_card">{t('Debit Card')}</option>
+                                <option value="credit_card">{t('Credit Card')}</option>
+                                <option value="bank_card">{t('Bank Card')}</option>
+                                <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                <option value="bank_cheque">{t('Bank Cheque')}</option>
+                                <option value="quotation_sales_return">{t('Qtn. Sales Return')}</option>
+                                <option value="customer_account">{t('Customer Account')}</option>
                               </select>
                               {errors["payment_method_" + key] && (
                                 <div style={{ color: "red", position: 'absolute', left: 0, top: '100%', whiteSpace: 'nowrap', zIndex: 100, backgroundColor: '#fff', fontSize: '12px', padding: '2px 4px' }}>
@@ -8205,7 +8250,7 @@ async function checkWarning(i) {
                             <td style={{ minWidth: "347px" }}>
                               <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                 onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
-                                placeholder="Description"
+                                placeholder={t('Description')}
                               />
                             </td>
                             <td style={{ minWidth: "240px" }}>
@@ -8227,7 +8272,7 @@ async function checkWarning(i) {
                         ))}
                       <tr>
                         <td className="text-end">
-                          <b>Total</b>
+                          <b>{t('Total')}</b>
                         </td>
                         <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                           {errors["total_payment"] && (
@@ -8237,7 +8282,7 @@ async function checkWarning(i) {
                           )}
                         </td>
                         <td>
-                          <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                          <b style={{ marginLeft: "12px", alignSelf: "end" }}>{t('Balance: ')}{trimTo2Decimals(balanceAmount)}</b>
                           {errors["customer_credit_limit"] && (
                             <div style={{ color: "red" }}>
                               {errors["customer_credit_limit"]}
@@ -8245,18 +8290,18 @@ async function checkWarning(i) {
                           )}
                         </td>
                         <td colSpan={3}>
-                          <b>Payment status: </b>
+                          <b>{t('Payment status: ')}</b>
                           {paymentStatus === "paid" ?
                             <span className="badge bg-success">
-                              Paid
+                              {t('Paid')}
                             </span> : ""}
                           {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
-                              Paid Partially
+                              {t('Paid Partially')}
                             </span> : ""}
                           {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
-                              Not Paid
+                              {t('Not Paid')}
                             </span> : ""}
                         </td>
                       </tr>
@@ -8267,7 +8312,7 @@ async function checkWarning(i) {
               </div>
               <div className="row" style={{ marginTop: "12px" }}>
                 <div className="col-md-2">
-                  <label className="form-label">Commission</label>
+                  <label className="form-label">{t('Commission')}</label>
                   <input
                     type='number'
                     ref={commissionRef}
@@ -8315,7 +8360,7 @@ async function checkWarning(i) {
                   )}
                 </div>
                 <div className="col-md-2">
-                  <label className="form-label">C. Payment Method</label>
+                  <label className="form-label">{t('C. Payment Method')}</label>
                   <select
                     value={formData.commission_payment_method || ""}
                     className="form-control"
@@ -8333,20 +8378,20 @@ async function checkWarning(i) {
                       setFormData({ ...formData });
                     }}
                   >
-                    <option value="">Select</option>
-                    <option value="cash">Cash</option>
-                    <option value="debit_card">Debit Card</option>
-                    <option value="credit_card">Credit Card</option>
-                    <option value="bank_card">Bank Card</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="bank_cheque">Bank Cheque</option>
+                    <option value="">{t('Select')}</option>
+                    <option value="cash">{t('Cash')}</option>
+                    <option value="debit_card">{t('Debit Card')}</option>
+                    <option value="credit_card">{t('Credit Card')}</option>
+                    <option value="bank_card">{t('Bank Card')}</option>
+                    <option value="bank_transfer">{t('Bank Transfer')}</option>
+                    <option value="bank_cheque">{t('Bank Cheque')}</option>
                   </select>
                   {errors["commission_payment_method"] && (
                     <div style={{ color: "red" }}>{errors["commission_payment_method"]}</div>
                   )}
                 </div>
                 <div className="col-md-2">
-                  <label className="form-label">Cash discount</label>
+                  <label className="form-label">{t('Cash discount')}</label>
                   <input
                     type='number'
                     ref={cashDiscountRef}
@@ -8394,7 +8439,7 @@ async function checkWarning(i) {
                   )}
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Sales ID</label>
+                  <label className="form-label">{t('Sales ID')}</label>
                   <div className="input-group mb-3">
                     <input
                       id="quotation_order_code"
@@ -8410,7 +8455,7 @@ async function checkWarning(i) {
                         console.log(formData);
                       }}
                       className="form-control"
-                      placeholder="Sales ID"
+                      placeholder={t('Sales ID')}
                     />
                     <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
                       openSales();
@@ -8429,7 +8474,7 @@ async function checkWarning(i) {
 
             {formData.type === "quotation" && <>
               <div className="col-md-2">
-                <label className="form-label">Status*</label>
+                <label className="form-label">{t('Status*')}</label>
 
                 <div className="input-group mb-3">
                   <select
@@ -8453,12 +8498,12 @@ async function checkWarning(i) {
                     }}
                     className="form-control"
                   >
-                    <option value="created">Created</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="pending">Pending</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="created">{t('Created')}</option>
+                    <option value="delivered">{t('Delivered')}</option>
+                    <option value="pending">{t('Pending')}</option>
+                    <option value="accepted">{t('Accepted')}</option>
+                    <option value="rejected">{t('Rejected')}</option>
+                    <option value="cancelled">{t('Cancelled')}</option>
                   </select>
                   {errors.status && (
                     <div style={{ color: "red" }}>
@@ -8576,7 +8621,7 @@ async function checkWarning(i) {
 
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
-                Close
+                {t('Close')}
               </Button>
               <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate}>
                 {isProcessing
@@ -8588,10 +8633,10 @@ async function checkWarning(i) {
                       role="status"
                       aria-hidden={true}
                     />
-                  ) + " Processing..."
+                  ) + t(' Processing...')
                   : (formData.id && formData.status !== "draft")
-                    ? "Update"
-                    : "Create"}
+                    ? t('Update')
+                    : t('Create')}
               </Button>
             </Modal.Footer>
           </form>
@@ -8600,7 +8645,7 @@ async function checkWarning(i) {
       {/* Quotation SP Table Settings Modal */}
       <Modal show={showQuotationSPSettings} onHide={() => setShowQuotationSPSettings(false)} size="md">
         <Modal.Header closeButton>
-          <Modal.Title>Table Settings</Modal.Title>
+          <Modal.Title>{t('Table Settings')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <DragDropContext onDragEnd={onDragEndQuotationSP}>
@@ -8616,7 +8661,7 @@ async function checkWarning(i) {
                           {...provided.dragHandleProps}>
                           <input type="checkbox" checked={col.visible}
                             onChange={() => handleToggleQuotationSPColumn(col.key)} />
-                          {col.label}
+                          {t(col.label)}
                         </li>
                       )}
                     </Draggable>
@@ -8628,8 +8673,8 @@ async function checkWarning(i) {
           </DragDropContext>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={restoreDefaultQuotationSPSettings}>Restore Defaults</Button>
-          <Button variant="primary" onClick={() => setShowQuotationSPSettings(false)}>Close</Button>
+          <Button variant="secondary" onClick={restoreDefaultQuotationSPSettings}>{t('Restore Defaults')}</Button>
+          <Button variant="primary" onClick={() => setShowQuotationSPSettings(false)}>{t('Close')}</Button>
         </Modal.Footer>
       </Modal>
 
