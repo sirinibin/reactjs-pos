@@ -4,6 +4,8 @@ import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
 import ProcurementEmailWidget from './ProcurementEmailWidget';
+import WABATemplatePurposeWidget from './WABATemplatePurposeWidget';
+import WABATemplateTesterWidget from './WABATemplateTesterWidget';
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -136,6 +138,130 @@ function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, 
 
 // Formats a UTC ISO string as a datetime-local input value (YYYY-MM-DDTHH:mm)
 // in the store's country timezone.
+function GoogleMapsTestWidget({ apiKey, storeId, purchaseMarkets }) {
+    const [keyword, setKeyword] = React.useState('');
+    const [market, setMarket] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+    const [result, setResult] = React.useState(null); // { count, places } or { error }
+
+    const token = localStorage.getItem('access_token');
+
+    const run = async () => {
+        const key = (apiKey || '').trim();
+        const kw  = keyword.trim();
+        if (!kw) return;
+        setLoading(true);
+        setResult(null);
+        try {
+            const params = new URLSearchParams({ store_id: storeId, keyword: kw });
+            if (market.trim()) params.set('market', market.trim());
+            if (key) params.set('api_key', key);
+            const res = await fetch(`/v1/rfq-bot/test-google-maps?${params}`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            setResult(data);
+        } catch (e) {
+            setResult({ error: e.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{ marginTop: '16px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '14px 16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0369a1', marginBottom: '10px' }}>
+                <i className="bi bi-search me-1"></i> Test Google Maps API
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <div>
+                    <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px' }}>Keyword / Category *</label>
+                    <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        placeholder='e.g. "iphone 15" or "Steel Pipes"'
+                        value={keyword}
+                        onChange={e => setKeyword(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && run()}
+                    />
+                </div>
+                <div>
+                    <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px' }}>Market (optional)</label>
+                    <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        style={{ width: '160px' }}
+                        placeholder={purchaseMarkets && purchaseMarkets[0] ? purchaseMarkets[0] : 'e.g. Riyadh'}
+                        value={market}
+                        onChange={e => setMarket(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && run()}
+                    />
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    style={{ height: '31px' }}
+                    disabled={loading || !keyword.trim()}
+                    onClick={run}
+                >
+                    {loading
+                        ? <><span className="spinner-border spinner-border-sm me-1"></span>Testing…</>
+                        : <><i className="bi bi-lightning-charge me-1"></i>Test API</>}
+                </button>
+                {result && <button type="button" className="btn btn-sm btn-link text-muted p-0" onClick={() => setResult(null)}>clear</button>}
+            </div>
+
+            {result && (
+                <div style={{ marginTop: '12px' }}>
+                    {result.error ? (
+                        <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', padding: '8px 12px', fontSize: '12px' }}>
+                            <i className="bi bi-x-circle me-1"></i><strong>Error:</strong> {result.error}
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{ fontSize: '12px', color: '#15803d', marginBottom: '8px', fontWeight: 600 }}>
+                                <i className="bi bi-check-circle me-1"></i>
+                                Found {result.count} place{result.count !== 1 ? 's' : ''} for "{result.keyword}"{result.market ? ` in ${result.market}` : ''}
+                                {result.count === 0 && <span style={{ color: '#92400e', fontWeight: 400 }}> — API key works but no results for this keyword/market</span>}
+                            </div>
+                            {result.places && result.places.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
+                                    {result.places.map((p, i) => (
+                                        <div key={i} style={{ background: '#fff', border: '1px solid #e0f2fe', borderRadius: '6px', padding: '8px 10px', fontSize: '12px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                                <div>
+                                                    <strong style={{ color: '#0f172a' }}>{p.name}</strong>
+                                                    {p.rating > 0 && <span style={{ color: '#f59e0b', marginLeft: '6px' }}>{'★'.repeat(Math.round(p.rating))} <span style={{ color: '#64748b' }}>{p.rating.toFixed(1)}</span></span>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                                    {p.phone && (
+                                                        <span style={{ background: '#dcfce7', color: '#166534', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}>
+                                                            <i className="bi bi-telephone me-1"></i>{p.phone}
+                                                        </span>
+                                                    )}
+                                                    {p.maps_url && (
+                                                        <a href={p.maps_url} target="_blank" rel="noopener noreferrer"
+                                                           style={{ fontSize: '11px', color: '#0369a1' }}>
+                                                            <i className="bi bi-geo-alt"></i> Maps
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {p.address && <div style={{ color: '#64748b', marginTop: '2px' }}>{p.address}</div>}
+                                            {!p.phone && <div style={{ color: '#dc2626', marginTop: '2px', fontSize: '11px' }}><i className="bi bi-exclamation-triangle me-1"></i>No phone number — this place would be skipped</div>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function toDatetimeLocalValue(isoString, countryCode) {
     const local = toStoreLocalDate(isoString, countryCode);
     if (!local) return "";
@@ -271,6 +397,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 },
                 purchase_request_serial_number: {
                     prefix: "PR",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                rfq_received_serial_number: {
+                    prefix: "RFQ",
                     start_from_count: 1,
                     padding_count: 4
                 },
@@ -596,6 +727,11 @@ const StoreCreate = forwardRef((props, ref) => {
         },
         purchase_request_serial_number: {
             prefix: "PR",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        rfq_received_serial_number: {
+            prefix: "RFQ",
             start_from_count: 1,
             padding_count: 4
         },
@@ -3296,6 +3432,22 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('RFQ PDF Title')}</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.rfq_pdf_title || ''}
+                                                    type='text'
+                                                    onChange={(e) => {
+                                                        formData.settings.rfq_pdf_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.rfq_pdf_title"
+                                                    placeholder={t('REQUEST FOR QUOTATION')}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
 
@@ -5094,6 +5246,72 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
+                                        <h5><b>{t("RFQ ID's:")}</b> {formData.rfq_received_serial_number?.prefix?.toUpperCase()}-{String(formData.rfq_received_serial_number?.start_from_count).padStart(formData.rfq_received_serial_number?.padding_count, '0')}, {formData.rfq_received_serial_number?.prefix?.toUpperCase()}-{String((formData.rfq_received_serial_number?.start_from_count + 1)).padStart(formData.rfq_received_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.prefix || ''}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["rfq_received_serial_number.prefix"] = "";
+                                                        formData.rfq_received_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number.prefix"
+                                                    placeholder="RFQ"
+                                                />
+                                            </div>
+                                            {errors.rfq_received_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.rfq_received_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.padding_count || 4}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["rfq_received_serial_number_padding_count"] = "";
+                                                        formData.rfq_received_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number_padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.start_from_count || 1}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.rfq_received_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        errors["rfq_received_serial_number.start_from_count"] = "";
+                                                        formData.rfq_received_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number_start_from_count"
+                                                    placeholder={t('eg: Start counting from 1000')}
+                                                />
+                                            </div>
+                                        </div>
+
                                     </div></div></div>)}
                                 {activeTab === 'bank_account' && (<div className="pw-tab-wrap"><div className="pw-card">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Bank Account')}</h3></div>
@@ -6759,8 +6977,29 @@ const StoreCreate = forwardRef((props, ref) => {
                                             storeId={formData.id}
                                             endpointBase="/v1/rfq-bot"
                                             label="Bot WhatsApp"
-                                            phone={formData.settings.bot_whatsapp_phone || ''}
-                                            onPhoneChange={v => { formData.settings.bot_whatsapp_phone = v; setFormData({ ...formData }); }}
+                                            useWABA={true}
+                                        />
+
+                                        {/* WABA Template Purpose Mapping */}
+                                        <WABATemplatePurposeWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 1c. WABA Template Tester */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-send-check text-success me-2"></i>
+                                            {t('WABA Template Tester')}
+                                        </h6>
+                                        <WABATemplateTesterWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
                                         />
                                     </div>
 
@@ -6885,6 +7124,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 onChange={e => { formData.settings.google_maps_api_key = e.target.value; setFormData({ ...formData }); }}
                                             />
                                         </div>
+                                        <GoogleMapsTestWidget
+                                            apiKey={formData.settings.google_maps_api_key}
+                                            storeId={formData.id || localStorage.getItem('store_id')}
+                                            purchaseMarkets={formData.settings.purchase_markets}
+                                        />
                                         <div style={{ maxWidth: '240px', marginTop: '12px' }}>
                                             <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
                                                 {t('rfq_min_suppliers_label')}

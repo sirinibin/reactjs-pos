@@ -2568,13 +2568,21 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-            warnings["quantity_" + i] = t("Warning: Available stock is") + " " + (selectedProducts[i].stock);
-        } else {
-            delete warnings["quantity_" + i];
-        }
+        const qty = selectedProducts[i]?.quantity ?? 0;
+        const stockVal2 = stock;
+        const shouldWarn = !formData.id && qty > stockVal2;
 
-        if (!skipUpdate) setWarnings({ ...warnings });
+        if (!skipUpdate) {
+            setWarnings(prev => {
+                const updated = { ...prev };
+                if (shouldWarn) {
+                    updated["quantity_" + i] = t("Warning: Available stock is") + " " + stockVal2;
+                } else {
+                    delete updated["quantity_" + i];
+                }
+                return updated;
+            });
+        }
 
         /*
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {

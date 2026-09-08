@@ -174,7 +174,7 @@ describe('RFQReceivedIndex smoke tests', () => {
         await waitFor(() => {
             const select = screen.getByRole('combobox');
             const options = select.querySelectorAll('option');
-            expect(options.length).toBe(5); // "all" + 4 statuses
+            expect(options.length).toBe(6); // "all" + 5 statuses
         });
     });
 
@@ -263,7 +263,7 @@ describe('RFQReceivedIndex smoke tests', () => {
     // ── Category column in detail modal ──────────────────────────────────────
 
     it('13. detail modal shows col_category header when forwarded_to has entries', async () => {
-        // Set up: first fetch returns list, second fetch returns RFQ detail with forwarded_to
+        // col_category is on the "suppliers" tab of the detail modal — must click that tab
         let fetchCount = 0;
         global.fetch = jest.fn().mockImplementation((url) => {
             fetchCount++;
@@ -274,17 +274,23 @@ describe('RFQReceivedIndex smoke tests', () => {
         await act(async () => { renderPage(); });
         await waitFor(() => screen.getAllByTitle('view_detail'));
 
+        // Open the detail modal
         await act(async () => {
             screen.getAllByTitle('view_detail')[0].click();
             await Promise.resolve();
             await Promise.resolve();
         });
 
-        await waitFor(() => {
-            // The modal should render the col_category header (i18n key)
-            const headers = screen.getAllByText('col_category');
-            expect(headers.length).toBeGreaterThanOrEqual(1);
+        // Wait for modal to appear
+        await waitFor(() => screen.getByTestId('modal'));
+
+        // Switch to the suppliers tab where col_category lives
+        await act(async () => {
+            fireEvent.click(screen.getByText('rfq_tab_suppliers'));
         });
+
+        // col_category header should now be visible
+        expect(screen.getAllByText('col_category').length).toBeGreaterThanOrEqual(1);
     });
 
     it('14. category badge shown when forwarded_to entry has category', async () => {
