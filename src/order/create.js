@@ -2371,11 +2371,34 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function removeWarningAndError(i) {
-        delete warnings["quantity_" + i];
-        delete errors["quantity_" + i];
-        delete errors["purchase_unit_price_" + i];
-        delete warnings["purchase_unit_price_" + i];
-        delete warnings["unit_price_" + i];
+        const totalBefore = selectedProducts.length + 1;
+        const errorKeys = ["quantity_", "unit_price_", "purchase_unit_price_", "name_", "part_number_", "product_"];
+        const warningKeys = ["quantity_", "unit_price_", "purchase_unit_price_"];
+
+        // Remove the deleted row's keys and shift subsequent rows down
+        errorKeys.forEach(prefix => {
+            delete errors[prefix + i];
+            for (let j = i + 1; j < totalBefore; j++) {
+                if (errors[prefix + j] !== undefined) {
+                    errors[prefix + (j - 1)] = errors[prefix + j];
+                } else {
+                    delete errors[prefix + (j - 1)];
+                }
+            }
+            delete errors[prefix + (totalBefore - 1)];
+        });
+        warningKeys.forEach(prefix => {
+            delete warnings[prefix + i];
+            for (let j = i + 1; j < totalBefore; j++) {
+                if (warnings[prefix + j] !== undefined) {
+                    warnings[prefix + (j - 1)] = warnings[prefix + j];
+                } else {
+                    delete warnings[prefix + (j - 1)];
+                }
+            }
+            delete warnings[prefix + (totalBefore - 1)];
+        });
+
         setErrors({ ...errors });
         setWarnings({ ...warnings });
     }
@@ -2383,7 +2406,7 @@ const OrderCreate = forwardRef((props, ref) => {
     async function checkErrors(index) {
         if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
         priceValidationTimer.current = setTimeout(() => {
-            if (index) {
+            if (index !== undefined && index !== null) {
                 checkError(index);
             } else {
                 for (let i = 0; i < selectedProducts.length; i++) {
