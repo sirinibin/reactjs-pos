@@ -176,6 +176,21 @@ const ServiceCreate = forwardRef((props, ref) => {
         } catch (e) {}
     }
 
+    useEffect(() => {
+        if (!show) return;
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem("access_token") };
+        const storeId = localStorage.getItem("store_id") || "";
+        fetch(`/v1/service-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { method: "GET", headers })
+            .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+    }, [show]);
+
+    function refreshServiceCategories() {
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem("access_token") };
+        const storeId = localStorage.getItem("store_id") || "";
+        fetch(`/v1/service-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { method: "GET", headers })
+            .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+    }
+
     async function suggestCategories(searchTerm) {
         if (!searchTerm) return;
         setIsCategoriesLoading(true);
@@ -424,26 +439,20 @@ const ServiceCreate = forwardRef((props, ref) => {
                                 <div className="col-md-5">
                                     <Label>{t('Service Category')}</Label>
                                     <div className="d-flex gap-1">
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <Typeahead ref={categorySearchRef} id="service_category_id" labelKey="name" positionFixed={true}
-                                                isLoading={isCategoriesLoading}
-                                                isInvalid={!!errors.service_category_id}
-                                                onChange={(selectedItems) => {
-                                                    clearError('service_category_id');
-                                                    if (selectedItems.length === 0) {
-                                                        formData.service_category_id = ''; formData.service_category_name = '';
-                                                        setFormData({ ...formData }); setSelectedCategories([]); return;
-                                                    }
-                                                    formData.service_category_id = selectedItems[0].id;
-                                                    formData.service_category_name = selectedItems[0].name;
-                                                    setFormData({ ...formData }); setSelectedCategories(selectedItems);
-                                                }}
-                                                options={categoryOptions} placeholder={t("Select service category")}
-                                                selected={selectedCategories} highlightOnlyResult={true}
-                                                onInputChange={(searchTerm) => suggestCategories(searchTerm)}
-                                                onKeyDown={(e) => { if (e.key === 'Escape') { setCategoryOptions([]); categorySearchRef.current?.clear(); } }}
-                                            />
-                                        </div>
+                                        <select
+                                            style={{ flex: 1, border: `1px solid ${errors.service_category_id ? '#dc3545' : '#c3c6d7'}`, borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: '"Inter",sans-serif', background: '#fff', color: '#191c1e', height: '34px' }}
+                                            value={formData.service_category_id || ''}
+                                            onChange={(e) => {
+                                                clearError('service_category_id');
+                                                const selected = categoryOptions.find(c => c.id === e.target.value);
+                                                formData.service_category_id = selected?.id || '';
+                                                formData.service_category_name = selected?.name || '';
+                                                setFormData({ ...formData });
+                                                setSelectedCategories(selected ? [selected] : []);
+                                            }}>
+                                            <option value="">{t('-- Select category --')}</option>
+                                            {categoryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
                                         <button type="button"
                                             style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
                                             onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>
@@ -653,7 +662,7 @@ const ServiceCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
             </Modal>
-            <ServiceCategoryCreate ref={ServiceCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceCategoryCreate ref={ServiceCategoryCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshServiceCategories} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
