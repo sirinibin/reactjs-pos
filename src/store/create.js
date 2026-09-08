@@ -5473,6 +5473,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="show_received_by_footer_in_invoice" name="show_received_by_footer_in_invoice" checked={!!formData.settings.show_received_by_footer_in_invoice} value={formData.settings.show_received_by_footer_in_invoice} onChange={() => { errors["show_received_by_footer_in_invoice"] = ""; formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice; setFormData({ ...formData }); }} />
                                                 <span>{t('Show Received By Footer in Invoices')}</span>
                                             </label>
+                                            <label className="pw-check" htmlFor="show_created_by_in_invoice_preview">
+                                                <input type="checkbox" id="show_created_by_in_invoice_preview" name="show_created_by_in_invoice_preview" checked={!!formData.settings.show_created_by_in_invoice_preview} value={formData.settings.show_created_by_in_invoice_preview} onChange={() => { formData.settings.show_created_by_in_invoice_preview = !formData.settings.show_created_by_in_invoice_preview; setFormData({ ...formData }); }} />
+                                                <span>{t('Show Created By in Invoice/Receivables Preview')}</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="zatca_qr_on_left_bottom">
                                                 <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
                                                 <span>{t('ZATCA QR on Left Bottom')}</span>
@@ -6368,6 +6372,22 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     {errors.show_received_by_footer_in_invoice}
                                                 </div>
                                             )}
+                                        </div>
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_created_by_in_invoice_preview}
+                                                    checked={!!formData.settings.show_created_by_in_invoice_preview}
+                                                    onChange={() => {
+                                                        formData.settings.show_created_by_in_invoice_preview = !formData.settings.show_created_by_in_invoice_preview;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="show_created_by_in_invoice_preview2"
+                                                    name="show_created_by_in_invoice_preview"
+                                                /> &nbsp;Show Created By in Invoice/Receivables Preview
+                                            </div>
+                                            <label className="form-label"></label>
                                         </div>
 
 

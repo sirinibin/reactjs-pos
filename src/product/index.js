@@ -4602,7 +4602,7 @@ function ProductIndex(props) {
                                                     <tr key={product.id}>
                                                         {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                             return (<React.Fragment key={col.key}>
-                                                                {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "deleted") && <td style={{ textAlign: 'center' }}>{product.deleted ? <i className="bi bi-trash-fill text-danger" title="Deleted" /> : ""}</td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <input
                                                                         type="checkbox"
@@ -4611,7 +4611,7 @@ function ProductIndex(props) {
                                                                     />
                                                                 </td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
-                                                                    <span style={{ marginLeft: "-40px" }}>
+                                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                                                                         {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
                                                                             confirmDelete(product.id);
                                                                         }}>
@@ -4627,13 +4627,13 @@ function ProductIndex(props) {
                                                                             openUpdateForm(product.id);
                                                                         }}>
                                                                             <i className="bi bi-pencil"></i>
-                                                                        </Button>&nbsp;
+                                                                        </Button>
 
                                                                         <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                             openDetailsView(product.id);
                                                                         }} style={{}}>
                                                                             <i className="bi bi-eye"></i>
-                                                                        </Button>&nbsp;
+                                                                        </Button>
                                                                         <Button className="btn btn-outline-primary btn-sm" onClick={(e) => {
                                                                             e.preventDefault();
                                                                             e.stopPropagation();
@@ -4642,7 +4642,7 @@ function ProductIndex(props) {
                                                                             <i className="bi bi-images"></i>
                                                                         </Button>
 
-                                                                        <Dropdown drop="down" style={{ marginLeft: "130px", marginTop: "-27px" }} >
+                                                                        <Dropdown drop="down" style={{}} >
                                                                             <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ height: "27px" }}>
 
                                                                             </Dropdown.Toggle>
@@ -4738,7 +4738,7 @@ function ProductIndex(props) {
                                                                         </b>
                                                                     </td>}
                                                                 {col.key === "stock" &&
-                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
                                                                         {(() => {
                                                                             const storeId = localStorage.getItem("store_id");
                                                                             const productStore = product.product_stores?.[storeId];

@@ -699,7 +699,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </tr>
                                             {page.products && page.products.map((product, index) => (
                                                 <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code ?? index} className="text-center"  >
-                                                    <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
+                                                    <td style={{ padding: "7px", borderRight: tableBorderThickness, textAlign: 'center' }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                     <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                     <th dir="ltr" style={{
                                                         unicodeBidi: 'isolate',
@@ -963,14 +963,28 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                     Remarks ملاحظات:
                                                 </th>
-                                                <td
+                                                {props.model.store?.settings?.show_created_by_in_invoice_preview ? <>
+                                                    <td
+                                                        className="text-start print-value"
+                                                        colSpan="3"
+                                                        style={{ padding: "5px", borderRight: tableBorderThickness, width: "50%" }}
+                                                    >
+                                                        {props.model.remarks ? props.model.remarks : ""}
+                                                    </td>
+                                                    <td
+                                                        colSpan="4"
+                                                        style={{ padding: "5px", borderRight: tableBorderThickness, width: "50%" }}
+                                                    >
+                                                        <span className="print-label">Created By: </span>
+                                                        <span className="print-value">{props.model.created_by_name || ""}</span>
+                                                    </td>
+                                                </> : <td
                                                     className="text-start print-value"
                                                     colSpan="7"
                                                     style={{ padding: "5px", borderRight: tableBorderThickness }}
-
                                                 >
                                                     {props.model.remarks ? props.model.remarks : ""}
-                                                </td>
+                                                </td>}
                                             </tr>
                                             {(props.modelName === "quotation" || props.modelName === "whatsapp_quotation") && (props.model.type === "quotation" || props.model.type === "whatsapp_quotation") && <>
                                                 <tr>
@@ -1126,16 +1140,25 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <th colSpan="2" className="text-end print-label" style={{ padding: "2px", width: "30%", height: "50px" }}>
                                                     Remarks ملاحظات:
                                                 </th>
-                                                <th
+                                                {props.model.store?.settings?.show_created_by_in_invoice_preview ? <>
+                                                    <th
+                                                        colSpan="1"
+                                                        className="print-value"
+                                                        style={{ padding: "2px", width: "35%" }}
+                                                    >
+                                                        {props.model.remarks ? props.model.remarks : ""}
+                                                    </th>
+                                                    <th colSpan="1" style={{ padding: "2px", width: "35%" }}>
+                                                        <span className="print-label">Created By: </span>
+                                                        <span className="print-value">{props.model.created_by_name || ""}</span>
+                                                    </th>
+                                                </> : <th
                                                     colSpan="2"
                                                     className="print-value"
                                                     style={{ padding: "2px", width: "70%" }}
-
                                                 >
                                                     {props.model.remarks ? props.model.remarks : ""}
-                                                </th>
-
-
+                                                </th>}
                                             </tr>}
                                             {props.model?.store?.settings?.show_received_by_footer_in_invoice && <tr>
                                                 <th className="text-end print-label" style={{ width: "20%", padding: "2px" }}>
