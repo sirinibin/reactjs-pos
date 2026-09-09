@@ -154,28 +154,6 @@ const PROVIDERS = [
     },
 ];
 
-function blankCreds() {
-    return {
-        outgoing_email_provider: '',
-        outgoing_email_from_name: '',
-        outgoing_email_from_address: '',
-        outgoing_email_smtp_host: '',
-        outgoing_email_smtp_port: '',
-        outgoing_email_smtp_username: '',
-        outgoing_email_smtp_password: '',
-        outgoing_email_smtp_use_tls: true,
-        outgoing_email_sendgrid_api_key: '',
-        outgoing_email_mailgun_api_key: '',
-        outgoing_email_mailgun_domain: '',
-        outgoing_email_ses_access_key_id: '',
-        outgoing_email_ses_secret_key: '',
-        outgoing_email_ses_region: '',
-        outgoing_email_postmark_server_token: '',
-        outgoing_email_brevo_api_key: '',
-        outgoing_email_resend_api_key: '',
-    };
-}
-
 export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSettingsChange }) {
     const [creds, setCreds] = useState(() => {
         const s = settings || {};
