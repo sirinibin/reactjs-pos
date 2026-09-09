@@ -242,9 +242,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
     const pollRef = useRef(null);
 
     const apiBase = process.env.REACT_APP_API_URL || '';
-    // Use the current page's origin so the dev proxy (localhost:3004) or production domain
-    // is the redirect URI. Falls back to apiBase for non-browser contexts.
-    const callbackURL = (typeof window !== 'undefined' ? window.location.origin : apiBase) + '/v1/rfq-email/oauth-callback';
+    const callbackURL = apiBase + '/v1/rfq-email/oauth-callback';
 
     const stopPolling = useCallback(() => {
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
