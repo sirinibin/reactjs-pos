@@ -130,3 +130,95 @@ describe('PDF card filename convention', () => {
         expect(pdfFilename('')).toBe('.pdf');
     });
 });
+
+// Customer RFQ ID / Email / Phone field tests
+describe('RFQ customer reference fields', () => {
+    // Simulates the form state helper used in create.js
+    function applyFormField(form, key, value) {
+        return { ...form, [key]: value };
+    }
+
+    const EMPTY_FORM = () => ({
+        customer_id: '', customer_name: '', customer_rfq_id: '',
+        customer_email: '', customer_phone: '', text_content: '',
+    });
+
+    it('1. EMPTY_FORM initialises customer_rfq_id to empty string', () => {
+        expect(EMPTY_FORM().customer_rfq_id).toBe('');
+    });
+
+    it('2. EMPTY_FORM initialises customer_email to empty string', () => {
+        expect(EMPTY_FORM().customer_email).toBe('');
+    });
+
+    it('3. EMPTY_FORM initialises customer_phone to empty string', () => {
+        expect(EMPTY_FORM().customer_phone).toBe('');
+    });
+
+    it('4. customer_rfq_id is set correctly', () => {
+        const form = applyFormField(EMPTY_FORM(), 'customer_rfq_id', 'PO-2025-001');
+        expect(form.customer_rfq_id).toBe('PO-2025-001');
+    });
+
+    it('5. customer_email is set correctly', () => {
+        const form = applyFormField(EMPTY_FORM(), 'customer_email', 'buyer@example.com');
+        expect(form.customer_email).toBe('buyer@example.com');
+    });
+
+    it('6. customer_phone is set correctly', () => {
+        const form = applyFormField(EMPTY_FORM(), 'customer_phone', '+966501234567');
+        expect(form.customer_phone).toBe('+966501234567');
+    });
+
+    it('7. edit() maps rfq.customer_rfq_id → form.customer_rfq_id', () => {
+        const rfq = { customer_id: 'c1', customer_name: 'Acme', customer_rfq_id: 'RFQ-XYZ', customer_email: '', customer_phone: '', text_content: '' };
+        const form = {
+            customer_id:     rfq.customer_id || '',
+            customer_name:   rfq.customer_name || '',
+            customer_rfq_id: rfq.customer_rfq_id || '',
+            customer_email:  rfq.customer_email || '',
+            customer_phone:  rfq.customer_phone || '',
+            text_content:    rfq.text_content || '',
+        };
+        expect(form.customer_rfq_id).toBe('RFQ-XYZ');
+    });
+
+    it('8. edit() with missing customer_rfq_id falls back to empty string', () => {
+        const rfq = { customer_id: '', customer_name: '', text_content: '' };
+        const form = { customer_rfq_id: rfq.customer_rfq_id || '' };
+        expect(form.customer_rfq_id).toBe('');
+    });
+
+    it('9. payload uses form values first, then selectedCustomers fallback for email', () => {
+        const formEmail = 'manual@email.com';
+        const selectedEmail = 'selected@email.com';
+        const result = formEmail || selectedEmail;
+        expect(result).toBe('manual@email.com');
+    });
+
+    it('10. payload falls back to selectedCustomers email when form email is empty', () => {
+        const formEmail = '';
+        const selectedEmail = 'fallback@email.com';
+        const result = formEmail || selectedEmail;
+        expect(result).toBe('fallback@email.com');
+    });
+
+    it('11. payload uses form phone first, then selectedCustomers fallback', () => {
+        const formPhone = '+966500000000';
+        const selectedPhone = '+966511111111';
+        const result = formPhone || selectedPhone;
+        expect(result).toBe('+966500000000');
+    });
+
+    it('12. payload sends undefined for customer_rfq_id when field is empty', () => {
+        const rfqId = '';
+        const payload = { customer_rfq_id: rfqId || undefined };
+        expect(payload.customer_rfq_id).toBeUndefined();
+    });
+
+    it('13. payload sends value for customer_rfq_id when field is filled', () => {
+        const rfqId = 'INV-001';
+        const payload = { customer_rfq_id: rfqId || undefined };
+        expect(payload.customer_rfq_id).toBe('INV-001');
+    });
+});

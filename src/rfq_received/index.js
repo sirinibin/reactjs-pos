@@ -444,7 +444,9 @@ function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProg
                                 <div className="mb-2">
                                     <strong>{t('customer')}</strong>: {rfq.customer_name}
                                     {rfq.customer_phone && <span className="text-muted ms-2"><i className="bi bi-telephone ms-1"></i> {rfq.customer_phone}</span>}
+                                    {rfq.customer_email && <span className="text-muted ms-2"><i className="bi bi-envelope ms-1"></i> {rfq.customer_email}</span>}
                                     {rfq.customer_company && <span className="text-muted ms-2">• {rfq.customer_company}</span>}
+                                    {rfq.customer_rfq_id && <span className="ms-2"><i className="bi bi-hash text-muted"></i> <strong>Customer RFQ:</strong> <span className="badge bg-light text-dark border">{rfq.customer_rfq_id}</span></span>}
                                 </div>
                             )}
                             {rfq.categories?.length > 0 && (
@@ -1770,6 +1772,9 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                 <th>{t('col_received_at')}</th>
                                 <th>{t('col_from')}</th>
                                 <th>{t('col_customer')}</th>
+                                <th>Customer RFQ ID</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
                                 <th>{t('col_type')}</th>
                                 <th>{t('col_categories')}</th>
                                 <th>{t('col_status')}</th>
@@ -1798,6 +1803,21 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                         <td style={{ fontSize: '13px' }}>
                                             {rfq.customer_name
                                                 ? <div>{rfq.customer_name}{rfq.customer_company && <div className="text-muted" style={{ fontSize: '11px' }}>{rfq.customer_company}</div>}</div>
+                                                : <span className="text-muted">—</span>}
+                                        </td>
+                                        <td style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                            {rfq.customer_rfq_id
+                                                ? <span className="badge bg-light text-dark border">{rfq.customer_rfq_id}</span>
+                                                : <span className="text-muted">—</span>}
+                                        </td>
+                                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                            {rfq.customer_email
+                                                ? <a href={`mailto:${rfq.customer_email}`} style={{ color: 'inherit' }}>{rfq.customer_email}</a>
+                                                : <span className="text-muted">—</span>}
+                                        </td>
+                                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                            {rfq.customer_phone
+                                                ? <a href={`tel:${rfq.customer_phone}`} style={{ color: 'inherit' }}>{rfq.customer_phone}</a>
                                                 : <span className="text-muted">—</span>}
                                         </td>
                                         <td>

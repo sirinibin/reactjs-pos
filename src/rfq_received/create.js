@@ -29,7 +29,7 @@ function fmtSize(b) {
     return (b / 1048576).toFixed(1) + " MB";
 }
 
-const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", text_content: "" });
+const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id: "", customer_email: "", customer_phone: "", text_content: "" });
 
 const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated }, ref) {
     const [show, setShow] = useState(false);
@@ -95,9 +95,12 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         edit(rfq) {
             setEditId(rfq.id || rfq._id);
             setForm({
-                customer_id:   rfq.customer_id || "",
-                customer_name: rfq.customer_name || "",
-                text_content:  rfq.text_content || "",
+                customer_id:     rfq.customer_id || "",
+                customer_name:   rfq.customer_name || "",
+                customer_rfq_id: rfq.customer_rfq_id || "",
+                customer_email:  rfq.customer_email || "",
+                customer_phone:  rfq.customer_phone || "",
+                text_content:    rfq.text_content || "",
             });
             setErrors({});
             setSelectedCustomers([]);
@@ -109,7 +112,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     part_no:    p.part_no || "",
                     name:       p.name || "",
                     quantity:   p.quantity || 1,
-                    unit:       p.unit || "",
+                    unit:       p.unit || "PCE",
                 }))
                 : [];
             setProducts(mappedProducts);
@@ -253,6 +256,9 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
 
     function isProductAdded(id) { return products.some(p => p.product_id === id); }
 
+    // Product form stores "Piece" as empty string; resolve to display code for RFQ.
+    const resolveUnit = (u) => (u === "" || u == null) ? "PCE" : u;
+
     function addProduct(product) {
         const id = product.id;
         const partLabel = product.prefix_part_number && product.part_number
@@ -266,7 +272,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 part_no:    partLabel,
                 name:       product.name || "",
                 quantity:   1,
-                unit:       product.unit || "",
+                unit:       resolveUnit(product.unit),
                 is_service: product.is_service || false,
             }]);
         }
@@ -300,7 +306,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 ? `${p.prefix_part_number}-${p.part_number}` : p.part_number || "";
             setProducts(prev => prev.map(row =>
                 row.product_id === id
-                    ? { ...row, part_no: partLabel || row.part_no, name: p.name || row.name, unit: p.unit || row.unit }
+                    ? { ...row, part_no: partLabel || row.part_no, name: p.name || row.name, unit: resolveUnit(p.unit) || row.unit }
                     : row
             ));
         }).catch(() => {});
@@ -325,107 +331,92 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     const onDrop      = e => { e.preventDefault(); setIsDragOver(false); addFiles(e.dataTransfer.files); };
     const removeFile  = i => setDroppedFiles(prev => prev.filter((_, idx) => idx !== i));
 
-    // ── Auto-create/link products in DB ─────────────────────────────────────
-    // For each extracted product: check by part_no → check by name → create new.
-    // Deduplicates by product_id so the same product is never added twice.
+    // ── Core product DB sync (pure helper, no state side-effects) ───────────
+    // For each product: find by part_no → find by name → create new.
+    // Returns the synced array with product_ids filled in.
+    // showErr: optional (msg) => void callback for user-visible errors.
+    const syncProductListToDB = async (productList, storeId, token, showErr) => {
+        const headers = { Authorization: token };
+        const deduped = [];
+        const seenIds = new Set();
+        for (const ep of productList) {
+            const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "" };
+            if (ep.product_id) {
+                if (!seenIds.has(ep.product_id)) { seenIds.add(ep.product_id); deduped.push({ ...base, product_id: ep.product_id }); }
+                continue;
+            }
+            if (!ep.name || !ep.name.trim()) { deduped.push({ ...base, product_id: "" }); continue; }
+            let found = null;
+            // 1. Search by part_no
+            if (ep.part_no && ep.part_no.trim()) {
+                try {
+                    const qs = new URLSearchParams({ 'search[part_number]': ep.part_no.trim(), 'search[store_id]': storeId, limit: 1 });
+                    const res = await fetch(`/v1/product?${qs}`, { headers });
+                    const d = await res.json();
+                    if (d.result && d.result.length > 0) found = d.result[0];
+                } catch (_) {}
+            }
+            // 2. Search by name (exact case-insensitive)
+            if (!found) {
+                try {
+                    const qs = new URLSearchParams({ 'search[name]': ep.name.trim(), 'search[store_id]': storeId, limit: 5 });
+                    const res = await fetch(`/v1/product?${qs}`, { headers });
+                    const d = await res.json();
+                    if (d.result && d.result.length > 0)
+                        found = d.result.find(p => p.name && p.name.trim().toLowerCase() === ep.name.trim().toLowerCase()) || null;
+                } catch (_) {}
+            }
+            // 3. Create new product
+            if (!found) {
+                try {
+                    const body = { name: ep.name.trim() };
+                    if (ep.part_no && ep.part_no.trim()) body.part_number = ep.part_no.trim();
+                    if (ep.unit    && ep.unit.trim())    body.unit        = ep.unit.trim();
+                    const res = await fetch(`/v1/product?search[store_id]=${storeId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: token },
+                        body: JSON.stringify(body),
+                    });
+                    const d = await res.json();
+                    if (res.ok && d.result && d.result.id) found = d.result;
+                    else {
+                        const errMsg = Object.values(d.errors || {}).join('; ') || JSON.stringify(d);
+                        console.error('Product create failed:', d.errors || d);
+                        showErr && showErr(`Failed to create product "${ep.name}": ${errMsg}`);
+                    }
+                } catch (e) {
+                    console.error('Product create exception:', e);
+                    showErr && showErr(`Error creating product "${ep.name}": ${e.message}`);
+                }
+            }
+            const pid = found?.id || "";
+            if (pid && seenIds.has(pid)) continue;
+            if (pid) seenIds.add(pid);
+            deduped.push({
+                ...base,
+                product_id: pid,
+                name:    found?.name        || base.name,
+                part_no: found?.part_number || found?.part_no || base.part_no,
+                unit:    found ? resolveUnit(found.unit) : (base.unit || "PCE"),
+            });
+        }
+        return deduped;
+    };
+
+    // ── Auto-create/link products (called from Extract button, edit mode) ────
     const autoSyncProducts = useCallback(async (productList) => {
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
-        const headers = { Authorization: token };
         setSyncingProducts(true);
-        let created = 0, found = 0;
-
-        const synced = await Promise.all(productList.map(async (ep) => {
-            const base = {
-                part_no:  ep.part_no  || "",
-                name:     ep.name     || "",
-                quantity: ep.quantity || 1,
-                unit:     ep.unit     || "",
-            };
-
-            // Already linked — keep as-is
-            if (ep.product_id) return { ...base, product_id: ep.product_id };
-
-            // Skip rows with no name
-            if (!ep.name || !ep.name.trim()) return { ...base, product_id: "" };
-
-            // 1. Search by part_no (exact regex)
-            if (ep.part_no && ep.part_no.trim()) {
-                try {
-                    const qs = new URLSearchParams({
-                        'search[part_number]': ep.part_no.trim(),
-                        store_id: storeId, limit: 1,
-                        select: 'id,name,part_number,unit',
-                    });
-                    const res  = await fetch(`/v1/product?${qs}`, { headers });
-                    const data = await res.json();
-                    if (data.result && data.result.length > 0) {
-                        found++;
-                        const p = data.result[0];
-                        return { ...base, product_id: p.id, name: p.name || base.name, unit: p.unit || base.unit };
-                    }
-                } catch (_) {}
-            }
-
-            // 2. Search by name (case-insensitive exact match)
-            try {
-                const qs = new URLSearchParams({
-                    'search[name]': ep.name.trim(),
-                    store_id: storeId, limit: 5,
-                    select: 'id,name,part_number,unit',
-                });
-                const res  = await fetch(`/v1/product?${qs}`, { headers });
-                const data = await res.json();
-                if (data.result && data.result.length > 0) {
-                    const match = data.result.find(p =>
-                        p.name && p.name.trim().toLowerCase() === ep.name.trim().toLowerCase()
-                    );
-                    if (match) {
-                        found++;
-                        return { ...base, product_id: match.id, name: match.name || base.name, unit: match.unit || base.unit };
-                    }
-                }
-            } catch (_) {}
-
-            // 3. Create new product
-            try {
-                const body = { name: ep.name.trim() };
-                if (ep.part_no && ep.part_no.trim()) body.part_number = ep.part_no.trim();
-                if (ep.unit    && ep.unit.trim())    body.unit        = ep.unit.trim();
-                const res  = await fetch(`/v1/product?store_id=${storeId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: token },
-                    body: JSON.stringify(body),
-                });
-                const data = await res.json();
-                if (res.ok && data.result && data.result.id) {
-                    created++;
-                    return { ...base, product_id: data.result.id };
-                }
-            } catch (_) {}
-
-            return { ...base, product_id: "" };
-        }));
-
-        // Dedup by product_id — same product should not appear twice
-        const deduped = [];
-        const seenIds = new Set();
-        for (const p of synced) {
-            if (p.product_id && seenIds.has(p.product_id)) continue;
-            if (p.product_id) seenIds.add(p.product_id);
-            deduped.push(p);
-        }
-
+        const before = productList.filter(p => p.product_id).length;
+        const synced = await syncProductListToDB(productList, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
         setSyncingProducts(false);
-        setProducts(deduped);
-
+        setProducts(synced);
+        const created = synced.filter(p => p.product_id).length - before;
         const msgs = [];
         if (created > 0) msgs.push(`${created} new product${created > 1 ? "s" : ""} created`);
-        if (found   > 0) msgs.push(`${found} existing product${found > 1 ? "s" : ""} linked`);
-        if (msgs.length > 0 && showToastMessage) {
-            showToastMessage("Products synced — " + msgs.join(", "), "success");
-        }
-    }, [showToastMessage]);
+        if (msgs.length > 0 && showToastMessage) showToastMessage("Products synced — " + msgs.join(", "), "success");
+    }, [showToastMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── LLM extraction ───────────────────────────────────────────────────────
     const handleExtract = async () => {
@@ -455,10 +446,16 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             if (Array.isArray(data.products) && data.products.length > 0) {
                 const extracted = data.products.map(p => ({
                     product_id: "", part_no: p.part_no || "", name: p.name || "",
-                    quantity: p.quantity || 1, unit: p.unit || "",
+                    quantity: p.quantity || 1, unit: p.unit || "PCE",
                 }));
                 setProducts(extracted); // Show immediately so user sees what was found
-                autoSyncProducts(extracted); // Then create/link in product DB (updates state when done)
+                await autoSyncProducts(extracted); // Await so sync completes before Extract button re-enables
+            } else if (!hasFiles && form.text_content.trim()) {
+                // LLM returned no products — treat the text as a direct product name
+                const text = form.text_content.trim();
+                const directProduct = [{ product_id: "", part_no: "", name: text, quantity: 1, unit: "" }];
+                setProducts(directProduct);
+                await autoSyncProducts(directProduct);
             }
             if (data.llm_model) setExtractionModel(data.llm_model);
             showToastMessage && showToastMessage("Extraction complete — syncing products…", "success");
@@ -484,71 +481,44 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         const token   = localStorage.getItem("access_token");
         setSaving(true);
 
-        // ── Auto-extract from text if no products yet ────────────────────────
-        // When the user typed text but added no products, run the LLM extraction
-        // first so products get created/linked before the RFQ is saved.
-        let currentProducts = products;
-        if (!currentProducts.some(p => p.name.trim()) && form.text_content.trim()) {
+        // ── Ensure all products exist in DB before saving ────────────────────
+        // Step 1: If no products in form but text is present, extract via LLM first.
+        let currentProducts = [...products];
+        if (!currentProducts.some(p => p.name && p.name.trim()) && form.text_content.trim()) {
+            let extracted = [];
             try {
                 const fd = new FormData();
                 fd.append("text_content", form.text_content.trim());
                 const exResp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
                     method: "POST", headers: { Authorization: token }, body: fd,
                 });
-                const exData = await exResp.json();
-                if (exResp.ok && Array.isArray(exData.products) && exData.products.length > 0) {
-                    const extracted = exData.products.map(p => ({
-                        product_id: "", part_no: p.part_no || "", name: p.name || "",
-                        quantity: p.quantity || 1, unit: p.unit || "",
-                    }));
-                    // Sync / create in DB synchronously so product_ids are available for the payload
-                    const synced = await (async () => {
-                        const headers = { Authorization: token };
-                        const deduped = [];
-                        const seenIds = new Set();
-                        for (const ep of extracted) {
-                            if (!ep.name.trim()) { deduped.push({ ...ep, product_id: "" }); continue; }
-                            let found = null;
-                            if (ep.part_no && ep.part_no.trim()) {
-                                try {
-                                    const qs = new URLSearchParams({ 'search[part_number]': ep.part_no.trim(), store_id: storeId, limit: 1, select: 'id,name,unit' });
-                                    const r = await fetch(`/v1/product?${qs}`, { headers });
-                                    const d = await r.json();
-                                    if (d.result && d.result.length > 0) found = d.result[0];
-                                } catch (_) {}
-                            }
-                            if (!found) {
-                                try {
-                                    const qs = new URLSearchParams({ 'search[name]': ep.name.trim(), store_id: storeId, limit: 5, select: 'id,name,unit' });
-                                    const r = await fetch(`/v1/product?${qs}`, { headers });
-                                    const d = await r.json();
-                                    if (d.result && d.result.length > 0) {
-                                        found = d.result.find(p => p.name && p.name.trim().toLowerCase() === ep.name.trim().toLowerCase()) || null;
-                                    }
-                                } catch (_) {}
-                            }
-                            if (!found) {
-                                try {
-                                    const body = { name: ep.name.trim() };
-                                    if (ep.part_no && ep.part_no.trim()) body.part_number = ep.part_no.trim();
-                                    if (ep.unit && ep.unit.trim()) body.unit = ep.unit.trim();
-                                    const r = await fetch(`/v1/product?store_id=${storeId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token }, body: JSON.stringify(body) });
-                                    const d = await r.json();
-                                    if (r.ok && d.result && d.result.id) found = d.result;
-                                } catch (_) {}
-                            }
-                            const pid = found?.id || "";
-                            if (pid && seenIds.has(pid)) continue;
-                            if (pid) seenIds.add(pid);
-                            deduped.push({ ...ep, product_id: pid, name: found?.name || ep.name, unit: found?.unit || ep.unit });
-                        }
-                        return deduped;
-                    })();
-                    currentProducts = synced;
-                    setProducts(synced);
-                    if (exData.llm_model) setExtractionModel(exData.llm_model);
-                }
-            } catch (_) {}
+                const exData = exResp.ok ? await exResp.json() : {};
+                if (Array.isArray(exData.products) && exData.products.length > 0) extracted = exData.products;
+                if (exData.llm_model) setExtractionModel(exData.llm_model);
+            } catch (e) { console.error('Pre-save extract error:', e); }
+
+            // Fallback: if LLM returned nothing (or extract failed), use the text itself as a product name
+            if (extracted.length === 0) extracted = [{ part_no: "", name: form.text_content.trim(), quantity: 1, unit: "" }];
+            currentProducts = extracted.map(p => ({ product_id: "", part_no: p.part_no || "", name: p.name || "", quantity: p.quantity || 1, unit: p.unit || "" }));
+            setProducts(currentProducts); // show in form immediately
+        }
+
+        // Step 2: Sync every product that lacks a product_id to the products DB.
+        const needsSync = currentProducts.some(p => p.name && p.name.trim() && !p.product_id);
+        if (needsSync) {
+            showToastMessage && showToastMessage(`Saving ${currentProducts.filter(p => p.name && p.name.trim() && !p.product_id).length} product(s) to DB…`, "info");
+            try {
+                setSyncingProducts(true);
+                currentProducts = await syncProductListToDB(currentProducts, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
+                setSyncingProducts(false);
+                setProducts(currentProducts);
+                const created = currentProducts.filter(p => p.product_id).length;
+                showToastMessage && showToastMessage(`${created} product(s) saved to DB ✓`, "success");
+            } catch (e) {
+                setSyncingProducts(false);
+                console.error('Pre-save sync error:', e);
+                showToastMessage && showToastMessage("Product sync error: " + e.message, "danger");
+            }
         }
         // ────────────────────────────────────────────────────────────────────
 
@@ -557,9 +527,10 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             const payload = {
                 customer_id:      form.customer_id || undefined,
                 customer_name:    customerName,
-                customer_phone:   selectedCustomers[0]?.phone || "",
-                customer_email:   selectedCustomers[0]?.email || "",
+                customer_phone:   form.customer_phone || selectedCustomers[0]?.phone || "",
+                customer_email:   form.customer_email || selectedCustomers[0]?.email || "",
                 customer_company: selectedCustomers[0]?.company || "",
+                customer_rfq_id:  form.customer_rfq_id || undefined,
                 text_content:     form.text_content,
                 extraction_model: extractionModel || undefined,
                 products:         currentProducts.map(p => ({
@@ -742,6 +713,43 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                                 </span>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* ── Customer RFQ ID / Email / Mobile ────────────────────── */}
+                <div className="mb-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", alignItems: "start" }}>
+                    <div>
+                        <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 500 }}>
+                            Customer RFQ ID
+                            <span className="text-muted ms-1" style={{ fontSize: "11px", fontWeight: 400 }}>— from customer doc</span>
+                        </label>
+                        <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder="e.g. PO-2025-001"
+                            value={form.customer_rfq_id}
+                            onChange={e => setForm(f => ({ ...f, customer_rfq_id: e.target.value }))}
+                        />
+                    </div>
+                    <div>
+                        <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 500 }}>Customer Email</label>
+                        <input
+                            type="email"
+                            className="form-control form-control-sm"
+                            placeholder="customer@example.com"
+                            value={form.customer_email}
+                            onChange={e => setForm(f => ({ ...f, customer_email: e.target.value }))}
+                        />
+                    </div>
+                    <div>
+                        <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 500 }}>Customer Mobile</label>
+                        <input
+                            type="tel"
+                            className="form-control form-control-sm"
+                            placeholder="+966 5x xxx xxxx"
+                            value={form.customer_phone}
+                            onChange={e => setForm(f => ({ ...f, customer_phone: e.target.value }))}
+                        />
                     </div>
                 </div>
 

@@ -242,7 +242,9 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
     const pollRef = useRef(null);
 
     const apiBase = process.env.REACT_APP_API_URL || '';
-    const callbackURL = apiBase + '/v1/rfq-email/oauth-callback';
+    // Use the current page's origin so the dev proxy (localhost:3004) or production domain
+    // is the redirect URI. Falls back to apiBase for non-browser contexts.
+    const callbackURL = (typeof window !== 'undefined' ? window.location.origin : apiBase) + '/v1/rfq-email/oauth-callback';
 
     const stopPolling = useCallback(() => {
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -306,7 +308,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
         setPhase('connecting');
         setErrorMsg('');
 
-        const body = { store_id: storeId, provider };
+        const body = { store_id: storeId, provider, callback_url: callbackURL };
         // Map frontend cred keys → backend keys
         if (provider === 'gmail') { body.rfq_gmail_client_id = creds.rfq_gmail_client_id; body.rfq_gmail_client_secret = creds.rfq_gmail_client_secret; }
         if (provider === 'outlook') { body.rfq_outlook_tenant_id = creds.rfq_outlook_tenant_id; body.rfq_outlook_client_id = creds.rfq_outlook_client_id; body.rfq_outlook_client_secret = creds.rfq_outlook_client_secret; }
