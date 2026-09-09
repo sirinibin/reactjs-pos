@@ -74,14 +74,14 @@ function renderWidget(props = {}) {
 describe('WABATemplateTesterWidget', () => {
     it('1. shows configure message when no storeId', async () => {
         await act(async () => { renderWidget(); });
-        expect(screen.getByText(/Configure and save WABA Business Account ID/)).toBeTruthy();
+        expect(screen.getByText(/Save the WABA Business Account ID above/)).toBeTruthy();
     });
 
     it('1b. shows configure message when storeId present but WABA account ID missing', async () => {
         await act(async () => {
             renderWidget({ storeId: 'store-abc', settings: {} });
         });
-        expect(screen.getByText(/Configure and save WABA Business Account ID/)).toBeTruthy();
+        expect(screen.getByText(/Save the WABA Business Account ID above/)).toBeTruthy();
     });
 
     it('2. shows Fetch Approved Templates button when WABA is configured', async () => {
@@ -183,7 +183,7 @@ describe('WABATemplateTesterWidget', () => {
         await act(async () => {
             fireEvent.change(select, { target: { value: 'rfq_to_supplier' } });
         });
-        await waitFor(() => expect(screen.getAllByText(/HEADER/).length).toBeGreaterThan(0));
+        await waitFor(() => expect(screen.getAllByText(/RFQ from/).length).toBeGreaterThan(0));
     });
 
     it('8. template with {{n}} placeholders shows variable inputs', async () => {
