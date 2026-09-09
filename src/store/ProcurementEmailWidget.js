@@ -345,7 +345,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
             setPhase('error');
             setErrorMsg('Cannot reach server: ' + e.message);
         }
-    }, [storeId, provider, creds, pollAccountStatus, onAdded]);
+    }, [storeId, provider, creds, callbackURL, pollAccountStatus, onAdded]);
 
     return (
         <div style={{ border: '1px dashed #0d6efd', borderRadius: '8px', padding: '16px', background: '#f0f4ff' }}>

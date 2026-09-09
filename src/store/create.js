@@ -4,6 +4,7 @@ import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
 import ProcurementEmailWidget from './ProcurementEmailWidget';
+import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
 import WABATemplatePurposeWidget from './WABATemplatePurposeWidget';
 import WABATemplateTesterWidget from './WABATemplateTesterWidget';
 
@@ -7000,6 +7001,61 @@ const StoreCreate = forwardRef((props, ref) => {
                                             useWABA={true}
                                         />
 
+                                        {/* WABA Business Account ID — required for template listing */}
+                                        <div style={{ marginTop: '12px', maxWidth: '420px' }}>
+                                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
+                                                {t('WABA Business Account ID')}
+                                            </label>
+                                            <div className="d-flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    placeholder="e.g. 123456789012345"
+                                                    value={formData.settings.bot_waba_business_account_id || ''}
+                                                    onChange={e => {
+                                                        formData.settings.bot_waba_business_account_id = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    style={{ whiteSpace: 'nowrap' }}
+                                                    disabled={!formData.id || !formData.settings.bot_waba_business_account_id}
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch('/v1/rfq-bot/waba-business-account-id', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    Authorization: localStorage.getItem('access_token'),
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    store_id: formData.id,
+                                                                    waba_business_account_id: formData.settings.bot_waba_business_account_id,
+                                                                }),
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.success) alert(t('WABA Business Account ID saved.'));
+                                                            else alert(data.error || t('Failed to save.'));
+                                                        } catch (e) {
+                                                            alert(t('Failed to save: ') + e.message);
+                                                        }
+                                                    }}
+                                                >
+                                                    {t('Save')}
+                                                </button>
+                                            </div>
+                                            <small className="text-muted" style={{ lineHeight: '1.6', display: 'block', marginTop: '4px' }}>
+                                                {t('How to find it:')}{' '}
+                                                <a href="https://business.facebook.com/settings/whatsapp-business-accounts" target="_blank" rel="noreferrer">
+                                                    {t('Meta Business Manager → WhatsApp Accounts')}
+                                                </a>
+                                                {' → '}{t('click your account → the ID is shown at the top of the Account Overview page (a 15-digit number).')}{' '}
+                                                {t('Required to load and map message templates.')}
+                                            </small>
+                                        </div>
+
                                         {/* WABA Template Purpose Mapping */}
                                         <WABATemplatePurposeWidget
                                             storeId={formData.id}
@@ -7009,6 +7065,26 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                             }}
                                         />
+
+                                        {/* RFQ Message Contact Number */}
+                                        <div style={{ marginTop: '16px', maxWidth: '420px' }}>
+                                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
+                                                {t('RFQ Message Contact Number')}
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                className="form-control form-control-sm"
+                                                placeholder="e.g. 966501234567"
+                                                value={formData.settings?.rfq_message_contact_phone || ''}
+                                                onChange={e => {
+                                                    formData.settings.rfq_message_contact_phone = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <small className="text-muted" style={{ fontSize: '11px' }}>
+                                                {t('Phone number shown in {{contact}} of the supplier WhatsApp message. Leave blank to use the Bot WhatsApp number.')}
+                                            </small>
+                                        </div>
                                     </div>
 
                                     {/* 1c. WABA Template Tester */}
@@ -7033,6 +7109,25 @@ const StoreCreate = forwardRef((props, ref) => {
                                             {t('Connect an email inbox to receive RFQs by email. Each incoming email is examined by the LLM to decide whether it is an RFQ, then processed the same way as WhatsApp messages.')}
                                         </p>
                                         <ProcurementEmailWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 1c. Outgoing Email (send emails from the app) */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-envelope-arrow-up text-success me-2"></i>
+                                            {t('Outgoing Email')} <small className="text-muted fw-normal">({t('send emails from the app')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Connect a transactional email provider to send emails (e.g. RFQ replies, notifications) from the app. Choose a provider, enter credentials, and send a test email to verify.')}
+                                        </p>
+                                        <ProcurementOutgoingEmailWidget
                                             storeId={formData.id}
                                             settings={formData.settings}
                                             onSettingsChange={changes => {
