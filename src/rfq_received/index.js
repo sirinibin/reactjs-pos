@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import RFQCreate from "./create";
+import RFQPreview from "./RFQPreview";
+import RFQPreviewContent from "./RFQPreviewContent";
 import { Badge, Spinner, Button, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
@@ -33,10 +35,14 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
 
     // Manual reply form state
     const [showAddReply, setShowAddReply] = useState(false);
-    const [replyForm, setReplyForm]       = useState({ supplier_name: '', supplier_phone: '', raw_text: '' });
+    const [replyForm, setReplyForm]       = useState({ supplier_name: '', supplier_phone: '', supplier_email: '', raw_text: '' });
     const [addingReply, setAddingReply]   = useState(false);
     const [addError, setAddError]         = useState('');
     const [addOk, setAddOk]               = useState(false);
+    // File upload state
+    const [uploadingFile, setUploadingFile] = useState(false);
+    const [uploadedFileName, setUploadedFileName] = useState('');
+    const fileInputRef = useRef(null);
 
     // Per-product: selected supplier and margin %
     const products = rfq.products || [];
@@ -91,18 +97,39 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
         setAddError('');
         setAddOk(false);
         try {
-            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-reply?store_id=${storeId}`, {
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify(replyForm),
+                body: JSON.stringify({ ...replyForm, run_llm_extraction: true }),
             });
             const data = await res.json();
             if (data.error) { setAddError(data.error); return; }
             setAddOk(true);
-            setReplyForm({ supplier_name: '', supplier_phone: '', raw_text: '' });
+            setReplyForm({ supplier_name: '', supplier_phone: '', supplier_email: '', raw_text: '' });
+            setUploadedFileName('');
             setShowAddReply(false);
         } catch (e) { setAddError(e.message); }
         finally { setAddingReply(false); }
+    };
+
+    const handleFileUpload = async (file) => {
+        if (!file) return;
+        setUploadingFile(true);
+        setAddError('');
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { Authorization: token },
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.error) { setAddError(data.error); return; }
+            setReplyForm(f => ({ ...f, raw_text: data.extracted_text || '' }));
+            setUploadedFileName(data.file_name || file.name);
+        } catch (e) { setAddError(e.message); }
+        finally { setUploadingFile(false); }
     };
 
     const buildQuotationItems = () =>
@@ -163,17 +190,19 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
 
             {addOk && <Alert variant="success" className="py-1 px-2 mb-2" style={{ fontSize: '12px' }}>{t('reply_added_ok')}</Alert>}
 
-            {/* Add reply manually */}
+            {/* Add Quotation manually */}
             <div className="mb-3">
                 {!showAddReply ? (
-                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowAddReply(true)}>
-                        <i className="bi bi-plus-circle me-1"></i>{t('add_supplier_reply')}
+                    <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setShowAddReply(true)}>
+                        <i className="bi bi-plus-circle me-1"></i>{t('add_quotation')}
                     </button>
                 ) : (
                     <div className="border rounded p-3" style={{ background: '#f8f9fa' }}>
-                        <h6 className="mb-3" style={{ fontSize: '13px' }}>{t('add_supplier_reply')}</h6>
+                        <h6 className="mb-3" style={{ fontSize: '13px' }}><i className="bi bi-receipt me-1 text-primary"></i>{t('add_quotation')}</h6>
+
+                        {/* Supplier info row */}
                         <div className="row g-2 mb-2">
-                            <div className="col-md-5">
+                            <div className="col-md-4">
                                 <input className="form-control form-control-sm" placeholder={t('supplier_name')}
                                     value={replyForm.supplier_name} onChange={e => setReplyForm({ ...replyForm, supplier_name: e.target.value })} />
                             </div>
@@ -181,20 +210,58 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                                 <input className="form-control form-control-sm" placeholder={t('supplier_phone')}
                                     value={replyForm.supplier_phone} onChange={e => setReplyForm({ ...replyForm, supplier_phone: e.target.value })} />
                             </div>
+                            <div className="col-md-4">
+                                <input type="email" className="form-control form-control-sm" placeholder={t('supplier_email')}
+                                    value={replyForm.supplier_email} onChange={e => setReplyForm({ ...replyForm, supplier_email: e.target.value })} />
+                            </div>
                         </div>
-                        <textarea className="form-control form-control-sm mb-2" rows={4}
+
+                        {/* File upload */}
+                        <div className="mb-2">
+                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
+                                {t('upload_quotation_file')}
+                            </label>
+                            <div className="d-flex align-items-center gap-2">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.xlsx,.xls,.csv,.txt"
+                                    className="form-control form-control-sm"
+                                    style={{ maxWidth: '340px' }}
+                                    onChange={e => { if (e.target.files?.[0]) handleFileUpload(e.target.files[0]); }}
+                                />
+                                {uploadingFile && <Spinner animation="border" size="sm" />}
+                                {uploadedFileName && !uploadingFile && (
+                                    <span className="text-success" style={{ fontSize: '12px' }}>
+                                        <i className="bi bi-check-circle me-1"></i>{uploadedFileName}
+                                    </span>
+                                )}
+                            </div>
+                            <small className="text-muted" style={{ fontSize: '11px' }}>
+                                {t('upload_quotation_hint')}
+                            </small>
+                        </div>
+
+                        {/* Quotation text — populated by file upload or typed manually */}
+                        <textarea className="form-control form-control-sm mb-2" rows={5}
                             placeholder={t('paste_supplier_reply_text')}
                             value={replyForm.raw_text} onChange={e => setReplyForm({ ...replyForm, raw_text: e.target.value })} />
+
                         {addError && <div className="text-danger mb-2" style={{ fontSize: '12px' }}>{addError}</div>}
                         <div className="d-flex gap-2">
-                            <button type="button" className="btn btn-primary btn-sm" onClick={handleAddReply} disabled={addingReply || !replyForm.raw_text}>
-                                {addingReply ? <Spinner animation="border" size="sm" className="me-1" /> : null}
-                                {t('save_reply')}
+                            <button type="button" className="btn btn-primary btn-sm" onClick={handleAddReply}
+                                disabled={addingReply || !replyForm.raw_text}>
+                                {addingReply ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-cpu me-1"></i>}
+                                {t('save_and_extract')}
                             </button>
-                            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowAddReply(false)}>
+                            <button type="button" className="btn btn-outline-secondary btn-sm"
+                                onClick={() => { setShowAddReply(false); setUploadedFileName(''); setAddError(''); }}>
                                 {t('cancel')}
                             </button>
                         </div>
+                        <small className="text-muted d-block mt-1" style={{ fontSize: '11px' }}>
+                            {t('llm_extract_hint')}
+                        </small>
                     </div>
                 )}
             </div>
@@ -649,7 +716,10 @@ function RFQTimeline({ logs, liveProgress }) {
                             {isExpanded && hasDetails && (() => {
                                 const prods = log.step === 'products_identified' && Array.isArray(log.details.products)
                                     ? log.details.products : null;
+                                const suppList = log.step === 'suppliers_found' && Array.isArray(log.details.suppliers)
+                                    ? log.details.suppliers : null;
                                 const llmModel = log.details.llm_model || log.details.model || null;
+                                const skipKeys = new Set(['llm_model', 'model', 'suppliers']);
                                 return (
                                     <div style={{ marginTop: '6px', background: '#f8fafc', borderRadius: '6px', padding: '8px 10px', fontSize: '12px' }}>
                                         {prods && prods.length > 0 && (
@@ -674,7 +744,7 @@ function RFQTimeline({ logs, liveProgress }) {
                                                 </tbody>
                                             </table>
                                         )}
-                                        {!prods && Object.entries(log.details).filter(([k]) => k !== 'llm_model' && k !== 'model').map(([k, v]) => (
+                                        {!prods && Object.entries(log.details).filter(([k]) => !skipKeys.has(k)).map(([k, v]) => (
                                             <div key={k} style={{ display: 'flex', gap: '8px', marginBottom: '2px' }}>
                                                 <span style={{ color: '#64748b', minWidth: '120px', flexShrink: 0 }}>{k.replace(/_/g, ' ')}</span>
                                                 <span style={{ color: '#1e293b', wordBreak: 'break-word' }}>
@@ -682,6 +752,24 @@ function RFQTimeline({ logs, liveProgress }) {
                                                 </span>
                                             </div>
                                         ))}
+                                        {suppList && suppList.length > 0 && (
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px' }}>
+                                                <thead>
+                                                    <tr style={{ background: '#e2e8f0' }}>
+                                                        <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600, color: '#475569' }}>Supplier</th>
+                                                        <th style={{ padding: '3px 6px', textAlign: 'left', fontWeight: 600, color: '#475569', width: '140px' }}>Phone</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {suppList.map((s, si) => (
+                                                        <tr key={si} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                            <td style={{ padding: '3px 6px', color: '#1e293b', fontWeight: 500 }}>{s.name || '—'}</td>
+                                                            <td style={{ padding: '3px 6px', color: '#64748b', fontFamily: 'monospace' }}>{s.phone || '—'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
                                         {llmModel && (
                                             <div style={{ marginTop: prods ? '4px' : 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#6b7280', fontSize: '11px' }}>
                                                 <i className="bi bi-robot" style={{ color: '#7c3aed' }}></i>
@@ -751,6 +839,675 @@ const STAGE_LABELS = {
     ignored:               "ℹ️ Message not an RFQ — ignored",
 };
 
+// ── RFQSendModal ─────────────────────────────────────────────────────────────
+
+function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
+    const token = localStorage.getItem('access_token');
+
+    const [preview, setPreview]                   = useState(null);
+    const [loadingPreview, setLoadingPreview]       = useState(false);
+    const [storeData, setStoreData]               = useState(null);
+    const [phase, setPhase]                       = useState('preview'); // preview | sending | done
+    const [sendModalTab, setSendModalTab]          = useState('send'); // send | replies
+    const [supplierStatuses, setSupplierStatuses] = useState({});
+    const [sentPhones, setSentPhones]             = useState(new Set()); // phones already successfully sent
+    const [error, setError]                       = useState('');
+    // Supplier selection + manual additions
+    const [selectedPhones, setSelectedPhones]     = useState(new Set());
+    const [extraSuppliers, setExtraSuppliers]     = useState([]); // [{name, phone}]
+    // Autocomplete for adding suppliers
+    const [addQuery, setAddQuery]                 = useState('');
+    const [addSuggestions, setAddSuggestions]     = useState([]);
+    const [showAddSugg, setShowAddSugg]           = useState(false);
+    const addTimerRef                             = useRef(null);
+    // Test message
+    const [testPhone, setTestPhone]               = useState('');
+    const [testSending, setTestSending]           = useState(false);
+    const [testResult, setTestResult]             = useState(null); // null | 'ok' | 'err: ...'
+    const esRef                                   = useRef(null);
+
+    // Fetch full store object (needed for RFQPreviewContent logo/header)
+    useEffect(() => {
+        if (!show || !storeId) return;
+        fetch(`/v1/store/${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json()).then(d => setStoreData(d)).catch(() => {});
+    }, [show, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Load preview on open — always, regardless of forwarded status
+    useEffect(() => {
+        if (!show || !rfq) return;
+        setError(''); setPreview(null); setSupplierStatuses({});
+        setExtraSuppliers([]); setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
+        setTestPhone(''); setTestResult(null);
+        setPhase('preview'); setSendModalTab('send');
+
+        // Build the set of phones already successfully sent
+        const alreadySent = new Set(
+            (rfq?.forwarded_to || []).filter(r => r.status === 'sent').map(r => r.phone)
+        );
+        setSentPhones(alreadySent);
+
+        setLoadingPreview(true);
+        fetch(`/v1/rfq-received/${rfq.id}/send-preview?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { setError(data.error); }
+                else {
+                    setPreview(data);
+                    // Select only suppliers not already sent to
+                    setSelectedPhones(new Set((data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)));
+                }
+            })
+            .catch(e => setError('Failed to load preview: ' + e.message))
+            .finally(() => setLoadingPreview(false));
+    }, [show, rfq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (!show) { esRef.current?.close(); esRef.current = null; }
+    }, [show]);
+
+    // All rows shown in recipient list — always from preview.suppliers, augmented with extras
+    // Also surface any forwarded_to entries not in the preview list (e.g. phones outside categories)
+    const previewPhones = new Set((preview?.suppliers || []).map(s => s.phone));
+    const forwardedExtras = (rfq?.forwarded_to || [])
+        .filter(r => !previewPhones.has(r.phone))
+        .map(r => ({ name: r.supplier_name, phone: r.phone, category: r.category }));
+    const baseSuppliers = [
+        ...(preview?.suppliers || []).map(s => ({ name: s.name, phone: s.phone, category: s.category })),
+        ...forwardedExtras,
+    ];
+    const supplierList = [...baseSuppliers, ...extraSuppliers.map(s => ({ name: s.name, phone: s.phone }))];
+
+    const togglePhone = (phone) => {
+        setSelectedPhones(prev => {
+            const next = new Set(prev);
+            next.has(phone) ? next.delete(phone) : next.add(phone);
+            return next;
+        });
+    };
+
+    const addSupplierDirect = (s) => {
+        const phone = s.phone.trim().replace(/\s+/g, '');
+        if (!phone) return;
+        // Skip if already in the list
+        if (supplierList.some(e => e.phone === phone)) {
+            setAddQuery(''); setShowAddSugg(false); return;
+        }
+        setExtraSuppliers(prev => [...prev, { name: s.name || phone, phone }]);
+        setSelectedPhones(prev => new Set([...prev, phone]));
+        setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
+    };
+
+    const searchAddSuppliers = (q) => {
+        clearTimeout(addTimerRef.current);
+        if (q.length < 2) { setAddSuggestions([]); setShowAddSugg(false); return; }
+        addTimerRef.current = setTimeout(() => {
+            fetch(`/v1/rfq-suppliers?store_id=${storeId}&search=${encodeURIComponent(q)}&limit=8`, { headers: { Authorization: token } })
+                .then(r => r.json())
+                .then(d => { setAddSuggestions(d.items || []); setShowAddSugg(true); })
+                .catch(() => {});
+        }, 250);
+    };
+
+    // Derive attachment type from template header — no user choice needed
+    const templateWantsDoc = (preview?.template_components || []).some(
+        c => (c.type || '').toLowerCase() === 'header' && (c.format || '').toUpperCase() === 'DOCUMENT'
+    );
+
+    const handleSend = async () => {
+        // Only send to selected phones that haven't been sent to yet
+        const recipients = supplierList.filter(s => selectedPhones.has(s.phone) && !sentPhones.has(s.phone));
+        if (!recipients.length) return;
+        setPhase('sending');
+
+        const initial = {};
+        recipients.forEach(s => { initial[s.phone] = 'pending'; });
+        setSupplierStatuses(initial);
+
+        if (esRef.current) esRef.current.close();
+        const es = new EventSource(`/v1/rfq-bot/events?store_id=${storeId}`);
+        esRef.current = es;
+        es.addEventListener('rfq_send_status', e => {
+            try {
+                const d = JSON.parse(e.data);
+                if (d.rfq_id === rfq.id)
+                    setSupplierStatuses(prev => ({ ...prev, [d.phone]: d.status === 'sent' ? 'sent' : 'failed_' + (d.error || '') }));
+            } catch (_) {}
+        });
+        es.addEventListener('rfq_send_done', e => {
+            try {
+                const d = JSON.parse(e.data);
+                if (d.rfq_id === rfq.id) { es.close(); esRef.current = null; setPhase('done'); onSent?.(); }
+            } catch (_) {}
+        });
+
+        try {
+            const userName = localStorage.getItem('user_name') || '';
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/send?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({
+                    prepared_by: userName,
+                    authorized_by: '',
+                    recipients: recipients.map(s => ({ name: s.name, phone: s.phone })),
+                    generate_pdf: templateWantsDoc,
+                }),
+            });
+            const data = await res.json();
+            if (data.error) {
+                setError(data.error); setPhase('preview'); es.close(); esRef.current = null;
+            } else if (data.success) {
+                // Apply per-supplier statuses from HTTP response (SSE may have been missed)
+                const statuses = data.recipient_statuses || {};
+                setSupplierStatuses(prev => ({ ...prev, ...statuses }));
+
+                // Update sentPhones with newly sent ones
+                const newlySent = new Set(Object.entries(statuses).filter(([, v]) => v === 'sent').map(([k]) => k));
+                setSentPhones(prev => new Set([...prev, ...newlySent]));
+
+                // Deselect the just-sent suppliers
+                setSelectedPhones(prev => { const next = new Set(prev); newlySent.forEach(p => next.delete(p)); return next; });
+
+                onSent?.(); es.close(); esRef.current = null;
+
+                // If all suppliers in the list are now sent → done, else back to preview
+                const allNowSent = supplierList.every(s => newlySent.has(s.phone) || sentPhones.has(s.phone));
+                setPhase(allNowSent ? 'done' : 'preview');
+            }
+        } catch (e) {
+            setError('Send failed: ' + e.message);
+            setPhase('preview'); es.close(); esRef.current = null;
+        }
+    };
+
+    // Build template components exactly like WABATemplateTesterWidget, with pre-filled RFQ values
+    const buildRFQComponents = ({ mediaId = null, mediaType = 'image' } = {}) => {
+        const comps = preview?.template_components || [];
+        const vars = preview?.pre_filled_vars || {};
+        const components = [];
+        for (const comp of comps) {
+            const type = (comp.type || '').toLowerCase();
+            const fmt  = (comp.format || '').toUpperCase();
+            if (type === 'header') {
+                if ((fmt === 'IMAGE' || fmt === 'DOCUMENT') && mediaId) {
+                    const mtype = mediaType || 'image';
+                    components.push({ type: 'HEADER', parameters: [{ type: mtype, [mtype]: { id: mediaId } }] });
+                }
+            } else if (type === 'body') {
+                const placeholders = [...(comp.text || '').matchAll(/\{\{(\w+)\}\}/g)].map(m => m[1]);
+                if (placeholders.length > 0) {
+                    const isNamed = placeholders.some(p => isNaN(p));
+                    const parameters = placeholders.map(p => {
+                        const val = vars[`body_${p}`] || '-';
+                        const param = { type: 'text', text: val };
+                        if (isNamed) param.parameter_name = p;
+                        return param;
+                    });
+                    components.push({ type: 'BODY', parameters });
+                }
+            }
+        }
+        return components;
+    };
+
+    const handleTestSend = async () => {
+        const p = testPhone.trim().replace(/\s+/g, '');
+        if (!p) return;
+        setTestSending(true); setTestResult(null);
+        try {
+            let mediaId = null;
+            let mediaType = templateWantsDoc ? 'document' : 'image';
+            try {
+                const endpoint = templateWantsDoc
+                    ? `/v1/rfq-received/${rfq.id}/generate-pdf?store_id=${storeId}`
+                    : `/v1/rfq-received/${rfq.id}/generate-image?store_id=${storeId}`;
+                const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: token } });
+                const data = await res.json();
+                if (data.media_id) mediaId = data.media_id;
+            } catch (_) { /* attachment optional */ }
+
+            const components = buildRFQComponents({ mediaId, mediaType });
+            const res = await fetch('/v1/rfq-bot/waba-test-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({
+                    store_id:      storeId,
+                    to:            p,
+                    template_name: preview?.template_name,
+                    language_code: preview?.template_language || 'en',
+                    components,
+                }),
+            });
+            const data = await res.json();
+            setTestResult(data.sent ? 'ok' : 'err: ' + (data.error || 'Failed'));
+        } catch (e) {
+            setTestResult('err: ' + e.message);
+        }
+        setTestSending(false);
+    };
+
+    const statusIcon = (s) => {
+        // Already sent in a previous batch
+        if (sentPhones.has(s.phone)) return <i className="bi bi-check2-circle text-success" style={{ fontSize: 18 }} title="Already sent"></i>;
+        if (phase === 'preview' || phase === 'done') return null;
+        const st = supplierStatuses[s.phone];
+        if (st === undefined) return null; // not in this send batch (unselected)
+        if (st === 'pending') return <Spinner animation="border" size="sm" />;
+        if (st === 'sent') return <i className="bi bi-check2-circle text-success" style={{ fontSize: 18 }}></i>;
+        return <i className="bi bi-x-circle text-danger" style={{ fontSize: 18 }} title={st.replace('failed_', '')}></i>;
+    };
+
+    // WhatsApp mockup constants
+    const A4_WIDTH = 794, THUMB_W = 290, THUMB_H = 190;
+    const thumbScale = THUMB_W / A4_WIDTH;
+
+    const isSending = phase === 'sending';
+    const isDone    = phase === 'done';
+    // Unsent = in selectedPhones, in supplierList, and NOT already sent
+    const unsentSelected = [...selectedPhones].filter(p => supplierList.some(s => s.phone === p) && !sentPhones.has(p));
+    const canSend = phase === 'preview' && !loadingPreview && !error && unsentSelected.length > 0;
+    // Progress
+    const totalCount = supplierList.length;
+    const sentCount  = supplierList.filter(s => sentPhones.has(s.phone)).length;
+    const progressPct = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
+
+    return (
+        <Modal show={show} onHide={onHide} size="xl" centered scrollable>
+            <Modal.Header closeButton style={{ background: '#f8f9fa' }}>
+                <Modal.Title style={{ fontSize: 17 }}>
+                    <i className="bi bi-whatsapp me-2" style={{ color: '#25d366' }}></i>
+                    {`Send RFQ #${rfq?.code || ''} to Suppliers`}
+                </Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body style={{ padding: 0 }}>
+                {/* ── Tab nav ── */}
+                <ul className="nav nav-tabs px-4 pt-2" style={{ borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
+                    <li className="nav-item">
+                        <button className={`nav-link ${sendModalTab === 'send' ? 'active' : ''}`} onClick={() => setSendModalTab('send')}>
+                            <i className="bi bi-send me-1"></i>Send
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${sendModalTab === 'replies' ? 'active' : ''}`} onClick={() => setSendModalTab('replies')}>
+                            <i className="bi bi-chat-left-dots me-1"></i>Replies
+                            {(rfq?.supplier_replies || []).length > 0 && (
+                                <Badge bg={sendModalTab === 'replies' ? 'primary' : 'secondary'} className="ms-2" style={{ fontSize: 10 }}>
+                                    {rfq.supplier_replies.length}
+                                </Badge>
+                            )}
+                        </button>
+                    </li>
+                </ul>
+
+                <div style={{ padding: '20px 24px' }}>
+                {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
+
+                {sendModalTab === 'replies' ? (
+                    <RFQRepliesPanel replies={rfq?.supplier_replies || []} />
+                ) : loadingPreview ? (
+                    <div className="text-center py-5">
+                        <Spinner animation="border" />
+                        <div className="text-muted mt-2">Loading preview…</div>
+                    </div>
+                ) : (
+                    <div className="row g-4">
+
+                        {/* ── Left: WhatsApp message mockup ── */}
+                        <div className="col-md-6">
+                            <div className="text-muted fw-semibold mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>MESSAGE PREVIEW</div>
+                            <div style={{ maxWidth: THUMB_W + 50, margin: '0 auto', borderRadius: 14, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.18)' }}>
+                                {/* WA header */}
+                                <div style={{ background: '#075e54', color: '#fff', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ width: 40, height: 40, background: '#128c7e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <i className="bi bi-building" style={{ fontSize: 17 }}></i>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: 14 }}>{storeData?.name || preview?.store_name || 'Your Store'}</div>
+                                        <div style={{ fontSize: 11, opacity: 0.8 }}>WhatsApp Business</div>
+                                    </div>
+                                </div>
+                                {/* Chat area */}
+                                <div style={{ background: '#eae2da', padding: '14px 10px', minHeight: 280 }}>
+                                    {/* Incoming/supplier contact line */}
+                                    <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                                        <span style={{ background: 'rgba(255,255,255,0.75)', borderRadius: 8, padding: '2px 10px', fontSize: 11, color: '#555' }}>
+                                            Today
+                                        </span>
+                                    </div>
+                                    {/* Outgoing message bubble */}
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                        <div style={{ background: '#dcf8c6', borderRadius: '10px 2px 10px 10px', overflow: 'hidden', width: THUMB_W, boxShadow: '0 1px 3px rgba(0,0,0,0.18)', maxWidth: '85%' }}>
+                                            {/* RFQ image thumbnail */}
+                                            <div style={{ width: THUMB_W, height: THUMB_H, background: '#f0f0f0', overflow: 'hidden', position: 'relative', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+                                                {storeData && rfq ? (
+                                                    <div style={{ position: 'absolute', top: 0, left: 0, width: A4_WIDTH, transformOrigin: 'top left', transform: `scale(${thumbScale})`, pointerEvents: 'none' }}>
+                                                        <RFQPreviewContent rfq={rfq} store={storeData} />
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#bbb' }}>
+                                                        <i className="bi bi-file-earmark-image" style={{ fontSize: 42 }}></i>
+                                                    </div>
+                                                )}
+                                                {/* Image caption overlay */}
+                                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.35)', color: '#fff', fontSize: 10, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <i className="bi bi-file-earmark-pdf"></i> RFQ {rfq?.code} — tap to view
+                                                </div>
+                                            </div>
+                                            {/* Template text */}
+                                            <div style={{ padding: '8px 10px 2px', fontSize: 13, whiteSpace: 'pre-line', lineHeight: 1.55, color: '#111' }}>
+                                                {preview?.template_body
+                                                    ? preview.template_body
+                                                    : <span style={{ color: '#aaa', fontStyle: 'italic' }}>Template text not available</span>}
+                                            </div>
+                                            {/* Timestamp */}
+                                            <div style={{ textAlign: 'right', fontSize: 11, color: '#888', padding: '2px 8px 7px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 3 }}>
+                                                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <i className="bi bi-check2-all" style={{ color: '#4fc3f7', fontSize: 14 }}></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ── Test message section ── */}
+                            {!isSending && (
+                                <div style={{ marginTop: 18, background: '#f8f9fa', borderRadius: 10, padding: '14px 16px', border: '1px solid #e9ecef' }}>
+                                    <div className="fw-semibold mb-2" style={{ fontSize: 12, color: '#555' }}>
+                                        <i className="bi bi-send-check me-1 text-primary"></i>Test this message
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        <input
+                                            className="form-control form-control-sm"
+                                            placeholder="WhatsApp number (e.g. 971501234567)"
+                                            value={testPhone}
+                                            onChange={e => { setTestPhone(e.target.value); setTestResult(null); }}
+                                            style={{ flex: 1 }}
+                                        />
+                                        <Button size="sm" variant="outline-primary" onClick={handleTestSend} disabled={testSending || !testPhone.trim()}>
+                                            {testSending ? <Spinner animation="border" size="sm" /> : 'Send Test'}
+                                        </Button>
+                                    </div>
+                                    {testResult && (
+                                        <div className={`mt-2 small ${testResult === 'ok' ? 'text-success' : 'text-danger'}`}>
+                                            {testResult === 'ok'
+                                                ? <><i className="bi bi-check2-circle me-1"></i>Test message sent successfully</>
+                                                : <><i className="bi bi-exclamation-circle me-1"></i>{testResult.replace('err: ', '')}</>}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Right: Recipient list ── */}
+                        <div className="col-md-6">
+                            {/* Progress bar */}
+                            {totalCount > 0 && (
+                                <div style={{ marginBottom: 10 }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <span className="text-muted fw-semibold" style={{ fontSize: 11, letterSpacing: 1 }}>RECIPIENTS</span>
+                                        <span style={{ fontSize: 12, color: sentCount === totalCount && totalCount > 0 ? '#198754' : '#555' }}>
+                                            {sentCount} / {totalCount} sent ({progressPct}%)
+                                            {!isSending && !isDone && unsentSelected.length > 0 && (
+                                                <span className="ms-2 text-muted">· {unsentSelected.length} selected</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div style={{ height: 6, background: '#e9ecef', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${progressPct}%`, height: '100%', background: sentCount === totalCount ? '#198754' : '#0d6efd', borderRadius: 4, transition: 'width 0.5s ease' }}></div>
+                                    </div>
+                                </div>
+                            )}
+                            {totalCount === 0 && (
+                                <div className="text-muted fw-semibold mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>RECIPIENTS</div>
+                            )}
+
+                            {supplierList.length === 0 && !loadingPreview && (
+                                <Alert variant="warning" className="py-2 small">
+                                    No suppliers found. Make sure product categories are identified first.
+                                </Alert>
+                            )}
+
+                            <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #f0f0f0', borderRadius: 8 }}>
+                                {supplierList.map((s, i) => {
+                                    const alreadySent = sentPhones.has(s.phone);
+                                    const isSelected  = selectedPhones.has(s.phone);
+                                    const isExtra     = extraSuppliers.some(e => e.phone === s.phone);
+                                    const clickable   = !alreadySent && !isSending;
+                                    return (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderBottom: '1px solid #f5f5f5', background: alreadySent ? '#f0fff4' : (isSelected ? '#f0fff4' : 'white'), cursor: clickable ? 'pointer' : 'default', opacity: alreadySent ? 0.75 : 1 }}
+                                            onClick={() => clickable && togglePhone(s.phone)}>
+                                            {/* Checkbox — disabled for already-sent */}
+                                            <input type="checkbox" checked={isSelected || alreadySent} readOnly disabled={alreadySent || isSending}
+                                                style={{ width: 16, height: 16, cursor: clickable ? 'pointer' : 'default', flexShrink: 0, accentColor: '#25d366' }} />
+                                            {/* Avatar */}
+                                            <div style={{ width: 36, height: 36, background: alreadySent ? '#198754' : (isExtra ? '#0d6efd' : '#25d366'), borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <i className={`bi ${isExtra ? 'bi-person-plus-fill' : 'bi-person-fill'} text-white`} style={{ fontSize: 15 }}></i>
+                                            </div>
+                                            {/* Info */}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                                                <div style={{ fontSize: 11, color: '#555' }}>
+                                                    <i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{s.phone}
+                                                    {s.category && <span className="ms-2 text-muted">{s.category}</span>}
+                                                    {alreadySent && <span className="ms-2 text-success">· sent</span>}
+                                                </div>
+                                            </div>
+                                            {/* Status icon */}
+                                            <div style={{ flexShrink: 0, width: 22, textAlign: 'center' }}>
+                                                {statusIcon(s)}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* ── Add supplier (autocomplete) ── */}
+                            {!isSending && (
+                                <div style={{ marginTop: 12, padding: '12px', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e9ecef', position: 'relative' }}>
+                                    <div className="fw-semibold mb-2" style={{ fontSize: 12, color: '#555' }}>
+                                        <i className="bi bi-person-plus me-1 text-primary"></i>Add supplier
+                                    </div>
+                                    <input
+                                        className="form-control form-control-sm"
+                                        placeholder="Type name or WhatsApp number…"
+                                        value={addQuery}
+                                        autoComplete="off"
+                                        onChange={e => { setAddQuery(e.target.value); searchAddSuppliers(e.target.value); }}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Escape') { setShowAddSugg(false); }
+                                            if (e.key === 'Enter') {
+                                                const q = addQuery.trim().replace(/\s+/g, '');
+                                                if (addSuggestions.length > 0) addSupplierDirect(addSuggestions[0]);
+                                                else if (q) addSupplierDirect({ name: q, phone: q });
+                                            }
+                                        }}
+                                        onFocus={() => addSuggestions.length > 0 && setShowAddSugg(true)}
+                                        onBlur={() => setTimeout(() => setShowAddSugg(false), 150)}
+                                    />
+                                    {showAddSugg && addSuggestions.length > 0 && (
+                                        <div style={{ position: 'absolute', left: 12, right: 12, top: '100%', marginTop: 2, background: '#fff', border: '1px solid #dee2e6', borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', zIndex: 1050, maxHeight: 220, overflowY: 'auto' }}>
+                                            {addSuggestions.map((s, i) => (
+                                                <div key={i}
+                                                    onMouseDown={() => addSupplierDirect(s)}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', cursor: 'pointer', borderBottom: i < addSuggestions.length - 1 ? '1px solid #f5f5f5' : 'none' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                                >
+                                                    <div style={{ width: 32, height: 32, background: '#0d6efd', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        <i className="bi bi-person-fill text-white" style={{ fontSize: 14 }}></i>
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                                                        <div style={{ fontSize: 11, color: '#555' }}>
+                                                            <i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{s.phone}
+                                                            {s.category && <span className="ms-2 text-muted">{s.category}</span>}
+                                                        </div>
+                                                    </div>
+                                                    <i className="bi bi-plus-circle text-primary" style={{ fontSize: 16 }}></i>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {isDone && (
+                                <Alert variant="success" className="mt-3 py-2 small">
+                                    <i className="bi bi-check2-circle me-2"></i>
+                                    RFQ sent to all {sentCount} supplier(s).
+                                </Alert>
+                            )}
+                        </div>
+                    </div>
+                )}
+                </div>
+            </Modal.Body>
+
+            <Modal.Footer style={{ background: '#f8f9fa' }}>
+                <Button variant="secondary" onClick={onHide}>
+                    {isDone ? 'Close' : 'Cancel'}
+                </Button>
+                {sendModalTab === 'send' && (
+                    <Button variant="success" onClick={handleSend} disabled={!canSend || isSending}>
+                        {isSending
+                            ? <><Spinner animation="border" size="sm" className="me-2" />Sending…</>
+                            : <><i className="bi bi-send-fill me-2"></i>Confirm & Send ({unsentSelected.length})</>}
+                    </Button>
+                )}
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+function RFQRepliesPanel({ replies }) {
+    const [expanded, setExpanded] = React.useState(null);
+
+    if (!replies || replies.length === 0) {
+        return (
+            <div className="text-center py-5 text-muted">
+                <i className="bi bi-chat-left-dots" style={{ fontSize: 40, display: 'block', marginBottom: 12, opacity: 0.35 }}></i>
+                <div style={{ fontSize: 14 }}>No replies received yet</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Supplier replies to this RFQ will appear here</div>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {replies.map((r, i) => {
+                const isOpen = expanded === i;
+                const ts = r.received_at ? new Date(r.received_at).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                const isQuote = r.is_quotation;
+                const statusColor = r.extraction_status === 'done' ? '#198754' : r.extraction_status === 'failed' ? '#dc3545' : '#f59e0b';
+                return (
+                    <div key={r.id || i} style={{ border: `1px solid ${isQuote ? '#c3e6cb' : '#dee2e6'}`, borderRadius: 10, overflow: 'hidden', background: isQuote ? '#f0fff4' : '#fff' }}>
+                        {/* Header row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer' }}
+                            onClick={() => setExpanded(isOpen ? null : i)}>
+                            <div style={{ width: 36, height: 36, background: isQuote ? '#198754' : '#6c757d', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <i className={`bi ${isQuote ? 'bi-currency-dollar' : 'bi-chat-left-text'} text-white`} style={{ fontSize: 15 }}></i>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: 13 }}>
+                                    {r.supplier_name || r.supplier_phone || 'Unknown supplier'}
+                                    {isQuote && <span className="ms-2 badge" style={{ background: '#d1e7dd', color: '#0a3622', fontSize: 10, fontWeight: 600 }}>Quotation</span>}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#555', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
+                                    {r.supplier_phone && <span><i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{r.supplier_phone}</span>}
+                                    {ts && <span><i className="bi bi-clock me-1"></i>{ts}</span>}
+                                    {r.source && <span className="text-muted">via {r.source}</span>}
+                                    {r.extraction_status && (
+                                        <span style={{ color: statusColor }}>
+                                            <i className={`bi ${r.extraction_status === 'done' ? 'bi-check-circle' : r.extraction_status === 'failed' ? 'bi-x-circle' : 'bi-hourglass-split'} me-1`}></i>
+                                            {r.extraction_status === 'done' ? 'Prices extracted' : r.extraction_status === 'failed' ? 'Extraction failed' : 'Extracting…'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} text-muted`} style={{ fontSize: 14, flexShrink: 0 }}></i>
+                        </div>
+
+                        {/* Expanded body */}
+                        {isOpen && (
+                            <div style={{ padding: '0 14px 14px', borderTop: '1px solid #f0f0f0' }}>
+                                {/* Raw text */}
+                                {r.raw_text && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 4, letterSpacing: 0.5 }}>MESSAGE</div>
+                                        <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: 6, padding: '10px 12px', margin: 0, fontFamily: 'inherit', lineHeight: 1.6 }}>
+                                            {r.raw_text}
+                                        </pre>
+                                    </div>
+                                )}
+                                {/* Media */}
+                                {r.media_urls?.length > 0 && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 6, letterSpacing: 0.5 }}>ATTACHMENTS</div>
+                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                            {r.media_urls.map((url, mi) => (
+                                                <a key={mi} href={url} target="_blank" rel="noreferrer"
+                                                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', background: '#fff', border: '1px solid #dee2e6', borderRadius: 6, fontSize: 12, color: '#0d6efd', textDecoration: 'none' }}>
+                                                    <i className="bi bi-paperclip"></i>Attachment {mi + 1}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Extracted prices */}
+                                {r.prices?.length > 0 && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 6, letterSpacing: 0.5 }}>EXTRACTED PRICES</div>
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                                                <thead>
+                                                    <tr style={{ background: '#f0f0f0' }}>
+                                                        <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap' }}>Product</th>
+                                                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>Unit Price</th>
+                                                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>Qty</th>
+                                                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>Total</th>
+                                                        <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {r.prices.map((p, pi) => {
+                                                        const total = (p.unit_price && p.quantity) ? (p.unit_price * p.quantity) : null;
+                                                        return (
+                                                        <tr key={pi} style={{ borderTop: '1px solid #f0f0f0' }}>
+                                                            <td style={{ padding: '7px 10px' }}>{p.product_name || p.part_no || '—'}</td>
+                                                            <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 600, color: '#198754' }}>
+                                                                {p.unit_price != null ? p.unit_price.toLocaleString() : '—'}
+                                                                {p.currency ? ' ' + p.currency : ''}
+                                                            </td>
+                                                            <td style={{ padding: '7px 10px', textAlign: 'right' }}>{p.quantity != null ? p.quantity : '—'}</td>
+                                                            <td style={{ padding: '7px 10px', textAlign: 'right' }}>
+                                                                {total != null ? total.toLocaleString() : '—'}
+                                                                {p.currency ? ' ' + p.currency : ''}
+                                                            </td>
+                                                            <td style={{ padding: '7px 10px', color: '#666', fontSize: 12 }}>{p.notes || ''}</td>
+                                                        </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Extraction error */}
+                                {r.extraction_status === 'failed' && r.extraction_error && (
+                                    <div className="mt-2 text-danger small">
+                                        <i className="bi bi-exclamation-circle me-1"></i>{r.extraction_error}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 function LiveProgressPanel({ progress, onDismiss }) {
     if (!progress) return null;
     const { stage, percent, message, supplier_name, market, status, step, total } = progress;
@@ -808,10 +1565,21 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [selected, setSelected] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [reprocessing, setReprocessing] = useState(null);
-    const [downloadingPDF, setDownloadingPDF] = useState(null);
+    const [showSendModal, setShowSendModal] = useState(false);
+    const [rfqForSend, setRfqForSend] = useState(null);
     const [liveProgress, setLiveProgress] = useState(null);
     const rfqCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
+    const rfqPreviewRef = useRef(null);
+
+    const refreshSelected = useCallback((id) => {
+        const targetId = id || selectedIdRef.current;
+        if (!targetId) return;
+        fetch(`/v1/rfq-received/${targetId}?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => { if (d && !d.error && selectedIdRef.current === targetId) setSelected(d); })
+            .catch(() => {});
+    }, [storeId, token]);
 
     const fetchList = useCallback(async () => {
         if (!storeId) return;
@@ -838,7 +1606,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         if (!storeId) return;
         const es = new EventSource(`/v1/rfq-bot/events?store_id=${storeId}`);
         es.addEventListener('rfq_received', () => fetchList());
-        es.addEventListener('rfq_updated',  () => fetchList());
+        es.addEventListener('rfq_updated',  () => { fetchList(); refreshSelected(); });
         es.addEventListener('rfq_progress', (e) => {
             try {
                 const data = JSON.parse(e.data);
@@ -858,7 +1626,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         });
         es.onerror = () => {};
         return () => es.close();
-    }, [storeId, token, fetchList]);
+    }, [storeId, token, fetchList, refreshSelected]);
 
     const openDetail = async (id) => {
         try {
@@ -887,38 +1655,13 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         setReprocessing(null);
     };
 
-    const downloadPDF = async (rfq) => {
-        setDownloadingPDF(rfq.id);
-        try {
-            const res = await fetch('/v1/rfq/pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({
-                    model: rfq,
-                    modelName: 'rfq_received',
-                    fontSizes: {},
-                    filename: `RFQ-${rfq.code || rfq.id}`,
-                }),
-            });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                if (showToastMessage) showToastMessage('PDF generation failed: ' + (err.errors?.pdf || err.errors?.chrome || JSON.stringify(err.errors || err)), 'danger');
-                return;
-            }
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `RFQ-${rfq.code || rfq.id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        } catch (e) {
-            console.error('PDF download error:', e);
-            if (showToastMessage) showToastMessage('PDF download failed: ' + e.message, 'danger');
-        }
-        setDownloadingPDF(null);
+    const openSendModal = (rfq) => {
+        setRfqForSend(rfq);
+        setShowSendModal(true);
+    };
+
+    const downloadPDF = (rfq) => {
+        rfqPreviewRef.current?.open(rfq);
     };
 
     // Quotation pre-fill: store in sessionStorage and navigate to quotation page
@@ -981,6 +1724,14 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             <LiveProgressPanel progress={liveProgress} onDismiss={() => setLiveProgress(null)} />
 
             <RFQCreate ref={rfqCreateRef} showToastMessage={showToastMessage} onCreated={fetchList} />
+            <RFQPreview ref={rfqPreviewRef} />
+            <RFQSendModal
+                rfq={rfqForSend}
+                storeId={storeId}
+                show={showSendModal}
+                onHide={() => setShowSendModal(false)}
+                onSent={() => { fetchList(); refreshSelected(rfqForSend?.id); }}
+            />
 
             {/* Table */}
             {isLoading ? (
@@ -1064,18 +1815,20 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                                 <Button variant="outline-secondary" size="sm" title={t('edit')} onClick={() => rfqCreateRef.current?.edit(rfq)}>
                                                     <i className="bi bi-pencil"></i>
                                                 </Button>
-                                                <Button variant="outline-danger" size="sm" title="Download PDF"
-                                                    onClick={() => downloadPDF(rfq)} disabled={downloadingPDF === rfq.id}>
-                                                    {downloadingPDF === rfq.id
-                                                        ? <Spinner animation="border" size="sm" />
-                                                        : <i className="bi bi-file-earmark-pdf"></i>}
+                                                <Button variant="outline-danger" size="sm" title="Preview & Download PDF"
+                                                    onClick={() => downloadPDF(rfq)}>
+                                                    <i className="bi bi-file-earmark-pdf"></i>
                                                 </Button>
                                                 {rfq.status === 'ready_to_send' && (
-                                                    <Button variant="outline-success" size="sm" title="Send to Suppliers"
-                                                        onClick={() => reprocess(rfq.id)} disabled={reprocessing === rfq.id}>
-                                                        {reprocessing === rfq.id
-                                                            ? <Spinner animation="border" size="sm" />
-                                                            : <><i className="bi bi-send"></i></>}
+                                                    <Button variant="outline-success" size="sm" title="Preview & Send to Suppliers via WhatsApp"
+                                                        onClick={() => openSendModal(rfq)}>
+                                                        <i className="bi bi-send"></i>
+                                                    </Button>
+                                                )}
+                                                {rfq.status === 'forwarded' && (
+                                                    <Button variant="outline-primary" size="sm" title="View Send Status"
+                                                        onClick={() => openSendModal(rfq)}>
+                                                        <i className="bi bi-whatsapp"></i>
                                                     </Button>
                                                 )}
                                                 {(rfq.status === 'failed' || rfq.status === 'received') && (
