@@ -328,7 +328,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
 
             if (data.oauth_url) {
                 pendingAccountRef.current = data.account_id;
-                window.open(data.oauth_url, 'rfq_email_oauth', 'width=700,height=600,noopener');
+                window.open(data.oauth_url, 'rfq_email_oauth', 'width=700,height=600');
                 setPhase('oauth_wait');
                 pollAccountStatus(data.account_id);
                 return;
