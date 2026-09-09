@@ -7,6 +7,14 @@ import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
 
+// Exported for unit testing — determines whether a WABA template sends a PDF document
+// (DOCUMENT header) vs an image (IMAGE header or no media header).
+export function rfqTemplateWantsDocument(templateComponents) {
+    return (templateComponents || []).some(
+        c => (c.type || '').toLowerCase() === 'header' && (c.format || '').toUpperCase() === 'DOCUMENT'
+    );
+}
+
 const STATUS_CONFIG = {
     received:      { labelKey: "status_received",      bg: "secondary" },
     processing:    { labelKey: "status_processing",    bg: "warning", text: "dark" },
@@ -950,9 +958,7 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     };
 
     // Derive attachment type from template header — no user choice needed
-    const templateWantsDoc = (preview?.template_components || []).some(
-        c => (c.type || '').toLowerCase() === 'header' && (c.format || '').toUpperCase() === 'DOCUMENT'
-    );
+    const templateWantsDoc = rfqTemplateWantsDocument(preview?.template_components);
 
     const handleSend = async () => {
         // Only send to selected phones that haven't been sent to yet
@@ -1178,22 +1184,36 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                     {/* Outgoing message bubble */}
                                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <div style={{ background: '#dcf8c6', borderRadius: '10px 2px 10px 10px', overflow: 'hidden', width: THUMB_W, boxShadow: '0 1px 3px rgba(0,0,0,0.18)', maxWidth: '85%' }}>
-                                            {/* RFQ image thumbnail */}
-                                            <div style={{ width: THUMB_W, height: THUMB_H, background: '#f0f0f0', overflow: 'hidden', position: 'relative', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
-                                                {storeData && rfq ? (
-                                                    <div style={{ position: 'absolute', top: 0, left: 0, width: A4_WIDTH, transformOrigin: 'top left', transform: `scale(${thumbScale})`, pointerEvents: 'none' }}>
-                                                        <RFQPreviewContent rfq={rfq} store={storeData} />
+                                            {templateWantsDoc ? (
+                                                /* PDF document card */
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#f7f7f7' }}>
+                                                    <div style={{ width: 40, height: 48, background: '#e53935', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: 22, color: '#fff' }}></i>
                                                     </div>
-                                                ) : (
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#bbb' }}>
-                                                        <i className="bi bi-file-earmark-image" style={{ fontSize: 42 }}></i>
+                                                    <div style={{ overflow: 'hidden' }}>
+                                                        <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                            {rfq?.code}.pdf
+                                                        </div>
+                                                        <div style={{ fontSize: 11, color: '#888' }}>PDF · RFQ Document</div>
                                                     </div>
-                                                )}
-                                                {/* Image caption overlay */}
-                                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.35)', color: '#fff', fontSize: 10, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <i className="bi bi-file-earmark-pdf"></i> RFQ {rfq?.code} — tap to view
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                /* Image thumbnail */
+                                                <div style={{ width: THUMB_W, height: THUMB_H, background: '#f0f0f0', overflow: 'hidden', position: 'relative', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+                                                    {storeData && rfq ? (
+                                                        <div style={{ position: 'absolute', top: 0, left: 0, width: A4_WIDTH, transformOrigin: 'top left', transform: `scale(${thumbScale})`, pointerEvents: 'none' }}>
+                                                            <RFQPreviewContent rfq={rfq} store={storeData} />
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#bbb' }}>
+                                                            <i className="bi bi-file-earmark-image" style={{ fontSize: 42 }}></i>
+                                                        </div>
+                                                    )}
+                                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.35)', color: '#fff', fontSize: 10, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                        <i className="bi bi-image"></i> RFQ {rfq?.code} — tap to view
+                                                    </div>
+                                                </div>
+                                            )}
                                             {/* Template text */}
                                             <div style={{ padding: '8px 10px 2px', fontSize: 13, whiteSpace: 'pre-line', lineHeight: 1.55, color: '#111' }}>
                                                 {preview?.template_body
