@@ -51,7 +51,7 @@ function SupplierForm({ supplier, onSave, onClose }) {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ ...form, store_id: storeId }),
+                body: JSON.stringify({ ...form, store_id: storeId, rating: parseFloat(form.rating) || 0 }),
             });
             const data = await res.json();
             if (data.error) { alert(t('error_prefix') + data.error); return; }
