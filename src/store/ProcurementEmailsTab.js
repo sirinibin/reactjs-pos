@@ -230,33 +230,50 @@ export default function ProcurementEmailsTab({ storeId }) {
                                     </tbody>
                                 </table>
 
-                                {selected.body_html ? (
-                                    <div
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '6px', padding: '12px', background: '#fff', maxHeight: '400px', overflow: 'auto', fontSize: '13px' }}
-                                        dangerouslySetInnerHTML={{ __html: selected.body_html }}
-                                    />
-                                ) : (
-                                    <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', background: '#f8f9fa', borderRadius: '6px', padding: '12px', maxHeight: '400px', overflow: 'auto' }}>
-                                        {selected.body_text || <span className="text-muted">{t('(empty body)')}</span>}
-                                    </pre>
-                                )}
+                                {/* Email body — Gmail-style: rendered HTML preferred, plaintext fallback */}
+                                <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
+                                    <div style={{ maxHeight: '480px', overflow: 'auto', padding: '20px 24px', fontSize: '14px', lineHeight: '1.6', color: '#202124' }}>
+                                        {selected.body_html ? (
+                                            <div dangerouslySetInnerHTML={{ __html: selected.body_html }} />
+                                        ) : (
+                                            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>
+                                                {selected.body_text || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}
+                                            </pre>
+                                        )}
+                                    </div>
+                                </div>
 
+                                {/* Attachments — Gmail-style cards */}
                                 {(selected.attachments || []).length > 0 && (
-                                    <div style={{ marginTop: '12px' }}>
-                                        <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px' }}>{t('Attachments')}</div>
+                                    <div style={{ marginTop: '16px' }}>
+                                        <div style={{ fontSize: '12px', color: '#5f6368', fontWeight: 500, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                            <i className="bi bi-paperclip me-1"></i>{selected.attachments.length} {t('Attachment')}{selected.attachments.length !== 1 ? 's' : ''}
+                                        </div>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            {selected.attachments.map((att, i) => (
-                                                <div key={i} style={{ border: '1px solid #dee2e6', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <i className="bi bi-paperclip"></i>
-                                                    <span>{att.filename}</span>
-                                                    {att.size > 0 && <span className="text-muted">({(att.size / 1024).toFixed(1)} KB)</span>}
-                                                    {att.url && (
-                                                        <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px' }}>
-                                                            <i className="bi bi-download me-1"></i>{t('Download')}
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            ))}
+                                            {selected.attachments.map((att, i) => {
+                                                const isPDF = att.content_type === 'application/pdf' || att.filename?.toLowerCase().endsWith('.pdf');
+                                                const isImage = att.content_type?.startsWith('image/');
+                                                const isExcel = att.filename?.match(/\.(xlsx?|csv)$/i);
+                                                const icon = isPDF ? 'bi-file-earmark-pdf text-danger' : isImage ? 'bi-file-earmark-image text-primary' : isExcel ? 'bi-file-earmark-excel text-success' : 'bi-file-earmark text-secondary';
+                                                return (
+                                                    <div key={i} style={{ border: '1px solid #dadce0', borderRadius: '8px', padding: '10px 14px', minWidth: '180px', maxWidth: '220px', background: '#f8f9fa' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                            <i className={`bi ${icon}`} style={{ fontSize: '22px' }}></i>
+                                                            <div style={{ overflow: 'hidden' }}>
+                                                                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.filename || `Attachment ${i + 1}`}</div>
+                                                                {att.size > 0 && <div style={{ fontSize: '11px', color: '#5f6368' }}>{(att.size / 1024).toFixed(0)} KB</div>}
+                                                            </div>
+                                                        </div>
+                                                        {att.url && (
+                                                            <a href={att.url} target="_blank" rel="noreferrer" download={att.filename}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#1a73e8', textDecoration: 'none', marginTop: '6px' }}>
+                                                                <i className="bi bi-download"></i> Download
+                                                            </a>
+                                                        )}
+                                                        {!att.url && <span style={{ fontSize: '11px', color: '#9aa0a6' }}>Not downloaded</span>}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
