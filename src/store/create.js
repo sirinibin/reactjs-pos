@@ -5,8 +5,6 @@ import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
 import ProcurementEmailWidget from './ProcurementEmailWidget';
 import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
-import ProcurementEmailsTab from './ProcurementEmailsTab';
-import ProcurementWhatsAppTab from './ProcurementWhatsAppTab';
 import WABATemplatePurposeWidget from './WABATemplatePurposeWidget';
 import WABATemplateTesterWidget from './WABATemplateTesterWidget';
 
@@ -7139,55 +7137,28 @@ const StoreCreate = forwardRef((props, ref) => {
                                         />
                                     </div>
 
-                                    {/* 1d. Message Log Settings */}
+                                    {/* 1d. Message Log — auto-delete setting */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
                                             <i className="bi bi-chat-square-text text-secondary me-2"></i>
                                             {t('Message Log')}
                                         </h6>
-                                        <div className="row g-3 align-items-center">
-                                            <div className="col-md-6">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
-                                                    {t('Auto-delete messages older than')}
-                                                </label>
-                                                <div className="input-group input-group-sm" style={{ maxWidth: '200px' }}>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control"
-                                                        min="0"
-                                                        value={formData.settings.auto_delete_procurement_messages_days ?? 0}
-                                                        onChange={e => { formData.settings.auto_delete_procurement_messages_days = parseInt(e.target.value, 10) || 0; setFormData({ ...formData }); }}
-                                                    />
-                                                    <span className="input-group-text">{t('days (0 = never)')}</span>
-                                                </div>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
+                                                {t('Auto-delete messages older than')}
+                                            </label>
+                                            <div className="input-group input-group-sm" style={{ maxWidth: '220px' }}>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="0"
+                                                    value={formData.settings.auto_delete_procurement_messages_days ?? 0}
+                                                    onChange={e => { formData.settings.auto_delete_procurement_messages_days = parseInt(e.target.value, 10) || 0; setFormData({ ...formData }); }}
+                                                />
+                                                <span className="input-group-text">{t('days (0 = never)')}</span>
                                             </div>
-                                            <div className="col-md-3">
-                                                <div className="form-check form-switch mt-2">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id="showEmailsTab"
-                                                        checked={!!formData.settings.show_procurement_emails_tab}
-                                                        onChange={e => { formData.settings.show_procurement_emails_tab = e.target.checked; setFormData({ ...formData }); }}
-                                                    />
-                                                    <label className="form-check-label" htmlFor="showEmailsTab" style={{ fontSize: '13px' }}>
-                                                        <i className="bi bi-envelope me-1 text-primary"></i>{t('Show Emails tab')}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-3">
-                                                <div className="form-check form-switch mt-2">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id="showWhatsAppTab"
-                                                        checked={!!formData.settings.show_procurement_whatsapp_tab}
-                                                        onChange={e => { formData.settings.show_procurement_whatsapp_tab = e.target.checked; setFormData({ ...formData }); }}
-                                                    />
-                                                    <label className="form-check-label" htmlFor="showWhatsAppTab" style={{ fontSize: '13px' }}>
-                                                        <i className="bi bi-whatsapp me-1 text-success"></i>{t('Show WhatsApp tab')}
-                                                    </label>
-                                                </div>
+                                            <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '6px' }}>
+                                                {t('View all messages via the Emails and WhatsApp Messages items in the sidebar.')}
                                             </div>
                                         </div>
                                     </div>
@@ -7587,17 +7558,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         )}
                                     </div>
 
-                                    {/* Message Log Tabs */}
-                                    {formData.settings.show_procurement_emails_tab && (
-                                        <div className="pw-card" style={{ marginBottom: '16px', padding: 0, overflow: 'hidden' }}>
-                                            <ProcurementEmailsTab storeId={formData.id} />
-                                        </div>
-                                    )}
-                                    {formData.settings.show_procurement_whatsapp_tab && (
-                                        <div className="pw-card" style={{ marginBottom: '16px', padding: 0, overflow: 'hidden' }}>
-                                            <ProcurementWhatsAppTab storeId={formData.id} />
-                                        </div>
-                                    )}
                                 </div>)}
 
                                 {activeTab === 'opening_balances' && (<div className="pw-tab-wrap">

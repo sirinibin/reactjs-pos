@@ -1,9 +1,11 @@
 import Dashboard from './Dashboard.js';
 import Login from './user/login.js';
+import AuthCallback from './user/AuthCallback.js';
 import InvoicePrintPage from './order/InvoicePrintPage';
 import ReceiptPrintPage from './customer_deposit/ReceiptPrintPage';
 import PostingPrintPage from './posting/PostingPrintPage';
 import ReportPrintPage from './order/ReportPrintPage';
+import RFQPrintPage from './rfq_received/RFQPrintPage';
 import { WebSocketProvider } from "./utils/WebSocketContext.js";
 import AutoRefresh from "./utils/AutoRefresh.js";
 import {
@@ -37,6 +39,9 @@ function App() {
           </Route>
           <Route path="/report-print">
             <ReportPrintPage />
+          </Route>
+          <Route path="/rfq-print">
+            <RFQPrintPage />
           </Route>
           <Route path="/dashboard/business-dashboard">
             <Dashboard />
@@ -79,6 +84,22 @@ function App() {
           </Route>
 
           <Route path="/dashboard/purchase-requests">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/rfq-received">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/rfq-suppliers">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/procurement-emails">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/procurement-whatsapp">
             <Dashboard />
           </Route>
 
@@ -234,6 +255,13 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/sidebar-settings">
+            <Dashboard />
+          </Route>
+
+          <Route path="/auth">
+            <AuthCallback />
+          </Route>
           <Route path="/">
             <Login />
           </Route>

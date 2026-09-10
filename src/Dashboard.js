@@ -73,6 +73,10 @@ import EmployeeIndex from './employee/index.js';
 import SalaryIndex from './employee/salaryIndex.js';
 import VehicleIndex from './vehicle/index.js';
 import RepairJobIndex from './repair_job/index.js';
+import RFQReceivedIndex from './rfq_received/index.js';
+import RFQSuppliersIndex from './rfq_suppliers/index.js';
+import ProcurementEmailsIndex from './procurement_emails/index.js';
+import ProcurementWhatsAppIndex from './procurement_whatsapp/index.js';
 
 // Checks RBAC READ permission for every route change.
 // Only runs when the store has enable_rbac_module = true.
@@ -518,6 +522,54 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseRequestIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/rfq-received">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RFQReceivedIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/rfq-suppliers">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RFQSuppliersIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/procurement-emails">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProcurementEmailsIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/procurement-whatsapp">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProcurementWhatsAppIndex />
                         </main>
                         <Footer />
                     </div>
