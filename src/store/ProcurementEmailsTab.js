@@ -116,20 +116,21 @@ export default function ProcurementEmailsTab({ storeId }) {
                             <th>{t('From')}</th>
                             <th>{t('Subject')}</th>
                             <th style={{ width: 90 }}>{t('Provider')}</th>
-                            <th style={{ width: 130 }}>{t('Date')}</th>
+                            <th style={{ width: 140 }}>{t('Date')}</th>
+                            <th style={{ width: 140 }}>{t('Created At')}</th>
                             <th style={{ width: 80 }}>{t('Attachments')}</th>
                             <th style={{ width: 60 }}></th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading && (
-                            <tr><td colSpan={7} className="text-center py-4">
+                            <tr><td colSpan={8} className="text-center py-4">
                                 <span className="spinner-border spinner-border-sm me-2" role="status" />
                                 {t('Loading...')}
                             </td></tr>
                         )}
                         {!loading && messages.length === 0 && (
-                            <tr><td colSpan={7} className="text-center py-4 text-muted">
+                            <tr><td colSpan={8} className="text-center py-4 text-muted">
                                 <i className="bi bi-inbox" style={{ fontSize: '24px', display: 'block', marginBottom: '6px' }}></i>
                                 {t('No emails logged yet')}
                             </td></tr>
@@ -150,6 +151,9 @@ export default function ProcurementEmailsTab({ storeId }) {
                                 </td>
                                 <td style={{ verticalAlign: 'middle' }}>
                                     <span title={msg.provider}>{providerIcon(msg.provider)} {msg.provider}</span>
+                                </td>
+                                <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '12px', color: '#6c757d' }}>
+                                    {msg.message_date ? new Date(msg.message_date).toLocaleString() : '—'}
                                 </td>
                                 <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '12px', color: '#6c757d' }}>
                                     {msg.created_at ? new Date(msg.created_at).toLocaleString() : '—'}
@@ -217,6 +221,10 @@ export default function ProcurementEmailsTab({ storeId }) {
                                         )}
                                         <tr>
                                             <th style={{ fontWeight: 600 }}>{t('Date')}</th>
+                                            <td>{selected.message_date ? new Date(selected.message_date).toLocaleString() : '—'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th style={{ fontWeight: 600 }}>{t('Created At')}</th>
                                             <td>{selected.created_at ? new Date(selected.created_at).toLocaleString() : '—'}</td>
                                         </tr>
                                     </tbody>

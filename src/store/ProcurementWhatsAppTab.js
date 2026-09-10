@@ -117,20 +117,21 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                             <th>{t('From')}</th>
                             <th>{t('Message')}</th>
                             <th style={{ width: 80 }}>{t('Type')}</th>
-                            <th style={{ width: 130 }}>{t('Date')}</th>
+                            <th style={{ width: 140 }}>{t('Date')}</th>
+                            <th style={{ width: 140 }}>{t('Created At')}</th>
                             <th style={{ width: 80 }}>{t('Attachments')}</th>
                             <th style={{ width: 60 }}></th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading && (
-                            <tr><td colSpan={7} className="text-center py-4">
+                            <tr><td colSpan={8} className="text-center py-4">
                                 <span className="spinner-border spinner-border-sm me-2" role="status" />
                                 {t('Loading...')}
                             </td></tr>
                         )}
                         {!loading && messages.length === 0 && (
-                            <tr><td colSpan={7} className="text-center py-4 text-muted">
+                            <tr><td colSpan={8} className="text-center py-4 text-muted">
                                 <i className="bi bi-chat-square" style={{ fontSize: '24px', display: 'block', marginBottom: '6px' }}></i>
                                 {t('No WhatsApp messages logged yet')}
                             </td></tr>
@@ -151,6 +152,9 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                 </td>
                                 <td style={{ verticalAlign: 'middle' }}>
                                     <span title={msg.wa_message_type}>{msgTypeIcon(msg.wa_message_type)} {msg.wa_message_type || 'text'}</span>
+                                </td>
+                                <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '12px', color: '#6c757d' }}>
+                                    {msg.message_date ? new Date(msg.message_date).toLocaleString() : '—'}
                                 </td>
                                 <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '12px', color: '#6c757d' }}>
                                     {msg.created_at ? new Date(msg.created_at).toLocaleString() : '—'}
@@ -222,6 +226,10 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                         )}
                                         <tr>
                                             <th style={{ fontWeight: 600 }}>{t('Date')}</th>
+                                            <td>{selected.message_date ? new Date(selected.message_date).toLocaleString() : '—'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th style={{ fontWeight: 600 }}>{t('Created At')}</th>
                                             <td>{selected.created_at ? new Date(selected.created_at).toLocaleString() : '—'}</td>
                                         </tr>
                                     </tbody>
@@ -242,7 +250,7 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                     }}>
                                         {selected.body_text || <span style={{ color: '#6c757d', fontStyle: 'italic' }}>{t('(media message)')}</span>}
                                         <div style={{ fontSize: '10px', color: '#999', marginTop: '4px', textAlign: 'right' }}>
-                                            {selected.created_at ? new Date(selected.created_at).toLocaleTimeString() : ''}
+                                            {new Date(selected.message_date || selected.created_at).toLocaleTimeString()}
                                             {selected.direction === 'out' && <i className="bi bi-check2-all ms-1" style={{ color: '#34b7f1' }}></i>}
                                         </div>
                                     </div>
