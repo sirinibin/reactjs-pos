@@ -31,14 +31,15 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
     const showStoreHeader = fontSizes[MODEL + '_storeHeader']?.visible ?? true;
     const marginTop = fontSizes[MODEL + '_marginTop']?.size || '0px';
 
-    const products = rfq.products || [];
+    const products                      = rfq.products || [];
+    const attachmentDataURIs            = rfq.attachment_data_uris || [];
+    const additionalAttachmentDataURIs  = rfq.additional_attachment_data_uris || [];
+    const hasAttachments                = attachmentDataURIs.length > 0;
+    const hasAdditionalAttachments      = additionalAttachmentDataURIs.length > 0;
     const receivedAt = rfq.received_at
         ? format(new Date(rfq.received_at), 'dd MMM yyyy  h:mm a')
         : '';
 
-    const customerPhone   = rfq.customer_phone || rfq.from_phone || '';
-    const customerEmail   = rfq.customer_email  || '';
-    const customerCompany = rfq.customer_company || '';
     const customerAddress = rfq.customer_address || '';
 
     const resolvedStore = store || rfq.store;
@@ -225,14 +226,40 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                 >
                     <DetailRow label="RFQ No. | رقم الطلب" value={<strong style={{ color: C.navy }}>{rfq.code || '—'}</strong>} />
                     <DetailRow label="Date | التاريخ" value={receivedAt} />
-                    {customerCompany && <DetailRow label="Company | الشركة" value={customerCompany} />}
-                    {customerPhone   && <DetailRow label="Phone | الهاتف"   value={customerPhone} />}
-                    {customerEmail   && <DetailRow label="Email | البريد"   value={customerEmail} />}
                     {customerAddress && <DetailRow label="Address | العنوان" value={customerAddress} last />}
                 </div>
 
+                {/* ── Attached files (shown in place of products table) ─────── */}
+                {hasAttachments && (
+                    <div style={{ margin: '0 0 12px 0' }}>
+                        {attachmentDataURIs.map((uri, i) => {
+                            const isPDF = uri.startsWith('data:application/pdf');
+                            const isImg = /^data:image\//i.test(uri);
+                            if (isPDF) {
+                                return (
+                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+                                        <iframe
+                                            src={uri}
+                                            title={`attachment-${i + 1}`}
+                                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                                        />
+                                    </div>
+                                );
+                            }
+                            if (isImg) {
+                                return (
+                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden', textAlign: 'center' }}>
+                                        <img src={uri} alt={`attachment-${i + 1}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }} />
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })}
+                    </div>
+                )}
+
                 {/* ── Products table ────────────────────────────────────────── */}
-                {products.length > 0 && (
+                {!hasAttachments && products.length > 0 && (
                     <div
                         className="clickable-text"
                         style={{ overflow: 'hidden', borderRadius: '4px', border: `1px solid ${C.border}` }}
@@ -305,6 +332,35 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* ── Additional detail files (below products table) ────────── */}
+                {hasAdditionalAttachments && (
+                    <div style={{ margin: '12px 0' }}>
+                        {additionalAttachmentDataURIs.map((uri, i) => {
+                            const isPDF = uri.startsWith('data:application/pdf');
+                            const isImg = /^data:image\//i.test(uri);
+                            if (isPDF) {
+                                return (
+                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+                                        <iframe
+                                            src={uri}
+                                            title={`additional-attachment-${i + 1}`}
+                                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                                        />
+                                    </div>
+                                );
+                            }
+                            if (isImg) {
+                                return (
+                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden', textAlign: 'center' }}>
+                                        <img src={uri} alt={`additional-attachment-${i + 1}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }} />
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })}
                     </div>
                 )}
 

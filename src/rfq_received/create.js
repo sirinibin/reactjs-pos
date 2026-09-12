@@ -1,4 +1,5 @@
 import React, { useState, useImperativeHandle, forwardRef, useRef, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { Modal, Button, Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { highlightWords } from "../utils/search.js";
@@ -58,15 +59,19 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     // Selected products list
     const [products, setProducts] = useState([]);
 
-    // File upload
-    const [droppedFiles, setDroppedFiles]   = useState([]);
-    const [isDragOver, setIsDragOver]         = useState(false);
+    // File upload — two separate sections
+    const [productFiles, setProductFiles]         = useState([]);  // shown in place of products table
+    const [additionalFiles, setAdditionalFiles]   = useState([]);  // shown below products table
+    const [isDragOverProduct, setIsDragOverProduct]     = useState(false);
+    const [isDragOverAdditional, setIsDragOverAdditional] = useState(false);
     const [extracting, setExtracting]           = useState(false);
-    const [extractionDone, setExtractionDone]   = useState(false);
     const [extractionModel, setExtractionModel] = useState("");
     const [syncingProducts, setSyncingProducts] = useState(false);
-    const fileInputRef = useRef(null);
-    const dropZoneRef  = useRef(null);
+    const productFileInputRef    = useRef(null);
+    const additionalFileInputRef = useRef(null);
+    const productDropZoneRef     = useRef(null);
+    const additionalDropZoneRef  = useRef(null);
+
 
     // Sub-form refs
     const CustomerUpdateRef = useRef(null);
@@ -87,8 +92,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setProducts([]);
             setProductOptions([]);
             setOpenProductSearch(false);
-            setDroppedFiles([]);
-            setExtractionDone(false);
+            setProductFiles([]);
+            setAdditionalFiles([]);
             setExtractionModel("");
             setShow(true);
         },
@@ -122,8 +127,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             }
             setProductOptions([]);
             setOpenProductSearch(false);
-            setDroppedFiles([]);
-            setExtractionDone(false);
+            setProductFiles([]);
+            setAdditionalFiles([]);
             setExtractionModel("");
             setShow(true);
         },
@@ -312,24 +317,98 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         }).catch(() => {});
     }
 
-    // ── File drag & drop ─────────────────────────────────────────────────────
-    const addFiles = (incoming) => {
+    // ── File drag & drop — Products section ──────────────────────────────────
+    // Excel files → LLM extract → products table; other files → stored as-is
+
+    const extractExcelText = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+                const parts = wb.SheetNames.map(name => {
+                    const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name], { skipHidden: true });
+                    return `=== Sheet: ${name} ===\n${csv}`;
+                });
+                resolve(parts.join("\n\n"));
+            } catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+
+    const extractFromExcel = async (files) => {
+        setExtracting(true);
+        try {
+            const texts = [];
+            for (const file of files) {
+                const text = await extractExcelText(file).catch(() => null);
+                if (text) texts.push(`=== ${file.name} ===\n${text}`);
+            }
+            if (!texts.length) { showToastMessage && showToastMessage("Could not read Excel file", "danger"); return; }
+            const storeId = localStorage.getItem("store_id");
+            const token   = localStorage.getItem("access_token");
+            const fd = new FormData();
+            fd.append("text_content", texts.join("\n\n").slice(0, 12000));
+            const resp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
+                method: "POST", headers: { Authorization: token }, body: fd,
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) { showToastMessage && showToastMessage(data.error || "Excel extraction failed", "danger"); return; }
+            if (Array.isArray(data.products) && data.products.length > 0) {
+                const extracted = data.products.map(p => ({
+                    product_id: "", part_no: p.part_no || "", name: p.name || "",
+                    quantity: p.quantity || 1, unit: p.unit || "PCE",
+                }));
+                setProducts(extracted);
+                await autoSyncProducts(extracted);
+            }
+            if (data.llm_model) setExtractionModel(data.llm_model);
+            showToastMessage && showToastMessage("Products extracted from Excel — review and adjust.", "success");
+        } catch (err) {
+            showToastMessage && showToastMessage("Excel extraction error: " + err.message, "danger");
+        } finally { setExtracting(false); }
+    };
+
+    const addProductFiles = async (incoming) => {
+        const excelExts = new Set(["xlsx", "xls"]);
+        const allowed = Array.from(incoming).filter(f => {
+            const ext = f.name.split(".").pop().toLowerCase();
+            return ["jpg","jpeg","png","gif","webp","pdf","xlsx","xls","csv"].includes(ext);
+        });
+        if (!allowed.length) return;
+        const excelFiles = allowed.filter(f => excelExts.has(f.name.split(".").pop().toLowerCase()));
+        const otherFiles = allowed.filter(f => !excelExts.has(f.name.split(".").pop().toLowerCase()));
+        if (otherFiles.length > 0) {
+            setProductFiles(prev => {
+                const seen = new Set(prev.map(f => f.name + f.size));
+                return [...prev, ...otherFiles.filter(f => !seen.has(f.name + f.size))];
+            });
+        }
+        if (excelFiles.length > 0) await extractFromExcel(excelFiles);
+    };
+
+    const onProductDragOver  = e => { e.preventDefault(); setIsDragOverProduct(true); };
+    const onProductDragLeave = e => { if (!productDropZoneRef.current?.contains(e.relatedTarget)) setIsDragOverProduct(false); };
+    const onProductDrop      = e => { e.preventDefault(); setIsDragOverProduct(false); addProductFiles(e.dataTransfer.files); };
+    const removeProductFile  = i => setProductFiles(prev => prev.filter((_, idx) => idx !== i));
+
+    // ── File drag & drop — Additional Details section ─────────────────────────
+    const addAdditionalFiles = (incoming) => {
         const ok = Array.from(incoming).filter(f => {
             const ext = f.name.split(".").pop().toLowerCase();
             return ["jpg","jpeg","png","gif","webp","pdf","xlsx","xls","csv","txt"].includes(ext);
         });
         if (!ok.length) return;
-        setDroppedFiles(prev => {
+        setAdditionalFiles(prev => {
             const seen = new Set(prev.map(f => f.name + f.size));
             return [...prev, ...ok.filter(f => !seen.has(f.name + f.size))];
         });
-        setExtractionDone(false);
     };
 
-    const onDragOver  = e => { e.preventDefault(); setIsDragOver(true); };
-    const onDragLeave = e => { if (!dropZoneRef.current?.contains(e.relatedTarget)) setIsDragOver(false); };
-    const onDrop      = e => { e.preventDefault(); setIsDragOver(false); addFiles(e.dataTransfer.files); };
-    const removeFile  = i => setDroppedFiles(prev => prev.filter((_, idx) => idx !== i));
+    const onAdditionalDragOver  = e => { e.preventDefault(); setIsDragOverAdditional(true); };
+    const onAdditionalDragLeave = e => { if (!additionalDropZoneRef.current?.contains(e.relatedTarget)) setIsDragOverAdditional(false); };
+    const onAdditionalDrop      = e => { e.preventDefault(); setIsDragOverAdditional(false); addAdditionalFiles(e.dataTransfer.files); };
+    const removeAdditionalFile  = i => setAdditionalFiles(prev => prev.filter((_, idx) => idx !== i));
 
     // ── Core product DB sync (pure helper, no state side-effects) ───────────
     // For each product: find by part_no → find by name → create new.
@@ -418,19 +497,16 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         if (msgs.length > 0 && showToastMessage) showToastMessage("Products synced — " + msgs.join(", "), "success");
     }, [showToastMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── LLM extraction ───────────────────────────────────────────────────────
-    const handleExtract = async () => {
-        const hasFiles = droppedFiles.length > 0;
-        const hasText  = form.text_content.trim().length > 0;
-        if (!hasFiles && !hasText) return;
+    // ── LLM extraction from text only ────────────────────────────────────────
+    const handleExtractFromText = async () => {
+        const text = form.text_content.trim();
+        if (!text) return;
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
         setExtracting(true);
         try {
             const fd = new FormData();
-            droppedFiles.forEach(f => fd.append("files", f));
-            // Send text content when no files — backend now accepts text-only extraction
-            if (!hasFiles && hasText) fd.append("text_content", form.text_content.trim());
+            fd.append("text_content", text);
             const resp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
                 method: "POST", headers: { Authorization: token }, body: fd,
             });
@@ -441,25 +517,18 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             }
             if (data.customer_name) {
                 setSelectedCustomers([{ id: "", search_label: data.customer_name, name: data.customer_name, phone: data.customer_phone || "" }]);
-                setForm(f => ({ ...f, customer_id: "", customer_name: data.customer_name, text_content: data.text_content || f.text_content }));
+                setForm(f => ({ ...f, customer_id: "", customer_name: data.customer_name }));
             }
             if (Array.isArray(data.products) && data.products.length > 0) {
                 const extracted = data.products.map(p => ({
                     product_id: "", part_no: p.part_no || "", name: p.name || "",
                     quantity: p.quantity || 1, unit: p.unit || "PCE",
                 }));
-                setProducts(extracted); // Show immediately so user sees what was found
-                await autoSyncProducts(extracted); // Await so sync completes before Extract button re-enables
-            } else if (!hasFiles && form.text_content.trim()) {
-                // LLM returned no products — treat the text as a direct product name
-                const text = form.text_content.trim();
-                const directProduct = [{ product_id: "", part_no: "", name: text, quantity: 1, unit: "" }];
-                setProducts(directProduct);
-                await autoSyncProducts(directProduct);
+                setProducts(extracted);
+                await autoSyncProducts(extracted);
             }
             if (data.llm_model) setExtractionModel(data.llm_model);
-            showToastMessage && showToastMessage("Extraction complete — syncing products…", "success");
-            setExtractionDone(true);
+            showToastMessage && showToastMessage("Products extracted from text — review and adjust.", "success");
         } catch (err) {
             showToastMessage && showToastMessage("Network error: " + err.message, "danger");
         } finally {
@@ -467,73 +536,81 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         }
     };
 
+    // Convert File objects to base64 data URIs
+    const filesToDataURIs = async (files) => {
+        return Promise.all(files.map(file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        })));
+    };
+
     // ── Submit ───────────────────────────────────────────────────────────────
     const handleSubmit = async () => {
+        const storeId = localStorage.getItem("store_id");
+        const token   = localStorage.getItem("access_token");
+
+        let currentProducts = [...products];
+        let currentForm     = form;
+
+        // Validate: need product-files, products, or text
         const errs = {};
-        const hasProducts = products.some(p => p.name.trim() !== "");
-        if (!hasProducts && !form.text_content.trim()) {
-            errs.text_content = "Add at least one product or a text description.";
+        const hasProducts     = currentProducts.some(p => p.name && p.name.trim() !== "");
+        const hasProductFiles = productFiles.length > 0;
+        if (!hasProducts && !hasProductFiles && !currentForm.text_content.trim()) {
+            errs.text_content = "Add products, upload a file, or enter a description.";
         }
         setErrors(errs);
         if (Object.keys(errs).length > 0) return;
 
-        const storeId = localStorage.getItem("store_id");
-        const token   = localStorage.getItem("access_token");
         setSaving(true);
 
-        // ── Ensure all products exist in DB before saving ────────────────────
-        // Step 1: If no products in form but text is present, extract via LLM first.
-        let currentProducts = [...products];
-        if (!currentProducts.some(p => p.name && p.name.trim()) && form.text_content.trim()) {
-            let extracted = [];
-            try {
-                const fd = new FormData();
-                fd.append("text_content", form.text_content.trim());
-                const exResp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
-                    method: "POST", headers: { Authorization: token }, body: fd,
-                });
-                const exData = exResp.ok ? await exResp.json() : {};
-                if (Array.isArray(exData.products) && exData.products.length > 0) extracted = exData.products;
-                if (exData.llm_model) setExtractionModel(exData.llm_model);
-            } catch (e) { console.error('Pre-save extract error:', e); }
-
-            // Fallback: if LLM returned nothing (or extract failed), use the text itself as a product name
-            if (extracted.length === 0) extracted = [{ part_no: "", name: form.text_content.trim(), quantity: 1, unit: "" }];
-            currentProducts = extracted.map(p => ({ product_id: "", part_no: p.part_no || "", name: p.name || "", quantity: p.quantity || 1, unit: p.unit || "" }));
-            setProducts(currentProducts); // show in form immediately
+        // Convert both file arrays to base64 data URIs
+        let attachmentDataURIs = [];
+        let additionalAttachmentDataURIs = [];
+        if (hasProductFiles) {
+            try { attachmentDataURIs = await filesToDataURIs(productFiles); } catch (e) { console.error('File encode error:', e); }
+        }
+        if (additionalFiles.length > 0) {
+            try { additionalAttachmentDataURIs = await filesToDataURIs(additionalFiles); } catch (e) { console.error('Additional file encode error:', e); }
         }
 
-        // Step 2: Sync every product that lacks a product_id to the products DB.
-        const needsSync = currentProducts.some(p => p.name && p.name.trim() && !p.product_id);
-        if (needsSync) {
-            showToastMessage && showToastMessage(`Saving ${currentProducts.filter(p => p.name && p.name.trim() && !p.product_id).length} product(s) to DB…`, "info");
-            try {
-                setSyncingProducts(true);
-                currentProducts = await syncProductListToDB(currentProducts, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
-                setSyncingProducts(false);
-                setProducts(currentProducts);
-                const created = currentProducts.filter(p => p.product_id).length;
-                showToastMessage && showToastMessage(`${created} product(s) saved to DB ✓`, "success");
-            } catch (e) {
-                setSyncingProducts(false);
-                console.error('Pre-save sync error:', e);
-                showToastMessage && showToastMessage("Product sync error: " + e.message, "danger");
+        // Sync products to DB if no product-files are attached (files replace products table)
+        if (!hasProductFiles) {
+            const needsSync = currentProducts.some(p => p.name && p.name.trim() && !p.product_id);
+            if (needsSync) {
+                showToastMessage && showToastMessage(`Saving ${currentProducts.filter(p => p.name && p.name.trim() && !p.product_id).length} product(s) to DB…`, "info");
+                try {
+                    setSyncingProducts(true);
+                    currentProducts = await syncProductListToDB(currentProducts, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
+                    setSyncingProducts(false);
+                    setProducts(currentProducts);
+                    const created = currentProducts.filter(p => p.product_id).length;
+                    showToastMessage && showToastMessage(`${created} product(s) saved to DB ✓`, "success");
+                } catch (e) {
+                    setSyncingProducts(false);
+                    console.error('Pre-save sync error:', e);
+                    showToastMessage && showToastMessage("Product sync error: " + e.message, "danger");
+                }
             }
         }
-        // ────────────────────────────────────────────────────────────────────
 
         try {
-            const customerName = form.customer_name || (selectedCustomers[0]?.name) || "UNKNOWN";
+            const customerName = currentForm.customer_name || (selectedCustomers[0]?.name) || "UNKNOWN";
             const payload = {
-                customer_id:      form.customer_id || undefined,
-                customer_name:    customerName,
-                customer_phone:   form.customer_phone || selectedCustomers[0]?.phone || "",
-                customer_email:   form.customer_email || selectedCustomers[0]?.email || "",
-                customer_company: selectedCustomers[0]?.company || "",
-                customer_rfq_id:  form.customer_rfq_id || undefined,
-                text_content:     form.text_content,
-                extraction_model: extractionModel || undefined,
-                products:         currentProducts.map(p => ({
+                customer_id:           currentForm.customer_id || undefined,
+                customer_name:         customerName,
+                customer_phone:        currentForm.customer_phone || selectedCustomers[0]?.phone || "",
+                customer_email:        currentForm.customer_email || selectedCustomers[0]?.email || "",
+                customer_company:      selectedCustomers[0]?.company || "",
+                customer_rfq_id:       currentForm.customer_rfq_id || undefined,
+                text_content:          currentForm.text_content,
+                extraction_model:      extractionModel || undefined,
+                attachment_data_uris:             attachmentDataURIs.length > 0 ? attachmentDataURIs : undefined,
+                additional_attachment_data_uris: additionalAttachmentDataURIs.length > 0 ? additionalAttachmentDataURIs : undefined,
+                // When product-files are uploaded, skip products table — files shown in preview instead
+                products: hasProductFiles ? [] : currentProducts.map(p => ({
                     product_id: p.product_id || undefined,
                     part_no:    p.part_no,
                     name:       p.name,
@@ -763,10 +840,19 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                                 Syncing products…
                             </span>
                         )}
-                        <button type="button" className="btn btn-outline-secondary btn-sm ms-auto"
-                            onClick={() => ProductCreateRef.current?.open()}>
-                            <i className="bi bi-plus-lg"></i> New Product
-                        </button>
+                        {openProductSearch && (
+                            <Button variant="success" size="sm" style={{ marginLeft: "auto", marginRight: "4px" }}
+                                onMouseDown={e => e.preventDefault()}
+                                onClick={() => { setOpenProductSearch(false); productRef.current?.clear(); }}>
+                                <i className="bi bi-check2 me-1"></i>Done
+                            </Button>
+                        )}
+                        {!openProductSearch && (
+                            <button type="button" className="btn btn-outline-secondary btn-sm ms-auto"
+                                onClick={() => ProductCreateRef.current?.open()}>
+                                <i className="bi bi-plus-lg"></i> New Product
+                            </button>
+                        )}
                     </div>
                     <Typeahead
                         id="rfq-product-search"
@@ -923,85 +1009,140 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     </table>
                 ) : (
                     <div className="text-center text-muted py-2 mb-3" style={{ fontSize: "13px", border: "1px dashed #dee2e6", borderRadius: "4px" }}>
-                        Search and select products above, or describe the requirement below, or extract from uploaded files.
+                        Search and select products above, or describe the requirement in the text field below and click "Extract from Text".
                     </div>
                 )}
 
                 {/* ── Additional description ────────────────────────────────── */}
                 <div className="mb-3">
-                    <label className="form-label fw-semibold">Additional Description / Enquiry Text</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                        <label className="form-label fw-semibold mb-0">Additional Description / Enquiry Text</label>
+                        <Button variant="outline-primary" size="sm" style={{ marginLeft: "auto" }}
+                            disabled={!form.text_content.trim() || extracting}
+                            onClick={handleExtractFromText}>
+                            {extracting
+                                ? <><Spinner animation="border" size="sm" className="me-1" />Extracting…</>
+                                : <><i className="bi bi-magic me-1"></i>Extract Products from Text</>}
+                        </Button>
+                    </div>
                     <textarea
                         className={`form-control ${errors.text_content ? "is-invalid" : ""}`}
                         rows={3}
                         value={form.text_content}
                         onChange={e => { setForm(f => ({ ...f, text_content: e.target.value })); setErrors(er => ({ ...er, text_content: "" })); }}
-                        placeholder="Paste the original enquiry text or add any extra notes…"
+                        placeholder="Paste the original enquiry text — click 'Extract Products from Text' to auto-populate the products table…"
                     />
                     {errors.text_content && <div className="invalid-feedback">{errors.text_content}</div>}
                 </div>
 
-                {/* ── File upload (bottom) ──────────────────────────────────── */}
-                <div
-                    ref={dropZoneRef}
-                    onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
-                    style={{
-                        border: `2px dashed ${isDragOver ? "#2563eb" : "#94a3b8"}`,
-                        borderRadius: "8px", padding: "12px 16px",
-                        background: isDragOver ? "#eff6ff" : "#f8fafc",
-                        transition: "all 0.15s",
-                    }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            {droppedFiles.length === 0 ? (
-                                <div className="text-center text-muted" style={{ padding: "4px 0" }}>
-                                    <i className="bi bi-cloud-upload" style={{ fontSize: "22px", color: "#94a3b8", display: "block", marginBottom: "3px" }}></i>
-                                    <span style={{ fontSize: "12px" }}>
-                                        Drop files here to extract products & customer info with AI, or{" "}
-                                        <span style={{ color: "#2563eb", cursor: "pointer", textDecoration: "underline" }} onClick={() => fileInputRef.current?.click()}>browse</span>
-                                    </span>
-                                    <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>Images, PDFs, Excel, CSV, Text</div>
-                                </div>
-                            ) : (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-                                    {droppedFiles.map((f, i) => {
-                                        const { icon, color } = fileIcon(f.name);
-                                        return (
-                                            <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e2e8f0", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
-                                                <i className={`bi ${icon}`} style={{ color, fontSize: "14px" }}></i>
-                                                <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.name}>{f.name}</span>
-                                                <span style={{ color: "#94a3b8" }}>({fmtSize(f.size)})</span>
-                                                <button type="button" style={{ border: "none", background: "none", color: "#94a3b8", cursor: "pointer", padding: 0 }} onClick={() => removeFile(i)}>
-                                                    <i className="bi bi-x"></i>
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                    <button type="button"
-                                        style={{ border: "1px dashed #94a3b8", background: "none", borderRadius: "5px", padding: "3px 8px", fontSize: "12px", color: "#64748b", cursor: "pointer" }}
-                                        onClick={() => fileInputRef.current?.click()}>
-                                        <i className="bi bi-plus me-1"></i>Add more
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        {droppedFiles.length > 0 && (
-                            <Button variant={extractionDone ? "outline-success" : "primary"} size="sm"
-                                onClick={handleExtract} disabled={extracting} style={{ flexShrink: 0, minWidth: "130px" }}>
-                                {extracting
-                                    ? <><Spinner animation="border" size="sm" className="me-2" />Extracting…</>
-                                    : extractionDone
-                                        ? <><i className="bi bi-check2 me-1"></i>Re-extract</>
-                                        : <><i className="bi bi-magic me-1"></i>Extract with AI</>}
-                            </Button>
+                {/* ── Products file upload (shown in place of products table) ── */}
+                <div className="mb-2">
+                    <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 600 }}>
+                        <i className="bi bi-file-earmark-arrow-up me-1 text-primary"></i>Products
+                        <span className="text-muted ms-2" style={{ fontSize: "11px", fontWeight: 400 }}>
+                            Excel → products extracted automatically · PDF/Image/CSV → shown as-is in place of products table
+                        </span>
+                    </label>
+                    <div
+                        ref={productDropZoneRef}
+                        onDragOver={onProductDragOver} onDragLeave={onProductDragLeave} onDrop={onProductDrop}
+                        style={{
+                            border: `2px dashed ${isDragOverProduct ? "#2563eb" : "#94a3b8"}`,
+                            borderRadius: "8px", padding: "10px 14px",
+                            background: isDragOverProduct ? "#eff6ff" : "#f8fafc",
+                            transition: "all 0.15s",
+                        }}>
+                        {extracting && (
+                            <div className="text-center text-muted py-1" style={{ fontSize: "13px" }}>
+                                <Spinner animation="border" size="sm" className="me-2" />Extracting products from Excel…
+                            </div>
+                        )}
+                        {!extracting && productFiles.length === 0 ? (
+                            <div className="text-center text-muted" style={{ padding: "4px 0" }}>
+                                <i className="bi bi-table" style={{ fontSize: "20px", color: "#94a3b8", display: "block", marginBottom: "3px" }}></i>
+                                <span style={{ fontSize: "12px" }}>
+                                    Drop PDF, image, or Excel here, or{" "}
+                                    <span style={{ color: "#2563eb", cursor: "pointer", textDecoration: "underline" }} onClick={() => productFileInputRef.current?.click()}>browse</span>
+                                </span>
+                            </div>
+                        ) : !extracting && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+                                {productFiles.map((f, i) => {
+                                    const { icon, color } = fileIcon(f.name);
+                                    return (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e2e8f0", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
+                                            <i className={`bi ${icon}`} style={{ color, fontSize: "14px" }}></i>
+                                            <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.name}>{f.name}</span>
+                                            <span style={{ color: "#94a3b8" }}>({fmtSize(f.size)})</span>
+                                            <button type="button" style={{ border: "none", background: "none", color: "#94a3b8", cursor: "pointer", padding: 0 }} onClick={() => removeProductFile(i)}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                                <button type="button"
+                                    style={{ border: "1px dashed #94a3b8", background: "none", borderRadius: "5px", padding: "3px 8px", fontSize: "12px", color: "#64748b", cursor: "pointer" }}
+                                    onClick={() => productFileInputRef.current?.click()}>
+                                    <i className="bi bi-plus me-1"></i>Add more
+                                </button>
+                            </div>
                         )}
                     </div>
+                    <input ref={productFileInputRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv" multiple style={{ display: "none" }}
+                        onChange={e => { addProductFiles(e.target.files); e.target.value = ""; }} />
                 </div>
-                <input ref={fileInputRef} type="file" accept={ACCEPTED_TYPES} multiple style={{ display: "none" }} onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
-                {extractionDone && (
-                    <div className="alert alert-success py-1 mt-2 mb-0" style={{ fontSize: "12px" }}>
-                        <i className="bi bi-magic me-2"></i>Fields auto-filled from uploaded files. Review and adjust before creating the RFQ.
+
+                {/* ── Additional Details file upload (shown below products table) ── */}
+                <div>
+                    <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 600 }}>
+                        <i className="bi bi-paperclip me-1 text-secondary"></i>Additional Details
+                        <span className="text-muted ms-2" style={{ fontSize: "11px", fontWeight: 400 }}>
+                            Any files — shown below the products table in the RFQ preview &amp; PDF
+                        </span>
+                    </label>
+                    <div
+                        ref={additionalDropZoneRef}
+                        onDragOver={onAdditionalDragOver} onDragLeave={onAdditionalDragLeave} onDrop={onAdditionalDrop}
+                        style={{
+                            border: `2px dashed ${isDragOverAdditional ? "#2563eb" : "#94a3b8"}`,
+                            borderRadius: "8px", padding: "10px 14px",
+                            background: isDragOverAdditional ? "#eff6ff" : "#f8fafc",
+                            transition: "all 0.15s",
+                        }}>
+                        {additionalFiles.length === 0 ? (
+                            <div className="text-center text-muted" style={{ padding: "4px 0" }}>
+                                <i className="bi bi-paperclip" style={{ fontSize: "20px", color: "#94a3b8", display: "block", marginBottom: "3px" }}></i>
+                                <span style={{ fontSize: "12px" }}>
+                                    Drop files here, or{" "}
+                                    <span style={{ color: "#2563eb", cursor: "pointer", textDecoration: "underline" }} onClick={() => additionalFileInputRef.current?.click()}>browse</span>
+                                </span>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+                                {additionalFiles.map((f, i) => {
+                                    const { icon, color } = fileIcon(f.name);
+                                    return (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e2e8f0", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
+                                            <i className={`bi ${icon}`} style={{ color, fontSize: "14px" }}></i>
+                                            <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.name}>{f.name}</span>
+                                            <span style={{ color: "#94a3b8" }}>({fmtSize(f.size)})</span>
+                                            <button type="button" style={{ border: "none", background: "none", color: "#94a3b8", cursor: "pointer", padding: 0 }} onClick={() => removeAdditionalFile(i)}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                                <button type="button"
+                                    style={{ border: "1px dashed #94a3b8", background: "none", borderRadius: "5px", padding: "3px 8px", fontSize: "12px", color: "#64748b", cursor: "pointer" }}
+                                    onClick={() => additionalFileInputRef.current?.click()}>
+                                    <i className="bi bi-plus me-1"></i>Add more
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+                    <input ref={additionalFileInputRef} type="file" accept={ACCEPTED_TYPES} multiple style={{ display: "none" }}
+                        onChange={e => { addAdditionalFiles(e.target.files); e.target.value = ""; }} />
+                </div>
 
             </Modal.Body>
             <Modal.Footer style={{ padding: "8px 16px" }}>

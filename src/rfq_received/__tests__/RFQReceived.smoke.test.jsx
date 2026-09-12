@@ -26,6 +26,11 @@ jest.mock('react-i18next', () => {
     return { useTranslation: () => ({ t: mockT }) };
 });
 
+jest.mock('react-router-dom', () => ({
+    useHistory:  () => ({ push: jest.fn() }),
+    useLocation: () => ({ pathname: '/', search: '', hash: '', state: undefined }),
+}));
+
 jest.useFakeTimers();
 
 jest.mock('react-bootstrap', () => {
@@ -52,7 +57,9 @@ const MOCK_RFQ_WITH_CATEGORY = {
     id: 'rfq-001',
     received_at: NOW,
     from_phone: '966501234567',
+    customer_phone: '966501234567',
     from_name: 'Test Buyer',
+    customer_name: 'Test Buyer',
     message_type: 'text',
     text_content: 'I need 50 steel pipes',
     categories: ['Steel Pipes'],
@@ -73,6 +80,7 @@ const MOCK_RFQ_LIST = {
             id: 'rfq-002',
             received_at: NOW,
             from_phone: '966502000000',
+            customer_phone: '966502000000',
             message_type: 'image',
             categories: [],
             status: 'failed',
@@ -82,6 +90,7 @@ const MOCK_RFQ_LIST = {
             id: 'rfq-003',
             received_at: NOW,
             from_phone: '966503000000',
+            customer_phone: '966503000000',
             message_type: 'text',
             categories: [],
             status: 'received',
