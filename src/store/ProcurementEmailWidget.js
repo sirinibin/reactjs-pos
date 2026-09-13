@@ -61,9 +61,9 @@ const PROVIDERS = [
         setupUrl: 'https://api-console.zoho.com/',
         setupUrlLabel: 'Zoho API Console',
         setupSteps: (cb) => [
-            'Go to api-console.zoho.com → Add Client → Server-based Applications',
+            'Go to api-console.zoho.com (India: api-console.zoho.in) → Add Client → Server-based Applications',
             'Set Authorized Redirect URI: ' + cb,
-            'Set Scope: ZohoMail.messages.READ, ZohoMail.folders.READ, ZohoMail.accounts.READ',
+            'Set Scope: ZohoMail.messages.READ, ZohoMail.folders.READ, ZohoMail.accounts.READ, ZohoMail.attachments.ALL',
             'Copy Client ID and Client Secret below',
         ],
         fields: [
@@ -468,13 +468,66 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
 
 // ── Single connected account card ─────────────────────────────────────────────
 
-function AccountCard({ account, storeId, onRemoved }) {
+function AccountCard({ account, storeId, onRemoved, onSaved }) {
     const { t } = useTranslation('common');
     const [removing, setRemoving] = useState(false);
     const [showWebhook, setShowWebhook] = useState(false);
+    const [showIMAP, setShowIMAP] = useState(false);
+    const [imapFields, setImapFields] = useState({
+        imap_host: account.imap_host || (account.provider === 'zoho' ? 'imappro.zoho.in' : ''),
+        imap_port: account.imap_port || 993,
+        imap_username: account.imap_username || account.email || '',
+        imap_use_ssl: account.imap_use_ssl !== false,
+        imap_password: '',
+    });
+    const [savingIMAP, setSavingIMAP] = useState(false);
+    const [testingIMAP, setTestingIMAP] = useState(false);
+    const [imapTestResult, setImapTestResult] = useState(null); // {ok, message}
+    const token = localStorage.getItem('access_token');
     const meta = PROVIDER_META[account.provider] || { icon: 'bi-envelope', iconColor: '#6c757d', label: account.provider };
     const isWebhook = meta && WEBHOOK_TYPES.has(meta.type);
     const webhookUrl = isWebhook ? webhookURLForAccount(storeId, account.id) : null;
+    const isZoho = account.provider === 'zoho';
+
+    const handleSaveIMAP = async () => {
+        setSavingIMAP(true);
+        setImapTestResult(null);
+        const payload = { ...imapFields, imap_port: parseInt(imapFields.imap_port, 10) || 993 };
+        try {
+            const res = await fetch(`/v1/rfq-email/account/${account.id}/settings?store_id=${storeId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify(payload),
+            });
+            if (res.ok) {
+                setImapTestResult({ ok: true, message: 'IMAP settings saved.' });
+                setImapFields(f => ({ ...f, imap_password: '' }));
+                if (onSaved) onSaved({ ...account, ...payload, imap_password: undefined });
+            } else {
+                const data = await res.json().catch(() => ({}));
+                setImapTestResult({ ok: false, message: data.error || 'Failed to save settings.' });
+            }
+        } catch (e) {
+            setImapTestResult({ ok: false, message: 'Network error: ' + String(e) });
+        }
+        setSavingIMAP(false);
+    };
+
+    const handleTestIMAP = async () => {
+        setTestingIMAP(true);
+        setImapTestResult(null);
+        try {
+            const res = await fetch(`/v1/rfq-email/account/${account.id}/test-imap?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            setImapTestResult({ ok: res.ok, message: data.message || data.error || 'Unknown result' });
+        } catch (e) {
+            setImapTestResult({ ok: false, message: String(e) });
+        }
+        setTestingIMAP(false);
+    };
 
     const handleDisconnect = async () => {
         setRemoving(true);
@@ -503,6 +556,11 @@ function AccountCard({ account, storeId, onRemoved }) {
                         <i className="bi bi-link-45deg me-1"></i>{t('Webhook URL')}
                     </button>
                 )}
+                {isZoho && (
+                    <button type="button" className="btn btn-link btn-sm p-0 ms-1" style={{ fontSize: '12px' }} onClick={() => setShowIMAP(v => !v)}>
+                        <i className="bi bi-server me-1"></i>{t('IMAP Settings')}
+                    </button>
+                )}
                 <button type="button" className="btn btn-sm btn-outline-danger ms-auto" onClick={handleDisconnect} disabled={removing}>
                     {removing ? <Spinner animation="border" size="sm" /> : <><i className="bi bi-x-circle me-1"></i>{t('Disconnect')}</>}
                 </button>
@@ -515,6 +573,60 @@ function AccountCard({ account, storeId, onRemoved }) {
                         <button type="button" className="btn btn-sm btn-outline-secondary py-0" style={{ fontSize: '11px' }} onClick={() => navigator.clipboard?.writeText(webhookUrl)}>
                             <i className="bi bi-clipboard me-1"></i>{t('Copy')}
                         </button>
+                    </div>
+                </div>
+            )}
+            {isZoho && showIMAP && (
+                <div className="mt-2 p-2" style={{ background: '#f0f4ff', borderRadius: '4px', border: '1px solid #c5d3f5' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#3b4cc0', marginBottom: '4px' }}>
+                        <i className="bi bi-server me-1"></i>{t('IMAP Configuration')}
+                    </div>
+                    <div className="text-muted mb-2" style={{ fontSize: '11px' }}>
+                        {t('Used for automatic attachment fetching. Steps to enable:')}
+                        <ol className="mb-1 mt-1" style={{ paddingLeft: '16px' }}>
+                            <li>{t('Enable IMAP Access: Zoho Mail → Settings → Mail Accounts → IMAP → IMAP Access: On')}</li>
+                            <li>
+                                {t('Get your password: use your Zoho account password, or if 2FA is enabled, generate an App Password at ')}
+                                <strong>Zoho Account → Security → App Passwords → Generate</strong>
+                                {t(' (select "Other App", name it "StartPOS IMAP")')}
+                            </li>
+                        </ol>
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-md-5">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('IMAP Host')}</label>
+                            <input className="form-control form-control-sm" value={imapFields.imap_host} placeholder="imappro.zoho.in" onChange={e => setImapFields(f => ({ ...f, imap_host: e.target.value }))} />
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Port')}</label>
+                            <input className="form-control form-control-sm" type="number" value={imapFields.imap_port} onChange={e => setImapFields(f => ({ ...f, imap_port: e.target.value }))} />
+                        </div>
+                        <div className="col-md-5">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Username (Email)')}</label>
+                            <input className="form-control form-control-sm" value={imapFields.imap_username} placeholder="info@yourdomain.com" onChange={e => setImapFields(f => ({ ...f, imap_username: e.target.value }))} />
+                        </div>
+                        <div className="col-md-7">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Password')}</label>
+                            <input className="form-control form-control-sm" type="password" autoComplete="new-password" value={imapFields.imap_password} placeholder={t('(leave blank to keep current)')} onChange={e => setImapFields(f => ({ ...f, imap_password: e.target.value }))} />
+                        </div>
+                        <div className="col-12 d-flex align-items-center gap-2 flex-wrap">
+                            <div className="form-check mb-0">
+                                <input className="form-check-input" type="checkbox" id={`imap-ssl-${account.id}`} checked={imapFields.imap_use_ssl} onChange={e => setImapFields(f => ({ ...f, imap_use_ssl: e.target.checked }))} />
+                                <label className="form-check-label" htmlFor={`imap-ssl-${account.id}`} style={{ fontSize: '12px' }}>{t('Use SSL')}</label>
+                            </div>
+                            <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveIMAP} disabled={savingIMAP}>
+                                {savingIMAP ? <Spinner animation="border" size="sm" /> : <><i className="bi bi-floppy me-1"></i>{t('Save')}</>}
+                            </button>
+                            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={handleTestIMAP} disabled={testingIMAP}>
+                                {testingIMAP ? <Spinner animation="border" size="sm" /> : <><i className="bi bi-plug me-1"></i>{t('Test Connection')}</>}
+                            </button>
+                            {imapTestResult && (
+                                <span style={{ fontSize: '12px', color: imapTestResult.ok ? '#198754' : '#dc3545', fontWeight: 500 }}>
+                                    <i className={`bi ${imapTestResult.ok ? 'bi-check-circle' : 'bi-x-circle'} me-1`}></i>
+                                    {imapTestResult.message}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -556,6 +668,10 @@ function ProcurementEmailWidget({ storeId, settings, onSettingsChange }) {
             onSettingsChange({ rfq_email_connected: true });
         }
     }, [onSettingsChange]);
+
+    const handleAccountSaved = useCallback((updatedAccount) => {
+        setAccounts(prev => prev.map(a => a.id === updatedAccount.id ? { ...a, ...updatedAccount } : a));
+    }, []);
 
     const handleRemoved = useCallback((accountId) => {
         setAccounts(prev => {
@@ -606,6 +722,7 @@ function ProcurementEmailWidget({ storeId, settings, onSettingsChange }) {
                     account={acct}
                     storeId={storeId}
                     onRemoved={handleRemoved}
+                    onSaved={handleAccountSaved}
                 />
             ))}
 
