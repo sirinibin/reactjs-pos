@@ -406,7 +406,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                                 {t('No RFQ ID in document — auto-matched by supplier phone:')}{' '}
                                                 <strong>{result.suggested_rfq_code}</strong>
                                                 <div className="mt-2 d-flex gap-2 flex-wrap">
-                                                    <a href={`/rfq_received/edit/${result.suggested_rfq_id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }}>
+                                                    <a href={`/dashboard/rfq-received?edit=${result.suggested_rfq_id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }}>
                                                         <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')} {result.suggested_rfq_code}
                                                     </a>
                                                 </div>
@@ -510,7 +510,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                             <div className="mt-3 d-flex align-items-center gap-2 p-2" style={{ background: '#d1e7dd', border: '1px solid #a3cfbb', borderRadius: '6px', fontSize: '12px' }}>
                                                 <i className="bi bi-check-circle-fill text-success"></i>
                                                 <span>{t('Prices saved to')} <strong>{selectedRFQ.code}</strong></span>
-                                                <a href={`/rfq_received/edit/${selectedRFQ.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success ms-2" style={{ fontSize: '11px' }}>
+                                                <a href={`/dashboard/rfq-received?edit=${selectedRFQ.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success ms-2" style={{ fontSize: '11px' }}>
                                                     <i className="bi bi-box-arrow-up-right me-1"></i>{t('View RFQ')}
                                                 </a>
                                                 <button className="btn btn-sm btn-link text-muted ms-auto" style={{ fontSize: '11px' }} onClick={() => setAddPhase(null)}>{t('Dismiss')}</button>

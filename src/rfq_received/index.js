@@ -2054,6 +2054,19 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         }
     }, [location.search, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Auto-open edit form when ?edit= is in URL (e.g. "View RFQ" from Extract Quotation Prices modal)
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const editId = params.get('edit');
+        if (editId && storeId && token) {
+            history.replace('/dashboard/rfq-received');
+            fetch(`/v1/rfq-received/${editId}?store_id=${storeId}`, { headers: { Authorization: token } })
+                .then(r => r.json())
+                .then(d => { if (d && !d.error) rfqCreateRef.current?.edit(d); })
+                .catch(() => {});
+        }
+    }, [location.search, storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Realtime updates via SSE
     useEffect(() => {
         if (!storeId) return;
