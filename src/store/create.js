@@ -2,6 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, u
 import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
+import { AI_PROVIDERS } from '../utils/aiProviders.js';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
 import ProcurementEmailWidget from './ProcurementEmailWidget';
 import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
@@ -1161,8 +1162,12 @@ const StoreCreate = forwardRef((props, ref) => {
     //const [selectedCountry, setSelectedCountry] = useState('')
     let [selectedCountries, setSelectedCountries] = useState([]);
     const [newMarket, setNewMarket] = React.useState('');
+    const [newEmailKeyword, setNewEmailKeyword] = React.useState('');
     const [waCheck, setWaCheck] = React.useState({ status: 'idle', name: '', error: '' }); // idle|checking|valid|invalid
     const [populateVendors, setPopulateVendors] = React.useState({ running: false, percent: 0, message: '', done: false });
+    const [extractTest, setExtractTest] = React.useState({
+        provider: '', model: '', text: '', files: [], loading: false, result: null, error: '',
+    });
 
     const countrySearchRef = useRef();
 
@@ -1175,6 +1180,7 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
         { id: 'procurement', label: 'Procurement', icon: 'bi-robot' },
+        { id: 'ai_models', label: 'AI Models', icon: 'bi-cpu' },
         { id: 'designs', label: 'Designs', icon: 'bi-palette' },
         { id: 'logo', label: 'Logo', icon: 'bi-image-fill' },
         { id: 'invoice_background', label: 'Invoice BG Image', icon: 'bi-image' },
@@ -7001,6 +7007,135 @@ const StoreCreate = forwardRef((props, ref) => {
                                             useWABA={true}
                                         />
 
+                                        {/* ── Meta Webhook Setup Instructions ── */}
+                                        {formData.id && (
+                                            <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '14px 16px', marginTop: '16px', fontSize: '12px' }}>
+                                                <div style={{ fontWeight: 700, marginBottom: '8px', fontSize: '13px' }}>
+                                                    <i className="bi bi-info-circle-fill text-warning me-2"></i>
+                                                    {t('Required: Configure Meta Webhook to receive WhatsApp messages')}
+                                                </div>
+
+                                                {/* ── Critical: App must be published ── */}
+                                                <div style={{ background: '#fdecea', border: '1px solid #f5c6cb', borderRadius: '6px', padding: '10px 12px', marginBottom: '10px', lineHeight: '1.6' }}>
+                                                    <strong><i className="bi bi-exclamation-octagon-fill text-danger me-1"></i>{t('Critical: Your Meta app must be Published')}</strong>
+                                                    <div style={{ marginTop: '4px', color: '#721c24' }}>
+                                                        {t('Unpublished apps only receive test webhooks sent from the Meta dashboard — real WhatsApp messages from any phone are blocked by Meta until you publish the app.')}{' '}
+                                                        {t('The "Send to server" test button works because it is a direct HTTP call and bypasses this restriction.')}
+                                                    </div>
+                                                    <div style={{ marginTop: '6px' }}>
+                                                        {t('To publish:')}{' '}
+                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
+                                                            {t('Open your app')}
+                                                        </a>{' '}
+                                                        → <strong>{t('Use cases → Connect on WhatsApp → Step 3: Business verification')}</strong>{' '}
+                                                        → {t('complete business verification → then click')} <strong>{t('"Publish your app"')}</strong>.{' '}
+                                                        {t('Verification usually takes 1–3 business days.')}
+                                                    </div>
+                                                </div>
+
+                                                <p style={{ marginBottom: '8px', color: '#555' }}>
+                                                    {t('After publishing, configure the webhook so Meta knows where to send messages:')}
+                                                </p>
+                                                <ol style={{ paddingLeft: '18px', marginBottom: '10px', color: '#333', lineHeight: '1.8' }}>
+                                                    <li>
+                                                        {t('Go to')}{' '}
+                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
+                                                            developers.facebook.com/apps
+                                                        </a>{' '}
+                                                        → {t('select your app')}
+                                                    </li>
+                                                    <li>
+                                                        {t('Left menu')} →{' '}
+                                                        <strong>WhatsApp</strong> →{' '}
+                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
+                                                            <strong>Configuration</strong>
+                                                        </a>
+                                                    </li>
+                                                    <li>{t('Under "Webhook", click')} <strong>{t('Edit')}</strong></li>
+                                                    <li>
+                                                        {t('Set')} <strong>{t('Callback URL')}</strong> {t('to:')}<br />
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px', wordBreak: 'break-all', fontSize: '11px' }}>
+                                                            {window.location.origin}/v1/rfq-bot/webhook?store_id={formData.id}
+                                                        </code>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-secondary ms-2"
+                                                            style={{ fontSize: '10px', padding: '0 6px' }}
+                                                            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/v1/rfq-bot/webhook?store_id=${formData.id}`)}
+                                                        >
+                                                            <i className="bi bi-clipboard"></i> {t('Copy')}
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        {t('Set')} <strong>{t('Verify Token')}</strong> {t('to:')}{' '}
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>startpos-rfq-verify</code>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-secondary ms-2"
+                                                            style={{ fontSize: '10px', padding: '0 6px' }}
+                                                            onClick={() => navigator.clipboard.writeText('startpos-rfq-verify')}
+                                                        >
+                                                            <i className="bi bi-clipboard"></i> {t('Copy')}
+                                                        </button>
+                                                    </li>
+                                                    <li>{t('Click')} <strong>{t('Verify and Save')}</strong></li>
+                                                    <li>
+                                                        {t('Under "Webhook fields", click')} <strong>{t('Manage')}</strong>{' '}
+                                                        → {t('find')} <strong>messages</strong> → {t('click')} <strong>{t('Subscribe')}</strong>
+                                                    </li>
+                                                    <li>
+                                                        <strong>{t('Subscribe your app to your WhatsApp Business Account (WABA)')}</strong>
+                                                        {' — '}{t('this is required for real messages; the dashboard "Send to server" test bypasses it.')}
+                                                        <div style={{ marginTop: '6px', background: '#f0f4ff', border: '1px solid #c7d2fe', borderRadius: '6px', padding: '10px', fontSize: '11px', lineHeight: '1.7' }}>
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <strong>Option A — via Graph API Explorer (easiest):</strong>
+                                                            </div>
+                                                            <ol style={{ paddingLeft: '16px', marginBottom: '6px' }} type="a">
+                                                                <li>
+                                                                    {t('Open')}{' '}
+                                                                    <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noreferrer">
+                                                                        Graph API Explorer
+                                                                    </a>
+                                                                </li>
+                                                                <li>{t('Select your App from the top-right dropdown')}</li>
+                                                                <li>{t('Set method to')} <strong>POST</strong></li>
+                                                                <li>
+                                                                    {t('Enter endpoint:')}{' '}
+                                                                    <code style={{ background: '#fff', padding: '1px 5px', borderRadius: '3px' }}>
+                                                                        /{'{'}WABA_ID{'}'}/subscribed_apps
+                                                                    </code>
+                                                                    {' '}{t('(replace with your WABA ID from the field below)')}
+                                                                </li>
+                                                                <li>{t('Click')} <strong>Submit</strong> — {t('you should get')} <code>{"{ \"success\": true }"}</code></li>
+                                                            </ol>
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <strong>Option B — via Meta Business Manager:</strong>
+                                                            </div>
+                                                            <ol style={{ paddingLeft: '16px', marginBottom: '0' }} type="a">
+                                                                <li>
+                                                                    {t('Go to')}{' '}
+                                                                    <a href="https://business.facebook.com/settings/whatsapp-business-accounts" target="_blank" rel="noreferrer">
+                                                                        Meta Business Manager → WhatsApp Accounts
+                                                                    </a>
+                                                                </li>
+                                                                <li>{t('Click your WABA → go to')} <strong>{t('Settings')}</strong> → <strong>{t('App Subscriptions')}</strong></li>
+                                                                <li>{t('Add your app if not already listed')}</li>
+                                                            </ol>
+                                                        </div>
+                                                    </li>
+                                                </ol>
+                                                <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', color: '#5d4037', marginBottom: '8px' }}>
+                                                    <i className="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                                    <strong>{t('Why does the test button work but real messages don\'t?')}</strong>{' '}
+                                                    {t('The "Send to server" button in Meta\'s dashboard posts the payload directly to your URL — it skips the WABA subscription check. Real WhatsApp messages only reach your server after completing step 8 above.')}
+                                                </div>
+                                                <div style={{ color: '#666', fontSize: '11px' }}>
+                                                    <i className="bi bi-lightbulb text-warning me-1"></i>
+                                                    {t('Once all steps are done, every WhatsApp message sent to your connected number will appear automatically in the Procurement → WhatsApp inbox.')}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* WABA Business Account ID — required for template listing */}
                                         <div style={{ marginTop: '12px', maxWidth: '420px' }}>
                                             <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
@@ -7118,6 +7253,90 @@ const StoreCreate = forwardRef((props, ref) => {
                                         />
                                     </div>
 
+                                    {/* 1b-2. Incoming Email — Keyword filter */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-funnel me-2 text-primary"></i>
+                                            {t('Incoming Email')} — {t('Keyword Filter')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Accept only emails whose subject or body contains at least one of these words (case-insensitive). Emails that don\'t match are ignored before reaching the database, reducing LLM token usage. Leave empty to accept all incoming emails.')}
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder={t('Add keyword…')}
+                                                style={{ maxWidth: '260px' }}
+                                                value={newEmailKeyword}
+                                                onChange={e => setNewEmailKeyword(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const kw = newEmailKeyword.trim().toLowerCase();
+                                                        if (kw) {
+                                                            const current = formData.settings.incoming_email_keywords || [];
+                                                            if (!current.includes(kw)) {
+                                                                formData.settings.incoming_email_keywords = [...current, kw];
+                                                                setFormData({ ...formData });
+                                                            }
+                                                            setNewEmailKeyword('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary"
+                                                onClick={() => {
+                                                    const kw = newEmailKeyword.trim().toLowerCase();
+                                                    if (kw) {
+                                                        const current = formData.settings.incoming_email_keywords || [];
+                                                        if (!current.includes(kw)) {
+                                                            formData.settings.incoming_email_keywords = [...current, kw];
+                                                            setFormData({ ...formData });
+                                                        }
+                                                        setNewEmailKeyword('');
+                                                    }
+                                                }}
+                                            >
+                                                {t('Add')}
+                                            </button>
+                                            {(formData.settings.incoming_email_keywords || []).length === 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => {
+                                                        formData.settings.incoming_email_keywords = ['quotation', 'rfq', 'request for quotation'];
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                >
+                                                    {t('Use defaults')}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {(formData.settings.incoming_email_keywords || []).map((kw, i) => (
+                                                <span key={i} className="badge bg-primary" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 400 }}>
+                                                    {kw}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.incoming_email_keywords = (formData.settings.incoming_email_keywords || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {(formData.settings.incoming_email_keywords || []).length === 0 && (
+                                                <span style={{ fontSize: '12px', color: '#9aa0a6', fontStyle: 'italic' }}>{t('No filter — all emails accepted')}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     {/* 1c. Outgoing Email (send emails from the app) */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
@@ -7163,30 +7382,38 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    {/* 2. LLM Model */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
+                                    {/* 2. LLM Model for auto-processing — provider/model selected from AI Models tab */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
+                                        <h6 className="fw-semibold mb-2">
                                             <i className="bi bi-cpu me-2 text-primary"></i>
-                                            {t('2. LLM Model')} <small className="text-muted fw-normal">({t('parses RFQ content — image support required')})</small>
+                                            {t('2. LLM Model')} <small className="text-muted fw-normal">({t('auto-processes incoming WhatsApp RFQs')})</small>
                                         </h6>
-
-                                        <div className="row g-3">
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                            {t('Select which AI model should automatically parse incoming RFQ messages. API keys are managed in the')}{' '}
+                                            <strong
+                                                style={{ color: '#004ac6', cursor: 'pointer', textDecoration: 'underline' }}
+                                                onClick={() => setActiveTab('ai_models')}
+                                            >
+                                                {t('AI Models tab')}
+                                            </strong>.
+                                        </p>
+                                        <div className="row g-2">
                                             <div className="col-md-4">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
                                                 <select
                                                     className="form-select form-select-sm"
                                                     value={formData.settings.rfq_llm_provider || ''}
                                                     onChange={e => { formData.settings.rfq_llm_provider = e.target.value; formData.settings.rfq_llm_model = ''; setFormData({ ...formData }); }}
                                                 >
                                                     <option value="">{t('— Select provider —')}</option>
-                                                    <option value="openai">OpenAI</option>
-                                                    <option value="anthropic">Anthropic (Claude)</option>
-                                                    <option value="gemini">Google Gemini</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
                                                 </select>
                                             </div>
-
-                                            <div className="col-md-4">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('Model')}</label>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
                                                 <select
                                                     className="form-select form-select-sm"
                                                     value={formData.settings.rfq_llm_model || ''}
@@ -7194,55 +7421,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     disabled={!formData.settings.rfq_llm_provider}
                                                 >
                                                     <option value="">{t('— Select model —')}</option>
-                                                    {formData.settings.rfq_llm_provider === 'openai' && <>
-                                                        <option value="gpt-4o-mini">gpt-4o-mini  ($0.15 / $0.60 per 1M tokens) ✅ Vision</option>
-                                                        <option value="gpt-4o">gpt-4o  ($5.00 / $15.00 per 1M tokens) ✅ Vision</option>
-                                                        <option value="gpt-4.1-mini">gpt-4.1-mini  ($0.40 / $1.60 per 1M tokens) ✅ Vision</option>
-                                                        <option value="gpt-4.1">gpt-4.1  ($2.00 / $8.00 per 1M tokens) ✅ Vision</option>
-                                                    </>}
-                                                    {formData.settings.rfq_llm_provider === 'anthropic' && <>
-                                                        <option value="claude-haiku-4-5-20251001">claude-haiku-4-5  ($0.80 / $4.00 per 1M tokens) ✅ Vision</option>
-                                                        <option value="claude-sonnet-4-5-20251001">claude-sonnet-4-5  ($3.00 / $15.00 per 1M tokens) ✅ Vision</option>
-                                                        <option value="claude-opus-4-5-20251101">claude-opus-4-5  ($15.00 / $75.00 per 1M tokens) ✅ Vision</option>
-                                                    </>}
-                                                    {formData.settings.rfq_llm_provider === 'gemini' && <>
-                                                        <option value="gemini-2.0-flash">gemini-2.0-flash  ($0.10 / $0.40 per 1M tokens) ✅ Vision</option>
-                                                        <option value="gemini-1.5-flash">gemini-1.5-flash  ($0.075 / $0.30 per 1M tokens) ✅ Vision</option>
-                                                        <option value="gemini-1.5-pro">gemini-1.5-pro  ($3.50 / $10.50 per 1M tokens) ✅ Vision</option>
-                                                    </>}
+                                                    {(formData.settings.rfq_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.rfq_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                    ))}
                                                 </select>
-                                            </div>
-
-                                            <div className="col-md-4">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('API Key')}</label>
-                                                <div className="d-flex gap-2">
-                                                    <input
-                                                        type="password"
-                                                        className="form-control form-control-sm"
-                                                        placeholder="API key"
-                                                        value={formData.settings.rfq_llm_api_key || ''}
-                                                        onChange={e => { formData.settings.rfq_llm_api_key = e.target.value; setFormData({ ...formData }); }}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-secondary"
-                                                        title={t('Test connection')}
-                                                        onClick={async () => {
-                                                            try {
-                                                                const res = await fetch('/v1/rfq-bot/check-llm', {
-                                                                    method: 'POST',
-                                                                    headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
-                                                                    body: JSON.stringify({ provider: formData.settings.rfq_llm_provider, api_key: formData.settings.rfq_llm_api_key, model: formData.settings.rfq_llm_model }),
-                                                                });
-                                                                const data = await res.json();
-                                                                alert(data.connected ? '✅ LLM connected successfully!' : '❌ Connection failed: ' + (data.error || 'unknown'));
-                                                            } catch (e) { alert('Error: ' + e.message); }
-                                                        }}
-                                                        disabled={!formData.settings.rfq_llm_provider || !formData.settings.rfq_llm_api_key}
-                                                    >
-                                                        {t('Test')}
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -7290,6 +7475,41 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
                                                 {t('rfq_min_suppliers_help')}
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    {/* RFQ Creation */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-lightning-charge me-2 text-warning"></i>
+                                            {t('RFQ Creation')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Control whether RFQs are created automatically when a new email or WhatsApp message arrives and is identified as an RFQ. Disable to review messages manually and create RFQs on demand.')}
+                                        </p>
+                                        <div className="form-check mb-2">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="auto_rfq_email"
+                                                checked={!formData.settings.disable_auto_rfq_from_email}
+                                                onChange={() => { formData.settings.disable_auto_rfq_from_email = !formData.settings.disable_auto_rfq_from_email; setFormData({ ...formData }); }}
+                                            />
+                                            <label className="form-check-label" htmlFor="auto_rfq_email" style={{ fontSize: '13px' }}>
+                                                {t('Automatic RFQ creation upon receipt of a new Email identified as an RFQ')}
+                                            </label>
+                                        </div>
+                                        <div className="form-check">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="auto_rfq_whatsapp"
+                                                checked={!formData.settings.disable_auto_rfq_from_whatsapp}
+                                                onChange={() => { formData.settings.disable_auto_rfq_from_whatsapp = !formData.settings.disable_auto_rfq_from_whatsapp; setFormData({ ...formData }); }}
+                                            />
+                                            <label className="form-check-label" htmlFor="auto_rfq_whatsapp" style={{ fontSize: '13px' }}>
+                                                {t('Automatic RFQ creation upon receipt of a new WhatsApp message identified as an RFQ')}
+                                            </label>
                                         </div>
                                     </div>
 
@@ -7494,6 +7714,97 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </label>
                                     </div>
 
+                                    {/* ── RFQ Module & Quotation Settings ────────────────── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-toggles2 text-primary me-2"></i>
+                                            {t('RFQ Module & Quotation Settings')}
+                                        </h6>
+
+                                        {/* Enable RFQ Module */}
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px', display: 'flex', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.settings.enable_rfq_module}
+                                                onChange={() => {
+                                                    formData.settings.enable_rfq_module = !formData.settings.enable_rfq_module;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable RFQ Module')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('Shows RFQ menu items in the sidebar, and RFQ-related columns in the Quotation index table.')}
+                                                </div>
+                                            </span>
+                                        </label>
+
+                                        {/* Default Customer Quotation Margin */}
+                                        <div className="row g-2 mb-3" style={{ maxWidth: '400px' }}>
+                                            <div className="col-6">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>
+                                                    {t('Default Customer Quotation Margin (%)')}
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    min="0"
+                                                    max="500"
+                                                    step="0.5"
+                                                    value={formData.settings.default_quotation_margin_percent ?? 35}
+                                                    onChange={e => {
+                                                        formData.settings.default_quotation_margin_percent = parseFloat(e.target.value) || 0;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                    {t('Applied as starting margin in the RFQ price comparison table. Default: 35%')}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Quotation Extraction LLM */}
+                                        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: '#495057' }}>
+                                            {t('Quotation Extraction LLM')}
+                                        </div>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                            {t('Provider and model used to extract prices from supplier quotation documents (PDF, image, Excel). Uses the same per-provider API key from the AI Models tab.')}
+                                        </p>
+                                        <div className="row g-2 mb-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.quotation_llm_provider || ''}
+                                                    onChange={e => { formData.settings.quotation_llm_provider = e.target.value; formData.settings.quotation_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.quotation_llm_model || ''}
+                                                    onChange={e => { formData.settings.quotation_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.quotation_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.quotation_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.quotation_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Populate RFQ Suppliers from Vendors */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
@@ -7503,6 +7814,47 @@ const StoreCreate = forwardRef((props, ref) => {
                                         <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
                                             {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
                                         </p>
+
+                                        {/* LLM selection for vendor population */}
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_model || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.populate_suppliers_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                                {formData.settings.populate_suppliers_llm_provider && (
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                        {t('API key from AI Models tab will be used')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-primary"
@@ -7558,6 +7910,326 @@ const StoreCreate = forwardRef((props, ref) => {
                                         )}
                                     </div>
 
+                                    {/* ── Content Extraction Test ─────────────────────────── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-1">
+                                            <i className="bi bi-magic me-2 text-purple" style={{ color: '#7c3aed' }}></i>
+                                            {t('Content Extraction Test')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Test LLM extraction on any text, image, PDF, or spreadsheet. Extracts customer info, products (part no / name / qty / unit), and additional notes.')}
+                                        </p>
+
+                                        {/* Provider + Model */}
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={extractTest.provider}
+                                                    onChange={e => setExtractTest(s => ({ ...s, provider: e.target.value, model: '' }))}
+                                                >
+                                                    <option value="">{t('— Select provider —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                                {extractTest.provider && (() => {
+                                                    const p = AI_PROVIDERS.find(x => x.value === extractTest.provider);
+                                                    const hasKey = p && !!(formData.settings?.[p.apiKeyField]);
+                                                    return <div style={{ fontSize: '11px', marginTop: '3px', color: hasKey ? '#198754' : '#dc3545' }}>
+                                                        {hasKey ? '✅ ' + t('API key from AI Models tab') : '⚠️ ' + t('No API key saved — set it in AI Models tab')}
+                                                    </div>;
+                                                })()}
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={extractTest.model}
+                                                    onChange={e => setExtractTest(s => ({ ...s, model: e.target.value }))}
+                                                    disabled={!extractTest.provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(extractTest.provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === extractTest.provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Free text input */}
+                                        <div className="mb-3">
+                                            <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Text (optional)')}</label>
+                                            <textarea
+                                                className="form-control form-control-sm"
+                                                rows={4}
+                                                placeholder={t('Paste email body, quotation text, or any RFQ content here…')}
+                                                value={extractTest.text}
+                                                onChange={e => setExtractTest(s => ({ ...s, text: e.target.value }))}
+                                                style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                                            />
+                                        </div>
+
+                                        {/* File upload */}
+                                        <div className="mb-3">
+                                            <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>
+                                                {t('Files (optional)')} <small className="text-muted">{t('PDF, Excel, CSV, TXT, images')}</small>
+                                            </label>
+                                            <div
+                                                style={{
+                                                    border: '2px dashed #ced4da', borderRadius: '6px', padding: '12px',
+                                                    textAlign: 'center', cursor: 'pointer', fontSize: '12px', color: '#6c757d',
+                                                    background: extractTest.files.length > 0 ? '#f8fff8' : '#fafafa',
+                                                }}
+                                                onClick={() => document.getElementById('extractTestFileInput').click()}
+                                                onDragOver={e => e.preventDefault()}
+                                                onDrop={e => {
+                                                    e.preventDefault();
+                                                    const dropped = Array.from(e.dataTransfer.files);
+                                                    setExtractTest(s => ({ ...s, files: [...s.files, ...dropped] }));
+                                                }}
+                                            >
+                                                <i className="bi bi-cloud-upload me-1"></i>
+                                                {extractTest.files.length === 0
+                                                    ? t('Click or drag files here')
+                                                    : extractTest.files.map(f => f.name).join(', ')}
+                                            </div>
+                                            <input
+                                                id="extractTestFileInput"
+                                                type="file"
+                                                multiple
+                                                hidden
+                                                accept=".pdf,.xlsx,.xls,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                                                onChange={e => {
+                                                    const picked = Array.from(e.target.files);
+                                                    setExtractTest(s => ({ ...s, files: [...s.files, ...picked] }));
+                                                    e.target.value = '';
+                                                }}
+                                            />
+                                            {extractTest.files.length > 0 && (
+                                                <div className="mt-1 d-flex flex-wrap gap-1">
+                                                    {extractTest.files.map((f, i) => (
+                                                        <span key={i} className="badge bg-secondary d-flex align-items-center gap-1" style={{ fontSize: '11px' }}>
+                                                            {f.name}
+                                                            <button
+                                                                type="button"
+                                                                className="btn-close btn-close-white"
+                                                                style={{ fontSize: '8px' }}
+                                                                onClick={() => setExtractTest(s => ({ ...s, files: s.files.filter((_, j) => j !== i) }))}
+                                                            />
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Extract button */}
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-success"
+                                            disabled={extractTest.loading || !extractTest.provider || (!extractTest.text && extractTest.files.length === 0)}
+                                            onClick={async () => {
+                                                setExtractTest(s => ({ ...s, loading: true, result: null, error: '' }));
+                                                try {
+                                                    const fd = new FormData();
+                                                    fd.append('llm_provider', extractTest.provider);
+                                                    fd.append('llm_model', extractTest.model);
+                                                    fd.append('text', extractTest.text);
+                                                    extractTest.files.forEach(f => fd.append('files', f));
+                                                    const resp = await fetch(`/v1/procurement-extract-test?store_id=${formData.id || ''}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                                                        body: fd,
+                                                    });
+                                                    const data = await resp.json();
+                                                    if (!resp.ok) {
+                                                        setExtractTest(s => ({ ...s, loading: false, error: data.error || 'Extraction failed' }));
+                                                    } else {
+                                                        setExtractTest(s => ({ ...s, loading: false, result: data }));
+                                                    }
+                                                } catch (e) {
+                                                    setExtractTest(s => ({ ...s, loading: false, error: e.message }));
+                                                }
+                                            }}
+                                        >
+                                            {extractTest.loading
+                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Extracting…')}</>
+                                                : <><i className="bi bi-magic me-2"></i>{t('Extract')}</>}
+                                        </button>
+
+                                        {/* Error */}
+                                        {extractTest.error && (
+                                            <div className="alert alert-danger mt-3 py-2" style={{ fontSize: '12px' }}>
+                                                {extractTest.error}
+                                            </div>
+                                        )}
+
+                                        {/* Results */}
+                                        {extractTest.result && (() => {
+                                            const r = extractTest.result;
+                                            return (
+                                                <div className="mt-3" style={{ borderTop: '1px solid #dee2e6', paddingTop: '12px' }}>
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '8px' }}>
+                                                        {t('Model used')}: <strong>{r.llm_model || extractTest.model}</strong>
+                                                    </div>
+
+                                                    {/* Customer Info */}
+                                                    {(r.customer_name || r.customer_email || r.customer_phone || r.customer_company) && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-person-circle me-1 text-primary"></i>{t('Customer Info')}
+                                                            </div>
+                                                            <table className="table table-sm table-bordered" style={{ fontSize: '12px', marginBottom: 0 }}>
+                                                                <tbody>
+                                                                    {r.customer_name && <tr><td className="fw-semibold" style={{ width: '30%' }}>{t('Name')}</td><td>{r.customer_name}</td></tr>}
+                                                                    {r.customer_company && <tr><td className="fw-semibold">{t('Company')}</td><td>{r.customer_company}</td></tr>}
+                                                                    {r.customer_email && <tr><td className="fw-semibold">{t('Email')}</td><td>{r.customer_email}</td></tr>}
+                                                                    {r.customer_phone && <tr><td className="fw-semibold">{t('Phone')}</td><td>{r.customer_phone}</td></tr>}
+                                                                    {r.customer_vat_no && <tr><td className="fw-semibold">{t('VAT No')}</td><td>{r.customer_vat_no}</td></tr>}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Products Table */}
+                                                    {r.products && r.products.length > 0 && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-box-seam me-1 text-success"></i>{t('Products')} ({r.products.length})
+                                                            </div>
+                                                            <div style={{ overflowX: 'auto' }}>
+                                                                <table className="table table-sm table-bordered table-hover" style={{ fontSize: '12px', marginBottom: 0 }}>
+                                                                    <thead className="table-light">
+                                                                        <tr>
+                                                                            <th>#</th>
+                                                                            <th>{t('Part No')}</th>
+                                                                            <th>{t('Name')}</th>
+                                                                            <th>{t('Qty')}</th>
+                                                                            <th>{t('Unit')}</th>
+                                                                            <th>{t('Notes')}</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {r.products.map((p, i) => (
+                                                                            <tr key={i}>
+                                                                                <td>{i + 1}</td>
+                                                                                <td>{p.part_no || '—'}</td>
+                                                                                <td>{p.name || p.item_name || '—'}</td>
+                                                                                <td>{p.quantity ?? p.qty ?? '—'}</td>
+                                                                                <td>{p.unit || '—'}</td>
+                                                                                <td style={{ maxWidth: '280px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '11px' }}>{p.notes || '—'}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* General Instructions */}
+                                                    {r.general_instructions && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-info-circle me-1 text-primary"></i>{t('General Instructions')}
+                                                            </div>
+                                                            <div style={{ background: '#f0f4ff', border: '1px solid #c7d3f5', borderRadius: '4px', padding: '8px 10px', fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                                {r.general_instructions}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Raw fallback */}
+                                                    {!r.customer_name && (!r.products || r.products.length === 0) && r.text_content && (
+                                                        <div>
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>{t('Raw Output')}</div>
+                                                            <pre style={{ background: '#f8f9fa', borderRadius: '4px', padding: '8px', fontSize: '11px', whiteSpace: 'pre-wrap', maxHeight: '300px', overflow: 'auto' }}>
+                                                                {r.text_content}
+                                                            </pre>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary mt-2"
+                                                        onClick={() => setExtractTest(s => ({ ...s, result: null, error: '' }))}
+                                                    >
+                                                        {t('Clear Results')}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'ai_models' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-cpu" style={{ fontSize: '18px', color: '#004ac6' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('AI Models — API Keys')}</h3>
+                                    </div>
+                                    <div className="pw-card" style={{ marginBottom: '8px' }}>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', margin: 0 }}>
+                                            {t('Save API keys for LLM providers here. They are used by the Extract buttons in Procurement Emails and in RFQ creation for AI-based product extraction. Keys are stored securely and never exposed to the browser after saving.')}
+                                        </p>
+                                    </div>
+                                    {AI_PROVIDERS.map(provider => (
+                                        <div key={provider.value} className="pw-card" style={{ marginBottom: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{provider.label}</div>
+                                                    <div style={{ fontSize: '12px', color: '#6c757d' }}>{provider.description}</div>
+                                                    {provider.keyInstructions && (
+                                                        <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
+                                                            {provider.keyInstructions}{' '}
+                                                            <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#004ac6', fontWeight: 500 }}>Get API Key →</a>
+                                                        </div>
+                                                    )}
+                                                    {!provider.keyInstructions && provider.docsUrl && (
+                                                        <div style={{ marginTop: '4px' }}>
+                                                            <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#004ac6', fontWeight: 500 }}>Get API Key →</a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {formData.settings?.[provider.apiKeyField] && (
+                                                    <span style={{ fontSize: '11px', background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '2px 8px', whiteSpace: 'nowrap', alignSelf: 'center' }}>
+                                                        ✅ {t('Key saved')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="row g-2">
+                                                <div className="col-md-6">
+                                                    <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>API Key</label>
+                                                    <input
+                                                        type="password"
+                                                        className="form-control form-control-sm"
+                                                        placeholder={provider.hint}
+                                                        value={formData.settings?.[provider.apiKeyField] || ''}
+                                                        onChange={e => { if (!formData.settings) formData.settings = {}; formData.settings[provider.apiKeyField] = e.target.value; setFormData({ ...formData }); }}
+                                                    />
+                                                </div>
+                                                {(provider.extraFields || []).map(ef => (
+                                                    <div key={ef.key} className="col-md-6">
+                                                        <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>{ef.label}</label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            placeholder={ef.hint}
+                                                            value={formData.settings?.[ef.key] || ''}
+                                                            onChange={e => { if (!formData.settings) formData.settings = {}; formData.settings[ef.key] = e.target.value; setFormData({ ...formData }); }}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ marginTop: '8px', fontSize: '11px', color: '#6c757d' }}>
+                                                {t('Models')}: {[...provider.models].sort((a,b)=>a.costPer1M-b.costPer1M).map(m => `${m.label} (${m.costLabel})`).join(' · ')}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>)}
 
                                 {activeTab === 'opening_balances' && (<div className="pw-tab-wrap">

@@ -5,7 +5,7 @@ import RFQPreviewContent from "./RFQPreviewContent";
 import { Badge, Spinner, Button, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -56,6 +56,15 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     const products = rfq.products || [];
     const replies  = (rfq.supplier_replies || []).filter(r => r.is_quotation && r.prices?.length > 0);
 
+    // Load default margin from store settings cache
+    const defaultMarginPct = (() => {
+        try {
+            const s = JSON.parse(localStorage.getItem('_store_settings_cache') || 'null');
+            const v = parseFloat(s?.default_quotation_margin_percent);
+            return (!isNaN(v) && v >= 0) ? v : 35;
+        } catch (_) { return 35; }
+    })();
+
     // Unique suppliers with quotation replies
     const suppliers = replies.map(r => ({ name: r.supplier_name, phone: r.supplier_phone, id: r.id }));
 
@@ -84,7 +93,8 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     const [selectedSupplier, setSelectedSupplier] = useState(defaultSelections);
     const [margins, setMargins] = useState(() => {
         const m = {};
-        products.forEach((_, i) => { m[i] = ''; });
+        // Pre-fill with store default margin
+        products.forEach((_, i) => { m[i] = String(defaultMarginPct); });
         return m;
     });
 
@@ -325,7 +335,14 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                                                     }}
                                                         title={p ? (isLowest ? '✓ Lowest price' : '') + (p.notes ? '\n' + p.notes : '') : ''}
                                                         onClick={() => { if (p) { const sid = s.id; setSelectedSupplier(prev => ({ ...prev, [i]: sid })); } }}>
-                                                        {p ? fmt(p.unit_price) : <span className="text-muted">—</span>}
+                                                        {p ? (
+                                                            <span>
+                                                                {fmt(p.unit_price)}
+                                                                <span className={`ms-1 badge ${p.vat_included ? 'bg-warning text-dark' : 'bg-light text-muted border'}`} style={{ fontSize: '9px', fontWeight: 400 }} title={p.vat_included ? t('Price includes VAT') : t('Price excludes VAT')}>
+                                                                    {p.vat_included ? t('incl.VAT') : t('excl.VAT')}
+                                                                </span>
+                                                            </span>
+                                                        ) : <span className="text-muted">—</span>}
                                                         {isLowest && p && <span className="ms-1 text-success" style={{ fontSize: '10px' }}>▼</span>}
                                                     </td>
                                                 );
@@ -875,6 +892,12 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     const [testSending, setTestSending]           = useState(false);
     const [testResult, setTestResult]             = useState(null); // null | 'ok' | 'err: ...'
     const esRef                                   = useRef(null);
+    // PDF view/download
+    const [pdfUrl, setPdfUrl]                     = useState(null);
+    const [pdfLoading, setPdfLoading]             = useState(false);
+    const [showPdfModal, setShowPdfModal]         = useState(false);
+    // Supplier view modal
+    const [viewingSupplier, setViewingSupplier]   = useState(null);
 
     // Fetch full store object (needed for RFQPreviewContent logo/header)
     useEffect(() => {
@@ -883,12 +906,29 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
             .then(r => r.json()).then(d => setStoreData(d)).catch(() => {});
     }, [show, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    const loadPdf = async () => {
+        if (pdfUrl) { setShowPdfModal(true); return; }
+        setPdfLoading(true);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/download-pdf?store_id=${storeId}`, {
+                headers: { Authorization: token },
+            });
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfUrl(url);
+            setShowPdfModal(true);
+        } catch (e) { /* silent */ }
+        finally { setPdfLoading(false); }
+    };
+
     // Load preview on open — always, regardless of forwarded status
     useEffect(() => {
         if (!show || !rfq) return;
         setError(''); setPreview(null); setSupplierStatuses({});
         setExtraSuppliers([]); setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
         setTestPhone(''); setTestResult(null);
+        setPdfUrl(null); setShowPdfModal(false);
         setPhase('preview'); setSendModalTab('send');
 
         // Build the set of phones already successfully sent
@@ -904,6 +944,8 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 if (data.error) { setError(data.error); }
                 else {
                     setPreview(data);
+                    // Show WABA config warning (non-blocking) if returned
+                    if (data.config_warning) { setError(data.config_warning); }
                     // Select only suppliers not already sent to
                     setSelectedPhones(new Set((data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)));
                 }
@@ -1120,6 +1162,7 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     const progressPct = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
 
     return (
+        <>
         <Modal show={show} onHide={onHide} size="xl" centered scrollable>
             <Modal.Header closeButton style={{ background: '#f8f9fa' }}>
                 <Modal.Title style={{ fontSize: 17 }}>
@@ -1308,12 +1351,39 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                             </div>
                                             {/* Info */}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <span style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>{s.name}</span>
+                                                    {s.id && (
+                                                        <button
+                                                            title="View supplier details"
+                                                            onClick={e => { e.stopPropagation(); setViewingSupplier(s); }}
+                                                            style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#6c757d', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
+                                                            <i className="bi bi-eye"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div style={{ fontSize: 11, color: '#555' }}>
                                                     <i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{s.phone}
-                                                    {s.category && <span className="ms-2 text-muted">{s.category}</span>}
                                                     {alreadySent && <span className="ms-2 text-success">· sent</span>}
                                                 </div>
+                                                {/* Supplier categories */}
+                                                {(s.categories || []).length > 0 && (
+                                                    <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                                        {s.categories.map((cat, ci) => {
+                                                            const rfqCats = (rfq?.categories || []).map(c => c.toLowerCase());
+                                                            const matches = rfqCats.some(rc => rc === cat.toLowerCase() || rc.includes(cat.toLowerCase()) || cat.toLowerCase().includes(rc));
+                                                            return (
+                                                                <span key={ci} style={{
+                                                                    fontSize: 9, padding: '1px 5px', borderRadius: 10,
+                                                                    background: matches ? '#dcfce7' : '#f1f5f9',
+                                                                    color: matches ? '#166534' : '#64748b',
+                                                                    border: `1px solid ${matches ? '#86efac' : '#e2e8f0'}`,
+                                                                    fontWeight: matches ? 600 : 400,
+                                                                }}>{cat}</span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                             {/* Status icon */}
                                             <div style={{ flexShrink: 0, width: 22, textAlign: 'center' }}>
@@ -1390,6 +1460,12 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 <Button variant="secondary" onClick={onHide}>
                     {isDone ? 'Close' : 'Cancel'}
                 </Button>
+                {/* PDF view / download */}
+                <Button variant="outline-secondary" onClick={loadPdf} disabled={pdfLoading} title="View / Download RFQ PDF" style={{ marginRight: 'auto' }}>
+                    {pdfLoading
+                        ? <><Spinner animation="border" size="sm" className="me-1" />Generating…</>
+                        : <><i className="bi bi-file-earmark-pdf me-1"></i>View PDF</>}
+                </Button>
                 {sendModalTab === 'send' && (
                     <Button variant="success" onClick={handleSend} disabled={!canSend || isSending}>
                         {isSending
@@ -1399,6 +1475,104 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 )}
             </Modal.Footer>
         </Modal>
+
+        {/* Supplier view modal */}
+        {viewingSupplier && (
+            <Modal show onHide={() => setViewingSupplier(null)} size="md" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title style={{ fontSize: 16 }}>
+                        <i className="bi bi-building me-2"></i>{viewingSupplier.name}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ padding: '20px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <i className="bi bi-whatsapp" style={{ color: '#25d366', fontSize: 16 }}></i>
+                            <span style={{ fontSize: 14 }}>{viewingSupplier.phone}</span>
+                        </div>
+                        {viewingSupplier.address && (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                                <i className="bi bi-geo-alt" style={{ color: '#6c757d', fontSize: 15, marginTop: 1 }}></i>
+                                <span style={{ fontSize: 13, color: '#444' }}>{viewingSupplier.address}</span>
+                            </div>
+                        )}
+                        {viewingSupplier.purchase_market && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="bi bi-pin-map" style={{ color: '#6c757d', fontSize: 15 }}></i>
+                                <span style={{ fontSize: 13, color: '#444' }}>{viewingSupplier.purchase_market}</span>
+                            </div>
+                        )}
+                        {viewingSupplier.rating > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="bi bi-star-fill" style={{ color: '#f59e0b', fontSize: 14 }}></i>
+                                <span style={{ fontSize: 13, color: '#444' }}>{viewingSupplier.rating.toFixed(1)} / 5.0</span>
+                            </div>
+                        )}
+                        {viewingSupplier.website && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="bi bi-globe" style={{ color: '#6c757d', fontSize: 14 }}></i>
+                                <a href={viewingSupplier.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13 }}>{viewingSupplier.website}</a>
+                            </div>
+                        )}
+                        {viewingSupplier.google_maps_url && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="bi bi-map" style={{ color: '#6c757d', fontSize: 14 }}></i>
+                                <a href={viewingSupplier.google_maps_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13 }}>View on Google Maps</a>
+                            </div>
+                        )}
+                        {(viewingSupplier.categories || []).length > 0 && (
+                            <div>
+                                <div style={{ fontSize: 11, color: '#6c757d', fontWeight: 600, marginBottom: 6, letterSpacing: 0.5 }}>PRODUCT CATEGORIES</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                    {viewingSupplier.categories.map((cat, ci) => {
+                                        const rfqCats = (rfq?.categories || []).map(c => c.toLowerCase());
+                                        const matches = rfqCats.some(rc => rc === cat.toLowerCase() || rc.includes(cat.toLowerCase()) || cat.toLowerCase().includes(rc));
+                                        return (
+                                            <span key={ci} style={{
+                                                fontSize: 11, padding: '3px 9px', borderRadius: 12,
+                                                background: matches ? '#dcfce7' : '#f1f5f9',
+                                                color: matches ? '#166534' : '#64748b',
+                                                border: `1px solid ${matches ? '#86efac' : '#e2e8f0'}`,
+                                                fontWeight: matches ? 600 : 400,
+                                            }}>{cat}{matches ? ' ✓' : ''}</span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Modal.Body>
+                <Modal.Footer style={{ background: '#f8f9fa', justifyContent: 'space-between' }}>
+                    <a href={`/dashboard/rfq-suppliers?search=${encodeURIComponent(viewingSupplier.name || '')}`}
+                        target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-secondary">
+                        <i className="bi bi-box-arrow-up-right me-1"></i>Open in Suppliers Page
+                    </a>
+                    <Button variant="secondary" size="sm" onClick={() => setViewingSupplier(null)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
+        )}
+
+        {/* PDF viewer modal */}
+        {showPdfModal && pdfUrl && (
+            <Modal show onHide={() => setShowPdfModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title style={{ fontSize: 16 }}>
+                        <i className="bi bi-file-earmark-pdf me-2 text-danger"></i>
+                        {rfq?.code}.pdf
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ padding: 0, height: '80vh' }}>
+                    <iframe src={pdfUrl} title="RFQ PDF" style={{ width: '100%', height: '100%', border: 'none' }} />
+                </Modal.Body>
+                <Modal.Footer style={{ background: '#f8f9fa' }}>
+                    <Button variant="secondary" onClick={() => setShowPdfModal(false)}>Close</Button>
+                    <a href={pdfUrl} download={`${rfq?.code || 'RFQ'}.pdf`} className="btn btn-primary">
+                        <i className="bi bi-download me-1"></i>Download PDF
+                    </a>
+                </Modal.Footer>
+            </Modal>
+        )}
+        </>
     );
 }
 
@@ -1575,6 +1749,10 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const storeId = localStorage.getItem("store_id");
     const token = localStorage.getItem("access_token");
     const history = useHistory();
+    const location = useLocation();
+
+    const isAdmin = localStorage.getItem("user_role") === "Admin";
+    const enableRFQModule = (() => { try { return !!JSON.parse(localStorage.getItem('_store_settings_cache') || 'null')?.enable_rfq_module; } catch (_) { return false; } })();
 
     const [list, setList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -1591,6 +1769,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [rfqForSend, setRfqForSend] = useState(null);
     const [procMsgModal, setProcMsgModal] = useState({ show: false, loading: false, msg: null, code: '' });
     const [liveProgress, setLiveProgress] = useState(null);
+    const [deletingAll, setDeletingAll] = useState(false);
     const rfqCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
     const rfqPreviewRef = useRef(null);
@@ -1623,6 +1802,17 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     }, [storeId, token, page, pageSize, statusFilter, search, showToastMessage, t]);
 
     useEffect(() => { fetchList(); }, [fetchList]);
+
+    // Auto-open detail when ?id= is in URL (e.g. navigated from procurement emails "View RFQ")
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id');
+        if (id && storeId) {
+            openDetail(id);
+            // Strip the param so refreshes don't re-open
+            history.replace('/dashboard/rfq-received');
+        }
+    }, [location.search, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Realtime updates via SSE
     useEffect(() => {
@@ -1700,14 +1890,31 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         rfqPreviewRef.current?.open(rfq);
     };
 
+    const handleDeleteAll = async () => {
+        if (!window.confirm(t('Confirm delete ALL RFQ records? This cannot be undone.'))) return;
+        setDeletingAll(true);
+        try {
+            await fetch(`/v1/rfq-received?store_id=${storeId}`, { method: 'DELETE', headers: { Authorization: token } });
+            setSelected(null);
+            setShowDetail(false);
+            fetchList();
+        } catch (e) {
+            if (showToastMessage) showToastMessage(t('Failed to delete all RFQ records'), 'danger');
+        } finally {
+            setDeletingAll(false);
+        }
+    };
+
     // Quotation pre-fill: store in sessionStorage and navigate to quotation page
     const handleCreateQuotation = (items, rfq) => {
         const prefill = {
-            rfq_id:       rfq.id,
-            rfq_code:     rfq.code || '',
-            customer_id:  rfq.customer_id || null,
-            customer_name: rfq.customer_name || '',
-            customer_phone: rfq.customer_phone || '',
+            rfq_id:            rfq.id,
+            rfq_code:          rfq.code || '',
+            rfq_received_id:   rfq.id,
+            rfq_received_code: rfq.code || '',
+            customer_id:       rfq.customer_id || null,
+            customer_name:     rfq.customer_name || '',
+            customer_phone:    rfq.customer_phone || '',
             items,
         };
         try { sessionStorage.setItem('rfq_quotation_prefill', JSON.stringify(prefill)); } catch (_) {}
@@ -1753,6 +1960,19 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                     <Button variant="primary" size="sm" onClick={() => rfqCreateRef.current?.open()}>
                         <i className="bi bi-plus-lg me-1"></i>Create New
                     </Button>
+                    {isAdmin && (
+                        <Button
+                            variant="outline-danger"
+                            size="sm"
+                            disabled={deletingAll}
+                            onClick={handleDeleteAll}
+                            title={t('Delete All RFQ records (admin only)')}
+                        >
+                            {deletingAll
+                                ? <span className="spinner-border spinner-border-sm" role="status" />
+                                : <><i className="bi bi-trash3 me-1"></i>{t('Delete All')}</>}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -1778,13 +1998,18 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                     {t('no_rfq_messages')}
                 </div>
             ) : (
+                <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-muted">
+                        Showing {((page - 1) * pageSize + 1).toLocaleString()}–{Math.min(page * pageSize, totalCount).toLocaleString()} of {totalCount.toLocaleString()} | Page {page} of {totalPages.toLocaleString()}
+                    </small>
+                </div>
                 <div className="table-responsive">
                     <table className="table table-hover table-sm align-middle">
                         <thead className="table-light">
                             <tr>
                                 <th>{t('col_id')}</th>
                                 <th>{t('col_received_at')}</th>
-                                <th>{t('col_from')}</th>
                                 <th>{t('col_customer')}</th>
                                 <th>Customer RFQ ID</th>
                                 <th>Email</th>
@@ -1794,6 +2019,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                 <th>{t('col_status')}</th>
                                 <th>{t('col_forwarded_to')}</th>
                                 <th>{t('col_replies')}</th>
+                                {enableRFQModule && <th style={{ width: 120 }}>{t('Quotations')}</th>}
                                 <th style={{ width: 110 }}>Message</th>
                                 <th style={{ width: 100 }}>{t('col_actions')}</th>
                             </tr>
@@ -1810,10 +2036,6 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                         </td>
                                         <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>
                                             {new Date(rfq.received_at).toLocaleString()}
-                                        </td>
-                                        <td>
-                                            <div className="fw-semibold" style={{ fontSize: '13px' }}>{rfq.from_phone}</div>
-                                            {rfq.from_name && <div className="text-muted" style={{ fontSize: '12px' }}>{rfq.from_name}</div>}
                                         </td>
                                         <td style={{ fontSize: '13px' }}>
                                             {rfq.customer_name
@@ -1862,6 +2084,19 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                                 </span>
                                             ) : <span className="text-muted small">—</span>}
                                         </td>
+                                        {enableRFQModule && (
+                                            <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                                {(rfq.quotation_codes || []).length > 0
+                                                    ? rfq.quotation_codes.map((code, ci) => (
+                                                        <Badge key={ci} bg="success" className="me-1" style={{ cursor: 'pointer', fontSize: '11px' }}
+                                                            onClick={() => history.push(`/dashboard/quotations?search=${encodeURIComponent(code)}`)}
+                                                            title={`View Quotation ${code}`}>
+                                                            <i className="bi bi-receipt me-1"></i>{code}
+                                                        </Badge>
+                                                    ))
+                                                    : <span className="text-muted">—</span>}
+                                            </td>
+                                        )}
                                         <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                                             {rfq.procurement_message_id
                                                 ? <button
@@ -1912,14 +2147,12 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3">
-                    <small className="text-muted">
-                        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalCount)} of {totalCount.toLocaleString()} | Page {page} of {totalPages.toLocaleString()}
-                    </small>
+            <div className="d-flex justify-content-end mt-3">
+                {totalPages > 1 && (
                     <ReactPaginate
                         pageCount={totalPages}
                         forcePage={page - 1}
@@ -1937,8 +2170,8 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                         marginPagesDisplayed={1}
                         pageRangeDisplayed={4}
                     />
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Detail Modal */}
             <ForwardDetail

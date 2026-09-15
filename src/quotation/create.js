@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, {
   useState,
   useEffect,
@@ -166,6 +167,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         status: "delivered",
         price_type: "retail",
         delivery_days: 7,
+        delivery_from: "Payment",
         validity_days: 2,
         remarks: "",
         type: "quotation",
@@ -220,6 +222,10 @@ const QuotationCreate = forwardRef((props, ref) => {
               formData.customer_name = prefill.customer_name;
               formData.customer_phone_number = prefill.customer_phone || '';
             }
+            if (prefill.rfq_received_id) {
+              formData.rfq_received_id = prefill.rfq_received_id;
+              formData.rfq_received_code = prefill.rfq_received_code || '';
+            }
             if (prefill.rfq_code) {
               formData.remarks = `RFQ: ${prefill.rfq_code}`;
             }
@@ -267,6 +273,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         status: "delivered",
         price_type: "retail",
         delivery_days: 7,
+        delivery_from: "Payment",
         validity_days: 2,
         remarks: "",
         type: "quotation",
@@ -336,6 +343,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     is_discount_percent: false,
     validity_days: 2,
     delivery_days: 7,
+    delivery_from: "Payment",
     type: "quotation",
     payment_status: "",
   });
@@ -558,6 +566,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           is_discount_percent: quotation.is_discount_percent,
           shipping_handling_fees: quotation.shipping_handling_fees,
           delivery_days: quotation.delivery_days ? quotation.delivery_days : 7,
+          delivery_from: quotation.delivery_from || "Payment",
           validity_days: quotation.validity_days ? quotation.validity_days : 2,
         };
         if (data.result.status === 'draft') {
@@ -8641,6 +8650,23 @@ async function checkWarning(i) {
                       {errors.delivery_days}
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Delivery From the Date of</label>
+                <div className="input-group mb-3">
+                  <select
+                    className="form-control"
+                    value={formData.delivery_from || "Payment"}
+                    onChange={(e) => {
+                      formData.delivery_from = e.target.value;
+                      setFormData({ ...formData });
+                    }}
+                  >
+                    <option value="Payment">Payment</option>
+                    <option value="Approval">Approval</option>
+                  </select>
                 </div>
               </div>
             </>}

@@ -159,6 +159,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [deleting, setDeleting] = useState(null);
+    const [refetching, setRefetching] = useState(null);
 
     const fetchList = useCallback(async () => {
         if (!storeId) return;
@@ -187,6 +188,28 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
         es.onerror = () => {}; // silently reconnect
         return () => es.close();
     }, [storeId, fetchList]);
+
+    const handleRefetchMaps = async (id) => {
+        setRefetching(id);
+        try {
+            const res = await fetch(`/v1/rfq-suppliers/${id}/refetch-maps?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (showToastMessage) showToastMessage(data.error || t('error_prefix'), "danger");
+            } else if (data.status === 'no_match') {
+                if (showToastMessage) showToastMessage(t('maps_no_match') || 'No Google Maps result found', "warning");
+            } else {
+                if (showToastMessage) showToastMessage(t('maps_refetched') || 'Google Maps data updated', "success");
+                fetchList();
+            }
+        } catch (e) {
+            if (showToastMessage) showToastMessage(t('error_prefix') + e.message, "danger");
+        }
+        setRefetching(null);
+    };
 
     const handleDelete = async (id) => {
         if (!window.confirm(t('delete_supplier_confirm'))) return;
@@ -249,6 +272,12 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                     {t('no_suppliers_yet')}
                 </div>
             ) : (
+                <>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-muted">
+                        Showing {((page - 1) * pageSize + 1).toLocaleString()}–{Math.min(page * pageSize, totalCount).toLocaleString()} of {totalCount.toLocaleString()} | Page {page} of {totalPages.toLocaleString()}
+                    </small>
+                </div>
                 <div className="table-responsive">
                     <table className="table table-hover table-sm align-middle">
                         <thead className="table-light">
@@ -328,6 +357,15 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                                 <i className="bi bi-pencil"></i>
                                             </Button>
                                             <Button
+                                                variant="outline-success"
+                                                size="sm"
+                                                title={t('refetch_maps') || 'Refetch from Google Maps'}
+                                                onClick={() => handleRefetchMaps(sup.id)}
+                                                disabled={refetching === sup.id}
+                                            >
+                                                {refetching === sup.id ? <Spinner animation="border" size="sm" /> : <i className="bi bi-google"></i>}
+                                            </Button>
+                                            <Button
                                                 variant="outline-danger"
                                                 size="sm"
                                                 title={t('delete')}
@@ -343,12 +381,12 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3">
-                    <small className="text-muted">{t('total_label')}: {totalCount} {t('suppliers')}</small>
+            <div className="d-flex justify-content-end mt-3">
+                {totalPages > 1 && (
                     <ReactPaginate
                         pageCount={totalPages}
                         forcePage={page - 1}
@@ -366,8 +404,8 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                         marginPagesDisplayed={1}
                         pageRangeDisplayed={4}
                     />
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Add/Edit Form Modal */}
             {showForm && (
