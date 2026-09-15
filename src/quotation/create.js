@@ -144,9 +144,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       setSelectedProducts([]);
       if (!id) {
         setTimeout(() => {
-          selectedProducts = [];
-          setSelectedProducts([]);
-          formData.products = [];
+          // Only clear if prefill hasn't already set products (avoids wiping RFQ-prefilled items)
+          if (selectedProducts.length === 0) {
+            setSelectedProducts([]);
+            formData.products = [];
+          }
         }, 50);
       }
 
