@@ -305,6 +305,19 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                         ) : (
                                             <div className="text-muted" style={{ fontSize: '12px' }}>{t('No prices found in document')}</div>
                                         )}
+                                        {/* Suggest a matching RFQ when no RFQ ID was in the document */}
+                                        {!result.rfq_code && result.suggested_rfq_code && (
+                                            <div className="mt-3 p-2" style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', fontSize: '12px' }}>
+                                                <i className="bi bi-search me-1 text-warning"></i>
+                                                {t('No RFQ ID in document — auto-matched by supplier phone:')}{' '}
+                                                <strong>{result.suggested_rfq_code}</strong>
+                                                <div className="mt-2 d-flex gap-2 flex-wrap">
+                                                    <a href={`/rfq_received/edit/${result.suggested_rfq_id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }}>
+                                                        <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')} {result.suggested_rfq_code}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

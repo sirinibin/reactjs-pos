@@ -1195,7 +1195,7 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
 
                 {sendModalTab === 'replies' ? (
-                    <RFQRepliesPanel replies={rfq?.supplier_replies || []} />
+                    <RFQRepliesPanel rfq={rfq} storeId={storeId} onAdded={onSent} replies={rfq?.supplier_replies || []} />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">
                         <Spinner animation="border" />
@@ -1576,21 +1576,188 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     );
 }
 
-function RFQRepliesPanel({ replies }) {
-    const [expanded, setExpanded] = React.useState(null);
+function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
+    const token                                     = localStorage.getItem('access_token');
+    const [expanded, setExpanded]                   = React.useState(null);
+    const [uploading, setUploading]                 = React.useState(false);
+    const [uploadResult, setUploadResult]           = React.useState(null); // { file_name, file_type, prices, is_quotation, extracted_text }
+    const [uploadError, setUploadError]             = React.useState('');
+    const [supplierName, setSupplierName]           = React.useState('');
+    const [supplierPhone, setSupplierPhone]         = React.useState('');
+    const [confirming, setConfirming]               = React.useState(false);
+    const [confirmError, setConfirmError]           = React.useState('');
+    const fileInputRef                              = React.useRef(null);
+
+    const handleFileSelect = async (file) => {
+        if (!file || !rfq?.id || !storeId) return;
+        setUploading(true);
+        setUploadError('');
+        setUploadResult(null);
+        setConfirmError('');
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { Authorization: token },
+                body: fd,
+            });
+            const data = await res.json();
+            if (data.error) { setUploadError(data.error); return; }
+            setUploadResult(data);
+        } catch (e) { setUploadError(e.message); }
+        finally { setUploading(false); }
+    };
+
+    const handleConfirm = async () => {
+        if (!uploadResult || !rfq?.id) return;
+        setConfirming(true);
+        setConfirmError('');
+        try {
+            const body = {
+                supplier_name:  supplierName.trim(),
+                supplier_phone: supplierPhone.trim(),
+                raw_text:       uploadResult.extracted_text || '',
+                prices:         uploadResult.prices || [],
+                run_llm_extraction: false,
+            };
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error) { setConfirmError(data.error); return; }
+            setUploadResult(null);
+            setSupplierName('');
+            setSupplierPhone('');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            onAdded?.();
+        } catch (e) { setConfirmError(e.message); }
+        finally { setConfirming(false); }
+    };
+
+    const uploadSection = (
+        <div style={{ marginBottom: 16, border: '1px dashed #ced4da', borderRadius: 10, padding: 14, background: '#fafafa' }}>
+            <div className="fw-semibold mb-2" style={{ fontSize: 13, color: '#444' }}>
+                <i className="bi bi-upload me-2 text-primary"></i>Upload Supplier Quotation File
+            </div>
+            {!uploadResult && !uploading && (
+                <div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.webp"
+                        style={{ display: 'none' }}
+                        onChange={e => handleFileSelect(e.target.files?.[0])}
+                    />
+                    <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ fontSize: 12 }}
+                    >
+                        <i className="bi bi-file-earmark-arrow-up me-1"></i>Choose File (PDF, Excel, Image)
+                    </button>
+                </div>
+            )}
+            {uploading && (
+                <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: 13 }}>
+                    <span className="spinner-border spinner-border-sm"></span> Extracting prices from file…
+                </div>
+            )}
+            {uploadError && <div className="alert alert-danger py-1 px-2 mt-2" style={{ fontSize: 12 }}>{uploadError}</div>}
+            {uploadResult && (
+                <div>
+                    <div className="d-flex align-items-center gap-2 mb-2" style={{ fontSize: 12, color: '#555' }}>
+                        <i className="bi bi-file-earmark-check text-success"></i>
+                        <strong>{uploadResult.file_name}</strong>
+                        <span className="badge bg-secondary" style={{ fontSize: 10 }}>{uploadResult.file_type}</span>
+                        {uploadResult.is_quotation && <span className="badge bg-success" style={{ fontSize: 10 }}>Quotation</span>}
+                    </div>
+                    {/* Supplier info */}
+                    <div className="row g-2 mb-2">
+                        <div className="col-sm-6">
+                            <input
+                                className="form-control form-control-sm"
+                                placeholder="Supplier name (optional)"
+                                value={supplierName}
+                                onChange={e => setSupplierName(e.target.value)}
+                                style={{ fontSize: 12 }}
+                            />
+                        </div>
+                        <div className="col-sm-6">
+                            <input
+                                className="form-control form-control-sm"
+                                placeholder="Supplier phone (optional)"
+                                value={supplierPhone}
+                                onChange={e => setSupplierPhone(e.target.value)}
+                                style={{ fontSize: 12 }}
+                            />
+                        </div>
+                    </div>
+                    {/* Extracted prices */}
+                    {(uploadResult.prices || []).length > 0 ? (
+                        <div style={{ overflowX: 'auto', marginBottom: 10 }}>
+                            <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ background: '#e8f4fd' }}>
+                                        <th style={{ padding: '5px 8px', textAlign: 'left' }}>Product</th>
+                                        <th style={{ padding: '5px 8px', textAlign: 'left' }}>Part No</th>
+                                        <th style={{ padding: '5px 8px', textAlign: 'right' }}>Qty</th>
+                                        <th style={{ padding: '5px 8px', textAlign: 'right' }}>Unit Price</th>
+                                        <th style={{ padding: '5px 8px', textAlign: 'left' }}>Currency</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {uploadResult.prices.map((p, pi) => (
+                                        <tr key={pi} style={{ borderTop: '1px solid #f0f0f0' }}>
+                                            <td style={{ padding: '5px 8px' }}>{p.product_name || '—'}</td>
+                                            <td style={{ padding: '5px 8px', color: '#666' }}>{p.part_no || '—'}</td>
+                                            <td style={{ padding: '5px 8px', textAlign: 'right' }}>{p.quantity != null ? p.quantity : '—'}</td>
+                                            <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: '#198754' }}>
+                                                {p.unit_price != null ? p.unit_price.toLocaleString() : '—'}
+                                            </td>
+                                            <td style={{ padding: '5px 8px' }}>{p.currency || 'SAR'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="text-muted mb-2" style={{ fontSize: 12 }}>No prices found in the file.</div>
+                    )}
+                    {confirmError && <div className="alert alert-danger py-1 px-2 mb-2" style={{ fontSize: 12 }}>{confirmError}</div>}
+                    <div className="d-flex gap-2">
+                        <button className="btn btn-sm btn-success" onClick={handleConfirm} disabled={confirming} style={{ fontSize: 12 }}>
+                            {confirming ? <span className="spinner-border spinner-border-sm me-1"></span> : <i className="bi bi-check-lg me-1"></i>}
+                            Add to RFQ
+                        </button>
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => { setUploadResult(null); setUploadError(''); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ fontSize: 12 }}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 
     if (!replies || replies.length === 0) {
         return (
-            <div className="text-center py-5 text-muted">
-                <i className="bi bi-chat-left-dots" style={{ fontSize: 40, display: 'block', marginBottom: 12, opacity: 0.35 }}></i>
-                <div style={{ fontSize: 14 }}>No replies received yet</div>
-                <div style={{ fontSize: 12, marginTop: 4 }}>Supplier replies to this RFQ will appear here</div>
+            <div>
+                {uploadSection}
+                <div className="text-center py-4 text-muted">
+                    <i className="bi bi-chat-left-dots" style={{ fontSize: 40, display: 'block', marginBottom: 12, opacity: 0.35 }}></i>
+                    <div style={{ fontSize: 14 }}>No replies received yet</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>Supplier replies to this RFQ will appear here</div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div>
+            {uploadSection}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {replies.map((r, i) => {
                 const isOpen = expanded === i;
                 const ts = r.received_at ? new Date(r.received_at).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
@@ -1700,6 +1867,7 @@ function RFQRepliesPanel({ replies }) {
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }
