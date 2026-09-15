@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Modal, Spinner } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import UserCreate from './create.js';
 import ChangePasswordModal from './ChangePasswordModal.js';
+import PaginationControls from '../utils/PaginationControls.js';
 
 const ACCENT = '#004ac6';
 const isManager = () => localStorage.getItem('user_role') === 'Manager';
@@ -33,6 +35,7 @@ function RoleBadge({ role }) {
 }
 
 function StatusBadge({ active }) {
+    const { t } = useTranslation('common');
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
@@ -45,7 +48,7 @@ function StatusBadge({ active }) {
                 width: '6px', height: '6px', borderRadius: '50%',
                 background: active ? '#16a34a' : '#dc2626', display: 'inline-block',
             }} />
-            {active ? 'Active' : 'Inactive'}
+            {active ? t('Active') : t('Inactive')}
         </span>
     );
 }
@@ -80,6 +83,12 @@ const ManageUsersModal = forwardRef((props, ref) => {
     const [deletingId, setDeletingId] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
 
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+
+    const { t } = useTranslation('common');
+
     const userCreateRef = useRef(null);
     const changePwRef = useRef(null);
 
@@ -88,18 +97,26 @@ const ManageUsersModal = forwardRef((props, ref) => {
             setSearchName('');
             setRoleFilter('');
             setShowInactive(false);
+            setPage(1);
             setShow(true);
             // list() called in useEffect on show change
         },
     }));
 
-    // Instant search: role filter and showInactive fire immediately;
-    // name search is debounced 300 ms to avoid a request on every keystroke.
+    // Initial load + page/pageSize changes
     useEffect(() => {
         if (!show) return;
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [show, roleFilter, showInactive]);
+    }, [show, page, pageSize]);
+
+    // Role / inactive filter changes: reset to page 1 and reload
+    useEffect(() => {
+        if (!show) return;
+        setPage(1);
+        fetchUsers(true, 1, pageSize);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roleFilter, showInactive]);
 
     // Poll online status silently every 15 s while the modal is open.
     useEffect(() => {
@@ -111,23 +128,27 @@ const ManageUsersModal = forwardRef((props, ref) => {
 
     useEffect(() => {
         if (!show) return;
-        const timer = setTimeout(() => list(), 300);
+        const timer = setTimeout(() => {
+            setPage(1);
+            fetchUsers(true, 1, pageSize);
+        }, 300);
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchName]);
 
-    function buildQuery() {
+    function buildQuery(currentPage, currentPageSize) {
         const params = new URLSearchParams();
         if (searchName) params.set('search[name]', searchName);
         if (roleFilter) params.set('search[role]', roleFilter);
         if (showInactive) params.set('search[deleted]', '1');
-        params.set('page_size', '50');
+        params.set('limit', String(currentPageSize));
+        params.set('page', String(currentPage));
         return params.toString();
     }
 
-    function fetchUsers(showSpinner) {
+    function fetchUsers(showSpinner, currentPage, currentPageSize) {
         if (showSpinner) setLoading(true);
-        fetch(`/v1/user?${buildQuery()}`, {
+        fetch(`/v1/user?${buildQuery(currentPage, currentPageSize)}`, {
             headers: { Authorization: localStorage.getItem('access_token') },
         })
             .then(r => r.json())
@@ -139,15 +160,17 @@ const ManageUsersModal = forwardRef((props, ref) => {
                         result = result.filter(u => u.role !== 'Admin' && !u.admin);
                     }
                     setUsers(result);
+                    setTotalCount(data.total_count || 0);
                 } else if (showSpinner) {
                     setUsers([]);
+                    setTotalCount(0);
                 }
             })
-            .catch(() => { if (showSpinner) { setLoading(false); setUsers([]); } });
+            .catch(() => { if (showSpinner) { setLoading(false); setUsers([]); setTotalCount(0); } });
     }
 
-    function list() { fetchUsers(true); }
-    function silentRefresh() { fetchUsers(false); }
+    function list() { fetchUsers(true, page, pageSize); }
+    function silentRefresh() { fetchUsers(false, page, pageSize); }
 
     function openCreate() {
         if (userCreateRef.current) userCreateRef.current.open();
@@ -166,8 +189,8 @@ const ManageUsersModal = forwardRef((props, ref) => {
     function toggleStatus(user) {
         if (!window.confirm(
             user.deleted
-                ? `Activate ${user.name}? They will be able to log in again.`
-                : `Deactivate ${user.name}? They will not be able to log in.`
+                ? t('Activate user confirm', { name: user.name })
+                : t('Deactivate user confirm', { name: user.name })
         )) return;
 
         setTogglingId(user.id);
@@ -182,18 +205,18 @@ const ManageUsersModal = forwardRef((props, ref) => {
                     list();
                     if (props.showToastMessage) props.showToastMessage(data.result, 'success');
                 } else {
-                    const msg = data.errors ? Object.values(data.errors).join('; ') : 'Failed to toggle status';
+                    const msg = data.errors ? Object.values(data.errors).join('; ') : t('Failed to toggle status');
                     if (props.showToastMessage) props.showToastMessage(msg, 'danger');
                 }
             })
             .catch(() => {
                 setTogglingId(null);
-                if (props.showToastMessage) props.showToastMessage('Network error', 'danger');
+                if (props.showToastMessage) props.showToastMessage(t('Network error'), 'danger');
             });
     }
 
     function deleteUser(user) {
-        if (!window.confirm(`Delete ${user.name}? This action cannot be undone.`)) return;
+        if (!window.confirm(t('Delete user confirm', { name: user.name }))) return;
         setDeletingId(user.id);
         fetch(`/v1/user/${user.id}`, {
             method: 'DELETE',
@@ -204,15 +227,15 @@ const ManageUsersModal = forwardRef((props, ref) => {
                 setDeletingId(null);
                 if (data.status) {
                     list();
-                    if (props.showToastMessage) props.showToastMessage('User deleted', 'success');
+                    if (props.showToastMessage) props.showToastMessage(t('User deleted'), 'success');
                 } else {
-                    const msg = data.errors ? Object.values(data.errors).join('; ') : 'Failed to delete user';
+                    const msg = data.errors ? Object.values(data.errors).join('; ') : t('Failed to delete user');
                     if (props.showToastMessage) props.showToastMessage(msg, 'danger');
                 }
             })
             .catch(() => {
                 setDeletingId(null);
-                if (props.showToastMessage) props.showToastMessage('Network error', 'danger');
+                if (props.showToastMessage) props.showToastMessage(t('Network error'), 'danger');
             });
     }
 
@@ -254,16 +277,16 @@ const ManageUsersModal = forwardRef((props, ref) => {
                         onMouseEnter={e => e.currentTarget.style.color = '#111'}
                         onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
                     >
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
 
                     <div style={{ flex: 1 }}>
                         <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '18px', fontWeight: 700, color: '#111827' }}>
                             <i className="bi bi-people-fill me-2" style={{ color: ACCENT }}></i>
-                            Manage Users
+                            {t('Manage Users')}
                         </div>
                         <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px', fontFamily: '"Inter", sans-serif' }}>
-                            {isManager() ? 'Create and manage Manager & SalesMan accounts for your stores' : 'Full user management'}
+                            {isManager() ? t('Create and manage Manager & SalesMan accounts for your stores') : t('Full user management')}
                         </div>
                     </div>
 
@@ -277,7 +300,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                         }}
                     >
                         <i className="bi bi-person-plus-fill"></i>
-                        New User
+                        {t('New User')}
                     </button>
                     <button
                         type="button"
@@ -307,7 +330,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                             <input
                                 className="mum-search-input"
                                 style={{ width: '100%', paddingLeft: '32px' }}
-                                placeholder="Search by name…"
+                                placeholder={t('Search by name…')}
                                 value={searchName}
                                 onChange={e => setSearchName(e.target.value)}
                             />
@@ -319,7 +342,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                             onChange={e => setRoleFilter(e.target.value)}
                             style={{ minWidth: '140px' }}
                         >
-                            <option value="">All Roles</option>
+                            <option value="">{t('All Roles')}</option>
                             {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </div>
@@ -340,7 +363,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                                 transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                             }} />
                         </div>
-                        Show Inactive
+                        {t('Show Inactive')}
                     </label>
                 </div>
 
@@ -349,7 +372,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                     {loading ? (
                         <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
                             <Spinner animation="border" style={{ color: ACCENT }} />
-                            <div style={{ marginTop: '12px', fontSize: '14px' }}>Loading users…</div>
+                            <div style={{ marginTop: '12px', fontSize: '14px' }}>{t('Loading users…')}</div>
                         </div>
                     ) : users.length === 0 ? (
                         <div style={{
@@ -357,20 +380,34 @@ const ManageUsersModal = forwardRef((props, ref) => {
                             background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb',
                         }}>
                             <i className="bi bi-people" style={{ fontSize: '48px', color: '#d1d5db' }}></i>
-                            <div style={{ marginTop: '12px', fontSize: '15px', fontWeight: 600, color: '#6b7280' }}>No users found</div>
-                            <div style={{ marginTop: '6px', fontSize: '13px' }}>Try adjusting your filters or create a new user.</div>
+                            <div style={{ marginTop: '12px', fontSize: '15px', fontWeight: 600, color: '#6b7280' }}>{t('No users found')}</div>
+                            <div style={{ marginTop: '6px', fontSize: '13px' }}>{t('Try adjusting your filters or create a new user.')}</div>
                         </div>
                     ) : (
                         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+                            <div style={{ padding: '10px 14px', borderBottom: '1px solid #f0f2f5', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <PaginationControls
+                                    showSizePicker={true}
+                                    totalPages={Math.ceil(totalCount / pageSize) || 1}
+                                    page={page}
+                                    totalItems={totalCount}
+                                    offset={(page - 1) * pageSize}
+                                    currentPageItemsCount={users.length}
+                                    pageSize={pageSize}
+                                    onPageChange={(newPage) => setPage(newPage)}
+                                    onPageSizeChange={(size) => { setPageSize(parseInt(size)); setPage(1); }}
+                                    pageSizes={[10, 20, 50, 100]}
+                                />
+                            </div>
                             <table className="mum-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Email / Phone</th>
-                                        <th>Role</th>
-                                        <th>Stores</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: 'right' }}>Actions</th>
+                                        <th>{t('Name')}</th>
+                                        <th>{t('Email / Phone')}</th>
+                                        <th>{t('Role')}</th>
+                                        <th>{t('Stores')}</th>
+                                        <th>{t('Status')}</th>
+                                        <th style={{ textAlign: 'right' }}>{t('Actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -392,7 +429,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                                                         {u.online && (
                                                             <div style={{ fontSize: '11px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
-                                                                Online
+                                                                {t('Online')}
                                                             </div>
                                                         )}
                                                     </div>
@@ -419,7 +456,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                                                         }}>{s}</span>
                                                     ))}
                                                     {(u.store_names || []).length > 3 && (
-                                                        <span style={{ fontSize: '11px', color: '#9ca3af' }}>+{u.store_names.length - 3} more</span>
+                                                        <span style={{ fontSize: '11px', color: '#9ca3af' }}>+{u.store_names.length - 3} {t('more')}</span>
                                                     )}
                                                     {!(u.store_names || []).length && (
                                                         <span style={{ fontSize: '12px', color: '#d1d5db' }}>—</span>
@@ -435,19 +472,19 @@ const ManageUsersModal = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                                                     <ActionBtn
                                                         icon="bi-pencil"
-                                                        title="Edit user"
+                                                        title={t('Edit user')}
                                                         color="#3b82f6"
                                                         onClick={() => openEdit(u)}
                                                     />
                                                     <ActionBtn
                                                         icon="bi-key"
-                                                        title="Change password"
+                                                        title={t('Change password')}
                                                         color="#8b5cf6"
                                                         onClick={() => openChangePassword(u)}
                                                     />
                                                     <ActionBtn
                                                         icon={u.deleted ? 'bi-person-check' : 'bi-person-slash'}
-                                                        title={u.deleted ? 'Activate user' : 'Deactivate user'}
+                                                        title={u.deleted ? t('Activate user') : t('Deactivate user')}
                                                         color={u.deleted ? '#16a34a' : '#f59e0b'}
                                                         onClick={() => toggleStatus(u)}
                                                         disabled={togglingId === u.id}
@@ -455,7 +492,7 @@ const ManageUsersModal = forwardRef((props, ref) => {
                                                     {canDelete(u) && (
                                                         <ActionBtn
                                                             icon="bi-trash3"
-                                                            title="Delete user permanently"
+                                                            title={t('Delete user permanently')}
                                                             color="#dc2626"
                                                             onClick={() => deleteUser(u)}
                                                             disabled={deletingId === u.id}

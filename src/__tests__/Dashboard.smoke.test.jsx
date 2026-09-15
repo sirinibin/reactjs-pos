@@ -61,6 +61,10 @@ jest.mock('../Footer', () => () => null);
 jest.mock('../Sidebar', () => () => null);
 jest.mock('../Topbar', () => () => null);
 jest.mock('../user/login.js', () => () => null);
+jest.mock('../quotation/create.js', () => {
+  const React = require('react');
+  return { __esModule: true, default: React.forwardRef((_props, _ref) => null) };
+});
 
 // ── Domain index components ────────────────────────────────────────────────
 jest.mock('../posting/index.js', () => () => null);

@@ -25,7 +25,7 @@ const SRC = fs.readFileSync(
 
 describe('ManageUsersModal — fetchUsers(showSpinner) abstraction', () => {
     test('fetchUsers function is defined', () => {
-        expect(SRC).toMatch(/function fetchUsers\s*\(\s*showSpinner\s*\)/);
+        expect(SRC).toMatch(/function fetchUsers\s*\(\s*showSpinner/);
     });
 
     test('fetchUsers calls setLoading(true) only when showSpinner is true', () => {
@@ -49,11 +49,11 @@ describe('ManageUsersModal — fetchUsers(showSpinner) abstraction', () => {
 
 describe('ManageUsersModal — list() and silentRefresh() wrappers', () => {
     test('list() calls fetchUsers(true)', () => {
-        expect(SRC).toMatch(/function list\s*\(\s*\)\s*\{\s*fetchUsers\s*\(\s*true\s*\)/);
+        expect(SRC).toMatch(/function list\s*\(\s*\)\s*\{\s*fetchUsers\s*\(\s*true/);
     });
 
     test('silentRefresh() calls fetchUsers(false)', () => {
-        expect(SRC).toMatch(/function silentRefresh\s*\(\s*\)\s*\{\s*fetchUsers\s*\(\s*false\s*\)/);
+        expect(SRC).toMatch(/function silentRefresh\s*\(\s*\)\s*\{\s*fetchUsers\s*\(\s*false/);
     });
 
     test('list() does NOT call setLoading directly', () => {

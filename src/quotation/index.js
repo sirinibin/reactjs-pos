@@ -682,16 +682,15 @@ function QuotationIndex(props) {
     }, 50);
   }
 
-  // Auto-open create form with RFQ prefill when opened from RFQ page (new tab)
+  // Auto-open create form with RFQ prefill when navigated from RFQ page
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('from_rfq') === '1') {
       try {
-        // Use localStorage so prefill survives a new browser tab (sessionStorage is per-tab)
-        const raw = localStorage.getItem('rfq_quotation_prefill');
+        const raw = sessionStorage.getItem('rfq_quotation_prefill');
         if (raw) {
           const prefill = JSON.parse(raw);
-          localStorage.removeItem('rfq_quotation_prefill');
+          sessionStorage.removeItem('rfq_quotation_prefill');
           history.replace('/dashboard/quotations');
           // Wait for component to mount
           setTimeout(() => openCreateForm(prefill), 200);
