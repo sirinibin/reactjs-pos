@@ -305,6 +305,13 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                         ) : (
                                             <div className="text-muted" style={{ fontSize: '12px' }}>{t('No prices found in document')}</div>
                                         )}
+                                        {/* General quotation conditions (validity, delivery, payment) */}
+                                        {result.general_notes && (
+                                            <div className="mt-2 p-2" style={{ background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '6px', fontSize: '12px' }}>
+                                                <i className="bi bi-info-circle me-1 text-secondary"></i>
+                                                <strong>{t('Quotation Terms')}:</strong> {result.general_notes}
+                                            </div>
+                                        )}
                                         {/* Suggest a matching RFQ when no RFQ ID was in the document */}
                                         {!result.rfq_code && result.suggested_rfq_code && (
                                             <div className="mt-3 p-2" style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', fontSize: '12px' }}>

@@ -1726,6 +1726,12 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
                     ) : (
                         <div className="text-muted mb-2" style={{ fontSize: 12 }}>No prices found in the file.</div>
                     )}
+                    {uploadResult.general_notes && (
+                        <div className="mb-2 p-2" style={{ background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: 6, fontSize: 12 }}>
+                            <i className="bi bi-info-circle me-1 text-secondary"></i>
+                            <strong>Quotation Terms:</strong> {uploadResult.general_notes}
+                        </div>
+                    )}
                     {confirmError && <div className="alert alert-danger py-1 px-2 mb-2" style={{ fontSize: 12 }}>{confirmError}</div>}
                     <div className="d-flex gap-2">
                         <button className="btn btn-sm btn-success" onClick={handleConfirm} disabled={confirming} style={{ fontSize: 12 }}>
@@ -1854,6 +1860,13 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
                                                 </tbody>
                                             </table>
                                         </div>
+                                    </div>
+                                )}
+                                {/* Quotation-wide terms (validity, delivery, payment) */}
+                                {r.general_notes && (
+                                    <div style={{ marginTop: 10, padding: '8px 10px', background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: 6, fontSize: 12 }}>
+                                        <i className="bi bi-info-circle me-1 text-secondary"></i>
+                                        <strong>Quotation Terms:</strong> {r.general_notes}
                                     </div>
                                 )}
                                 {/* Extraction error */}
