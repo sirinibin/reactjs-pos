@@ -122,12 +122,13 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
     const handleExtract = async () => {
         setError('');
         setResult(null);
-        if (!isQuotationMode && !hasApiKey) { setError(t('No API key saved for this provider. Add it under Store → AI Models.')); return; }
+        if (!hasApiKey) { setError(t('No API key saved for this provider. Add it under Store → AI Models.')); return; }
         setExtracting(true);
         try {
             if (isQuotationMode) {
-                // Supplier quotation mode — use the dedicated price extraction endpoint.
-                const res = await fetch(`/v1/procurement-messages/${msg.id}/extract-quotation?store_id=${storeId}`, {
+                // Supplier quotation mode — use the dedicated price extraction endpoint with selected LLM.
+                const url = `/v1/procurement-messages/${msg.id}/extract-quotation?store_id=${storeId}&llm_provider=${encodeURIComponent(provider)}&llm_model=${encodeURIComponent(model)}`;
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { Authorization: token },
                 });
@@ -168,8 +169,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                         <button className="btn-close" onClick={onClose} />
                     </div>
                     <div className="modal-body">
-                        {/* Provider + Model (hidden in quotation mode — backend uses store LLM) */}
-                        <div className="row g-3 mb-4" hidden={isQuotationMode}>
+                        {/* Provider + Model */}
+                        <div className="row g-3 mb-4">
                             <div className="col-md-4">
                                 <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>{t('Provider')}</label>
                                 <select
@@ -227,8 +228,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                             </ul>
                         </div>
 
-                        {/* Additional file upload */}
-                        <div className="mb-3">
+                        {/* Additional file upload (RFQ mode only — quotation reads from saved attachments) */}
+                        <div className="mb-3" hidden={isQuotationMode}>
                             <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>
                                 {t('Additional Files')} <span className="text-muted fw-normal" style={{ fontSize: '12px' }}>({t('optional — image, PDF, Excel, CSV, text')})</span>
                             </label>

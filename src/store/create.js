@@ -7432,11 +7432,55 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    {/* 3. Google Maps API Key */}
+                                    {/* 2b. Classification LLM — for auto-labeling incoming messages */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', background: '#fff8f0', border: '1px solid #fed7aa' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-tags me-2 text-warning"></i>
+                                            {t('3. Classification LLM')} <small className="text-muted fw-normal">({t('auto-labels incoming emails & WhatsApp messages')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                            {t('Classifies incoming messages as')} <strong>{t('Customer RFQ')}</strong> {t('or')} <strong>{t('Supplier Quotation')}</strong> {t('(all others are ignored). Leave blank to use the LLM Model above.')}
+                                        </p>
+                                        <div className="row g-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.classify_llm_provider || ''}
+                                                    onChange={e => { formData.settings.classify_llm_provider = e.target.value; formData.settings.classify_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Same as LLM Model above —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.classify_llm_model || ''}
+                                                    onChange={e => { formData.settings.classify_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.classify_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.classify_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.classify_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 4. Google Maps API Key */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
                                             <i className="bi bi-geo-alt me-2 text-danger"></i>
-                                            {t('3. Google Maps API Key')} <small className="text-muted fw-normal">({t('finds suppliers by product category')})</small>
+                                            {t('4. Google Maps API Key')} <small className="text-muted fw-normal">({t('finds suppliers by product category')})</small>
                                         </h6>
                                         <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
                                             {t('Used to search Google Maps Places API for suppliers matching the RFQ product categories.')} {t('Enable')} <strong>Places API</strong> {t('in your Google Cloud project. If enough suppliers are already in the RFQ Suppliers database, Google Maps won\'t be queried.')}
