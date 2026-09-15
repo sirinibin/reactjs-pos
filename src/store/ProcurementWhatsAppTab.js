@@ -356,6 +356,20 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                     </div>
                                 )}
 
+                                {/* Categories (RFQ mode only) */}
+                                {!result._quotation && (result.product_categories || []).length > 0 && (
+                                    <div className="mb-3">
+                                        <div className="fw-semibold mb-1" style={{ color: '#155724' }}><i className="bi bi-tags me-1"></i>{t('Product Categories')}</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {result.product_categories.map((cat, i) => (
+                                                <span key={i} className="badge" style={{ background: '#d1ecf1', color: '#0c5460', fontSize: '12px', padding: '5px 10px', borderRadius: '20px' }}>
+                                                    <i className="bi bi-tag me-1"></i>{cat}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* General Instructions (RFQ mode only) */}
                                 {!result._quotation && result.general_instructions && (
                                     <div className="mb-3">

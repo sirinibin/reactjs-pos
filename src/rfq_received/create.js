@@ -6,6 +6,7 @@ import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
+import { AI_PROVIDERS, modelsForProvider } from "../utils/aiProviders.js";
 
 const ACCEPTED_TYPES = ".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv,.txt";
 const FILE_ICONS = {
@@ -30,7 +31,7 @@ function fmtSize(b) {
     return (b / 1048576).toFixed(1) + " MB";
 }
 
-const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id: "", customer_email: "", customer_phone: "", text_content: "" });
+const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id: "", customer_email: "", customer_phone: "", text_content: "", general_instructions: "" });
 
 const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated }, ref) {
     const [show, setShow] = useState(false);
@@ -38,6 +39,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     const [form, setForm] = useState(EMPTY_FORM());
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
+    const [sourceMsgId, setSourceMsgId] = useState(null);
+    const [sourceMsgCode, setSourceMsgCode] = useState(null);
 
     // Customer
     const [customerOptions, setCustomerOptions]   = useState([]);
@@ -66,11 +69,27 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     const [isDragOverAdditional, setIsDragOverAdditional] = useState(false);
     const [extracting, setExtracting]           = useState(false);
     const [extractionModel, setExtractionModel] = useState("");
+    const [extractedCategories, setExtractedCategories] = useState([]);
     const [syncingProducts, setSyncingProducts] = useState(false);
     const productFileInputRef    = useRef(null);
     const additionalFileInputRef = useRef(null);
     const productDropZoneRef     = useRef(null);
     const additionalDropZoneRef  = useRef(null);
+
+    // AI File Extraction section
+    const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+    const defaultAIProvider = AI_PROVIDERS.find(p => storeSettings?.[p.apiKeyField]) || AI_PROVIDERS[0];
+    const [aiProvider, setAIProvider] = useState(defaultAIProvider.value);
+    const [aiModel, setAIModel]       = useState(modelsForProvider(defaultAIProvider.value)[0]?.value || '');
+    const [aiFiles, setAIFiles]       = useState([]);
+    const [isDragOverAI, setIsDragOverAI] = useState(false);
+    const [aiExtracting, setAIExtracting] = useState(false);
+    const aiFileInputRef = useRef(null);
+    const aiDropZoneRef  = useRef(null);
+
+    // Text extraction LLM selector
+    const [textProvider, setTextProvider] = useState(defaultAIProvider.value);
+    const [textModel, setTextModel]       = useState(modelsForProvider(defaultAIProvider.value)[0]?.value || '');
 
 
     // Sub-form refs
@@ -84,6 +103,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     useImperativeHandle(ref, () => ({
         open() {
             setEditId(null);
+            setSourceMsgId(null);
+            setSourceMsgCode(null);
             setForm(EMPTY_FORM());
             setErrors({});
             setSelectedCustomers([]);
@@ -95,22 +116,38 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setProductFiles([]);
             setAdditionalFiles([]);
             setExtractionModel("");
+            setExtractedCategories([]);
+            setAIFiles([]);
             setShow(true);
         },
         edit(rfq) {
             setEditId(rfq.id || rfq._id);
+            setSourceMsgId(null);
+            setSourceMsgCode(null);
             setForm({
-                customer_id:     rfq.customer_id || "",
-                customer_name:   rfq.customer_name || "",
-                customer_rfq_id: rfq.customer_rfq_id || "",
-                customer_email:  rfq.customer_email || "",
-                customer_phone:  rfq.customer_phone || "",
-                text_content:    rfq.text_content || "",
+                customer_id:          rfq.customer_id || "",
+                customer_name:        rfq.customer_name || "",
+                customer_rfq_id:      rfq.customer_rfq_id || "",
+                customer_email:       rfq.customer_email || "",
+                customer_phone:       rfq.customer_phone || "",
+                text_content:         rfq.text_content || "",
+                general_instructions: rfq.general_instructions || "",
             });
             setErrors({});
-            setSelectedCustomers([]);
             setCustomerOptions([]);
             setOpenCustomerSearch(false);
+            if (rfq.customer_id && rfq.customer_name) {
+                setSelectedCustomers([{
+                    id:           rfq.customer_id,
+                    search_label: rfq.customer_name,
+                    name:         rfq.customer_name,
+                    phone:        rfq.customer_phone || "",
+                    email:        rfq.customer_email || "",
+                    company:      rfq.customer_company || "",
+                }]);
+            } else {
+                setSelectedCustomers([]);
+            }
             const mappedProducts = Array.isArray(rfq.products)
                 ? rfq.products.map(p => ({
                     product_id: p.product_id || "",
@@ -118,6 +155,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     name:       p.name || "",
                     quantity:   p.quantity || 1,
                     unit:       p.unit || "PCE",
+                    notes:      p.notes || "",
                 }))
                 : [];
             setProducts(mappedProducts);
@@ -131,6 +169,49 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setAdditionalFiles([]);
             setExtractionModel("");
             setShow(true);
+        },
+        openFromExtraction(data, msgId, msgCode) {
+            setEditId(null);
+            setSourceMsgId(msgId || null);
+            setSourceMsgCode(msgCode || null);
+            setForm({
+                customer_id:          "",
+                customer_name:        data.customer_name || "",
+                customer_rfq_id:      "",
+                customer_email:       data.customer_email || "",
+                customer_phone:       data.customer_phone || "",
+                text_content:         "",
+                general_instructions: data.general_instructions || "",
+            });
+            setErrors({});
+            setSelectedCustomers([]);
+            setCustomerOptions([]);
+            setOpenCustomerSearch(false);
+            const mappedProducts = (data.products || []).map(p => ({
+                product_id: "",
+                part_no:    p.part_no || "",
+                name:       p.name || "",
+                quantity:   p.quantity || 1,
+                unit:       p.unit || "PCE",
+                notes:      p.notes || "",
+            }));
+            setProducts(mappedProducts);
+            setProductOptions([]);
+            setOpenProductSearch(false);
+            setProductFiles([]);
+            setAdditionalFiles([]);
+            setExtractionModel(data.llm_model || "");
+            setExtractedCategories(data.product_categories || []);
+            setAIFiles([]);
+            setShow(true);
+            // Auto-find or create customer, then auto-sync products
+            autoCreateOrFindCustomer(
+                data.customer_name, data.customer_phone,
+                data.customer_email, data.customer_company
+            );
+            if (mappedProducts.some(p => p.name)) {
+                autoSyncProducts(mappedProducts);
+            }
         },
     }));
 
@@ -278,6 +359,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 name:       product.name || "",
                 quantity:   1,
                 unit:       resolveUnit(product.unit),
+                notes:      "",
                 is_service: product.is_service || false,
             }]);
         }
@@ -336,6 +418,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         reader.readAsArrayBuffer(file);
     });
 
+    // eslint-disable-next-line no-unused-vars
     const extractFromExcel = async (files) => {
         setExtracting(true);
         try {
@@ -369,22 +452,16 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         } finally { setExtracting(false); }
     };
 
-    const addProductFiles = async (incoming) => {
-        const excelExts = new Set(["xlsx", "xls"]);
+    const addProductFiles = (incoming) => {
         const allowed = Array.from(incoming).filter(f => {
             const ext = f.name.split(".").pop().toLowerCase();
             return ["jpg","jpeg","png","gif","webp","pdf","xlsx","xls","csv"].includes(ext);
         });
         if (!allowed.length) return;
-        const excelFiles = allowed.filter(f => excelExts.has(f.name.split(".").pop().toLowerCase()));
-        const otherFiles = allowed.filter(f => !excelExts.has(f.name.split(".").pop().toLowerCase()));
-        if (otherFiles.length > 0) {
-            setProductFiles(prev => {
-                const seen = new Set(prev.map(f => f.name + f.size));
-                return [...prev, ...otherFiles.filter(f => !seen.has(f.name + f.size))];
-            });
-        }
-        if (excelFiles.length > 0) await extractFromExcel(excelFiles);
+        setProductFiles(prev => {
+            const seen = new Set(prev.map(f => f.name + f.size));
+            return [...prev, ...allowed.filter(f => !seen.has(f.name + f.size))];
+        });
     };
 
     const onProductDragOver  = e => { e.preventDefault(); setIsDragOverProduct(true); };
@@ -419,7 +496,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         const deduped = [];
         const seenIds = new Set();
         for (const ep of productList) {
-            const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "" };
+            const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "", notes: ep.notes || "" };
             if (ep.product_id) {
                 if (!seenIds.has(ep.product_id)) { seenIds.add(ep.product_id); deduped.push({ ...base, product_id: ep.product_id }); }
                 continue;
@@ -482,6 +559,33 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         return deduped;
     };
 
+    // ── Auto-create or find customer from extracted data ─────────────────────
+    const autoCreateOrFindCustomer = useCallback(async (name, phone, email, company) => {
+        if (!name && !phone) return;
+        const storeId = localStorage.getItem("store_id");
+        const token   = localStorage.getItem("access_token");
+        try {
+            const res = await fetch(`/v1/customer/find-or-create?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ name: name?.trim(), phone: phone?.trim(), email: email?.trim(), company: company?.trim() }),
+            });
+            const d = await res.json();
+            if (res.ok && d.result?.id) {
+                const c = d.result;
+                setSelectedCustomers([{ ...c, search_label: c.name }]);
+                setForm(f => ({ ...f, customer_id: c.id, customer_name: c.name || name }));
+                if (d.created) {
+                    showToastMessage && showToastMessage(`Customer "${c.name}" created`, "success");
+                }
+            } else {
+                showToastMessage && showToastMessage(`Could not find/create customer: ${JSON.stringify(d.error || d)}`, "danger");
+            }
+        } catch (e) {
+            showToastMessage && showToastMessage("Customer error: " + e.message, "danger");
+        }
+    }, [showToastMessage]);
+
     // ── Auto-create/link products (called from Extract button, edit mode) ────
     const autoSyncProducts = useCallback(async (productList) => {
         const storeId = localStorage.getItem("store_id");
@@ -507,6 +611,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         try {
             const fd = new FormData();
             fd.append("text_content", text);
+            if (textProvider) fd.append("llm_provider", textProvider);
+            if (textModel)    fd.append("llm_model", textModel);
             const resp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
                 method: "POST", headers: { Authorization: token }, body: fd,
             });
@@ -534,6 +640,57 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         } finally {
             setExtracting(false);
         }
+    };
+
+    // ── AI File Extraction section handlers ───────────────────────────────────
+    const addAIFiles = (incoming) => {
+        const allowed = Array.from(incoming).filter(f => {
+            const ext = f.name.split(".").pop().toLowerCase();
+            return ["jpg","jpeg","png","gif","webp","pdf","xlsx","xls","csv","txt"].includes(ext);
+        });
+        if (!allowed.length) return;
+        setAIFiles(prev => {
+            const seen = new Set(prev.map(f => f.name + f.size));
+            return [...prev, ...allowed.filter(f => !seen.has(f.name + f.size))];
+        });
+    };
+    const onAIDragOver  = e => { e.preventDefault(); setIsDragOverAI(true); };
+    const onAIDragLeave = e => { if (!aiDropZoneRef.current?.contains(e.relatedTarget)) setIsDragOverAI(false); };
+    const onAIDrop      = e => { e.preventDefault(); setIsDragOverAI(false); addAIFiles(e.dataTransfer.files); };
+    const removeAIFile  = i => setAIFiles(prev => prev.filter((_, idx) => idx !== i));
+
+    const handleAIExtract = async () => {
+        if (!aiFiles.length) { showToastMessage && showToastMessage("Please upload at least one file for AI extraction.", "danger"); return; }
+        const storeId = localStorage.getItem("store_id");
+        const token   = localStorage.getItem("access_token");
+        setAIExtracting(true);
+        try {
+            const fd = new FormData();
+            fd.append("llm_provider", aiProvider);
+            fd.append("llm_model", aiModel);
+            aiFiles.forEach(f => fd.append("files", f));
+            const resp = await fetch(`/v1/rfq-received/extract?store_id=${storeId}`, {
+                method: "POST", headers: { Authorization: token }, body: fd,
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) { showToastMessage && showToastMessage(data.error || "AI extraction failed", "danger"); return; }
+            if (data.customer_name) {
+                setSelectedCustomers([{ id: "", search_label: data.customer_name, name: data.customer_name, phone: data.customer_phone || "" }]);
+                setForm(f => ({ ...f, customer_id: "", customer_name: data.customer_name }));
+            }
+            if (Array.isArray(data.products) && data.products.length > 0) {
+                const extracted = data.products.map(p => ({
+                    product_id: "", part_no: p.part_no || "", name: p.name || "",
+                    quantity: p.quantity || 1, unit: p.unit || "PCE",
+                }));
+                setProducts(extracted);
+                await autoSyncProducts(extracted);
+            }
+            if (data.llm_model) setExtractionModel(data.llm_model);
+            showToastMessage && showToastMessage("Products extracted — review and adjust.", "success");
+        } catch (err) {
+            showToastMessage && showToastMessage("AI extraction error: " + err.message, "danger");
+        } finally { setAIExtracting(false); }
     };
 
     // Convert File objects to base64 data URIs
@@ -607,15 +764,20 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 customer_rfq_id:       currentForm.customer_rfq_id || undefined,
                 text_content:          currentForm.text_content,
                 extraction_model:      extractionModel || undefined,
+                product_categories:    extractedCategories.length > 0 ? extractedCategories : undefined,
                 attachment_data_uris:             attachmentDataURIs.length > 0 ? attachmentDataURIs : undefined,
                 additional_attachment_data_uris: additionalAttachmentDataURIs.length > 0 ? additionalAttachmentDataURIs : undefined,
                 // When product-files are uploaded, skip products table — files shown in preview instead
+                general_instructions:      currentForm.general_instructions || undefined,
+                procurement_message_id:    sourceMsgId || undefined,
+                procurement_message_code:  sourceMsgCode || undefined,
                 products: hasProductFiles ? [] : currentProducts.map(p => ({
                     product_id: p.product_id || undefined,
                     part_no:    p.part_no,
                     name:       p.name,
                     quantity:   parseFloat(p.quantity) || 1,
                     unit:       p.unit,
+                    notes:      p.notes || undefined,
                 })),
             };
             const url = editId
@@ -973,11 +1135,12 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                         <thead className="table-light">
                             <tr>
                                 <th style={{ width: "32px" }}>#</th>
-                                <th style={{ width: "140px" }}>Part No.</th>
+                                <th style={{ width: "120px" }}>Part No.</th>
                                 <th>Product Name</th>
-                                <th style={{ width: "90px" }}>Qty</th>
-                                <th style={{ width: "65px" }}>Unit</th>
-                                <th style={{ width: "60px" }}></th>
+                                <th style={{ width: "80px" }}>Qty</th>
+                                <th style={{ width: "60px" }}>Unit</th>
+                                <th>Notes <span className="text-muted fw-normal" style={{ fontSize: "11px" }}>(product-specific specs)</span></th>
+                                <th style={{ width: "36px" }}></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -998,6 +1161,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                                     </td>
                                     <td><input type="number" min="0" step="any" className="form-control form-control-sm text-end" value={p.quantity} onWheel={e => e.target.blur()} onChange={e => updateProductField(i, "quantity", e.target.value)} /></td>
                                     <td><input type="text" className="form-control form-control-sm" value={p.unit} onChange={e => updateProductField(i, "unit", e.target.value)} placeholder="EA" /></td>
+                                    <td><textarea rows={2} className="form-control form-control-sm" style={{ fontSize: "12px", resize: "vertical", minHeight: "40px" }} value={p.notes || ""} onChange={e => updateProductField(i, "notes", e.target.value)} placeholder="e.g. Power Supply: 220V, 60Hz, 7.5kW…" /></td>
                                     <td className="text-center">
                                         <div style={{ color: "red", cursor: "pointer" }} onClick={() => removeProductRow(i)}>
                                             <i className="bi bi-trash"></i>
@@ -1013,17 +1177,57 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     </div>
                 )}
 
+                {/* ── General Instructions ──────────────────────────────────── */}
+                <div className="mb-3">
+                    <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 600 }}>
+                        <i className="bi bi-info-circle me-1 text-primary"></i>General Instructions
+                        <span className="text-muted ms-2" style={{ fontSize: "11px", fontWeight: 400 }}>
+                            — applies to the whole RFQ (delivery terms, datasheet requests, etc.)
+                        </span>
+                    </label>
+                    <textarea
+                        className="form-control"
+                        rows={3}
+                        value={form.general_instructions}
+                        onChange={e => setForm(f => ({ ...f, general_instructions: e.target.value }))}
+                        placeholder="e.g. Provide technical datasheet, unit price, warranty, delivery lead time. If exact model unavailable propose nearest equivalent."
+                        style={{ fontSize: "13px" }}
+                    />
+                </div>
+
                 {/* ── Additional description ────────────────────────────────── */}
                 <div className="mb-3">
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", flexWrap: "wrap" }}>
                         <label className="form-label fw-semibold mb-0">Additional Description / Enquiry Text</label>
-                        <Button variant="outline-primary" size="sm" style={{ marginLeft: "auto" }}
-                            disabled={!form.text_content.trim() || extracting}
-                            onClick={handleExtractFromText}>
-                            {extracting
-                                ? <><Spinner animation="border" size="sm" className="me-1" />Extracting…</>
-                                : <><i className="bi bi-magic me-1"></i>Extract Products from Text</>}
-                        </Button>
+                        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
+                            <select
+                                className="form-select form-select-sm"
+                                style={{ width: "140px", fontSize: "12px" }}
+                                value={textProvider}
+                                onChange={e => { setTextProvider(e.target.value); setTextModel(modelsForProvider(e.target.value)[0]?.value || ''); }}
+                            >
+                                {AI_PROVIDERS.map(p => (
+                                    <option key={p.value} value={p.value}>{p.label}{storeSettings?.[p.apiKeyField] ? ' ✅' : ''}</option>
+                                ))}
+                            </select>
+                            <select
+                                className="form-select form-select-sm"
+                                style={{ width: "180px", fontSize: "12px" }}
+                                value={textModel}
+                                onChange={e => setTextModel(e.target.value)}
+                            >
+                                {modelsForProvider(textProvider).map(m => (
+                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}</option>
+                                ))}
+                            </select>
+                            <Button variant="outline-primary" size="sm"
+                                disabled={!form.text_content.trim() || extracting}
+                                onClick={handleExtractFromText}>
+                                {extracting
+                                    ? <><Spinner animation="border" size="sm" className="me-1" />Extracting…</>
+                                    : <><i className="bi bi-magic me-1"></i>Extract from Text</>}
+                            </Button>
+                        </div>
                     </div>
                     <textarea
                         className={`form-control ${errors.text_content ? "is-invalid" : ""}`}
@@ -1038,9 +1242,9 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 {/* ── Products file upload (shown in place of products table) ── */}
                 <div className="mb-2">
                     <label className="form-label mb-1" style={{ fontSize: "13px", fontWeight: 600 }}>
-                        <i className="bi bi-file-earmark-arrow-up me-1 text-primary"></i>Products
+                        <i className="bi bi-file-earmark-arrow-up me-1 text-primary"></i>Products File
                         <span className="text-muted ms-2" style={{ fontSize: "11px", fontWeight: 400 }}>
-                            Excel → products extracted automatically · PDF/Image/CSV → shown as-is in place of products table
+                            PDF / Image / CSV / Excel — shown as-is in place of products table
                         </span>
                     </label>
                     <div
@@ -1052,20 +1256,15 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                             background: isDragOverProduct ? "#eff6ff" : "#f8fafc",
                             transition: "all 0.15s",
                         }}>
-                        {extracting && (
-                            <div className="text-center text-muted py-1" style={{ fontSize: "13px" }}>
-                                <Spinner animation="border" size="sm" className="me-2" />Extracting products from Excel…
-                            </div>
-                        )}
-                        {!extracting && productFiles.length === 0 ? (
+                        {productFiles.length === 0 ? (
                             <div className="text-center text-muted" style={{ padding: "4px 0" }}>
                                 <i className="bi bi-table" style={{ fontSize: "20px", color: "#94a3b8", display: "block", marginBottom: "3px" }}></i>
                                 <span style={{ fontSize: "12px" }}>
-                                    Drop PDF, image, or Excel here, or{" "}
+                                    Drop PDF, image, CSV, or Excel here, or{" "}
                                     <span style={{ color: "#2563eb", cursor: "pointer", textDecoration: "underline" }} onClick={() => productFileInputRef.current?.click()}>browse</span>
                                 </span>
                             </div>
-                        ) : !extracting && (
+                        ) : (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
                                 {productFiles.map((f, i) => {
                                     const { icon, color } = fileIcon(f.name);
@@ -1090,6 +1289,88 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     </div>
                     <input ref={productFileInputRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv" multiple style={{ display: "none" }}
                         onChange={e => { addProductFiles(e.target.files); e.target.value = ""; }} />
+                </div>
+
+                {/* ── AI File Extraction section ─────────────────────────────── */}
+                <div className="mb-3" style={{ border: "1px solid #c7d2fe", borderRadius: "8px", padding: "12px 14px", background: "#f5f3ff" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
+                        <i className="bi bi-cpu text-primary" style={{ fontSize: "15px" }}></i>
+                        <span style={{ fontWeight: 600, fontSize: "13px" }}>AI File Extraction</span>
+                        <span style={{ fontSize: "11px", color: "#6c757d", marginLeft: "4px" }}>
+                            Upload Excel / CSV / PDF / Image / TXT → AI extracts products
+                        </span>
+                        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap" }}>
+                            <select
+                                className="form-select form-select-sm"
+                                style={{ width: "140px", fontSize: "12px" }}
+                                value={aiProvider}
+                                onChange={e => { setAIProvider(e.target.value); setAIModel(modelsForProvider(e.target.value)[0]?.value || ''); }}
+                            >
+                                {AI_PROVIDERS.map(p => (
+                                    <option key={p.value} value={p.value}>{p.label}{storeSettings?.[p.apiKeyField] ? ' ✅' : ''}</option>
+                                ))}
+                            </select>
+                            <select
+                                className="form-select form-select-sm"
+                                style={{ width: "190px", fontSize: "12px" }}
+                                value={aiModel}
+                                onChange={e => setAIModel(e.target.value)}
+                            >
+                                {modelsForProvider(aiProvider).map(m => (
+                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}</option>
+                                ))}
+                            </select>
+                            <Button variant="primary" size="sm"
+                                disabled={!aiFiles.length || aiExtracting}
+                                onClick={handleAIExtract}>
+                                {aiExtracting
+                                    ? <><Spinner animation="border" size="sm" className="me-1" />Extracting…</>
+                                    : <><i className="bi bi-magic me-1"></i>Extract</>}
+                            </Button>
+                        </div>
+                    </div>
+                    <div
+                        ref={aiDropZoneRef}
+                        onDragOver={onAIDragOver} onDragLeave={onAIDragLeave} onDrop={onAIDrop}
+                        style={{
+                            border: `2px dashed ${isDragOverAI ? "#4f46e5" : "#a5b4fc"}`,
+                            borderRadius: "8px", padding: "10px 14px",
+                            background: isDragOverAI ? "#ede9fe" : "#fff",
+                            transition: "all 0.15s",
+                        }}>
+                        {aiFiles.length === 0 ? (
+                            <div className="text-center text-muted" style={{ padding: "4px 0" }}>
+                                <i className="bi bi-file-earmark-arrow-up" style={{ fontSize: "20px", color: "#a5b4fc", display: "block", marginBottom: "3px" }}></i>
+                                <span style={{ fontSize: "12px" }}>
+                                    Drop Excel, CSV, PDF, image, or TXT here, or{" "}
+                                    <span style={{ color: "#4f46e5", cursor: "pointer", textDecoration: "underline" }} onClick={() => aiFileInputRef.current?.click()}>browse</span>
+                                </span>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+                                {aiFiles.map((f, i) => {
+                                    const { icon, color } = fileIcon(f.name);
+                                    return (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e0e7ff", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
+                                            <i className={`bi ${icon}`} style={{ color, fontSize: "14px" }}></i>
+                                            <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.name}>{f.name}</span>
+                                            <span style={{ color: "#94a3b8" }}>({fmtSize(f.size)})</span>
+                                            <button type="button" style={{ border: "none", background: "none", color: "#94a3b8", cursor: "pointer", padding: 0 }} onClick={() => removeAIFile(i)}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                                <button type="button"
+                                    style={{ border: "1px dashed #a5b4fc", background: "none", borderRadius: "5px", padding: "3px 8px", fontSize: "12px", color: "#4f46e5", cursor: "pointer" }}
+                                    onClick={() => aiFileInputRef.current?.click()}>
+                                    <i className="bi bi-plus me-1"></i>Add more
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <input ref={aiFileInputRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv,.txt" multiple style={{ display: "none" }}
+                        onChange={e => { addAIFiles(e.target.files); e.target.value = ""; }} />
                 </div>
 
                 {/* ── Additional Details file upload (shown below products table) ── */}
