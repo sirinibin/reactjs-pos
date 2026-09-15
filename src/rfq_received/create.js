@@ -6,7 +6,7 @@ import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
-import { AI_PROVIDERS, modelsForProvider } from "../utils/aiProviders.js";
+import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from "../utils/aiProviders.js";
 
 const ACCEPTED_TYPES = ".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv,.txt";
 const FILE_ICONS = {
@@ -1217,7 +1217,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                                 onChange={e => setTextModel(e.target.value)}
                             >
                                 {modelsForProvider(textProvider).map(m => (
-                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}</option>
+                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                 ))}
                             </select>
                             <Button variant="outline-primary" size="sm"
@@ -1317,7 +1317,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                                 onChange={e => setAIModel(e.target.value)}
                             >
                                 {modelsForProvider(aiProvider).map(m => (
-                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}</option>
+                                    <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                 ))}
                             </select>
                             <Button variant="primary" size="sm"

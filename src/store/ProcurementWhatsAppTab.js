@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
-import { AI_PROVIDERS, modelsForProvider } from '../utils/aiProviders.js';
+import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
 
 const PAGE_SIZE = 20;
@@ -207,7 +207,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                 >
                                     {modelsForProvider(provider).map(m => (
                                         <option key={m.value} value={m.value}>
-                                            {m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}
+                                            {m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}
                                         </option>
                                     ))}
                                 </select>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, u
 import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
-import { AI_PROVIDERS } from '../utils/aiProviders.js';
+import { AI_PROVIDERS, fileCapabilityLabel } from '../utils/aiProviders.js';
 import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
 import ProcurementEmailWidget from './ProcurementEmailWidget';
 import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
@@ -7388,7 +7388,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <i className="bi bi-cpu me-2 text-primary"></i>
                                             {t('2. LLM Model')} <small className="text-muted fw-normal">({t('auto-processes incoming WhatsApp RFQs')})</small>
                                         </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '8px' }}>
                                             {t('Select which AI model should automatically parse incoming RFQ messages. API keys are managed in the')}{' '}
                                             <strong
                                                 style={{ color: '#004ac6', cursor: 'pointer', textDecoration: 'underline' }}
@@ -7397,6 +7397,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 {t('AI Models tab')}
                                             </strong>.
                                         </p>
+                                        {formData.settings.disable_auto_rfq_from_email && formData.settings.disable_auto_rfq_from_whatsapp && (
+                                            <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-exclamation-triangle me-1"></i>
+                                                {t('This LLM is only used when "Automatic RFQ creation upon receipt of a new Email" or "Automatic RFQ creation upon receipt of a new WhatsApp message" is enabled (see section 5 below).')}
+                                            </div>
+                                        )}
                                         <div className="row g-2">
                                             <div className="col-md-4">
                                                 <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
@@ -7425,7 +7431,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.rfq_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
                                                         : []
                                                     ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -7469,7 +7475,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.classify_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
                                                         : []
                                                     ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -7842,7 +7848,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.quotation_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
                                                         : []
                                                     ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -7888,7 +7894,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
                                                         : []
                                                     ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                                     ))}
                                                 </select>
                                                 {formData.settings.populate_suppliers_llm_provider && (
@@ -8000,7 +8006,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         ? [...(AI_PROVIDERS.find(p => p.value === extractTest.provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
                                                         : []
                                                     ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}</option>
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -8154,6 +8160,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                                             <th>{t('Part No')}</th>
                                                                             <th>{t('Name')}</th>
                                                                             <th>{t('Qty')}</th>
+                                                                            <th>{t('Unit Price')}</th>
                                                                             <th>{t('Unit')}</th>
                                                                             <th>{t('Notes')}</th>
                                                                         </tr>
@@ -8165,6 +8172,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                                                 <td>{p.part_no || '—'}</td>
                                                                                 <td>{p.name || p.item_name || '—'}</td>
                                                                                 <td>{p.quantity ?? p.qty ?? '—'}</td>
+                                                                                <td>{p.unit_price > 0 ? p.unit_price : '—'}</td>
                                                                                 <td>{p.unit || '—'}</td>
                                                                                 <td style={{ maxWidth: '280px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '11px' }}>{p.notes || '—'}</td>
                                                                             </tr>
