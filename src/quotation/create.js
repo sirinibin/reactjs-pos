@@ -218,7 +218,16 @@ const QuotationCreate = forwardRef((props, ref) => {
           if (raw) {
             sessionStorage.removeItem('rfq_quotation_prefill_active');
             const prefill = JSON.parse(raw);
-            if (prefill.customer_name) {
+            if (prefill.customer_id) {
+              formData.customer_id = prefill.customer_id;
+              formData.customer_name = prefill.customer_name || '';
+              formData.customer_phone_number = prefill.customer_phone || '';
+              fetchAndSetCustomer(prefill.customer_id, {
+                id: prefill.customer_id,
+                name: prefill.customer_name || '',
+                phone: prefill.customer_phone || '',
+              });
+            } else if (prefill.customer_name) {
               formData.customer_name = prefill.customer_name;
               formData.customer_phone_number = prefill.customer_phone || '';
             }
