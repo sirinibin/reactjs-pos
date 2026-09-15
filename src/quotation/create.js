@@ -257,6 +257,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               formData.products = newProducts;
             }
             setFormData({ ...formData });
+            reCalculate();
           }
         } catch (_) {}
       }
