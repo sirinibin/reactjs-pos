@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
 import RFQPreview from "./RFQPreview";
 import RFQPreviewContent from "./RFQPreviewContent";
@@ -2012,7 +2011,6 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [liveProgress, setLiveProgress] = useState(null);
     const [deletingAll, setDeletingAll] = useState(false);
     const rfqCreateRef = useRef(null);
-    const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
     const rfqPreviewRef = useRef(null);
 
@@ -2160,7 +2158,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         }
     };
 
-    // Quotation pre-fill: open QuotationCreate inline without navigating away
+    // Quotation pre-fill: open in new tab so the RFQ modal stays open
     const handleCreateQuotation = (items, rfq) => {
         const prefill = {
             rfq_id:            rfq.id,
@@ -2172,8 +2170,9 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             customer_phone:    rfq.customer_phone || '',
             items,
         };
-        try { sessionStorage.setItem('rfq_quotation_prefill_active', JSON.stringify(prefill)); } catch (_) {}
-        quotationCreateRef.current?.open();
+        // Use localStorage so the new tab can read the prefill (sessionStorage is per-tab)
+        try { localStorage.setItem('rfq_quotation_prefill', JSON.stringify(prefill)); } catch (_) {}
+        window.open('/dashboard/quotations?from_rfq=1', '_blank');
     };
 
     return (
@@ -2234,7 +2233,6 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             <LiveProgressPanel progress={liveProgress} onDismiss={() => setLiveProgress(null)} />
 
             <RFQCreate ref={rfqCreateRef} showToastMessage={showToastMessage} onCreated={fetchList} />
-            <QuotationCreate ref={quotationCreateRef} showToastMessage={showToastMessage} refreshList={() => {}} />
             <RFQPreview ref={rfqPreviewRef} />
             <RFQSendModal
                 rfq={rfqForSend}
