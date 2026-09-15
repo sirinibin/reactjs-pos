@@ -6,6 +6,7 @@ import { Badge, Spinner, Button, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
 import { useHistory, useLocation } from "react-router-dom";
+import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -1578,6 +1579,23 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
 
 function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
     const token                                     = localStorage.getItem('access_token');
+    const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+
+    // Provider/model for file extraction — default to last used or first provider with a key
+    const defaultProvider = (() => {
+        const last = localStorage.getItem('_rfq_extract_provider');
+        if (last && AI_PROVIDERS.find(p => p.value === last)) return AI_PROVIDERS.find(p => p.value === last);
+        return AI_PROVIDERS.find(p => storeSettings?.[p.apiKeyField]) || AI_PROVIDERS[0];
+    })();
+    const defaultModel = (() => {
+        const lastProv = localStorage.getItem('_rfq_extract_provider');
+        const lastMod  = localStorage.getItem('_rfq_extract_model');
+        if (lastProv && lastMod && modelsForProvider(lastProv).find(m => m.value === lastMod)) return lastMod;
+        return modelsForProvider(defaultProvider.value)[0]?.value || '';
+    })();
+
+    const [uploadProvider, setUploadProvider]       = React.useState(defaultProvider.value);
+    const [uploadModel, setUploadModel]             = React.useState(defaultModel);
     const [expanded, setExpanded]                   = React.useState(null);
     const [uploading, setUploading]                 = React.useState(false);
     const [uploadResult, setUploadResult]           = React.useState(null); // { file_name, file_type, prices, is_quotation, extracted_text }
@@ -1588,6 +1606,13 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
     const [confirmError, setConfirmError]           = React.useState('');
     const fileInputRef                              = React.useRef(null);
 
+    const handleProviderChange = prov => {
+        setUploadProvider(prov);
+        const firstModel = modelsForProvider(prov)[0]?.value || '';
+        setUploadModel(firstModel);
+        try { localStorage.setItem('_rfq_extract_provider', prov); localStorage.setItem('_rfq_extract_model', firstModel); } catch (_) {}
+    };
+
     const handleFileSelect = async (file) => {
         if (!file || !rfq?.id || !storeId) return;
         setUploading(true);
@@ -1597,7 +1622,10 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
         try {
             const fd = new FormData();
             fd.append('file', file);
-            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}`, {
+            const params = new URLSearchParams({ store_id: storeId });
+            if (uploadProvider) params.set('llm_provider', uploadProvider);
+            if (uploadModel)    params.set('llm_model', uploadModel);
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?${params}`, {
                 method: 'POST',
                 headers: { Authorization: token },
                 body: fd,
@@ -1642,6 +1670,37 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
             <div className="fw-semibold mb-2" style={{ fontSize: 13, color: '#444' }}>
                 <i className="bi bi-upload me-2 text-primary"></i>Upload Supplier Quotation File
             </div>
+            {/* Provider & model selection */}
+            {!uploadResult && (
+                <div className="row g-2 mb-2">
+                    <div className="col-sm-5">
+                        <select
+                            className="form-select form-select-sm"
+                            style={{ fontSize: 12 }}
+                            value={uploadProvider}
+                            onChange={e => handleProviderChange(e.target.value)}
+                        >
+                            {AI_PROVIDERS.map(p => (
+                                <option key={p.value} value={p.value}>{p.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-sm-7">
+                        <select
+                            className="form-select form-select-sm"
+                            style={{ fontSize: 12 }}
+                            value={uploadModel}
+                            onChange={e => { setUploadModel(e.target.value); try { localStorage.setItem('_rfq_extract_model', e.target.value); } catch (_) {} }}
+                        >
+                            {modelsForProvider(uploadProvider).map(m => (
+                                <option key={m.value} value={m.value}>
+                                    {m.label} — {m.costLabel}{fileCapabilityLabel(m)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            )}
             {!uploadResult && !uploading && (
                 <div>
                     <input

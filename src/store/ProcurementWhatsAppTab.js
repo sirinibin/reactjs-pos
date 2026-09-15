@@ -99,6 +99,93 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
     const [error, setError]           = useState('');
     const fileInputRef = useRef(null);
 
+    // ── Add Price to RFQ flow ──────────────────────────────────────
+    const [addPhase, setAddPhase]           = useState(null); // null | 'picking' | 'mapping' | 'saving' | 'done'
+    const [rfqList, setRfqList]             = useState([]);
+    const [loadingRFQs, setLoadingRFQs]     = useState(false);
+    const [rfqListError, setRfqListError]   = useState('');
+    const [selectedRFQ, setSelectedRFQ]     = useState(null);
+    const [priceRows, setPriceRows]         = useState([]);
+    const [saveError, setSaveError]         = useState('');
+
+    const matchExtractedPrice = (rfqProduct, rfqIndex, extractedPrices) => {
+        if (rfqProduct.part_no) {
+            const m = extractedPrices.find(p => (p.part_no || '').toLowerCase() === rfqProduct.part_no.toLowerCase());
+            if (m) return m;
+        }
+        const byIdx = extractedPrices.find(p => p.product_index === rfqIndex);
+        if (byIdx) return byIdx;
+        return extractedPrices.length === 1 ? extractedPrices[0] : null;
+    };
+
+    const handleAddPriceToRFQ = async () => {
+        setAddPhase('picking');
+        setRfqListError('');
+        setRfqList([]);
+        setSelectedRFQ(null);
+        setSaveError('');
+        setLoadingRFQs(true);
+        try {
+            const phone = (msg.from || '').replace(/^\+/, '');
+            const res = await fetch(`/v1/rfq-received?store_id=${storeId}&supplier_phone=${encodeURIComponent(phone)}`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            if (data.error) { setRfqListError(data.error); return; }
+            setRfqList(data.items || []);
+        } catch (e) { setRfqListError(e.message); }
+        finally { setLoadingRFQs(false); }
+    };
+
+    const handleSelectRFQ = (rfq) => {
+        setSelectedRFQ(rfq);
+        const prices = result.prices || [];
+        const rows = (rfq.products || []).map((prod, i) => {
+            const matched = matchExtractedPrice(prod, i, prices);
+            return {
+                productIndex: i,
+                productName: prod.name || prod.part_no || `Product ${i + 1}`,
+                partNo: prod.part_no || '',
+                qty: prod.quantity || 1,
+                unit: prod.unit || '',
+                unitPrice: matched ? matched.unit_price : 0,
+                currency: matched ? (matched.currency || 'SAR') : (prices[0]?.currency || 'SAR'),
+            };
+        });
+        setPriceRows(rows);
+        setSaveError('');
+        setAddPhase('mapping');
+    };
+
+    const handleSavePrices = async () => {
+        setAddPhase('saving');
+        setSaveError('');
+        try {
+            const body = {
+                supplier_name:  msg.from_name || msg.from || '',
+                supplier_phone: (msg.from || '').replace(/^\+/, ''),
+                raw_text:       '',
+                prices: priceRows.map(r => ({
+                    product_index: r.productIndex,
+                    product_name:  r.productName,
+                    part_no:       r.partNo,
+                    unit_price:    parseFloat(r.unitPrice) || 0,
+                    quantity:      r.qty,
+                    currency:      r.currency,
+                })),
+                run_llm_extraction: false,
+            };
+            const res = await fetch(`/v1/rfq-received/${selectedRFQ.id}/supplier-replies?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error) { setSaveError(data.error); setAddPhase('mapping'); return; }
+            setAddPhase('done');
+        } catch (e) { setSaveError(e.message); setAddPhase('mapping'); }
+    };
+
     const handleProviderChange = prov => {
         setProvider(prov);
         const firstModel = modelsForProvider(prov)[0]?.value || '';
@@ -323,6 +410,110 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                                         <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')} {result.suggested_rfq_code}
                                                     </a>
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {/* ── Add Price to RFQ ── */}
+                                        {(result.prices || []).length > 0 && addPhase === null && (
+                                            <div className="mt-3">
+                                                <button className="btn btn-sm btn-success" style={{ fontSize: '12px' }} onClick={handleAddPriceToRFQ}>
+                                                    <i className="bi bi-plus-circle me-1"></i>{t('Add Price to RFQ')}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Step 1: Pick RFQ */}
+                                        {addPhase === 'picking' && (
+                                            <div className="mt-3 p-3" style={{ border: '1px solid #dee2e6', borderRadius: '8px', fontSize: '12px', background: '#fff' }}>
+                                                <div className="fw-semibold mb-2" style={{ fontSize: '13px' }}>
+                                                    <i className="bi bi-search me-1 text-primary"></i>{t('Select RFQ to add pricing to')}
+                                                    <span className="text-muted fw-normal ms-2" style={{ fontSize: '11px' }}>({t('RFQs sent to')} {msg.from})</span>
+                                                </div>
+                                                {loadingRFQs && <div className="text-muted"><span className="spinner-border spinner-border-sm me-1"></span>{t('Loading…')}</div>}
+                                                {rfqListError && <div className="alert alert-danger py-1 px-2 mb-2">{rfqListError}</div>}
+                                                {!loadingRFQs && rfqList.length === 0 && !rfqListError && (
+                                                    <div className="text-muted">{t('No RFQs found for this supplier phone.')}</div>
+                                                )}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
+                                                    {rfqList.map(rfq => (
+                                                        <div key={rfq.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', border: '1px solid #e9ecef', borderRadius: '6px', background: '#fafafa' }}>
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                <strong>{rfq.code}</strong>
+                                                                {rfq.customer_name && <span className="text-muted ms-2">{rfq.customer_name}</span>}
+                                                                <span className="badge bg-secondary ms-2" style={{ fontSize: '10px' }}>{(rfq.products || []).length} {t('products')}</span>
+                                                                {rfq.status && <span className="badge ms-1" style={{ fontSize: '10px', background: '#e8f4fd', color: '#0a58ca' }}>{rfq.status}</span>}
+                                                            </div>
+                                                            <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSelectRFQ(rfq)}>
+                                                                {t('Select')}
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button className="btn btn-sm btn-outline-secondary mt-2" style={{ fontSize: '11px' }} onClick={() => setAddPhase(null)}>{t('Cancel')}</button>
+                                            </div>
+                                        )}
+
+                                        {/* Step 2: Review & edit prices per product */}
+                                        {(addPhase === 'mapping' || addPhase === 'saving') && selectedRFQ && (
+                                            <div className="mt-3 p-3" style={{ border: '1px solid #dee2e6', borderRadius: '8px', fontSize: '12px', background: '#fff' }}>
+                                                <div className="fw-semibold mb-2" style={{ fontSize: '13px' }}>
+                                                    <i className="bi bi-currency-dollar me-1 text-success"></i>
+                                                    {t('Add pricing to')} <strong>{selectedRFQ.code}</strong>
+                                                </div>
+                                                <div style={{ overflowX: 'auto' }}>
+                                                    <table className="table table-sm table-bordered mb-2" style={{ fontSize: '12px' }}>
+                                                        <thead className="table-light">
+                                                            <tr>
+                                                                <th>{t('Product')}</th>
+                                                                <th>{t('Part No')}</th>
+                                                                <th>{t('Qty')}</th>
+                                                                <th style={{ minWidth: '110px' }}>{t('Unit Price')}</th>
+                                                                <th>{t('Currency')}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {priceRows.map((row, i) => (
+                                                                <tr key={i}>
+                                                                    <td>{row.productName}</td>
+                                                                    <td className="text-muted">{row.partNo || '—'}</td>
+                                                                    <td>{row.qty}</td>
+                                                                    <td>
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            step="0.01"
+                                                                            className="form-control form-control-sm"
+                                                                            style={{ fontSize: '12px', padding: '2px 6px' }}
+                                                                            value={row.unitPrice}
+                                                                            onChange={e => setPriceRows(prev => prev.map((r, ri) => ri === i ? { ...r, unitPrice: e.target.value } : r))}
+                                                                        />
+                                                                    </td>
+                                                                    <td>{row.currency}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {saveError && <div className="alert alert-danger py-1 px-2 mb-2">{saveError}</div>}
+                                                <div className="d-flex gap-2 flex-wrap">
+                                                    <button className="btn btn-sm btn-success" style={{ fontSize: '12px' }} onClick={handleSavePrices} disabled={addPhase === 'saving'}>
+                                                        {addPhase === 'saving' ? <><span className="spinner-border spinner-border-sm me-1"></span>{t('Saving…')}</> : <><i className="bi bi-check-lg me-1"></i>{t('Add')}</>}
+                                                    </button>
+                                                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }} onClick={() => setAddPhase('picking')} disabled={addPhase === 'saving'}>{t('Back')}</button>
+                                                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }} onClick={() => setAddPhase(null)} disabled={addPhase === 'saving'}>{t('Cancel')}</button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Step 3: Done */}
+                                        {addPhase === 'done' && selectedRFQ && (
+                                            <div className="mt-3 d-flex align-items-center gap-2 p-2" style={{ background: '#d1e7dd', border: '1px solid #a3cfbb', borderRadius: '6px', fontSize: '12px' }}>
+                                                <i className="bi bi-check-circle-fill text-success"></i>
+                                                <span>{t('Prices saved to')} <strong>{selectedRFQ.code}</strong></span>
+                                                <a href={`/rfq_received/edit/${selectedRFQ.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success ms-2" style={{ fontSize: '11px' }}>
+                                                    <i className="bi bi-box-arrow-up-right me-1"></i>{t('View RFQ')}
+                                                </a>
+                                                <button className="btn btn-sm btn-link text-muted ms-auto" style={{ fontSize: '11px' }} onClick={() => setAddPhase(null)}>{t('Dismiss')}</button>
                                             </div>
                                         )}
                                     </div>
