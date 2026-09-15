@@ -117,24 +117,37 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
 
     const removeFile = idx => setFiles(prev => prev.filter((_, i) => i !== idx));
 
+    const isQuotationMode = !!msg.is_supplier_quotation;
+
     const handleExtract = async () => {
         setError('');
         setResult(null);
-        if (!hasApiKey) { setError(t('No API key saved for this provider. Add it under Store → AI Models.')); return; }
+        if (!isQuotationMode && !hasApiKey) { setError(t('No API key saved for this provider. Add it under Store → AI Models.')); return; }
         setExtracting(true);
         try {
-            const fd = new FormData();
-            fd.append('llm_provider', provider);
-            fd.append('llm_model', model);
-            files.forEach(f => fd.append('files', f));
-            const res = await fetch(`/v1/procurement-messages/${msg.id}/extract?store_id=${storeId}`, {
-                method: 'POST',
-                headers: { Authorization: token },
-                body: fd,
-            });
-            const data = await res.json();
-            if (!res.ok) { setError(data.error || t('Extraction failed')); return; }
-            setResult(data);
+            if (isQuotationMode) {
+                // Supplier quotation mode — use the dedicated price extraction endpoint.
+                const res = await fetch(`/v1/procurement-messages/${msg.id}/extract-quotation?store_id=${storeId}`, {
+                    method: 'POST',
+                    headers: { Authorization: token },
+                });
+                const data = await res.json();
+                if (!res.ok) { setError(data.error || t('Extraction failed')); return; }
+                setResult({ _quotation: true, ...data });
+            } else {
+                const fd = new FormData();
+                fd.append('llm_provider', provider);
+                fd.append('llm_model', model);
+                files.forEach(f => fd.append('files', f));
+                const res = await fetch(`/v1/procurement-messages/${msg.id}/extract?store_id=${storeId}`, {
+                    method: 'POST',
+                    headers: { Authorization: token },
+                    body: fd,
+                });
+                const data = await res.json();
+                if (!res.ok) { setError(data.error || t('Extraction failed')); return; }
+                setResult(data);
+            }
         } catch (err) {
             setError(err.message || t('Network error'));
         } finally {
@@ -148,15 +161,15 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f0fff4', borderBottom: `3px solid ${WA_GREEN}` }}>
                         <h6 className="modal-title fw-bold">
-                            <i className="bi bi-magic me-2 text-success"></i>
-                            {t('Extract RFQ Data')}
+                            <i className={`bi ${isQuotationMode ? 'bi-receipt' : 'bi-magic'} me-2 text-success`}></i>
+                            {isQuotationMode ? t('Extract Quotation Prices') : t('Extract RFQ Data')}
                             <small className="text-muted fw-normal ms-2" style={{ fontSize: '13px' }}>— {msg.from || t('WhatsApp message')}</small>
                         </h6>
                         <button className="btn-close" onClick={onClose} />
                     </div>
                     <div className="modal-body">
-                        {/* Provider + Model */}
-                        <div className="row g-3 mb-4">
+                        {/* Provider + Model (hidden in quotation mode — backend uses store LLM) */}
+                        <div className="row g-3 mb-4" hidden={isQuotationMode}>
                             <div className="col-md-4">
                                 <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>{t('Provider')}</label>
                                 <select
@@ -253,8 +266,49 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                     {t('Extraction complete')} {result.llm_model && <span className="text-muted fw-normal" style={{ fontSize: '12px' }}>via {result.llm_model}</span>}
                                 </div>
 
-                                {/* Customer info */}
-                                {(result.customer_name || result.customer_phone || result.customer_email || result.customer_company) && (
+                                {/* Supplier quotation prices */}
+                                {result._quotation && (
+                                    <div className="mb-3">
+                                        {result.rfq_code && <div className="mb-2 text-muted" style={{ fontSize: '12px' }}><strong>{t('RFQ Reference')}:</strong> {result.rfq_code}</div>}
+                                        {(result.prices || []).length > 0 ? (
+                                            <>
+                                                <div className="fw-semibold mb-1" style={{ color: '#155724' }}>{t('Extracted Prices')} ({result.price_count})</div>
+                                                <div style={{ overflowX: 'auto' }}>
+                                                    <table className="table table-sm table-bordered" style={{ fontSize: '12px' }}>
+                                                        <thead className="table-light">
+                                                            <tr>
+                                                                <th>{t('Part No')}</th>
+                                                                <th>{t('Product')}</th>
+                                                                <th>{t('Qty')}</th>
+                                                                <th>{t('Unit Price')}</th>
+                                                                <th>{t('Currency')}</th>
+                                                                <th>{t('Notes')}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {result.prices.map((p, i) => (
+                                                                <tr key={i}>
+                                                                    <td>{p.part_no || '—'}</td>
+                                                                    <td>{p.product_name || '—'}</td>
+                                                                    <td>{p.quantity || '—'}</td>
+                                                                    <td><strong>{p.unit_price?.toFixed(2)}</strong></td>
+                                                                    <td>{p.currency || 'SAR'}</td>
+                                                                    <td style={{ maxWidth: '200px', whiteSpace: 'pre-wrap', fontSize: '11px' }}>{p.notes || '—'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {msg.linked_rfq_received_code && <div className="text-success mt-1" style={{ fontSize: '12px' }}><i className="bi bi-check2 me-1"></i>{t('Prices saved to')} {msg.linked_rfq_received_code}</div>}
+                                            </>
+                                        ) : (
+                                            <div className="text-muted" style={{ fontSize: '12px' }}>{t('No prices found in document')}</div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Customer info (RFQ mode only) */}
+                                {!result._quotation && (result.customer_name || result.customer_phone || result.customer_email || result.customer_company) && (
                                     <div className="mb-3">
                                         <div className="fw-semibold mb-1" style={{ color: '#155724' }}>{t('Customer')}</div>
                                         <table className="table table-sm table-bordered" style={{ fontSize: '12px', maxWidth: '480px' }}>
@@ -269,8 +323,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                     </div>
                                 )}
 
-                                {/* Products */}
-                                {(result.products || []).length > 0 && (
+                                {/* Products (RFQ mode only) */}
+                                {!result._quotation && (result.products || []).length > 0 && (
                                     <div className="mb-3">
                                         <div className="fw-semibold mb-1" style={{ color: '#155724' }}>{t('Products')} ({result.products.length})</div>
                                         <div style={{ overflowX: 'auto' }}>
@@ -302,8 +356,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                     </div>
                                 )}
 
-                                {/* General Instructions */}
-                                {result.general_instructions && (
+                                {/* General Instructions (RFQ mode only) */}
+                                {!result._quotation && result.general_instructions && (
                                     <div className="mb-3">
                                         <div className="fw-semibold mb-1" style={{ color: '#155724' }}><i className="bi bi-info-circle me-1"></i>{t('General Instructions')}</div>
                                         <div style={{ background: '#fff', border: '1px solid #c3e6cb', borderRadius: '6px', padding: '10px 12px', fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -312,8 +366,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                     </div>
                                 )}
 
-                                {/* Raw text if no structured data */}
-                                {!result.products?.length && result.text_content && (
+                                {/* Raw text if no structured data (RFQ mode only) */}
+                                {!result._quotation && !result.products?.length && result.text_content && (
                                     <div>
                                         <div className="fw-semibold mb-1" style={{ color: '#155724' }}>{t('Extracted text')}</div>
                                         <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '12px', background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #c3e6cb', maxHeight: '300px', overflow: 'auto' }}>{result.text_content}</pre>
@@ -323,7 +377,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                         )}
                     </div>
                     <div className="modal-footer">
-                        {result && onCreateRFQ && (
+                        {result && !result._quotation && onCreateRFQ && (
                             <button
                                 className="btn btn-success btn-sm me-auto"
                                 onClick={() => { onCreateRFQ(result); onClose(); }}
@@ -638,10 +692,15 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                     {msg.from || <span className="text-muted">—</span>}
                                 </td>
                                 <td style={{ verticalAlign: 'middle', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {msg.processed_as_rfq && <span title={t('Processed as RFQ')} className="me-1">✅</span>}
+                                    {msg.processed_as_rfq && (
+                                        <span className="badge bg-success me-1" style={{ fontSize: '10px' }} title={msg.rfq_received_code || t('Processed as Customer RFQ')}>
+                                            <i className="bi bi-file-earmark-text me-1"></i>{t('Customer RFQ')}
+                                            {msg.rfq_received_code && ` (${msg.rfq_received_code})`}
+                                        </span>
+                                    )}
                                     {msg.is_supplier_quotation && (
                                         <span className="badge bg-info text-dark me-1" style={{ fontSize: '10px' }} title={msg.linked_rfq_received_code ? `${t('Linked to')} ${msg.linked_rfq_received_code}` : t('Supplier Quotation')}>
-                                            <i className="bi bi-receipt me-1"></i>{t('Quotation')}
+                                            <i className="bi bi-receipt me-1"></i>{t('Supplier Quotation')}
                                             {msg.linked_rfq_received_code && ` (${msg.linked_rfq_received_code})`}
                                         </span>
                                     )}
