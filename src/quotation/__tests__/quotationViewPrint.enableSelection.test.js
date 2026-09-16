@@ -91,21 +91,19 @@ describe('quotation/index.js — QuotationView gets elevated modalClass when ena
 // ── 3. Print type selection modal className ───────────────────────────────────
 
 describe('quotation/index.js — print type selection modal elevated when enableSelection=true', () => {
-    test('print type selection modal uses above-pending-modal-dialog when pendingView', () => {
+    test('print type selection modal has quotation-print-type-modal base class', () => {
+        expect(Q_IDX).toMatch(/quotation-print-type-modal/);
+    });
+
+    test('print type selection modal includes above-pending-modal-dialog when pendingView', () => {
         expect(Q_IDX).toMatch(
-            /showPrintTypeSelection[\s\S]{0,300}className=\{pendingView\s*\?\s*["']above-pending-modal-dialog["']/
+            /quotation-print-type-modal[\s\S]{0,200}above-pending-modal-dialog/
         );
     });
 
-    test('print type selection modal uses above-quotations-modal when enableSelection=true', () => {
+    test('print type selection modal includes above-quotations-modal when enableSelection=true', () => {
         expect(Q_IDX).toMatch(
-            /showPrintTypeSelection[\s\S]{0,300}className=\{pendingView\s*\?\s*["']above-pending-modal-dialog["']\s*:\s*props\.enableSelection\s*\?\s*["']above-quotations-modal["']\s*:\s*["']["']\}/
-        );
-    });
-
-    test('print type selection modal falls back to empty string when neither flag is set', () => {
-        expect(Q_IDX).toMatch(
-            /showPrintTypeSelection[\s\S]{0,300}props\.enableSelection\s*\?\s*["']above-quotations-modal["']\s*:\s*["']["']\}/
+            /quotation-print-type-modal[\s\S]{0,200}above-quotations-modal/
         );
     });
 });

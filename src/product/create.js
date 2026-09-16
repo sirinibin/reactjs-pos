@@ -391,6 +391,7 @@ const ProductCreate = forwardRef((props, ref) => {
       });
   }
 
+  // eslint-disable-next-line no-unused-vars
   async function suggestCategories(searchTerm) {
     console.log("Inside handle suggest Categories");
 
@@ -430,6 +431,7 @@ const ProductCreate = forwardRef((props, ref) => {
     setCategoryOptions(data.result);
   }
 
+  // eslint-disable-next-line no-unused-vars
   async function suggestBrands(searchTerm) {
     console.log("Inside handle suggest Brands");
 
@@ -741,6 +743,7 @@ const ProductCreate = forwardRef((props, ref) => {
     ProductBrandCreateFormRef.current.open();
   }
 
+  // eslint-disable-next-line no-unused-vars
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
 
   function makePartNumberPrefix() {
@@ -970,7 +973,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const inputRefs = useRef({});
   const countrySearchRef = useRef();
+  // eslint-disable-next-line no-unused-vars
   const brandSearchRef = useRef();
+  // eslint-disable-next-line no-unused-vars
   const categorySearchRef = useRef();
 
   function AddProductToSet(product) {
@@ -1816,7 +1821,7 @@ const ProductCreate = forwardRef((props, ref) => {
         </div>
       )}
 
-      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="pw-modal-wrap">
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className={`pw-modal-wrap${props.modalClass ? ' ' + props.modalClass : ''}`}>
         <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button type="button" onClick={handleClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}

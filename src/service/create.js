@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Spinner } from "react-bootstrap";
+// eslint-disable-next-line no-unused-vars
 import { Typeahead } from "react-bootstrap-typeahead";
 import ServiceCategoryCreate from "../service_category/create.js";
 import ImageGallery from '../utils/ImageGallery.js';
@@ -88,6 +89,7 @@ const ServiceCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef(null);
     const ServiceCategoryCreateFormRef = useRef(null);
+    // eslint-disable-next-line no-unused-vars
     const categorySearchRef = useRef(null);
     const SalesHistoryRef = useRef(null);
     const SalesReturnHistoryRef = useRef(null);
@@ -95,6 +97,7 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     let [selectedCategories, setSelectedCategories] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
 
     let [store, setStore] = useState({});
@@ -191,6 +194,7 @@ const ServiceCreate = forwardRef((props, ref) => {
             .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
     }
 
+    // eslint-disable-next-line no-unused-vars
     async function suggestCategories(searchTerm) {
         if (!searchTerm) return;
         setIsCategoriesLoading(true);
@@ -348,7 +352,7 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="pw-modal" className="pw-modal-wrap">
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="pw-modal" className={`pw-modal-wrap${props.modalClass ? ' ' + props.modalClass : ''}`}>
                 <style>{`
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .svc-body { overflow-y: auto !important; padding: 0 !important; flex: 1; min-height: 0; }

@@ -5881,9 +5881,9 @@ const OrderCreate = forwardRef((props, ref) => {
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
-            <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />

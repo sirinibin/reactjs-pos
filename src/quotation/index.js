@@ -1005,7 +1005,7 @@ function QuotationIndex(props) {
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
         setShowPrintTypeSelection(showPrintTypeSelection);
-      }} centered className={pendingView ? "above-pending-modal-dialog" : props.enableSelection ? "above-quotations-modal" : ""}>
+      }} centered className={`quotation-print-type-modal${pendingView ? " above-pending-modal-dialog" : props.enableSelection ? " above-quotations-modal" : ""}`}>
         <Modal.Header closeButton>
           <Modal.Title>{t('Select Print Type')}</Modal.Title>
         </Modal.Header>

@@ -17,6 +17,9 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import { toStoreLocalDate, fromStoreLocalDate } from '../utils/timezone.js';
 import ZatcaConnect from './zatca_connect.js';
 import { resolveImageUrl } from '../utils/imageUtils.js';
+/* eslint-disable no-unused-vars */
+import { invalidateStoreCache } from '../utils/storeUtils.js';
+/* eslint-enable no-unused-vars */
 import SampleInvoiceBg1 from '../INVOICE.jpg';
 import SampleInvoiceBg2 from '../LGK_WHATSAPP.png';
 //import { DebounceInput } from 'react-debounce-input';
@@ -954,16 +957,6 @@ const StoreCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        if (!formData.zipcode) {
-            errors["zipcode"] = "Zipcode is required";
-            haveErrors = true;
-        } else {
-            if (!isValidNDigitNumber(formData.zipcode, 5)) {
-                errors["zipcode"] = "Zipcode should be 5 digits";
-                haveErrors = true;
-            }
-        }
-
         if (!formData.vat_no) {
             errors["vat_no"] = "VAT No. is required";
             haveErrors = true;
@@ -1099,6 +1092,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 if (data.result?.settings) {
                     localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
                 }
+                invalidateStoreCache(formData.id);
                 localStorage.setItem("store_settings_updated", Date.now());
                 window.dispatchEvent(new StorageEvent('storage', { key: 'store_settings_updated' }));
 

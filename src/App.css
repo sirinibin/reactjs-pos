@@ -12039,11 +12039,21 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 /* Opened from the "Select Quotation" modal (above-sales-modal = 1082 → drops to 1081 when form opens) */
 .quotation-create-wrap.above-quotations-modal { z-index: 1085 !important; }
 .quotation-sales-return-create-wrap.above-quotations-modal { z-index: 1085 !important; }
+/* QuotationView opened from Select Quotation (above-sales-modal = 1082 inside Sales form).
+   Two-class specificity (0,2,0) beats any single-class !important rule (0,1,0). 1096 > 1095 (Sales form). */
+.quotation-view-overlay.above-quotations-modal { z-index: 1096 !important; }
+.quotation-view-overlay.above-quotations-modal + .modal-backdrop { z-index: 1095 !important; }
+/* Print type selection modal opened from Select Quotation — same context, same fix. */
+.quotation-print-type-modal.above-quotations-modal { z-index: 1096 !important; }
+.quotation-print-type-modal.above-quotations-modal + .modal-backdrop { z-index: 1095 !important; }
 .quotation-sales-return-create-wrap { z-index: 1080 !important; }
 /* Delivery Note form modal — one step above above-sales-modal (1065) */
 .delivery-note-create-wrap { z-index: 1066 !important; }
 /* Product Create form — must appear above all parent forms (purchase 1088, quotation/delivery-note ~1066-1080) */
 .pw-modal-wrap { z-index: 1095 !important; }
+/* ProductCreate/ServiceCreate opened from within a pending-mode Sales form (order-create-wrap.above-pending-modal = 1095).
+   Two-class specificity (0,2,0) ensures 1098 > 1095 regardless of single-class injected styles. */
+.pw-modal-wrap.above-pending-modal { z-index: 1098 !important; }
 /* Raise history modals above their standalone parent form.
    These rules intentionally win over body.form-over-history (1072) via CSS source-order.
    fromHistory={true} on sub-forms prevents them from adding these body classes, so there is
