@@ -1,6 +1,79 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { format } from 'date-fns';
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
+import * as XLSX from 'xlsx';
+
+// Parses an Excel data-URI and renders each sheet as a styled table.
+function ExcelSheetTable({ dataUri, filename }) {
+    const sheets = useMemo(() => {
+        try {
+            const base64 = dataUri.split(',')[1];
+            if (!base64) return null;
+            const wb = XLSX.read(base64, { type: 'base64' });
+            return wb.SheetNames.map(name => {
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' });
+                // Filter completely empty rows
+                const filtered = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+                return { name, rows: filtered };
+            }).filter(s => s.rows.length > 0);
+        } catch (_) { return null; }
+    }, [dataUri]);
+
+    if (!sheets || sheets.length === 0) return null;
+
+    const headerStyle = {
+        background: '#0f3460', color: '#fff',
+        padding: '5px 8px', fontSize: '10px', fontWeight: 700,
+        border: '1px solid #0f3460', whiteSpace: 'nowrap',
+    };
+    const cellStyle = {
+        padding: '4px 8px', fontSize: '10px', border: '1px solid #cbd5e1',
+        verticalAlign: 'top', wordBreak: 'break-word', maxWidth: '220px',
+    };
+
+    return (
+        <div style={{ marginBottom: '12px' }}>
+            {/* File name header */}
+            <div style={{ background: '#1d4ed8', color: '#fff', padding: '5px 12px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px', borderRadius: '4px 4px 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>📊</span>
+                <span>{filename || 'Attachment'}</span>
+            </div>
+            {sheets.map(({ name, rows }, si) => {
+                if (rows.length === 0) return null;
+                const numCols = Math.max(...rows.map(r => r.length));
+                const header = rows[0];
+                const body = rows.slice(1);
+                return (
+                    <div key={si} style={{ overflowX: 'auto', marginBottom: si < sheets.length - 1 ? '8px' : 0 }}>
+                        {sheets.length > 1 && (
+                            <div style={{ background: '#e2e8f0', padding: '3px 10px', fontSize: '10px', fontWeight: 600, color: '#374151' }}>
+                                Sheet: {name}
+                            </div>
+                        )}
+                        <table style={{ borderCollapse: 'collapse', width: '100%', tableLayout: 'auto' }}>
+                            <thead>
+                                <tr>
+                                    {Array.from({ length: numCols }).map((_, ci) => (
+                                        <th key={ci} style={headerStyle}>{header[ci] ?? ''}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {body.map((row, ri) => (
+                                    <tr key={ri} style={{ background: ri % 2 === 0 ? '#f8fafc' : '#fff' }}>
+                                        {Array.from({ length: numCols }).map((_, ci) => (
+                                            <td key={ci} style={cellStyle}>{row[ci] ?? ''}</td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 
 const MODEL = 'rfq_received';
 
@@ -23,6 +96,36 @@ const C = {
     sigBorder:  '#e2e8f0',
 };
 
+// Renders product notes as a structured Key/Value table when the text follows
+// "Key: Value, Key: Value" format; falls back to plain text otherwise.
+function renderProductNotes(notes) {
+    if (!notes) return null;
+    // Split on commas that are followed by a new "Word(s):" label (lookahead).
+    const segments = notes.split(/,\s*(?=[A-Za-z][^,]*:)/);
+    const pairs = segments.map(seg => {
+        const idx = seg.indexOf(':');
+        if (idx > 0) return { k: seg.slice(0, idx).trim(), v: seg.slice(idx + 1).trim() };
+        return null;
+    }).filter(Boolean);
+    if (pairs.length < 2) return <span>{notes}</span>;
+    return (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+            <tbody>
+                {pairs.map((p, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
+                        <td style={{ padding: '3px 6px', fontWeight: 600, color: '#374151', width: '44%', borderBottom: '1px solid #e5e7eb', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                            {p.k}
+                        </td>
+                        <td style={{ padding: '3px 6px', color: '#4b5563', borderBottom: '1px solid #e5e7eb', verticalAlign: 'top' }}>
+                            {p.v}
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
 function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, selectText = () => {} }) {
     if (!rfq) return null;
 
@@ -34,6 +137,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
     const products                      = rfq.products || [];
     const attachmentDataURIs            = rfq.attachment_data_uris || [];
     const additionalAttachmentDataURIs  = rfq.additional_attachment_data_uris || [];
+    const additionalAttachmentFilenames = rfq.additional_attachment_filenames || [];
     const hasAttachments                = attachmentDataURIs.length > 0;
     const hasAdditionalAttachments      = additionalAttachmentDataURIs.length > 0;
     const receivedAt = rfq.received_at
@@ -155,7 +259,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                                     <img
                                         width="72" height="72"
                                         style={{ objectFit: 'contain', objectPosition: 'center', display: 'block' }}
-                                        src={resolveImageUrl(resolvedStore.logo, resolvedStore.id, 'store') + '?' + Date.now()}
+                                        src={storeLogoUrl(resolvedStore)}
                                         alt="Store logo"
                                     />
                                 )}
@@ -325,8 +429,8 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                                         <td style={{ padding: '6px 8px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#374151' }}>
                                             {product.unit || ''}
                                         </td>
-                                        <td style={{ padding: '6px 8px', textAlign: 'left', color: '#6b7280', fontSize: fs('tableBody') || '10px' }}>
-                                            {product.notes || ''}
+                                        <td style={{ padding: '4px 6px', textAlign: 'left', color: '#6b7280', fontSize: fs('tableBody') || '10px' }}>
+                                            {renderProductNotes(product.notes)}
                                         </td>
                                     </tr>
                                 ))}
@@ -341,6 +445,17 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                         {additionalAttachmentDataURIs.map((uri, i) => {
                             const isPDF = uri.startsWith('data:application/pdf');
                             const isImg = /^data:image\//i.test(uri);
+                            const filename = additionalAttachmentFilenames[i] || '';
+                            const isExcel = /\.(xlsx|xls|csv)$/i.test(filename) ||
+                                /application\/vnd\.(openxmlformats|ms-excel)/.test(uri) ||
+                                uri.startsWith('data:text/csv');
+                            if (isExcel) {
+                                return (
+                                    <div key={i} style={{ marginBottom: '16px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+                                        <ExcelSheetTable dataUri={uri} filename={filename} />
+                                    </div>
+                                );
+                            }
                             if (isPDF) {
                                 return (
                                     <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
@@ -361,6 +476,20 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                             }
                             return null;
                         })}
+                    </div>
+                )}
+
+                {/* ── General Instructions ─────────────────────────────────── */}
+                {rfq.general_instructions && (
+                    <div style={{ margin: '12px 0', border: `1px solid #bfdbfe`, borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ background: '#1d4ed8', color: '#fff', padding: '4px 10px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>ℹ</span>
+                            <span>GENERAL INSTRUCTIONS&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                            <span dir="rtl" lang="ar" style={{ unicodeBidi: 'embed' }}>تعليمات عامة</span>
+                        </div>
+                        <div style={{ background: '#eff6ff', padding: '8px 12px', fontSize: '11px', color: '#1e3a5f', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.6 }}>
+                            {rfq.general_instructions}
+                        </div>
                     </div>
                 )}
 
@@ -460,16 +589,52 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                         marginTop: '12px',
                         borderTop: `1px solid ${C.sigBorder}`,
                         paddingTop: '6px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
                         fontSize: fs('footer') || '10px',
                         color: C.footerText,
-                        paddingLeft: '4px',
-                        paddingRight: '4px',
                     }}
                 >
-                    <span>Generated by StartPOS</span>
-                    <span>{new Date().toLocaleString('en-GB')}</span>
+                    {resolvedStore?.settings?.show_address_in_invoice_footer && (
+                        <div style={{ color: '#374151', fontWeight: 600, marginBottom: '6px', lineHeight: 1.7 }}>
+                            {resolvedStore.national_address && (() => {
+                                const na = resolvedStore.national_address;
+                                const enLine1 = [na.building_no, na.street_name].filter(Boolean).join(', ');
+                                const enLine2 = [na.district_name, na.city_name].filter(Boolean).join(', ');
+                                const arLine1 = [na.building_no_arabic, na.street_name_arabic].filter(Boolean).join('، ');
+                                const arLine2 = [na.district_name_arabic, na.city_name_arabic].filter(Boolean).join('، ');
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #d1d5db', padding: '5px 8px', marginBottom: '5px' }}>
+                                        {/* English — left */}
+                                        <div style={{ flex: 1, textAlign: 'left', direction: 'ltr', fontSize: 'inherit' }}>
+                                            {enLine1 && <div>{enLine1}</div>}
+                                            {enLine2 && <div>{enLine2}</div>}
+                                            {na.zipcode && <div>ZIP: {na.zipcode}</div>}
+                                        </div>
+                                        {/* Vertical separator */}
+                                        <div style={{ width: '1px', background: '#d1d5db', margin: '0 10px', alignSelf: 'stretch' }}></div>
+                                        {/* Arabic — right */}
+                                        <div style={{ flex: 1, textAlign: 'right', direction: 'rtl', fontSize: 'inherit' }}>
+                                            {arLine1 && <div>{arLine1}</div>}
+                                            {arLine2 && <div>{arLine2}</div>}
+                                            {na.zipcode && <div>الرمز البريدي: {na.zipcode_arabic || na.zipcode}</div>}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                            {(resolvedStore.phone || resolvedStore.phone_in_arabic || resolvedStore.email) && (
+                                <div style={{ textAlign: 'center' }}>
+                                    {[
+                                        resolvedStore.phone_in_arabic ? `هاتف: ${resolvedStore.phone_in_arabic}` : null,
+                                        resolvedStore.phone ? `Phone: ${resolvedStore.phone}` : null,
+                                        resolvedStore.email ? `Email: ${resolvedStore.email}` : null,
+                                    ].filter(Boolean).join('  |  ')}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: '4px', paddingRight: '4px' }}>
+                        <span>Generated by StartPOS</span>
+                        <span>{new Date().toLocaleString('en-GB')}</span>
+                    </div>
                 </div>
 
             </div>

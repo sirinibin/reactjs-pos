@@ -12149,3 +12149,6 @@ body.sales-return-form-pending-open .above-sales-modal:not(.customer-pending-mod
 body.sales-return-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }
 body.quotation-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }
 body.quotation-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }
+/* Select Quotation / Delivery Notes / ImageViewer opened from within the Sales form in pending context.
+   Sales form (order-create-wrap.above-pending-modal) sits at 1095; sub-modals need 1096 to appear on top. */
+body.order-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }

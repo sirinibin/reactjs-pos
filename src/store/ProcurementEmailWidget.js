@@ -69,6 +69,8 @@ const PROVIDERS = [
         fields: [
             { key: 'rfq_zoho_client_id', label: 'Client ID', type: 'text', placeholder: '1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' },
             { key: 'rfq_zoho_client_secret', label: 'Client Secret', type: 'password', placeholder: 'your-client-secret' },
+            { key: 'rfq_zoho_smtp_username', label: 'SMTP Username (Email)', type: 'email', placeholder: 'your@zoho.com', hint: 'Used to send replies via smtppro.zoho.in:465 SSL' },
+            { key: 'rfq_zoho_smtp_password', label: 'SMTP Password', type: 'password', placeholder: 'your Zoho password or app password', hint: 'Required only for email replies' },
         ],
     },
     {
@@ -207,6 +209,8 @@ function blankCreds() {
         rfq_outlook_client_secret: '',
         rfq_zoho_client_id: '',
         rfq_zoho_client_secret: '',
+        rfq_zoho_smtp_username: '',
+        rfq_zoho_smtp_password: '',
         rfq_mailgun_api_key: '',
         rfq_mailgun_domain: '',
         rfq_sendgrid_api_key: '',
@@ -310,7 +314,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
         // Map frontend cred keys → backend keys
         if (provider === 'gmail') { body.rfq_gmail_client_id = creds.rfq_gmail_client_id; body.rfq_gmail_client_secret = creds.rfq_gmail_client_secret; }
         if (provider === 'outlook') { body.rfq_outlook_tenant_id = creds.rfq_outlook_tenant_id; body.rfq_outlook_client_id = creds.rfq_outlook_client_id; body.rfq_outlook_client_secret = creds.rfq_outlook_client_secret; }
-        if (provider === 'zoho') { body.rfq_zoho_client_id = creds.rfq_zoho_client_id; body.rfq_zoho_client_secret = creds.rfq_zoho_client_secret; }
+        if (provider === 'zoho') { body.rfq_zoho_client_id = creds.rfq_zoho_client_id; body.rfq_zoho_client_secret = creds.rfq_zoho_client_secret; body.rfq_zoho_smtp_username = creds.rfq_zoho_smtp_username; body.rfq_zoho_smtp_password = creds.rfq_zoho_smtp_password; }
         if (provider === 'mailgun') { body.rfq_mailgun_api_key = creds.rfq_mailgun_api_key; body.rfq_mailgun_domain = creds.rfq_mailgun_domain; }
         if (provider === 'sendgrid') { body.rfq_sendgrid_api_key = creds.rfq_sendgrid_api_key; }
         if (provider === 'postmark') { body.rfq_postmark_server_token = creds.rfq_postmark_server_token; }
@@ -432,6 +436,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
                                         <>
                                             <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t(f.label)}</label>
                                             <input type={f.type} className="form-control form-control-sm" placeholder={f.placeholder} value={creds[f.key] || ''} onChange={e => setCred(f.key, e.target.value)} disabled={busy} autoComplete={f.type === 'password' ? 'new-password' : 'off'} />
+                                            {f.hint && <div className="form-text" style={{ fontSize: '11px' }}>{f.hint}</div>}
                                         </>
                                     )}
                                 </div>
@@ -483,6 +488,15 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
     const [savingIMAP, setSavingIMAP] = useState(false);
     const [testingIMAP, setTestingIMAP] = useState(false);
     const [imapTestResult, setImapTestResult] = useState(null); // {ok, message}
+    const [showSMTP, setShowSMTP] = useState(false);
+    const [smtpFields, setSmtpFields] = useState({
+        smtp_host: account.smtp_host || (account.provider === 'zoho' ? 'smtppro.zoho.in' : ''),
+        smtp_port: account.smtp_port || 465,
+        smtp_username: account.smtp_username || account.imap_username || account.email || '',
+        smtp_password: '',
+    });
+    const [savingSMTP, setSavingSMTP] = useState(false);
+    const [smtpSaveResult, setSmtpSaveResult] = useState(null);
     const token = localStorage.getItem('access_token');
     const meta = PROVIDER_META[account.provider] || { icon: 'bi-envelope', iconColor: '#6c757d', label: account.provider };
     const isWebhook = meta && WEBHOOK_TYPES.has(meta.type);
@@ -529,6 +543,38 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
         setTestingIMAP(false);
     };
 
+    const handleSaveSMTP = async () => {
+        setSavingSMTP(true);
+        setSmtpSaveResult(null);
+        const payload = {
+            imap_host: imapFields.imap_host,
+            imap_port: parseInt(imapFields.imap_port, 10) || 993,
+            imap_username: imapFields.imap_username,
+            imap_use_ssl: imapFields.imap_use_ssl,
+            smtp_host: smtpFields.smtp_host,
+            smtp_port: parseInt(smtpFields.smtp_port, 10) || 465,
+            smtp_username: smtpFields.smtp_username,
+            ...(smtpFields.smtp_password ? { smtp_password: smtpFields.smtp_password } : {}),
+        };
+        try {
+            const res = await fetch(`/v1/rfq-email/account/${account.id}/settings?store_id=${storeId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify(payload),
+            });
+            if (res.ok) {
+                setSmtpSaveResult({ ok: true, message: t('SMTP settings saved.') });
+                setSmtpFields(f => ({ ...f, smtp_password: '' }));
+            } else {
+                const data = await res.json().catch(() => ({}));
+                setSmtpSaveResult({ ok: false, message: data.error || t('Failed to save settings.') });
+            }
+        } catch (e) {
+            setSmtpSaveResult({ ok: false, message: 'Network error: ' + String(e) });
+        }
+        setSavingSMTP(false);
+    };
+
     const handleDisconnect = async () => {
         setRemoving(true);
         try {
@@ -561,6 +607,11 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                         <i className="bi bi-server me-1"></i>{t('IMAP Settings')}
                     </button>
                 )}
+                {isZoho && (
+                    <button type="button" className="btn btn-link btn-sm p-0 ms-1" style={{ fontSize: '12px', color: '#0d6efd' }} onClick={() => setShowSMTP(v => !v)}>
+                        <i className="bi bi-send me-1"></i>{t('Outgoing (SMTP)')}
+                    </button>
+                )}
                 <button type="button" className="btn btn-sm btn-outline-danger ms-auto" onClick={handleDisconnect} disabled={removing}>
                     {removing ? <Spinner animation="border" size="sm" /> : <><i className="bi bi-x-circle me-1"></i>{t('Disconnect')}</>}
                 </button>
@@ -576,6 +627,45 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                     </div>
                 </div>
             )}
+            {isZoho && showSMTP && (
+                <div className="mt-2 p-2" style={{ background: '#e8f4fd', borderRadius: '4px', border: '1px solid #90caf9' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#1565c0', marginBottom: '4px' }}>
+                        <i className="bi bi-send me-1"></i>{t('Outgoing Email (SMTP)')}
+                    </div>
+                    <div className="text-muted mb-2" style={{ fontSize: '11px' }}>
+                        {t('Configure outgoing SMTP to send emails from the app. For Zoho, use smtppro.zoho.in:465 with your email and password (or App Password). If left blank, the IMAP credentials above are used automatically.')}
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-md-5">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('SMTP Host')}</label>
+                            <input className="form-control form-control-sm" value={smtpFields.smtp_host} placeholder="smtppro.zoho.in" onChange={e => setSmtpFields(f => ({ ...f, smtp_host: e.target.value }))} />
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Port')}</label>
+                            <input className="form-control form-control-sm" type="number" value={smtpFields.smtp_port} onChange={e => setSmtpFields(f => ({ ...f, smtp_port: e.target.value }))} />
+                        </div>
+                        <div className="col-md-5">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Username (Email)')}</label>
+                            <input className="form-control form-control-sm" value={smtpFields.smtp_username} placeholder="info@yourdomain.com" onChange={e => setSmtpFields(f => ({ ...f, smtp_username: e.target.value }))} />
+                        </div>
+                        <div className="col-md-7">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Password')}</label>
+                            <input className="form-control form-control-sm" type="password" autoComplete="new-password" value={smtpFields.smtp_password} placeholder={t('(leave blank to keep current)')} onChange={e => setSmtpFields(f => ({ ...f, smtp_password: e.target.value }))} />
+                        </div>
+                        <div className="col-12 d-flex align-items-center gap-2 flex-wrap">
+                            <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveSMTP} disabled={savingSMTP}>
+                                {savingSMTP ? <Spinner animation="border" size="sm" /> : <><i className="bi bi-floppy me-1"></i>{t('Save')}</>}
+                            </button>
+                            {smtpSaveResult && (
+                                <span style={{ fontSize: '12px', color: smtpSaveResult.ok ? '#198754' : '#dc3545', fontWeight: 500 }}>
+                                    <i className={`bi ${smtpSaveResult.ok ? 'bi-check-circle' : 'bi-x-circle'} me-1`}></i>
+                                    {smtpSaveResult.message}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             {isZoho && showIMAP && (
                 <div className="mt-2 p-2" style={{ background: '#f0f4ff', borderRadius: '4px', border: '1px solid #c5d3f5' }}>
                     <div style={{ fontSize: '11px', fontWeight: 600, color: '#3b4cc0', marginBottom: '4px' }}>
@@ -584,10 +674,23 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                     <div className="text-muted mb-2" style={{ fontSize: '11px' }}>
                         {t('Used for automatic attachment fetching. Steps to enable:')}
                         <ol className="mb-1 mt-1" style={{ paddingLeft: '16px' }}>
-                            <li>{t('Enable IMAP Access: Zoho Mail → Settings → Mail Accounts → IMAP → IMAP Access: On')}</li>
                             <li>
-                                {t('Get your password: use your Zoho account password, or if 2FA is enabled, generate an App Password at ')}
-                                <strong>Zoho Account → Security → App Passwords → Generate</strong>
+                                {t('Enable IMAP for your account: ')}
+                                <a href="https://mail.zoho.in/zm/#settings/mailaccounts/primary/imap" target="_blank" rel="noreferrer">
+                                    {t('Zoho Mail → Settings → Mail Accounts → IMAP → turn on IMAP Access')}
+                                </a>
+                            </li>
+                            <li>
+                                {t('If your organisation admin blocked IMAP, ask them to enable it at: ')}
+                                <a href="https://mailadmin.zoho.in/cpanel/index.do#users/active" target="_blank" rel="noreferrer">
+                                    {t('Zoho Mail Admin → Users → your account → Mail Settings → IMAP Access')}
+                                </a>
+                            </li>
+                            <li>
+                                {t('Get your password: use your Zoho account password. If 2FA is enabled, generate an App Password instead: ')}
+                                <a href="https://accounts.zoho.in/home#security/apppassword" target="_blank" rel="noreferrer">
+                                    {t('Zoho Account → Security → App Passwords → Generate')}
+                                </a>
                                 {t(' (select "Other App", name it "StartPOS IMAP")')}
                             </li>
                         </ol>

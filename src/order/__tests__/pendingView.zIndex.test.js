@@ -22,6 +22,11 @@ const APP_CSS = fs.readFileSync(
     'utf8'
 );
 
+const ORDER_CREATE_SRC = fs.readFileSync(
+    path.join(__dirname, '../create.js'),
+    'utf8'
+);
+
 // ── Rule presence ─────────────────────────────────────────────────────────────
 
 describe('App.css — pendingView z-index rules are present', () => {
@@ -291,5 +296,42 @@ describe('CSS selector specificity — why draggable-history-modal target is cor
         const newSelector = 'body.quotation-form-pending-open .draggable-history-modal';
 
         expect(specificity(oldSelector)).toEqual(specificity(newSelector));
+    });
+});
+
+// ── Select Quotation / Delivery Notes / ImageViewer behind Sales form (pending) ──
+
+describe('App.css — order-form-pending-open raises sub-modals above Sales form', () => {
+    test('body.order-form-pending-open .above-sales-modal:not(.customer-pending-modal) rule exists at z-index 1096', () => {
+        expect(APP_CSS).toMatch(
+            /body\.order-form-pending-open\s+\.above-sales-modal:not\(\.customer-pending-modal\)\s*\{[^}]*z-index\s*:\s*1096\s*!important/
+        );
+    });
+
+    test('sub-modal z-index (1096) is above Sales form z-index (1095)', () => {
+        const subModal = 1096;
+        const salesForm = 1095;
+        expect(subModal).toBeGreaterThan(salesForm);
+    });
+
+    test('customer-pending-modal is excluded from the boost via :not selector', () => {
+        const rule = APP_CSS.match(
+            /body\.order-form-pending-open\s+(\.above-sales-modal[^{]*)\{/
+        )?.[1] || '';
+        expect(rule).toMatch(/:not\(\.customer-pending-modal\)/);
+    });
+});
+
+describe('order/create.js — adds order-form-pending-open body class in pending mode', () => {
+    test('document.body.classList.add("order-form-pending-open") is present', () => {
+        expect(ORDER_CREATE_SRC).toMatch(/classList\.add\s*\(\s*['"]order-form-pending-open['"]\s*\)/);
+    });
+
+    test('document.body.classList.remove("order-form-pending-open") is present (cleanup)', () => {
+        expect(ORDER_CREATE_SRC).toMatch(/classList\.remove\s*\(\s*['"]order-form-pending-open['"]\s*\)/);
+    });
+
+    test('body class is only added when modalClass === above-pending-modal', () => {
+        expect(ORDER_CREATE_SRC).toMatch(/above-pending-modal[\s\S]{0,80}order-form-pending-open/);
     });
 });

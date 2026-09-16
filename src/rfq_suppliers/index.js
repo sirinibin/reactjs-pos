@@ -43,6 +43,7 @@ function SupplierForm({ supplier, onSave, onClose }) {
 
     const handleSave = async () => {
         if (!form.name || !form.phone) { alert(t('supplier_name_phone_required')); return; }
+        if (!form.purchase_market) { alert('Market is required. Please select the supplier\'s city/market.'); return; }
         setSaving(true);
         try {
             const isNew = !form.id;
@@ -160,10 +161,12 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const [showForm, setShowForm] = useState(false);
     const [deleting, setDeleting] = useState(null);
     const [refetching, setRefetching] = useState(null);
+    const [backfilling, setBackfilling] = useState(false);
 
-    const fetchList = useCallback(async () => {
+    const fetchList = useCallback(async ({ silent = false } = {}) => {
         if (!storeId) return;
-        setIsLoading(true);
+        if (!silent) setIsLoading(true);
+        const scrollY = window.scrollY;
         const params = new URLSearchParams({ store_id: storeId, page, limit: pageSize });
         if (search) params.set("search", search);
         try {
@@ -175,7 +178,8 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
         } catch (e) {
             if (showToastMessage) showToastMessage(t('error_load_suppliers') + e.message, "danger");
         }
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
+        if (silent) requestAnimationFrame(() => window.scrollTo(0, scrollY));
     }, [storeId, token, page, pageSize, search, showToastMessage, t]);
 
     useEffect(() => { fetchList(); }, [fetchList]);
@@ -184,7 +188,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     useEffect(() => {
         if (!storeId) return;
         const es = new EventSource(`/v1/rfq-bot/events?store_id=${storeId}`);
-        es.addEventListener('supplier_updated', () => fetchList());
+        es.addEventListener('supplier_updated', () => fetchList({ silent: true }));
         es.onerror = () => {}; // silently reconnect
         return () => es.close();
     }, [storeId, fetchList]);
@@ -203,7 +207,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                 if (showToastMessage) showToastMessage(t('maps_no_match') || 'No Google Maps result found', "warning");
             } else {
                 if (showToastMessage) showToastMessage(t('maps_refetched') || 'Google Maps data updated', "success");
-                fetchList();
+                fetchList({ silent: true });
             }
         } catch (e) {
             if (showToastMessage) showToastMessage(t('error_prefix') + e.message, "danger");
@@ -252,6 +256,25 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                     <Button variant="outline-secondary" size="sm" onClick={fetchList} title={t('refresh')}>
                         <i className="bi bi-arrow-clockwise"></i>
                     </Button>
+                    <Button
+                        variant="outline-info"
+                        size="sm"
+                        disabled={backfilling}
+                        title="Fill missing Market values using Google Maps"
+                        onClick={async () => {
+                            setBackfilling(true);
+                            try {
+                                const res = await fetch(`/v1/rfq-suppliers/backfill-markets?store_id=${storeId}`, { method: 'POST', headers: { Authorization: token } });
+                                const data = await res.json();
+                                if (data.error) { if (showToastMessage) showToastMessage(data.error, 'danger'); }
+                                else { if (showToastMessage) showToastMessage(`Markets filled: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`, 'success'); fetchList({ silent: true }); }
+                            } catch (e) { if (showToastMessage) showToastMessage('Fill markets error: ' + e.message, 'danger'); }
+                            setBackfilling(false);
+                        }}
+                    >
+                        {backfilling ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-geo-alt me-1"></i>}
+                        Fill Markets
+                    </Button>
                     <Button variant="primary" size="sm" onClick={() => { setEditingSupplier(null); setShowForm(true); }}>
                         <i className="bi bi-plus-lg me-1"></i>{t('add_supplier')}
                     </Button>
@@ -289,6 +312,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                 <th>{t('purchase_market_col')}</th>
                                 <th>{t('col_address')}</th>
                                 <th>{t('col_status')}</th>
+                                <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
                                 <th style={{ width: 90 }}>{t('col_actions')}</th>
                             </tr>
                         </thead>
@@ -350,6 +374,9 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                         {sup.is_active
                                             ? <Badge bg="success">{t('status_active')}</Badge>
                                             : <Badge bg="secondary">{t('status_inactive')}</Badge>}
+                                    </td>
+                                    <td style={{ fontSize: '12px', color: '#555', whiteSpace: 'nowrap' }}>
+                                        {sup.added_at ? new Date(sup.added_at).toLocaleDateString() : <span className="text-muted">—</span>}
                                     </td>
                                     <td>
                                         <div className="d-flex gap-1">

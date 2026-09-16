@@ -8,6 +8,7 @@ import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
 import { useHistory, useLocation } from "react-router-dom";
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
+import EmailDetailModal from '../store/EmailDetailModal.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -39,7 +40,7 @@ function fmt(v) {
     return Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
+function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) {
     const { t } = useTranslation('common');
     const token = localStorage.getItem('access_token');
 
@@ -56,6 +57,9 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     // Update product prices state
     const [updatingPrices, setUpdatingPrices] = useState(false);
     const [priceUpdateResult, setPriceUpdateResult] = useState(null);
+    // Delete supplier reply state
+    const [deletingReplyId, setDeletingReplyId] = useState(null);
+    const [deleteReplyError, setDeleteReplyError] = useState('');
 
     // Per-product: selected supplier and margin %
     const products = rfq.products || [];
@@ -70,12 +74,21 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
         } catch (_) { return 35; }
     })();
 
-    // Unique suppliers with quotation replies
-    const suppliers = replies.map(r => ({ name: r.supplier_name, phone: r.supplier_phone, id: r.id }));
+    // Deduplicate suppliers: one column per unique supplier (by phone, then name).
+    // When a supplier has multiple reply records, keep the latest one (by received_at).
+    const supplierMap = new Map(); // key → reply
+    for (const r of replies) {
+        const key = r.supplier_phone?.trim() || r.supplier_name?.trim() || r.id;
+        const existing = supplierMap.get(key);
+        if (!existing || (r.received_at && (!existing.received_at || r.received_at > existing.received_at))) {
+            supplierMap.set(key, r);
+        }
+    }
+    const suppliers = Array.from(supplierMap.values()).map(r => ({ name: r.supplier_name, phone: r.supplier_phone, id: r.id }));
 
     // Build price map: productIndex → { supplierId → price }
     const priceMap = {};
-    for (const reply of replies) {
+    for (const reply of Array.from(supplierMap.values())) {
         for (const p of (reply.prices || [])) {
             if (!priceMap[p.product_index]) priceMap[p.product_index] = {};
             priceMap[p.product_index][reply.id] = p;
@@ -181,6 +194,21 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
         finally { setUploadingFile(false); }
     };
 
+    const handleDeleteReply = async (replyId) => {
+        if (!window.confirm(t('Confirm delete this supplier quotation?'))) return;
+        setDeletingReplyId(replyId);
+        setDeleteReplyError('');
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/${replyId}?store_id=${storeId}`, {
+                method: 'DELETE', headers: { Authorization: token },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { setDeleteReplyError(data.error || t('Delete failed')); }
+            else if (onRfqReload) { onRfqReload(); }
+        } catch (e) { setDeleteReplyError(e.message); }
+        finally { setDeletingReplyId(null); }
+    };
+
     const buildQuotationItems = () =>
         products.map((prod, i) => {
             const sid = selectedSupplier[i];
@@ -249,13 +277,24 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     return (
         <div>
             {/* Non-quotation replies summary */}
-            {(rfq.supplier_replies || []).length > 0 && (
+            {(rfq.supplier_replies || []).length > 0 && (() => {
+                // Deduplicate: keep the latest reply per supplier (by phone, then email, then name)
+                const seen = new Map();
+                (rfq.supplier_replies || []).forEach((r, i) => {
+                    const key = r.supplier_phone || r.supplier_email || r.supplier_name || `idx_${i}`;
+                    const existing = seen.get(key);
+                    if (!existing || new Date(r.received_at) > new Date(existing.received_at)) {
+                        seen.set(key, { ...r, _origIdx: i });
+                    }
+                });
+                const dedupedReplies = Array.from(seen.values());
+                return (
                 <div className="mb-3">
                     <h6 className="fw-semibold mb-2">
                         <i className="bi bi-chat-dots me-2 text-primary"></i>
-                        {t('supplier_replies_label')} ({rfq.supplier_replies.length})
+                        {t('supplier_replies_label')} ({dedupedReplies.length})
                     </h6>
-                    {rfq.supplier_replies.map((r, i) => (
+                    {dedupedReplies.map((r, i) => (
                         <div key={r.id || i} className="d-flex align-items-start gap-2 mb-2 p-2 rounded border" style={{ background: r.is_quotation ? '#f0fff4' : '#f8f9fa', fontSize: '13px' }}>
                             <div className="flex-grow-1">
                                 <div className="d-flex align-items-center gap-2 mb-1">
@@ -277,10 +316,23 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                                     <div className="text-danger" style={{ fontSize: '11px' }}>{r.extraction_error}</div>
                                 )}
                             </div>
+                            <button
+                                className="btn btn-sm btn-outline-danger flex-shrink-0"
+                                style={{ fontSize: '11px', padding: '2px 8px', alignSelf: 'flex-start' }}
+                                disabled={deletingReplyId === r.id}
+                                onClick={() => handleDeleteReply(r.id)}
+                                title={t('Delete this quotation')}
+                            >
+                                {deletingReplyId === r.id
+                                    ? <span className="spinner-border spinner-border-sm" />
+                                    : <i className="bi bi-trash3"></i>}
+                            </button>
                         </div>
                     ))}
+                    {deleteReplyError && <div className="text-danger mt-1" style={{ fontSize: '12px' }}>{deleteReplyError}</div>}
                 </div>
-            )}
+                );
+            })()}
 
             {addOk && <Alert variant="success" className="py-1 px-2 mb-2" style={{ fontSize: '12px' }}>{t('reply_added_ok')}</Alert>}
 
@@ -377,7 +429,9 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                                     <th style={{ width: 60 }}>{t('col_qty')}</th>
                                     {suppliers.map(s => (
                                         <th key={s.id} className="text-center" style={{ minWidth: 90, background: '#e8f4fd' }}>
-                                            {s.name || s.phone}
+                                            {s.name
+                                                ? <span title={s.phone}>{s.name}</span>
+                                                : <span style={{ fontSize: '11px', color: '#555' }}><i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{s.phone || t('Supplier')}</span>}
                                         </th>
                                     ))}
                                     <th style={{ width: 100 }}>{t('col_selected_supplier')}</th>
@@ -429,7 +483,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                                                     onChange={e => setSelectedSupplier(prev => ({ ...prev, [i]: e.target.value || null }))}>
                                                     <option value="">{t('none')}</option>
                                                     {suppliers.filter(s => priceMap[i]?.[s.id]).map(s => (
-                                                        <option key={s.id} value={s.id}>{s.name || s.phone}</option>
+                                                        <option key={s.id} value={s.id}>{s.name || s.phone || t('Supplier')}</option>
                                                     ))}
                                                 </select>
                                             </td>
@@ -496,21 +550,103 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
 
 // ── Forward / Detail Modal ────────────────────────────────────────────────────
 
-function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProgress }) {
+export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProgress, onSendToSuppliers, onReload, zIndex }) {
     const { t } = useTranslation('common');
+    const history = useHistory();
     const [activeTab, setActiveTab] = useState('info');
     const [expandedMsg, setExpandedMsg] = useState(null);
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [pdfLoading, setPdfLoading] = useState(false);
+    const [showPdfModal, setShowPdfModal] = useState(false);
+    const [emailDetail, setEmailDetail]     = useState(null);
+    const [emailDetailShow, setEmailDetailShow] = useState(false);
     if (!rfq) return null;
+
+    const handleSendToSuppliers = () => {
+        if (onSendToSuppliers) {
+            onSendToSuppliers(rfq);
+            return;
+        }
+        try { sessionStorage.setItem('_rfq_auto_send', rfq.id || rfq._id); } catch (_) {}
+        history.push('/dashboard/rfq-received?t=' + Date.now());
+        onHide();
+    };
+
+    const openLinkedEmail = async () => {
+        if (!rfq.procurement_message_id) return;
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch(`/v1/procurement-messages/${rfq.procurement_message_id}?store_id=${storeId}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            if (data?.id) { setEmailDetail(data); setEmailDetailShow(true); }
+        } catch (_) {}
+    };
+
+    const token = localStorage.getItem('access_token');
+    const loadPdf = async () => {
+        if (pdfUrl) { setShowPdfModal(true); return; }
+        setPdfLoading(true);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfq.id}/download-pdf?store_id=${storeId}`, {
+                headers: { Authorization: token },
+            });
+            if (!res.ok) return;
+            const blob = await res.blob();
+            setPdfUrl(URL.createObjectURL(blob));
+            setShowPdfModal(true);
+        } catch (_) {}
+        finally { setPdfLoading(false); }
+    };
 
     const hasReplies = (rfq.supplier_replies || []).length > 0;
     const hasQuotation = (rfq.supplier_replies || []).some(r => r.is_quotation);
 
     return (
-        <Modal show={show} onHide={onHide} size="xl" centered>
+        <>
+        <Modal show={show} onHide={onHide} size="xl" centered {...(zIndex ? { style: { zIndex } } : {})}>
             <Modal.Header closeButton>
-                <Modal.Title>
-                    <i className="bi bi-whatsapp text-success me-2"></i>
-                    {t('rfq_detail_title')} — <small className="text-muted fs-6">{t('rfq_from')} {rfq.from_phone} {rfq.from_name && `(${rfq.from_name})`}</small>
+                <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1 }}>
+                    <i className="bi bi-whatsapp text-success me-1"></i>
+                    {rfq.code && (
+                        <span style={{
+                            fontFamily: 'monospace',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: '#0a7c42',
+                            background: '#e6f4ed',
+                            border: '1px solid #b2dfcb',
+                            borderRadius: '4px',
+                            padding: '1px 7px',
+                            letterSpacing: '0.03em',
+                        }}>{rfq.code}</span>
+                    )}
+                    <span>{t('rfq_detail_title')}</span>
+                    <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>
+                        {t('rfq_from')} {rfq.from_phone}{rfq.from_name && ` (${rfq.from_name})`}
+                    </small>
+                    {rfq.procurement_message_id && (
+                        <button
+                            className="btn btn-sm btn-outline-primary"
+                            style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                            onClick={openLinkedEmail}
+                            title="Open linked email"
+                        >
+                            <i className="bi bi-envelope-fill me-1 text-primary"></i>
+                            {rfq.from_phone && rfq.from_phone.includes('@')
+                                ? rfq.from_phone
+                                : rfq.procurement_message_code || t('Linked Email')}
+                        </button>
+                    )}
+                    {rfq.status !== 'cancelled' && (
+                        <button
+                            className={`btn btn-sm btn-success${rfq.procurement_message_id ? '' : ' ms-auto'}`}
+                            style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                            onClick={handleSendToSuppliers}
+                            title={`Send ${rfq.code || ''} to Suppliers`}
+                        >
+                            <i className="bi bi-send me-1"></i>Send to Suppliers
+                        </button>
+                    )}
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body style={{ padding: 0 }}>
@@ -547,11 +683,23 @@ function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProg
                     {/* Info tab */}
                     {activeTab === 'info' && (
                         <div>
-                            <div className="d-flex align-items-center gap-2 mb-2">
+                            <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                                 <StatusBadge status={rfq.status} />
                                 <small className="text-muted">{new Date(rfq.received_at).toLocaleString()}</small>
-                                {rfq.code && <Badge bg="light" text="dark" style={{ fontSize: '11px', border: '1px solid #dee2e6' }}>{rfq.code}</Badge>}
                                 {rfq.processed_at && <small className="text-muted">{t('processed_at')} {new Date(rfq.processed_at).toLocaleString()}</small>}
+                                {rfq.procurement_message_code && (
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={openLinkedEmail}
+                                        onKeyDown={e => e.key === 'Enter' && openLinkedEmail()}
+                                        style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: '#1a73e8', background: '#e8f0fe', border: '1px solid #c8d8f5', borderRadius: '4px', padding: '2px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                        title="Open linked email"
+                                    >
+                                        <i className="bi bi-envelope" style={{ fontSize: '12px' }}></i>
+                                        {rfq.procurement_message_code}
+                                    </span>
+                                )}
                             </div>
                             {rfq.customer_name && (
                                 <div className="mb-2">
@@ -726,6 +874,7 @@ function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProg
                             rfq={rfq}
                             storeId={storeId}
                             onCreateQuotation={onCreateQuotation}
+                            onRfqReload={onReload}
                         />
                     )}
 
@@ -735,33 +884,75 @@ function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProg
                 </div>
             </Modal.Body>
             <Modal.Footer>
+                <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={loadPdf}
+                    disabled={pdfLoading}
+                    title="View / Download RFQ PDF"
+                    style={{ marginRight: 'auto' }}
+                >
+                    {pdfLoading
+                        ? <><span className="spinner-border spinner-border-sm me-1" />Loading…</>
+                        : <><i className="bi bi-file-earmark-pdf me-1 text-danger"></i>View PDF</>}
+                </Button>
                 <Button variant="outline-secondary" size="sm" onClick={onHide}>{t('close')}</Button>
             </Modal.Footer>
         </Modal>
+
+        {showPdfModal && pdfUrl && (
+            <Modal show onHide={() => setShowPdfModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title style={{ fontSize: 15 }}>
+                        <i className="bi bi-file-earmark-pdf text-danger me-2"></i>
+                        {rfq.code} — RFQ PDF
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ padding: 0, height: '80vh' }}>
+                    <iframe src={pdfUrl} title="RFQ PDF" style={{ width: '100%', height: '100%', border: 'none' }} />
+                </Modal.Body>
+                <Modal.Footer>
+                    <a href={pdfUrl} download={`${rfq.code || 'rfq'}.pdf`} className="btn btn-sm btn-primary me-2">
+                        <i className="bi bi-download me-1"></i>Download
+                    </a>
+                    <Button variant="secondary" size="sm" onClick={() => setShowPdfModal(false)}>{t('close')}</Button>
+                </Modal.Footer>
+            </Modal>
+        )}
+        <EmailDetailModal
+            msg={emailDetail}
+            show={emailDetailShow && !!emailDetail}
+            onClose={() => setEmailDetailShow(false)}
+            storeId={storeId}
+            token={localStorage.getItem('access_token')}
+        />
+        </>
     );
 }
 
 // ── RFQ Timeline ─────────────────────────────────────────────────────────────
 
 const STEP_META = {
-    input_received:       { icon: 'bi-inbox-fill',               bg: '#22c55e', label: 'Input Received' },
-    rfq_created:          { icon: 'bi-file-earmark-check-fill',  bg: '#3b82f6', label: 'RFQ Created' },
-    products_identified:  { icon: 'bi-box-seam-fill',            bg: '#0ea5e9', label: 'Products Identified' },
-    customer_identified:  { icon: 'bi-person-fill-check',        bg: '#0ea5e9', label: 'Customer Identified' },
-    ai_categorizing:      { icon: 'bi-cpu-fill',                 bg: '#94a3b8', label: 'AI Categorizing' },
-    categories_identified:{ icon: 'bi-tags-fill',                bg: '#8b5cf6', label: 'Categories Identified' },
-    categories_error:     { icon: 'bi-exclamation-circle-fill',  bg: '#ef4444', label: 'Category Error' },
-    ai_skipped:           { icon: 'bi-info-circle-fill',         bg: '#94a3b8', label: 'AI Skipped' },
-    suppliers_found:      { icon: 'bi-people-fill',              bg: '#22c55e', label: 'Ready to Send to Suppliers' },
-    no_suppliers_found:   { icon: 'bi-exclamation-triangle-fill',bg: '#f59e0b', label: 'No Suppliers Found' },
-    suppliers_matched:    { icon: 'bi-shop',                     bg: '#f59e0b', label: 'Suppliers Matched' },
-    waiting_approval:     { icon: 'bi-hourglass-split',          bg: '#f59e0b', label: 'Waiting Approval' },
-    rfq_sent_to_supplier: { icon: 'bi-send-fill',                bg: '#22c55e', label: 'Sent to Supplier' },
-    rfq_send_failed:      { icon: 'bi-exclamation-triangle-fill',bg: '#ef4444', label: 'Send Failed' },
-    waiting_replies:      { icon: 'bi-hourglass',                bg: '#94a3b8', label: 'Waiting Replies' },
-    supplier_replied:     { icon: 'bi-chat-left-dots-fill',      bg: '#3b82f6', label: 'Supplier Replied' },
-    prices_extracted:     { icon: 'bi-cpu-fill',                 bg: '#8b5cf6', label: 'Prices Extracted' },
-    prices_updated:       { icon: 'bi-currency-dollar',          bg: '#22c55e', label: 'Prices Updated' },
+    input_received:          { icon: 'bi-inbox-fill',               bg: '#22c55e', label: 'Input Received' },
+    rfq_created:             { icon: 'bi-file-earmark-check-fill',  bg: '#3b82f6', label: 'RFQ Created' },
+    products_identified:     { icon: 'bi-box-seam-fill',            bg: '#0ea5e9', label: 'Products Identified' },
+    customer_identified:     { icon: 'bi-person-fill-check',        bg: '#0ea5e9', label: 'Customer Identified' },
+    ai_categorizing:         { icon: 'bi-cpu-fill',                 bg: '#94a3b8', label: 'AI Categorizing' },
+    categories_identified:   { icon: 'bi-tags-fill',                bg: '#8b5cf6', label: 'Categories Identified' },
+    categories_error:        { icon: 'bi-exclamation-circle-fill',  bg: '#ef4444', label: 'Category Error' },
+    ai_skipped:              { icon: 'bi-info-circle-fill',         bg: '#94a3b8', label: 'AI Skipped' },
+    suppliers_found:         { icon: 'bi-people-fill',              bg: '#22c55e', label: 'Ready to Send to Suppliers' },
+    no_suppliers_found:      { icon: 'bi-exclamation-triangle-fill',bg: '#f59e0b', label: 'No Suppliers Found' },
+    suppliers_below_minimum: { icon: 'bi-exclamation-triangle-fill',bg: '#f59e0b', label: 'Suppliers Below Minimum' },
+    suppliers_matched:       { icon: 'bi-shop',                     bg: '#f59e0b', label: 'Suppliers Matched' },
+    waiting_approval:        { icon: 'bi-hourglass-split',          bg: '#f59e0b', label: 'Waiting Approval' },
+    rfq_sent_to_supplier:    { icon: 'bi-send-fill',                bg: '#22c55e', label: 'Sent to Supplier' },
+    rfq_send_failed:         { icon: 'bi-exclamation-triangle-fill',bg: '#ef4444', label: 'Send Failed' },
+    template_sent:           { icon: 'bi-whatsapp',                 bg: '#25d366', label: 'Sent via WhatsApp' },
+    waiting_replies:         { icon: 'bi-hourglass',                bg: '#94a3b8', label: 'Waiting Replies' },
+    supplier_replied:        { icon: 'bi-chat-left-dots-fill',      bg: '#3b82f6', label: 'Supplier Replied' },
+    prices_extracted:        { icon: 'bi-cpu-fill',                 bg: '#8b5cf6', label: 'Prices Extracted' },
+    prices_updated:          { icon: 'bi-currency-dollar',          bg: '#22c55e', label: 'Prices Updated' },
 };
 
 function fmtLogTime(iso) {
@@ -789,6 +980,8 @@ function RFQTimeline({ logs, liveProgress }) {
         <div style={{ padding: '4px 0', maxHeight: '520px', overflowY: 'auto' }}>
             {(logs || []).map((log, idx) => {
                 const meta = STEP_META[log.step] || { icon: 'bi-dot', bg: '#94a3b8', label: log.step };
+                // For template_sent (manual WhatsApp send), show red bullet when the send failed
+                const bg = (log.step === 'template_sent' && log.details?.status === 'failed') ? '#ef4444' : meta.bg;
                 const isLast = idx === logs.length - 1;
                 const isExpanded = expandedIdx === idx;
                 const hasDetails = log.details && Object.keys(log.details).length > 0;
@@ -799,7 +992,7 @@ function RFQTimeline({ logs, liveProgress }) {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: '32px' }}>
                             <div style={{
                                 width: '32px', height: '32px', borderRadius: '50%',
-                                background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
                             }}>
                                 <i className={`bi ${meta.icon}`} style={{ color: '#fff', fontSize: '14px' }}></i>
@@ -813,7 +1006,7 @@ function RFQTimeline({ logs, liveProgress }) {
                         <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <span style={{ fontSize: '12px', fontWeight: 700, color: meta.bg, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: 700, color: bg, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                         {meta.label}
                                     </span>
                                     <p style={{ margin: '1px 0 0', fontSize: '13px', color: '#1e293b', lineHeight: 1.45 }}>
@@ -975,6 +1168,8 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     const [supplierStatuses, setSupplierStatuses] = useState({});
     const [sentPhones, setSentPhones]             = useState(new Set()); // phones already successfully sent
     const [error, setError]                       = useState('');
+    const toTitleCase = s => s.trim().replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+
     // Supplier selection + manual additions
     const [selectedPhones, setSelectedPhones]     = useState(new Set());
     const [extraSuppliers, setExtraSuppliers]     = useState([]); // [{name, phone}]
@@ -994,12 +1189,21 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     const [showPdfModal, setShowPdfModal]         = useState(false);
     // Supplier view modal
     const [viewingSupplier, setViewingSupplier]   = useState(null);
+    // Google Maps supplier fetch
+    const [mapsOpen, setMapsOpen]                 = useState(false);
+    const [mapsMarkets, setMapsMarkets]           = useState(new Set());
+    const [mapsMinCount, setMapsMinCount]         = useState('5');
+    const [mapsMaxCount, setMapsMaxCount]         = useState('20');
+    const [mapsFetching, setMapsFetching]         = useState(false);
+    const [mapsResult, setMapsResult]             = useState(null); // null | { found: N, added: N } | { error: '...' }
+    const [mapsCustomInput, setMapsCustomInput]   = useState('');
+    const [removedFromList, setRemovedFromList]   = useState(new Set());
 
     // Fetch full store object (needed for RFQPreviewContent logo/header)
     useEffect(() => {
         if (!show || !storeId) return;
         fetch(`/v1/store/${storeId}`, { headers: { Authorization: token } })
-            .then(r => r.json()).then(d => setStoreData(d)).catch(() => {});
+            .then(r => r.json()).then(d => setStoreData(d.result || d)).catch(() => {});
     }, [show, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadPdf = async () => {
@@ -1022,10 +1226,16 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     useEffect(() => {
         if (!show || !rfq) return;
         setError(''); setPreview(null); setSupplierStatuses({});
-        setExtraSuppliers([]); setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
+        setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
         setTestPhone(''); setTestResult(null);
         setPdfUrl(null); setShowPdfModal(false);
         setPhase('preview'); setSendModalTab('send');
+        setMapsResult(null); setMapsOpen(false); setMapsCustomInput(''); setRemovedFromList(new Set());
+
+        // Restore extra recipients from localStorage (persist across modal open/close)
+        const _lsKey = `rfq_extra_${rfq.id}`;
+        const storedExtras = (() => { try { return JSON.parse(localStorage.getItem(_lsKey) || '[]'); } catch { return []; } })();
+        setExtraSuppliers(storedExtras);
 
         // Build the set of phones already successfully sent
         const alreadySent = new Set(
@@ -1042,8 +1252,9 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                     setPreview(data);
                     // Show WABA config warning (non-blocking) if returned
                     if (data.config_warning) { setError(data.config_warning); }
-                    // Select only suppliers not already sent to
-                    setSelectedPhones(new Set((data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)));
+                    // Select suppliers not already sent — also pre-select stored extras
+                    const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
+                    setSelectedPhones(new Set([...extraPhones, ...(data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)]));
                 }
             })
             .catch(e => setError('Failed to load preview: ' + e.message))
@@ -1054,17 +1265,35 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
         if (!show) { esRef.current?.close(); esRef.current = null; }
     }, [show]);
 
+    // Persist extra recipients to localStorage so they survive modal close/reopen
+    useEffect(() => {
+        if (!rfq?.id || !show) return;
+        try {
+            if (extraSuppliers.length > 0) localStorage.setItem(`rfq_extra_${rfq.id}`, JSON.stringify(extraSuppliers));
+            else localStorage.removeItem(`rfq_extra_${rfq.id}`);
+        } catch (_) {}
+    }, [extraSuppliers]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // All rows shown in recipient list — always from preview.suppliers, augmented with extras
     // Also surface any forwarded_to entries not in the preview list (e.g. phones outside categories)
     const previewPhones = new Set((preview?.suppliers || []).map(s => s.phone));
     const forwardedExtras = (rfq?.forwarded_to || [])
         .filter(r => !previewPhones.has(r.phone))
-        .map(r => ({ name: r.supplier_name, phone: r.phone, category: r.category }));
+        .map(r => ({ name: r.supplier_name, phone: r.phone, category: r.category, purchase_market: r.purchase_market }));
     const baseSuppliers = [
-        ...(preview?.suppliers || []).map(s => ({ name: s.name, phone: s.phone, category: s.category })),
+        ...(preview?.suppliers || []).map(s => ({ name: s.name, phone: s.phone, category: s.category, categories: s.categories, id: s.id, purchase_market: s.purchase_market })),
         ...forwardedExtras,
     ];
-    const supplierList = [...baseSuppliers, ...extraSuppliers.map(s => ({ name: s.name, phone: s.phone }))];
+    const _customerPhone = (rfq?.customer_phone || '').replace(/\D/g, '');
+    const _allSuppliers = [...baseSuppliers, ...extraSuppliers.map(s => ({ ...s }))];
+    const _seenPhones = new Set();
+    const supplierList = _allSuppliers.filter(s => {
+        if (_seenPhones.has(s.phone)) return false;
+        _seenPhones.add(s.phone);
+        if (removedFromList.has(s.phone)) return false;
+        if (_customerPhone && s.phone && s.phone.replace(/\D/g, '').endsWith(_customerPhone.slice(-9))) return false;
+        return true;
+    });
 
     const togglePhone = (phone) => {
         setSelectedPhones(prev => {
@@ -1081,9 +1310,20 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
         if (supplierList.some(e => e.phone === phone)) {
             setAddQuery(''); setShowAddSugg(false); return;
         }
-        setExtraSuppliers(prev => [...prev, { name: s.name || phone, phone }]);
+        const name = s.name || phone;
+        setExtraSuppliers(prev => [...prev, { name, phone }]);
         setSelectedPhones(prev => new Set([...prev, phone]));
         setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
+        // Persist to rfq_suppliers DB — if it already exists the 409 is silently ignored
+        if (!s.id) {
+            fetch(`/v1/rfq-suppliers?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ name, phone }),
+            }).then(r => r.json()).then(data => {
+                if (data.id) setExtraSuppliers(prev => prev.map(e => e.phone === phone ? { ...e, id: data.id } : e));
+            }).catch(() => {});
+        }
     };
 
     const searchAddSuppliers = (q) => {
@@ -1095,6 +1335,39 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 .then(d => { setAddSuggestions(d.items || []); setShowAddSugg(true); })
                 .catch(() => {});
         }, 250);
+    };
+
+    const fetchFromMaps = async () => {
+        if (mapsMarkets.size === 0) return;
+        setMapsFetching(true);
+        setMapsResult(null);
+        try {
+            const res = await fetch(`/v1/rfq-suppliers/fetch-from-maps?store_id=${storeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ rfq_id: rfq.id, markets: [...mapsMarkets], min_count: Math.max(1, parseInt(mapsMinCount) || 5), max_count: Math.min(20, Math.max(1, parseInt(mapsMaxCount) || 20)) }),
+            });
+            const data = await res.json();
+            if (data.error) { setMapsResult({ error: data.error }); return; }
+            const newSups = (data.suppliers || []);
+            const _custPhone = (rfq?.customer_phone || '').replace(/\D/g, '');
+            // Add found suppliers to RECIPIENTS, deduplicating and excluding the customer's own phone
+            const currentPhones = new Set(supplierList.map(s => s.phone));
+            const toAdd = newSups.filter(s => {
+                if (!s.phone || currentPhones.has(s.phone)) return false;
+                if (_custPhone && s.phone.replace(/\D/g, '').endsWith(_custPhone.slice(-9))) return false;
+                return true;
+            });
+            if (toAdd.length > 0) {
+                setExtraSuppliers(prev => [...prev, ...toAdd.map(s => ({ id: s.id, name: s.name, phone: s.phone, purchase_market: s.purchase_market, categories: s.categories }))]);
+                setSelectedPhones(prev => { const next = new Set(prev); toAdd.forEach(s => next.add(s.phone)); return next; });
+            }
+            setMapsResult({ found: data.found, added: toAdd.length });
+        } catch (e) {
+            setMapsResult({ error: e.message });
+        } finally {
+            setMapsFetching(false);
+        }
     };
 
     // Derive attachment type from template header — no user choice needed
@@ -1123,7 +1396,7 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
         es.addEventListener('rfq_send_done', e => {
             try {
                 const d = JSON.parse(e.data);
-                if (d.rfq_id === rfq.id) { es.close(); esRef.current = null; setPhase('done'); onSent?.(); }
+                if (d.rfq_id === rfq.id) { es.close(); esRef.current = null; setPhase('done'); onSent?.(); try { localStorage.removeItem(`rfq_extra_${rfq.id}`); } catch (_) {} }
             } catch (_) {}
         });
 
@@ -1177,7 +1450,9 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
             if (type === 'header') {
                 if ((fmt === 'IMAGE' || fmt === 'DOCUMENT') && mediaId) {
                     const mtype = mediaType || 'image';
-                    components.push({ type: 'HEADER', parameters: [{ type: mtype, [mtype]: { id: mediaId } }] });
+                    const mediaObj = { id: mediaId };
+                    if (mtype === 'document') mediaObj.filename = `${rfq?.code || 'RFQ'}.pdf`;
+                    components.push({ type: 'HEADER', parameters: [{ type: mtype, [mtype]: mediaObj }] });
                 }
             } else if (type === 'body') {
                 const placeholders = [...(comp.text || '').matchAll(/\{\{(\w+)\}\}/g)].map(m => m[1]);
@@ -1429,6 +1704,38 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                 </Alert>
                             )}
 
+                            {/* Remove-all-by-market buttons */}
+                            {(() => {
+                                const marketCounts = {};
+                                supplierList.forEach(s => {
+                                    if (s.purchase_market) {
+                                        const mk = toTitleCase(s.purchase_market);
+                                        marketCounts[mk] = (marketCounts[mk] || 0) + 1;
+                                    }
+                                });
+                                const markets = Object.keys(marketCounts);
+                                if (markets.length === 0 || isSending) return null;
+                                return (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                        {markets.map(mkt => (
+                                            <button key={mkt}
+                                                title={`Remove all ${mkt} suppliers from this list`}
+                                                onClick={() => {
+                                                    const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
+                                                    setRemovedFromList(prev => new Set([...prev, ...phones]));
+                                                    setSelectedPhones(prev => { const next = new Set(prev); phones.forEach(p => next.delete(p)); return next; });
+                                                    setExtraSuppliers(prev => prev.filter(ex => !ex.purchase_market || toTitleCase(ex.purchase_market) !== mkt));
+                                                }}
+                                                style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <i className="bi bi-x-circle" style={{ fontSize: 10 }}></i>
+                                                Remove all: {mkt}
+                                                <span style={{ background: '#fca5a5', color: '#7f1d1d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{marketCounts[mkt]}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+
                             <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #f0f0f0', borderRadius: 8 }}>
                                 {supplierList.map((s, i) => {
                                     const alreadySent = sentPhones.has(s.phone);
@@ -1461,6 +1768,11 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                                 <div style={{ fontSize: 11, color: '#555' }}>
                                                     <i className="bi bi-whatsapp me-1" style={{ color: '#25d366' }}></i>{s.phone}
                                                     {alreadySent && <span className="ms-2 text-success">· sent</span>}
+                                                    {s.purchase_market && (
+                                                        <span style={{ marginLeft: 6, padding: '1px 6px', borderRadius: 10, background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', fontWeight: 600, fontSize: 9 }}>
+                                                            {s.purchase_market}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {/* Supplier categories */}
                                                 {(s.categories || []).length > 0 && (
@@ -1485,6 +1797,20 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                             <div style={{ flexShrink: 0, width: 22, textAlign: 'center' }}>
                                                 {statusIcon(s)}
                                             </div>
+                                            {/* Remove button — removes from this list only, not from rfq-suppliers DB */}
+                                            {!alreadySent && !isSending && (
+                                                <button
+                                                    title="Remove from recipients list"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setRemovedFromList(prev => new Set([...prev, s.phone]));
+                                                        setSelectedPhones(prev => { const next = new Set(prev); next.delete(s.phone); return next; });
+                                                        if (isExtra) setExtraSuppliers(prev => prev.filter(ex => ex.phone !== s.phone));
+                                                    }}
+                                                    style={{ flexShrink: 0, border: 'none', background: 'none', padding: '2px 4px', color: '#dc3545', fontSize: 13, lineHeight: 1, cursor: 'pointer', borderRadius: 4, opacity: 0.7 }}>
+                                                    <i className="bi bi-x-circle"></i>
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -1535,6 +1861,134 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                                                     <i className="bi bi-plus-circle text-primary" style={{ fontSize: 16 }}></i>
                                                 </div>
                                             ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ── Fetch suppliers from Google Maps ── */}
+                            {!isSending && (
+                                <div style={{ marginTop: 10 }}>
+                                    <button
+                                        className="btn btn-sm w-100 text-start"
+                                        style={{ background: mapsOpen ? '#e8f0fe' : '#f8f9fa', border: '1px solid #dee2e6', borderRadius: 8, padding: '8px 12px', fontWeight: 600, fontSize: 12, color: '#1a56db', display: 'flex', alignItems: 'center', gap: 6 }}
+                                        onClick={() => { setMapsOpen(o => !o); setMapsResult(null); }}
+                                    >
+                                        <i className="bi bi-google me-1"></i>
+                                        Fetch suppliers from Google Maps
+                                        <i className={`bi bi-chevron-${mapsOpen ? 'up' : 'down'} ms-auto`}></i>
+                                    </button>
+
+                                    {mapsOpen && (
+                                        <div style={{ background: '#f0f4ff', border: '1px solid #c7d7fc', borderRadius: '0 0 8px 8px', padding: '12px', marginTop: -1 }}>
+
+                                            {/* Result flash message */}
+                                            {mapsResult && (() => {
+                                                const isOk = !mapsResult.error && mapsResult.found > 0;
+                                                const isWarn = !mapsResult.error && !mapsResult.found;
+                                                const color = mapsResult.error || isWarn ? '#842029' : '#0a3622';
+                                                const bg    = mapsResult.error || isWarn ? '#f8d7da' : '#d1e7dd';
+                                                const bdr   = mapsResult.error || isWarn ? '#f5c2c7' : '#a3cfbb';
+                                                return (
+                                                    <div style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 8, border: `1px solid ${bdr}`, background: bg, color, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                        <i className={`bi ${isOk ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`} style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}></i>
+                                                        <div>
+                                                            {mapsResult.error
+                                                                ? <span style={{ fontWeight: 600, fontSize: 13 }}>{mapsResult.error}</span>
+                                                                : isOk
+                                                                    ? <>
+                                                                        <div style={{ fontWeight: 700, fontSize: 13 }}>{mapsResult.found} supplier{mapsResult.found !== 1 ? 's' : ''} found on Google Maps</div>
+                                                                        <div style={{ fontSize: 12, marginTop: 2 }}>{mapsResult.added} new added · {mapsResult.found - mapsResult.added} already in list</div>
+                                                                      </>
+                                                                    : <span style={{ fontWeight: 600, fontSize: 13 }}>No suppliers found. Try different markets or ensure product categories are identified.</span>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Market chips */}
+                                            <div style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>
+                                                Select markets to search:
+                                            </div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                                {[...(storeData?.settings?.purchase_markets || []), ...[...mapsMarkets].filter(m => !(storeData?.settings?.purchase_markets || []).includes(m))].map((m, i) => (
+                                                    <label key={i} onClick={() => setMapsMarkets(prev => { const next = new Set(prev); next.has(m) ? next.delete(m) : next.add(m); return next; })}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 20, border: `1px solid ${mapsMarkets.has(m) ? '#2563eb' : '#cbd5e1'}`, background: mapsMarkets.has(m) ? '#dbeafe' : '#fff', cursor: 'pointer', fontSize: 12, fontWeight: mapsMarkets.has(m) ? 600 : 400, color: mapsMarkets.has(m) ? '#1d4ed8' : '#374151', userSelect: 'none' }}>
+                                                        <i className={`bi bi-geo-alt${mapsMarkets.has(m) ? '-fill' : ''}`}></i>
+                                                        {m}
+                                                    </label>
+                                                ))}
+                                            </div>
+
+                                            {/* Add custom market */}
+                                            <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                                                <input
+                                                    className="form-control form-control-sm"
+                                                    placeholder="Add market (e.g. Dubai, Cairo…)"
+                                                    value={mapsCustomInput}
+                                                    onChange={e => setMapsCustomInput(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') {
+                                                            const v = toTitleCase(mapsCustomInput);
+                                                            if (v) { setMapsMarkets(prev => new Set([...prev, v])); setMapsCustomInput(''); }
+                                                        }
+                                                    }}
+                                                    style={{ fontSize: 12 }}
+                                                />
+                                                <button
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    style={{ whiteSpace: 'nowrap', fontSize: 12 }}
+                                                    onClick={() => {
+                                                        const v = toTitleCase(mapsCustomInput);
+                                                        if (v) { setMapsMarkets(prev => new Set([...prev, v])); setMapsCustomInput(''); }
+                                                    }}
+                                                >
+                                                    + Add
+                                                </button>
+                                            </div>
+
+                                            {/* Min / Max count */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>Min. suppliers per category:</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={20}
+                                                        value={mapsMinCount}
+                                                        onChange={e => setMapsMinCount(e.target.value)}
+                                                        onBlur={e => { const v = parseInt(e.target.value); setMapsMinCount(isNaN(v) || v < 1 ? '5' : String(Math.min(v, 20))); }}
+                                                        style={{ width: 64, padding: '3px 6px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}
+                                                    />
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <label style={{ fontSize: 11, fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>Max. suppliers per category:</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={20}
+                                                        value={mapsMaxCount}
+                                                        onChange={e => setMapsMaxCount(e.target.value)}
+                                                        onBlur={e => { const v = parseInt(e.target.value); setMapsMaxCount(isNaN(v) || v < 1 ? '20' : String(Math.min(v, 20))); }}
+                                                        style={{ width: 64, padding: '3px 6px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 10 }}>
+                                                {rfq?.categories?.length || 0} categor{(rfq?.categories?.length || 0) !== 1 ? 'ies' : 'y'} × {mapsMarkets.size} market{mapsMarkets.size !== 1 ? 's' : ''} = {(rfq?.categories?.length || 0) * mapsMarkets.size} Google Maps search{(rfq?.categories?.length || 0) * mapsMarkets.size !== 1 ? 'es' : ''}
+                                            </div>
+
+                                            <button
+                                                className="btn btn-sm btn-primary w-100"
+                                                disabled={mapsFetching || mapsMarkets.size === 0}
+                                                onClick={fetchFromMaps}
+                                                style={{ fontSize: 12, fontWeight: 600 }}
+                                            >
+                                                {mapsFetching
+                                                    ? <><Spinner animation="border" size="sm" className="me-1" />Searching Google Maps…</>
+                                                    : <><i className="bi bi-search me-1"></i>Fetch Suppliers</>}
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -1728,6 +2182,8 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
             const data = await res.json();
             if (data.error) { setUploadError(data.error); return; }
             setUploadResult(data);
+            if (data.supplier_name)  setSupplierName(data.supplier_name);
+            if (data.supplier_phone) setSupplierPhone(data.supplier_phone);
         } catch (e) { setUploadError(e.message); }
         finally { setUploading(false); }
     };
@@ -1860,6 +2316,7 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
                                         <th style={{ padding: '5px 8px', textAlign: 'right' }}>Qty</th>
                                         <th style={{ padding: '5px 8px', textAlign: 'right' }}>Unit Price</th>
                                         <th style={{ padding: '5px 8px', textAlign: 'left' }}>Currency</th>
+                                        <th style={{ padding: '5px 8px', textAlign: 'center' }}>VAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1872,6 +2329,11 @@ function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
                                                 {p.unit_price != null ? p.unit_price.toLocaleString() : '—'}
                                             </td>
                                             <td style={{ padding: '5px 8px' }}>{p.currency || 'SAR'}</td>
+                                            <td style={{ padding: '5px 8px', textAlign: 'center' }}>
+                                                <span style={{ fontSize: 10, color: p.vat_included ? '#198754' : '#6c757d' }}>
+                                                    {p.vat_included ? 'Incl.' : 'Excl.'}
+                                                </span>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -2163,6 +2625,32 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         }
     }, [location.search, storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Auto-open "Send to Suppliers" modal after RFQ creation from email/WhatsApp.
+    // Signal is passed via sessionStorage (_rfq_auto_send). Navigation uses ?t=<ts> to ensure
+    // location.search changes so this effect re-fires even when already on this page.
+    useEffect(() => {
+        if (!storeId || !token) return;
+        // Always clean the ?t= timestamp param from the URL so it doesn't persist
+        const params = new URLSearchParams(location.search);
+        if (params.has('t') || params.has('send')) {
+            history.replace('/dashboard/rfq-received');
+        }
+        let sendId = null;
+        try {
+            sendId = sessionStorage.getItem('_rfq_auto_send');
+            if (sendId) sessionStorage.removeItem('_rfq_auto_send');
+        } catch (_) {}
+        // Also support legacy ?send= URL param for direct links
+        if (!sendId) {
+            sendId = params.get('send');
+        }
+        if (!sendId) return;
+        fetch(`/v1/rfq-received/${sendId}?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => { if (d && !d.error) { setRfqForSend(d); setShowSendModal(true); } })
+            .catch(() => {});
+    }, [location.search, storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Realtime updates via SSE
     useEffect(() => {
         if (!storeId) return;
@@ -2257,13 +2745,15 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     // Quotation pre-fill: open QuotationCreate modal inline (no navigation)
     const handleCreateQuotation = (items, rfq) => {
         const prefill = {
-            rfq_id:            rfq.id,
-            rfq_code:          rfq.code || '',
-            rfq_received_id:   rfq.id,
-            rfq_received_code: rfq.code || '',
-            customer_id:       rfq.customer_id || null,
-            customer_name:     rfq.customer_name || '',
-            customer_phone:    rfq.customer_phone || '',
+            rfq_id:                    rfq.id,
+            rfq_code:                  rfq.code || '',
+            rfq_received_id:           rfq.id,
+            rfq_received_code:         rfq.code || '',
+            customer_id:               rfq.customer_id || null,
+            customer_name:             rfq.customer_name || '',
+            customer_phone:            rfq.customer_phone || '',
+            procurement_message_id:    rfq.procurement_message_id || null,
+            procurement_message_code:  rfq.procurement_message_code || '',
             items,
         };
         try { sessionStorage.setItem('rfq_quotation_prefill_active', JSON.stringify(prefill)); } catch (_) {}
@@ -2327,7 +2817,10 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             {/* Live Progress Panel */}
             <LiveProgressPanel progress={liveProgress} onDismiss={() => setLiveProgress(null)} />
 
-            <RFQCreate ref={rfqCreateRef} showToastMessage={showToastMessage} onCreated={fetchList} />
+            <RFQCreate ref={rfqCreateRef} showToastMessage={showToastMessage} onCreated={newRfq => {
+                fetchList();
+                if (newRfq?.id) { setRfqForSend(newRfq); setShowSendModal(true); }
+            }} />
             <QuotationCreate ref={quotationCreateRef} showToastMessage={showToastMessage} refreshList={() => {}} />
             <RFQPreview ref={rfqPreviewRef} />
             <RFQSendModal
@@ -2530,6 +3023,8 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 onHide={() => { selectedIdRef.current = null; setShowDetail(false); setSelected(null); }}
                 onCreateQuotation={handleCreateQuotation}
                 liveProgress={liveProgress?.rfq_id === selected?.id ? liveProgress : null}
+                onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
+                onReload={refreshSelected}
             />
 
             {/* Procurement Message Modal */}

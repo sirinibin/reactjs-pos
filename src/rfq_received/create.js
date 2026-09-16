@@ -7,6 +7,7 @@ import { ObjectToSearchQueryParams } from "../utils/queryUtils.js";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from "../utils/aiProviders.js";
+import EmailDetailModal from "../store/EmailDetailModal.js";
 
 const ACCEPTED_TYPES = ".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv,.txt";
 const FILE_ICONS = {
@@ -36,6 +37,11 @@ const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id:
 const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated }, ref) {
     const [show, setShow] = useState(false);
     const [editId, setEditId] = useState(null);
+    const [editRfqCode, setEditRfqCode] = useState(null);
+    const [editLinkedMsgId, setEditLinkedMsgId] = useState(null);
+    const [editLinkedMsgCode, setEditLinkedMsgCode] = useState(null);
+    const [editLinkedMsgObj, setEditLinkedMsgObj] = useState(null);
+    const [showLinkedEmail, setShowLinkedEmail] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM());
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
@@ -65,6 +71,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     // File upload — two separate sections
     const [productFiles, setProductFiles]         = useState([]);  // shown in place of products table
     const [additionalFiles, setAdditionalFiles]   = useState([]);  // shown below products table
+    const [existingAdditionalDataURIs, setExistingAdditionalDataURIs] = useState([]);  // already-saved URIs from DB
+    const [existingAdditionalFilenames, setExistingAdditionalFilenames] = useState([]);
     const [isDragOverProduct, setIsDragOverProduct]     = useState(false);
     const [isDragOverAdditional, setIsDragOverAdditional] = useState(false);
     const [extracting, setExtracting]           = useState(false);
@@ -103,6 +111,11 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     useImperativeHandle(ref, () => ({
         open() {
             setEditId(null);
+            setEditRfqCode(null);
+            setEditLinkedMsgId(null);
+            setEditLinkedMsgCode(null);
+            setEditLinkedMsgObj(null);
+            setShowLinkedEmail(false);
             setSourceMsgId(null);
             setSourceMsgCode(null);
             setForm(EMPTY_FORM());
@@ -115,6 +128,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setOpenProductSearch(false);
             setProductFiles([]);
             setAdditionalFiles([]);
+            setExistingAdditionalDataURIs([]);
+            setExistingAdditionalFilenames([]);
             setExtractionModel("");
             setExtractedCategories([]);
             setAIFiles([]);
@@ -122,6 +137,11 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         },
         edit(rfq) {
             setEditId(rfq.id || rfq._id);
+            setEditRfqCode(rfq.code || null);
+            setEditLinkedMsgId(rfq.procurement_message_id || null);
+            setEditLinkedMsgCode(rfq.procurement_message_code || null);
+            setEditLinkedMsgObj(null);
+            setShowLinkedEmail(false);
             setSourceMsgId(null);
             setSourceMsgCode(null);
             setForm({
@@ -167,6 +187,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setOpenProductSearch(false);
             setProductFiles([]);
             setAdditionalFiles([]);
+            setExistingAdditionalDataURIs(rfq.additional_attachment_data_uris || []);
+            setExistingAdditionalFilenames(rfq.additional_attachment_filenames || []);
             setExtractionModel("");
             setShow(true);
         },
@@ -184,7 +206,12 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 general_instructions: data.general_instructions || "",
             });
             setErrors({});
-            setSelectedCustomers([]);
+            // Show extracted customer name immediately; autoCreateOrFindCustomer will replace with DB record
+            if (data.customer_name) {
+                setSelectedCustomers([{ id: "", name: data.customer_name, search_label: data.customer_name, phone: data.customer_phone || "", email: data.customer_email || "" }]);
+            } else {
+                setSelectedCustomers([]);
+            }
             setCustomerOptions([]);
             setOpenCustomerSearch(false);
             const mappedProducts = (data.products || []).map(p => ({
@@ -200,17 +227,26 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setOpenProductSearch(false);
             setProductFiles([]);
             setAdditionalFiles([]);
+            setExistingAdditionalDataURIs([]);
+            setExistingAdditionalFilenames([]);
             setExtractionModel(data.llm_model || "");
             setExtractedCategories(data.product_categories || []);
             setAIFiles([]);
             setShow(true);
-            // Auto-find or create customer, then auto-sync products
-            autoCreateOrFindCustomer(
-                data.customer_name, data.customer_phone,
-                data.customer_email, data.customer_company
-            );
+            // Auto-find or create customer (will update selectedCustomers with DB record).
+            // When company is present use it as the primary name; individual name becomes contact_person.
+            {
+                const custName = data.customer_company || data.customer_name || "";
+                const custContact = data.customer_company
+                    ? (data.customer_contact_person || data.customer_name || "")
+                    : (data.customer_contact_person || "");
+                autoCreateOrFindCustomer(
+                    custName, data.customer_phone,
+                    data.customer_email, data.customer_company, custContact
+                );
+            }
             if (mappedProducts.some(p => p.name)) {
-                autoSyncProducts(mappedProducts);
+                autoSyncProducts(mappedProducts, mappedProducts.length);
             }
         },
     }));
@@ -489,31 +525,44 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
 
     // ── Core product DB sync (pure helper, no state side-effects) ───────────
     // For each product: find by part_no → find by name → create new.
-    // Returns the synced array with product_ids filled in.
-    // showErr: optional (msg) => void callback for user-visible errors.
+    // Returns same-length array as input with product_ids filled in (never drops products).
+    // Caches part_no lookups to avoid redundant API calls for duplicate part_nos.
     const syncProductListToDB = async (productList, storeId, token, showErr) => {
         const headers = { Authorization: token };
-        const deduped = [];
-        const seenIds = new Set();
+        // Cache: part_no → found DB product (or null if not found/created with that part_no)
+        const partNoCache = new Map();
+        const result = [];
         for (const ep of productList) {
             const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "", notes: ep.notes || "" };
+            // Already has a product_id — keep it as-is
             if (ep.product_id) {
-                if (!seenIds.has(ep.product_id)) { seenIds.add(ep.product_id); deduped.push({ ...base, product_id: ep.product_id }); }
+                result.push({ ...base, product_id: ep.product_id });
                 continue;
             }
-            if (!ep.name || !ep.name.trim()) { deduped.push({ ...base, product_id: "" }); continue; }
-            let found = null;
-            // 1. Search by part_no
-            if (ep.part_no && ep.part_no.trim()) {
-                try {
-                    const qs = new URLSearchParams({ 'search[part_number]': ep.part_no.trim(), 'search[store_id]': storeId, limit: 1 });
-                    const res = await fetch(`/v1/product?${qs}`, { headers });
-                    const d = await res.json();
-                    if (d.result && d.result.length > 0) found = d.result[0];
-                } catch (_) {}
+            if (!ep.name || !ep.name.trim()) {
+                result.push({ ...base, product_id: "" });
+                continue;
             }
-            // 2. Search by name (exact case-insensitive)
-            if (!found) {
+            let found = null;
+            const partNoKey = ep.part_no?.trim() || "";
+            // 1. Search by part_no (use cache to avoid redundant lookups for duplicate part_nos)
+            if (partNoKey) {
+                if (partNoCache.has(partNoKey)) {
+                    found = partNoCache.get(partNoKey);
+                } else {
+                    try {
+                        const qs = new URLSearchParams({ 'search[part_number]': partNoKey, 'search[store_id]': storeId, limit: 1 });
+                        const res = await fetch(`/v1/product?${qs}`, { headers });
+                        const d = await res.json();
+                        if (d.result && d.result.length > 0) found = d.result[0];
+                    } catch (_) {}
+                    partNoCache.set(partNoKey, found);
+                }
+            }
+            // 2. Search by name only when no part_no was supplied.
+            // If a part_no was given but not found, skip name search to avoid matching
+            // a different product that happens to share the same generic name.
+            if (!found && !partNoKey) {
                 try {
                     const qs = new URLSearchParams({ 'search[name]': ep.name.trim(), 'search[store_id]': storeId, limit: 5 });
                     const res = await fetch(`/v1/product?${qs}`, { headers });
@@ -526,16 +575,18 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             if (!found) {
                 try {
                     const body = { name: ep.name.trim() };
-                    if (ep.part_no && ep.part_no.trim()) body.part_number = ep.part_no.trim();
-                    if (ep.unit    && ep.unit.trim())    body.unit        = ep.unit.trim();
+                    if (partNoKey) body.part_number = partNoKey;
+                    if (ep.unit && ep.unit.trim()) body.unit = ep.unit.trim();
                     const res = await fetch(`/v1/product?search[store_id]=${storeId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: token },
                         body: JSON.stringify(body),
                     });
                     const d = await res.json();
-                    if (res.ok && d.result && d.result.id) found = d.result;
-                    else {
+                    if (res.ok && d.result && d.result.id) {
+                        found = d.result;
+                        if (partNoKey) partNoCache.set(partNoKey, found);
+                    } else {
                         const errMsg = Object.values(d.errors || {}).join('; ') || JSON.stringify(d);
                         console.error('Product create failed:', d.errors || d);
                         showErr && showErr(`Failed to create product "${ep.name}": ${errMsg}`);
@@ -545,22 +596,19 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     showErr && showErr(`Error creating product "${ep.name}": ${e.message}`);
                 }
             }
-            const pid = found?.id || "";
-            if (pid && seenIds.has(pid)) continue;
-            if (pid) seenIds.add(pid);
-            deduped.push({
+            result.push({
                 ...base,
-                product_id: pid,
+                product_id: found?.id || "",
                 name:    found?.name        || base.name,
                 part_no: found?.part_number || found?.part_no || base.part_no,
                 unit:    found ? resolveUnit(found.unit) : (base.unit || "PCE"),
             });
         }
-        return deduped;
+        return result;
     };
 
     // ── Auto-create or find customer from extracted data ─────────────────────
-    const autoCreateOrFindCustomer = useCallback(async (name, phone, email, company) => {
+    const autoCreateOrFindCustomer = useCallback(async (name, phone, email, company, contactPerson) => {
         if (!name && !phone) return;
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
@@ -568,7 +616,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             const res = await fetch(`/v1/customer/find-or-create?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ name: name?.trim(), phone: phone?.trim(), email: email?.trim(), company: company?.trim() }),
+                body: JSON.stringify({ name: name?.trim(), phone: phone?.trim(), email: email?.trim(), company: company?.trim(), contact_person: contactPerson?.trim() }),
             });
             const d = await res.json();
             if (res.ok && d.result?.id) {
@@ -587,14 +635,26 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     }, [showToastMessage]);
 
     // ── Auto-create/link products (called from Extract button, edit mode) ────
-    const autoSyncProducts = useCallback(async (productList) => {
+    const autoSyncProducts = useCallback(async (productList, expectedCount) => {
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
         setSyncingProducts(true);
         const before = productList.filter(p => p.product_id).length;
         const synced = await syncProductListToDB(productList, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
         setSyncingProducts(false);
-        setProducts(synced);
+        // Update products in-place by index so that all originally extracted rows are preserved.
+        // syncProductListToDB may return fewer rows when it deduplicates by product_id;
+        // we keep the full extracted list and just fill in product_id where found.
+        setProducts(prev => {
+            const base = (prev && prev.length > 0) ? prev : productList;
+            return base.map((p, i) => ({
+                ...p,
+                product_id: synced[i]?.product_id || p.product_id || "",
+                name:       synced[i]?.name || p.name,
+                part_no:    synced[i]?.part_no || p.part_no || "",
+                unit:       synced[i]?.unit || p.unit || "",
+            }));
+        });
         const created = synced.filter(p => p.product_id).length - before;
         const msgs = [];
         if (created > 0) msgs.push(`${created} new product${created > 1 ? "s" : ""} created`);
@@ -726,12 +786,16 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         // Convert both file arrays to base64 data URIs
         let attachmentDataURIs = [];
         let additionalAttachmentDataURIs = [];
+        let additionalAttachmentFilenames = [...existingAdditionalFilenames];
         if (hasProductFiles) {
             try { attachmentDataURIs = await filesToDataURIs(productFiles); } catch (e) { console.error('File encode error:', e); }
         }
         if (additionalFiles.length > 0) {
             try { additionalAttachmentDataURIs = await filesToDataURIs(additionalFiles); } catch (e) { console.error('Additional file encode error:', e); }
+            additionalAttachmentFilenames = [...existingAdditionalFilenames, ...additionalFiles.map(f => f.name)];
         }
+        // Prepend any existing (already-saved) data URIs so they are preserved on update
+        additionalAttachmentDataURIs = [...existingAdditionalDataURIs, ...additionalAttachmentDataURIs];
 
         // Sync products to DB if no product-files are attached (files replace products table)
         if (!hasProductFiles) {
@@ -766,7 +830,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 extraction_model:      extractionModel || undefined,
                 product_categories:    extractedCategories.length > 0 ? extractedCategories : undefined,
                 attachment_data_uris:             attachmentDataURIs.length > 0 ? attachmentDataURIs : undefined,
-                additional_attachment_data_uris: additionalAttachmentDataURIs.length > 0 ? additionalAttachmentDataURIs : undefined,
+                additional_attachment_data_uris: additionalAttachmentDataURIs.length > 0 ? additionalAttachmentDataURIs : (editId ? [] : undefined),
+                additional_attachment_filenames: additionalAttachmentFilenames.length > 0 ? additionalAttachmentFilenames : (editId ? [] : undefined),
                 // When product-files are uploaded, skip products table — files shown in preview instead
                 general_instructions:      currentForm.general_instructions || undefined,
                 procurement_message_id:    sourceMsgId || undefined,
@@ -795,7 +860,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             }
             showToastMessage && showToastMessage(editId ? "RFQ updated" : `RFQ created: ${data.code || data.id}`, "success");
             setShow(false);
-            onCreated && onCreated();
+            onCreated && onCreated(editId ? null : data);
         } catch (err) {
             console.error("RFQ create error:", err);
             showToastMessage && showToastMessage(err.message, "danger");
@@ -811,9 +876,37 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         <>
         <Modal show={show} onHide={() => setShow(false)} size="xl" fullscreen centered scrollable backdrop="static" animation={false}>
             <Modal.Header closeButton style={{ padding: "10px 16px" }}>
-                <Modal.Title style={{ fontSize: "15px", fontWeight: 600 }}>
-                    <i className={`bi ${editId ? "bi-pencil-square" : "bi-file-earmark-plus"} me-2 text-primary`}></i>
-                    {editId ? "Edit RFQ" : "New RFQ"}
+                <Modal.Title style={{ fontSize: "15px", fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span>
+                        <i className={`bi ${editId ? "bi-pencil-square" : "bi-file-earmark-plus"} me-2 text-primary`}></i>
+                        {editId ? "Edit RFQ" : "New RFQ"}
+                        {editId && editRfqCode && (
+                            <span style={{ marginLeft: '8px', fontSize: '13px', fontWeight: 700, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px' }}>{editRfqCode}</span>
+                        )}
+                    </span>
+                    {editId && editLinkedMsgCode && (
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            style={{ fontSize: '12px', fontWeight: 500, color: '#6c757d', background: '#f1f3f5', border: '1px solid #dee2e6', borderRadius: '6px', padding: '2px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                            title="Open linked email"
+                            onClick={async () => {
+                                if (editLinkedMsgObj) { setShowLinkedEmail(true); return; }
+                                if (!editLinkedMsgId) return;
+                                const _storeId = localStorage.getItem('store_id');
+                                const _token = localStorage.getItem('access_token');
+                                try {
+                                    const res = await fetch(`/v1/procurement-messages/${editLinkedMsgId}?store_id=${_storeId}`, { headers: { Authorization: _token } });
+                                    const data = await res.json();
+                                    if (data && data.id) { setEditLinkedMsgObj(data); setShowLinkedEmail(true); }
+                                } catch (_) {}
+                            }}
+                            onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.click(); }}
+                        >
+                            <i className="bi bi-envelope" style={{ fontSize: '11px' }}></i>
+                            {editLinkedMsgCode}
+                        </span>
+                    )}
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body style={{ padding: "12px 16px" }}>
@@ -1390,7 +1483,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                             background: isDragOverAdditional ? "#eff6ff" : "#f8fafc",
                             transition: "all 0.15s",
                         }}>
-                        {additionalFiles.length === 0 ? (
+                        {additionalFiles.length === 0 && existingAdditionalDataURIs.length === 0 ? (
                             <div className="text-center text-muted" style={{ padding: "4px 0" }}>
                                 <i className="bi bi-paperclip" style={{ fontSize: "20px", color: "#94a3b8", display: "block", marginBottom: "3px" }}></i>
                                 <span style={{ fontSize: "12px" }}>
@@ -1400,10 +1493,26 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                             </div>
                         ) : (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+                                {existingAdditionalDataURIs.map((uri, i) => {
+                                    const isImg = /^data:image\//i.test(uri);
+                                    const isPDF = uri.startsWith('data:application/pdf');
+                                    return (
+                                        <div key={`ex-${i}`} style={{ position: "relative", display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #bfdbfe", borderRadius: "5px", padding: isImg ? "2px" : "3px 7px", fontSize: "12px" }}>
+                                            {isImg
+                                                ? <img src={uri} alt={`attachment ${i+1}`} style={{ height: "40px", width: "40px", objectFit: "cover", borderRadius: "3px" }} />
+                                                : <><i className={`bi ${isPDF ? 'bi-file-pdf' : 'bi-paperclip'}`} style={{ color: isPDF ? "#dc2626" : "#64748b", fontSize: "14px" }}></i>
+                                                    <span style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={existingAdditionalFilenames[i] || undefined}>{existingAdditionalFilenames[i] || (isPDF ? `PDF ${i+1}` : `File ${i+1}`)}</span></>
+                                            }
+                                            <button type="button" style={{ border: "none", background: "none", color: "#94a3b8", cursor: "pointer", padding: "0 2px" }} title="Remove" onClick={() => { setExistingAdditionalDataURIs(prev => prev.filter((_, idx) => idx !== i)); setExistingAdditionalFilenames(prev => prev.filter((_, idx) => idx !== i)); }}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                                 {additionalFiles.map((f, i) => {
                                     const { icon, color } = fileIcon(f.name);
                                     return (
-                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e2e8f0", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
+                                        <div key={`new-${i}`} style={{ display: "flex", alignItems: "center", gap: "4px", background: "white", border: "1px solid #e2e8f0", borderRadius: "5px", padding: "3px 7px", fontSize: "12px" }}>
                                             <i className={`bi ${icon}`} style={{ color, fontSize: "14px" }}></i>
                                             <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.name}>{f.name}</span>
                                             <span style={{ color: "#94a3b8" }}>({fmtSize(f.size)})</span>
@@ -1443,6 +1552,15 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         <CustomerCreate ref={CustomerCreateRef} showToastMessage={showToastMessage}
             onUpdated={c => { if (c?.id) selectCustomer(c); }} />
         <ProductCreate ref={ProductCreateRef} showToastMessage={showToastMessage} refreshList={refreshEditedProduct} />
+        {editLinkedMsgObj && (
+            <EmailDetailModal
+                msg={editLinkedMsgObj}
+                show={showLinkedEmail}
+                onClose={() => setShowLinkedEmail(false)}
+                storeId={localStorage.getItem('store_id')}
+                token={localStorage.getItem('access_token')}
+            />
+        )}
         </>
     );
 });

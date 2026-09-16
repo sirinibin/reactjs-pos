@@ -5609,6 +5609,14 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     }, [loadWarehouses, show]);
 
+    useEffect(() => {
+        if (!show || props.modalClass !== 'above-pending-modal') return;
+        document.body.classList.add('order-form-pending-open');
+        return () => {
+            document.body.classList.remove('order-form-pending-open');
+        };
+    }, [show, props.modalClass]);
+
     return (
         <>
             <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1097 : 1096} !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: ${props.modalClass === 'above-pending-modal' ? 1096 : 1082} !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>

@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
+import { ForwardDetail } from '../rfq_received/index.js';
+import QuotationCreate from '../quotation/create.js';
+import EmailDetailModal from './EmailDetailModal.js';
+import { ViewButton } from './FileViewerModal.js';
 
 const PAGE_SIZE = 20;
 
@@ -20,16 +24,47 @@ const isImageMime = mime => mime && mime.startsWith('image/');
 const isAudioMime = mime => mime && mime.startsWith('audio/');
 const isVideoMime = mime => mime && mime.startsWith('video/');
 
+const ImageLightbox = ({ src, alt, onClose }) => (
+    <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}
+    >
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', color: '#fff', fontSize: '28px', lineHeight: 1, cursor: 'pointer' }}>×</button>
+        <img
+            src={src}
+            alt={alt}
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '6px', boxShadow: '0 4px 32px rgba(0,0,0,0.6)', cursor: 'default' }}
+        />
+    </div>
+);
+
 const AttachmentPreview = ({ att }) => {
+    const [lightbox, setLightbox] = useState(false);
     if (isImageMime(att.content_type)) {
         return (
             <div style={{ marginBottom: '8px' }}>
+                {lightbox && <ImageLightbox src={att.url} alt={att.filename} onClose={() => setLightbox(false)} />}
                 <img
                     src={att.url}
                     alt={att.filename}
-                    style={{ maxWidth: '100%', maxHeight: '320px', borderRadius: '8px', border: '1px solid #dee2e6', display: 'block' }}
+                    onClick={() => setLightbox(true)}
+                    style={{ maxWidth: '100%', maxHeight: '320px', borderRadius: '8px', border: '1px solid #dee2e6', display: 'block', cursor: 'zoom-in' }}
                 />
-                {att.filename && <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>{att.filename}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                    {att.filename && <span style={{ fontSize: '11px', color: '#6c757d' }}>{att.filename}</span>}
+                    {att.url && (
+                        <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+                            <button className="btn btn-sm btn-outline-secondary" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setLightbox(true)}>
+                                <i className="bi bi-eye me-1"></i>View
+                            </button>
+                            <a href={att.url} download={att.filename || 'image'} target="_blank" rel="noreferrer"
+                                className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px' }}>
+                                <i className="bi bi-download me-1"></i>Download
+                            </a>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -40,7 +75,15 @@ const AttachmentPreview = ({ att }) => {
                     <source src={att.url} type={att.content_type} />
                     Your browser does not support video.
                 </video>
-                {att.filename && <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>{att.filename}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                    {att.filename && <span style={{ fontSize: '11px', color: '#6c757d' }}>{att.filename}</span>}
+                    {att.url && (
+                        <a href={att.url} download={att.filename || 'video'} target="_blank" rel="noreferrer"
+                            className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px', marginLeft: 'auto' }}>
+                            <i className="bi bi-download me-1"></i>Download
+                        </a>
+                    )}
+                </div>
             </div>
         );
     }
@@ -57,15 +100,24 @@ const AttachmentPreview = ({ att }) => {
     }
     const docIcon = att.filename?.endsWith('.pdf') ? '📄' : att.filename?.match(/\.(xls|xlsx)$/) ? '📊' : att.filename?.match(/\.(doc|docx)$/) ? '📝' : '📎';
     return (
-        <div style={{ border: '1px solid #dee2e6', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span style={{ fontSize: '18px' }}>{docIcon}</span>
-            <span style={{ flex: 1 }}>{att.filename || att.content_type}</span>
-            {att.size > 0 && <span className="text-muted">({(att.size / 1024).toFixed(1)} KB)</span>}
-            {att.url && (
-                <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px' }}>
-                    <i className="bi bi-download me-1"></i>Download
-                </a>
-            )}
+        <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '8px 10px', fontSize: '12px', marginBottom: '6px', minWidth: 0, whiteSpace: 'normal', wordBreak: 'normal', background: '#fafafa' }}>
+            {/* Row 1: icon + filename */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '20px', flexShrink: 0 }}>{docIcon}</span>
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500, fontSize: '12px' }}>{att.filename || att.content_type}</span>
+            </div>
+            {/* Row 2: size + action buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <span style={{ color: '#6c757d', fontSize: '11px' }}>{att.size > 0 ? `${(att.size / 1024).toFixed(1)} KB` : ''}</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    <ViewButton att={att} />
+                    {att.url && (
+                        <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '3px 12px', fontSize: '11px' }}>
+                            <i className="bi bi-download me-1"></i>Download
+                        </a>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
@@ -162,7 +214,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
         setSaveError('');
         try {
             const body = {
-                supplier_name:  msg.from_name || msg.from || '',
+                supplier_name:  msg.sender_name || msg.from_name || msg.from || '',
                 supplier_phone: (msg.from || '').replace(/^\+/, ''),
                 raw_text:       '',
                 prices: priceRows.map(r => ({
@@ -269,7 +321,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                         <h6 className="modal-title fw-bold">
                             <i className={`bi ${isQuotationMode ? 'bi-receipt' : 'bi-magic'} me-2 text-success`}></i>
                             {isQuotationMode ? t('Extract Quotation Prices') : t('Extract RFQ Data')}
-                            <small className="text-muted fw-normal ms-2" style={{ fontSize: '13px' }}>— {msg.from || t('WhatsApp message')}</small>
+                            <small className="text-muted fw-normal ms-2" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from || t('WhatsApp message')}</small>
                         </h6>
                         <button className="btn-close" onClick={onClose} />
                     </div>
@@ -661,12 +713,240 @@ export default function ProcurementWhatsAppTab({ storeId }) {
     const [deleting, setDeleting] = useState(null);
     const [syncing, setSyncing] = useState(false);
     const [deletingAll, setDeletingAll] = useState(false);
+    const [resolvingSenders, setResolvingSenders] = useState(false);
+    const [diskUsage, setDiskUsage] = useState(null);
     const [extractMsg, setExtractMsg] = useState(null);
     const [uploadingFor, setUploadingFor] = useState(null);
     const [linkingFor, setLinkingFor] = useState(null);
     const [toast, setToast] = useState(null);
+    const [replyText, setReplyText] = useState('');
+    const [sendingReply, setSendingReply] = useState(false);
+    const [replyError, setReplyError] = useState(null);
+    // Conversation threading state
+    const [viewMode, setViewMode] = useState('conversations');
+    const [threads, setThreads] = useState([]);
+    const [threadsLoading, setThreadsLoading] = useState(false);
+    const [selectedThread, setSelectedThread] = useState(null);
+    const [threadMessages, setThreadMessages] = useState([]);
+    const [threadMsgLoading, setThreadMsgLoading] = useState(false);
+    const [composeText, setComposeText] = useState('');
+    const [sendingMsg, setSendingMsg] = useState(false);
+    const [sendMsgError, setSendMsgError] = useState(null);
+    const [threadSearch, setThreadSearch] = useState('');
+    const chatBottomRef = useRef(null);
+    const chatContainerRef = useRef(null);
+    // Responsive: mobile hides one panel at a time
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [mobilePanel, setMobilePanel] = useState('threads'); // 'threads' | 'chat'
+    // File attach
+    const [attachedFile, setAttachedFile] = useState(null); // {file, preview, type}
+    const fileInputRef = useRef(null);
+    // Voice recording
+    const [recording, setRecording] = useState(false);
+    const [recSeconds, setRecSeconds] = useState(0);
+    const mediaRecRef = useRef(null);
+    const recChunksRef = useRef([]);
+    const recTimerRef = useRef(null);
+    const [sendingMedia, setSendingMedia] = useState(false);
+    const [deletingMsgId, setDeletingMsgId] = useState(null);
+    const [hoveredMsgId, setHoveredMsgId] = useState(null);
+    const [translations, setTranslations] = useState({}); // { [msgId]: { loading, text, error } }
+    const [copiedMsgId, setCopiedMsgId] = useState(null);
+    const [rfqHistoryOpen, setRfqHistoryOpen] = useState(false);
+    const [rfqHistoryList, setRfqHistoryList] = useState([]);
+    const [rfqHistoryLoading, setRfqHistoryLoading] = useState(false);
+    const rfqHistoryRef = useRef(null);
+    const rfqHistoryPhoneRef = useRef(null); // phone for which history is already loaded
+    const [rfqDetailItem, setRfqDetailItem] = useState(null);
+    const [rfqDetailShow, setRfqDetailShow] = useState(false);
+    const [emailDetailMsg, setEmailDetailMsg] = useState(null);
+    const [emailDetailShow, setEmailDetailShow] = useState(false);
+    // Forward modal state
+    const [forwardMsg, setForwardMsg]                     = useState(null);
+    const [forwardTab, setForwardTab]                     = useState('contacts'); // 'contacts'|'wa'|'email'
+    const [forwardSearch, setForwardSearch]               = useState('');
+    const [forwardSelected, setForwardSelected]           = useState(new Set());
+    const [forwardSending, setForwardSending]             = useState(false);
+    const [forwardStatus, setForwardStatus]               = useState(null);
+    const [forwardPickedRfq, setForwardPickedRfq]         = useState(null);
+    const [forwardEmailBody, setForwardEmailBody]         = useState('');
+    const [forwardEmailSubject, setForwardEmailSubject]   = useState('');
+    const [forwardEmailStatus, setForwardEmailStatus]     = useState(null);
+
+    // Customer lookup state
+    const [customerByPhone, setCustomerByPhone] = useState({}); // phone → { id, name }
+    const [threadCustomer, setThreadCustomer] = useState(null);
+    const [customerRfqOpen, setCustomerRfqOpen] = useState(false);
+    const [customerRfqList, setCustomerRfqList] = useState([]);
+    const [customerRfqLoading, setCustomerRfqLoading] = useState(false);
+    const customerRfqRef = useRef(null);
+    const customerRfqPhoneRef = useRef(null);
+
+    const loadRFQHistory = useCallback(async (phone, force = false) => {
+        if (!phone) return;
+        if (!force && rfqHistoryPhoneRef.current === phone) return; // already loaded for this phone
+        rfqHistoryPhoneRef.current = phone;
+        setRfqHistoryLoading(true);
+        setRfqHistoryList([]);
+        try {
+            const res = await fetch(`/v1/rfq-received?store_id=${storeId}&supplier_phone=${encodeURIComponent(phone)}&limit=20`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            setRfqHistoryList(data.items || data.result || []);
+        } catch (_) {}
+        setRfqHistoryLoading(false);
+    }, [storeId, token]);
+
+    // Look up a single customer by phone; returns { id, name } or null
+    const lookupCustomerByPhone = useCallback(async (phone) => {
+        if (!phone) return null;
+        try {
+            const res = await fetch(`/v1/customer/by-phone?store_id=${storeId}&phone=${encodeURIComponent(phone)}`, {
+                headers: { Authorization: token },
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.id ? { id: data.id, name: data.name } : null;
+        } catch (_) { return null; }
+    }, [storeId, token]);
+
+    // Batch-enrich threads with customer info for phones not yet in customerByPhone
+    const enrichThreadsWithCustomers = useCallback(async (threadList) => {
+        const phonesToLookup = threadList
+            .map(th => th.contact_phone)
+            .filter(p => p && !(p in customerByPhone));
+        if (phonesToLookup.length === 0) return;
+        // Look up in parallel (max 15 at once)
+        const slice = phonesToLookup.slice(0, 15);
+        const results = await Promise.all(slice.map(async p => {
+            const c = await lookupCustomerByPhone(p);
+            return [p, c]; // [phone, customer|null]
+        }));
+        const updates = {};
+        results.forEach(([p, c]) => { updates[p] = c; });
+        setCustomerByPhone(prev => ({ ...prev, ...updates }));
+    }, [customerByPhone, lookupCustomerByPhone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Load customer quotations (sales quotations) for selected thread's customer
+    const loadCustomerRfqs = useCallback(async (customerId, force = false) => {
+        if (!customerId) return;
+        if (!force && customerRfqPhoneRef.current === customerId) return;
+        customerRfqPhoneRef.current = customerId;
+        setCustomerRfqLoading(true);
+        setCustomerRfqList([]);
+        try {
+            const res = await fetch(`/v1/rfq-received?store_id=${storeId}&customer_id=${customerId}&limit=50`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            setCustomerRfqList(data.result || []);
+        } catch (_) {}
+        setCustomerRfqLoading(false);
+    }, [storeId, token]);
+
+    const fetchAndOpenPreview = useCallback(async (rfqId) => {
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const rfq = data.result || data;
+            if (rfq?.id || rfq?._id) {
+                setRfqDetailItem(rfq);
+                setRfqDetailShow(true);
+            }
+        } catch (_) {}
+    }, [storeId, token]);
+
+    const fetchAndOpenEmail = useCallback(async (msgId) => {
+        try {
+            const res = await fetch(`/v1/procurement-messages/${msgId}?store_id=${storeId}`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const msg = data.result || data;
+            if (msg?.id || msg?._id) {
+                setEmailDetailMsg(msg);
+                setEmailDetailShow(true);
+            }
+        } catch (_) {}
+    }, [storeId, token]);
+
+    // Auto-load RFQ history count when a thread is selected (so badge appears immediately)
+    useEffect(() => {
+        if (selectedThread?.contact_phone) {
+            rfqHistoryPhoneRef.current = null; // reset cache so new thread loads fresh
+            setRfqHistoryList([]);
+            setRfqHistoryOpen(false);
+            loadRFQHistory(selectedThread.contact_phone);
+            // Look up customer for selected thread
+            setThreadCustomer(customerByPhone[selectedThread.contact_phone] ?? undefined); // undefined = unknown yet
+            if (!(selectedThread.contact_phone in customerByPhone)) {
+                lookupCustomerByPhone(selectedThread.contact_phone).then(c => {
+                    setThreadCustomer(c);
+                    setCustomerByPhone(prev => ({ ...prev, [selectedThread.contact_phone]: c }));
+                });
+            } else {
+                setThreadCustomer(customerByPhone[selectedThread.contact_phone]);
+            }
+            // Reset customer RFQ panel
+            setCustomerRfqOpen(false);
+            setCustomerRfqList([]);
+            customerRfqPhoneRef.current = null;
+        }
+    }, [selectedThread?.contact_phone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Close Customer RFQ panel on outside click
+    useEffect(() => {
+        if (!customerRfqOpen) return;
+        const handler = (e) => {
+            if (customerRfqRef.current && !customerRfqRef.current.contains(e.target)) {
+                setCustomerRfqOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [customerRfqOpen]);
+
+    // Close RFQ history panel on outside click
+    useEffect(() => {
+        if (!rfqHistoryOpen) return;
+        const handler = (e) => {
+            if (rfqHistoryRef.current && !rfqHistoryRef.current.contains(e.target)) {
+                setRfqHistoryOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [rfqHistoryOpen]);
+
+    const translateMsg = useCallback(async (msgId, text) => {
+        if (!text) return;
+        setTranslations(prev => ({ ...prev, [msgId]: { loading: true, text: null } }));
+        try {
+            const res = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text, target: 'en' }),
+            });
+            const data = await res.json();
+            setTranslations(prev => ({ ...prev, [msgId]: { loading: false, text: data.translatedText || '' } }));
+        } catch (_) {
+            setTranslations(prev => ({ ...prev, [msgId]: { loading: false, error: true } }));
+        }
+    }, [token]);
+
+    const copyMsg = useCallback((msgId, text) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            setCopiedMsgId(msgId);
+            setTimeout(() => setCopiedMsgId(id => id === msgId ? null : id), 1500);
+        });
+    }, []);
     const toastTimer = useRef(null);
     const rfqCreateRef = useRef(null);
+    const quotationCreateRef = useRef(null);
     const isAdmin = localStorage.getItem('user_role') === 'Admin';
     const searchTimeout = useRef(null);
 
@@ -674,10 +954,210 @@ export default function ProcurementWhatsAppTab({ storeId }) {
     // eslint-disable-next-line no-unused-vars
     const autoRfqDisabled = storeSettings?.disable_auto_rfq_from_whatsapp === true;
 
+    const handleCreateQuotation = (items, rfq) => {
+        const prefill = {
+            rfq_id:                    rfq.id,
+            rfq_code:                  rfq.code || '',
+            rfq_received_id:           rfq.id,
+            rfq_received_code:         rfq.code || '',
+            customer_id:               rfq.customer_id || null,
+            customer_name:             rfq.customer_name || '',
+            customer_phone:            rfq.customer_phone || '',
+            procurement_message_id:    rfq.procurement_message_id || null,
+            procurement_message_code:  rfq.procurement_message_code || '',
+            items,
+        };
+        try { sessionStorage.setItem('rfq_quotation_prefill_active', JSON.stringify(prefill)); } catch (_) {}
+        quotationCreateRef.current?.open();
+    };
+
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 4000);
+    };
+
+    const handleSendReply = async () => {
+        if (!selected || !replyText.trim() || sendingReply) return;
+        setSendingReply(true);
+        setReplyError(null);
+        try {
+            const res = await fetch(`/v1/procurement-messages/${selected.id}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text: replyText.trim(), store_id: storeId }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                setReplyError(data.error || t('Failed to send reply'));
+            } else {
+                setReplyText('');
+                showToast(t('Reply sent'));
+                load(page);
+            }
+        } catch (e) {
+            setReplyError(t('Network error'));
+        } finally {
+            setSendingReply(false);
+        }
+    };
+
+    // ── Conversation threading ────────────────────────────────────────────────
+
+    const loadThreads = useCallback(async (q = threadSearch, silent = false) => {
+        if (!storeId) return;
+        if (!silent) setThreadsLoading(true);
+        try {
+            const params = new URLSearchParams({ store_id: storeId, type: 'whatsapp', limit: 50 });
+            if (q) params.set('search', q);
+            const res = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            const next = data.threads || [];
+            // Only update state when something actually changed — avoids re-rendering the list on every poll
+            setThreads(prev => {
+                const prevSig = prev.map(t => t.contact_phone + '|' + t.message_count + '|' + t.unread_count).join(',');
+                const nextSig = next.map(t => t.contact_phone + '|' + t.message_count + '|' + t.unread_count).join(',');
+                return prevSig === nextSig ? prev : next;
+            });
+            // Enrich threads with customer info for phones not yet resolved
+            enrichThreadsWithCustomers(next);
+        } catch (_) {} finally { if (!silent) setThreadsLoading(false); }
+    }, [storeId, token, threadSearch, enrichThreadsWithCustomers]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const togglePin = useCallback(async (th, msgType) => {
+        const method = th.pinned ? 'DELETE' : 'POST';
+        try {
+            await fetch(`/v1/procurement-message-threads/${encodeURIComponent(th.contact_phone)}/pin?store_id=${storeId}&type=${msgType}`, {
+                method, headers: { Authorization: token },
+            });
+            loadThreads(threadSearch, true);
+        } catch (_) {}
+    }, [storeId, token, threadSearch, loadThreads]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const loadThread = useCallback(async (contactPhone, silent = false) => {
+        if (!storeId || !contactPhone) return;
+        if (!silent) setThreadMsgLoading(true);
+        try {
+            const params = new URLSearchParams({ store_id: storeId, type: 'whatsapp', limit: 100 });
+            const res = await fetch(`/v1/procurement-message-threads/${encodeURIComponent(contactPhone)}?${params}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            const next = data.messages || [];
+            // Only update state when messages actually changed — prevents bubble re-renders on every poll
+            setThreadMessages(prev => {
+                const prevLast = prev.length > 0 ? prev[prev.length - 1]?.id : '';
+                const nextLast = next.length > 0 ? next[next.length - 1]?.id : '';
+                if (prev.length === next.length && prevLast === nextLast) return prev;
+                return next;
+            });
+            if (!silent) {
+                setThreads(prev => prev.map(t => t.contact_phone === contactPhone ? { ...t, unread_count: 0 } : t));
+            }
+        } catch (_) {} finally { if (!silent) setThreadMsgLoading(false); }
+    }, [storeId, token]);
+
+    const handleSendInThread = async () => {
+        if (!selectedThread || !composeText.trim() || sendingMsg) return;
+        setSendingMsg(true);
+        setSendMsgError(null);
+        try {
+            const res = await fetch(`/v1/procurement-message-threads/${encodeURIComponent(selectedThread.contact_phone)}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text: composeText.trim(), store_id: storeId }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                setSendMsgError(data.error || t('Failed to send message'));
+            } else {
+                setComposeText('');
+                loadThread(selectedThread.contact_phone, true);
+                loadThreads();
+            }
+        } catch (_) {
+            setSendMsgError(t('Network error'));
+        } finally { setSendingMsg(false); }
+    };
+
+    // Resize listener for responsive layout
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handler);
+        return () => window.removeEventListener('resize', handler);
+    }, []);
+
+
+    // When a thread is selected on mobile, switch to chat panel
+    useEffect(() => {
+        if (selectedThread && isMobile) setMobilePanel('chat');
+    }, [selectedThread, isMobile]);
+
+    // Auto-scroll to bottom when thread messages change
+    // Scroll to bottom after messages finish loading (not during — spinner hides messages so scrollHeight is wrong while loading).
+    useEffect(() => {
+        if (!threadMsgLoading) {
+            // rAF ensures messages are painted before we measure scrollHeight
+            requestAnimationFrame(() => {
+                const el = chatContainerRef.current;
+                if (el) el.scrollTop = el.scrollHeight;
+            });
+        }
+    }, [threadMsgLoading, threadMessages]);
+
+    const handleSendMedia = async (fileOrBlob, mimeType, filename) => {
+        if (!selectedThread || sendingMedia) return;
+        setSendingMedia(true);
+        setSendMsgError(null);
+        try {
+            const fd = new FormData();
+            const blob = fileOrBlob instanceof Blob ? fileOrBlob : fileOrBlob;
+            fd.append('file', new File([blob], filename || 'file', { type: mimeType }));
+            fd.append('store_id', storeId);
+            const res = await fetch(`/v1/procurement-message-threads/${encodeURIComponent(selectedThread.contact_phone)}/send-media`, {
+                method: 'POST', headers: { Authorization: token }, body: fd,
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                setSendMsgError(data.error || t('Failed to send'));
+            } else {
+                setAttachedFile(null);
+                loadThread(selectedThread.contact_phone, true);
+                loadThreads();
+            }
+        } catch (_) {
+            setSendMsgError(t('Network error'));
+        } finally { setSendingMedia(false); }
+    };
+
+    const handleStartRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
+            recChunksRef.current = [];
+            mr.ondataavailable = e => { if (e.data.size > 0) recChunksRef.current.push(e.data); };
+            mr.onstop = () => {
+                stream.getTracks().forEach(t => t.stop());
+                clearInterval(recTimerRef.current);
+                const mime = mr.mimeType || 'audio/webm';
+                const blob = new Blob(recChunksRef.current, { type: mime });
+                const ext = mime.includes('ogg') ? 'voice.ogg' : 'voice.webm';
+                handleSendMedia(blob, mime, ext);
+                setRecording(false);
+                setRecSeconds(0);
+            };
+            mr.start();
+            mediaRecRef.current = mr;
+            setRecording(true);
+            setRecSeconds(0);
+            recTimerRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000);
+        } catch (e) {
+            setSendMsgError(t('Microphone access denied'));
+        }
+    };
+
+    const handleStopRecording = () => {
+        if (mediaRecRef.current && mediaRecRef.current.state !== 'inactive') {
+            mediaRecRef.current.stop();
+        }
     };
 
     const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter) => {
@@ -696,13 +1176,30 @@ export default function ProcurementWhatsAppTab({ storeId }) {
         } finally { setLoading(false); }
     }, [storeId, token, search, direction, rfqFilter]);
 
-    useEffect(() => { load(1); }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Auto-refresh every 30 seconds to pick up new incoming WhatsApp messages.
     useEffect(() => {
-        const id = setInterval(() => load(1), 30000);
-        return () => clearInterval(id);
-    }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
+        load(1);
+        loadThreads();
+        if (storeId) {
+            fetch(`/v1/procurement-messages/disk-usage?store_id=${storeId}`, { headers: { Authorization: token } })
+                .then(r => r.json()).then(d => setDiskUsage(d.formatted)).catch(() => {});
+        }
+    }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fast poll: refresh active thread every 3 seconds for near-realtime incoming messages.
+    const selectedThreadRef = useRef(selectedThread);
+    useEffect(() => { selectedThreadRef.current = selectedThread; }, [selectedThread]);
+
+    useEffect(() => {
+        const fastId = setInterval(() => {
+            if (selectedThreadRef.current) {
+                loadThread(selectedThreadRef.current.contact_phone, true);
+            }
+        }, 3000);
+        const slowId = setInterval(() => {
+            loadThreads(undefined, true); // silent — no spinner, only updates if data changed
+        }, 5000);
+        return () => { clearInterval(fastId); clearInterval(slowId); };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSearch = e => {
         const q = e.target.value;
@@ -732,6 +1229,8 @@ export default function ProcurementWhatsAppTab({ storeId }) {
         if (!msg.read) {
             setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m));
         }
+        setReplyText('');
+        setReplyError(null);
         const res = await fetch(`/v1/procurement-messages/${msg.id}`, { headers: { Authorization: token } });
         const data = await res.json();
         setSelected(data);
@@ -824,6 +1323,11 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                 <i className="bi bi-whatsapp" style={{ fontSize: '20px', color: WA_GREEN }}></i>
                 <h5 style={{ margin: 0, fontWeight: 600, fontSize: '15px' }}>{t('WhatsApp Messages')}</h5>
                 <span className="badge bg-secondary ms-auto">{total} {t('messages')}</span>
+                {diskUsage && (
+                    <span className="badge bg-light text-muted border" style={{ fontSize: '11px' }}>
+                        <i className="bi bi-hdd me-1"></i>{diskUsage} {t('used')}
+                    </span>
+                )}
             </div>
 
             {/* Filters */}
@@ -860,6 +1364,29 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                         ? <><span className="spinner-border spinner-border-sm me-1" />{t('Syncing…')}</>
                         : <><i className="bi bi-arrow-clockwise me-1"></i>{t('Sync Now')}</>}
                 </button>
+                <button
+                    className="btn btn-sm btn-outline-primary"
+                    disabled={resolvingSenders}
+                    title={t('Identify sender names from RFQ suppliers & customers for all messages')}
+                    onClick={async () => {
+                        setResolvingSenders(true);
+                        try {
+                            const res = await fetch(`/v1/procurement-messages/resolve-senders?store_id=${storeId}`, {
+                                method: 'POST', headers: { Authorization: token },
+                            });
+                            const data = await res.json();
+                            showToast(t(`Resolved ${data.updated || 0} sender(s)`));
+                            load(page);
+                            loadThreads();
+                        } catch (_) {
+                            showToast(t('Failed to resolve senders'), 'danger');
+                        } finally { setResolvingSenders(false); }
+                    }}
+                >
+                    {resolvingSenders
+                        ? <><span className="spinner-border spinner-border-sm me-1" role="status" />{t('Resolving...')}</>
+                        : <><i className="bi bi-person-check me-1"></i>{t('Identify Senders')}</>}
+                </button>
                 {isAdmin && (
                     <button
                         className="btn btn-sm btn-outline-danger"
@@ -883,6 +1410,574 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                 )}
             </div>
 
+            {/* View mode toggle */}
+            <div className="btn-group btn-group-sm mb-3" role="group">
+                <button
+                    type="button"
+                    className={`btn ${viewMode === 'conversations' ? 'btn-success' : 'btn-outline-success'}`}
+                    onClick={() => setViewMode('conversations')}
+                >
+                    <i className="bi bi-chat-dots me-1"></i>{t('Conversations')}
+                </button>
+                <button
+                    type="button"
+                    className={`btn ${viewMode === 'messages' ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                    onClick={() => setViewMode('messages')}
+                >
+                    <i className="bi bi-list-ul me-1"></i>{t('All Messages')}
+                </button>
+            </div>
+
+            {/* ── Conversations view ─────────────────────────────────────────── */}
+            {viewMode === 'conversations' && (
+                <div style={{ display: 'flex', border: '1px solid #dee2e6', borderRadius: '8px', overflow: 'hidden', height: isMobile ? 'calc(100vh - 200px)' : 'calc(100vh - 280px)', minHeight: '400px', background: '#f5f5f5' }}>
+                    {/* Contact list — hidden on mobile when chat is open */}
+                    <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (isMobile && mobilePanel === 'chat') ? 'none' : 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '10px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
+                            <input
+                                className="form-control form-control-sm"
+                                placeholder={t('Search contacts...')}
+                                value={threadSearch}
+                                onChange={e => {
+                                    setThreadSearch(e.target.value);
+                                    clearTimeout(searchTimeout.current);
+                                    searchTimeout.current = setTimeout(() => loadThreads(e.target.value), 350);
+                                }}
+                            />
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            {threadsLoading && <div className="text-center py-3"><span className="spinner-border spinner-border-sm text-success" /></div>}
+                            {!threadsLoading && threads.length === 0 && (
+                                <div style={{ padding: '24px', textAlign: 'center', color: '#6c757d', fontSize: '13px' }}>
+                                    <i className="bi bi-chat-dots fs-4 d-block mb-2"></i>{t('No conversations yet')}
+                                </div>
+                            )}
+                            {threads.map(th => (
+                                <div
+                                    key={th.contact_phone}
+                                    onClick={() => { setSelectedThread(th); loadThread(th.contact_phone); setComposeText(''); setSendMsgError(null); }}
+                                    style={{
+                                        padding: '10px 12px',
+                                        borderBottom: '1px solid #f0f0f0',
+                                        cursor: 'pointer',
+                                        background: selectedThread?.contact_phone === th.contact_phone ? '#e8f5e9' : th.pinned ? '#fffde7' : '#fff',
+                                        borderLeft: selectedThread?.contact_phone === th.contact_phone ? `3px solid ${WA_GREEN}` : th.pinned ? '3px solid #f9a825' : '3px solid transparent',
+                                        position: 'relative',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ overflow: 'hidden', flex: 1 }}>
+                                            {(() => {
+                                                const custInfo = customerByPhone[th.contact_phone];
+                                                const displayName = th.sender_name || custInfo?.name || th.contact_phone;
+                                                const isSupplier = th.sender_type === 'supplier';
+                                                const isCustomer = th.sender_type === 'customer' || !!custInfo?.id;
+                                                return (
+                                                    <>
+                                                        <div style={{ fontWeight: 600, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            {th.pinned && <i className="bi bi-pin-fill" style={{ color: '#f9a825', fontSize: '11px', flexShrink: 0 }}></i>}
+                                                            <i className="bi bi-whatsapp me-1" style={{ color: WA_GREEN }}></i>
+                                                            {displayName}
+                                                        </div>
+                                                        {(isSupplier || isCustomer || displayName !== th.contact_phone) && (
+                                                            <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '1px', display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'wrap' }}>
+                                                                {isSupplier && (
+                                                                    <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}>
+                                                                        <i className="bi bi-truck me-1"></i>{t('Supplier')}
+                                                                    </span>
+                                                                )}
+                                                                {isCustomer && (
+                                                                    <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+                                                                        <i className="bi bi-person me-1"></i>{t('Customer')}
+                                                                    </span>
+                                                                )}
+                                                                {!isSupplier && !isCustomer && null}
+                                                                {(displayName !== th.contact_phone) && <span style={{ marginLeft: '2px' }}>{th.contact_phone}</span>}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', marginLeft: '4px' }}>
+                                            <span style={{ fontSize: '10px', color: '#6c757d', whiteSpace: 'nowrap' }}>
+                                                {th.last_message_date ? new Date(th.last_message_date).toLocaleDateString() : ''}
+                                            </span>
+                                            <button
+                                                onClick={e => { e.stopPropagation(); togglePin(th, 'whatsapp'); }}
+                                                title={th.pinned ? t('Unpin') : t('Pin conversation')}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', color: th.pinned ? '#f9a825' : '#ccc', fontSize: '12px', lineHeight: 1 }}
+                                            >
+                                                <i className={`bi ${th.pinned ? 'bi-pin-fill' : 'bi-pin'}`}></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                                        <span style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
+                                            {th.last_message_text || t('(media)')}
+                                        </span>
+                                        {th.unread_count > 0 && (
+                                            <span className="badge rounded-pill" style={{ background: WA_GREEN, fontSize: '10px', minWidth: '20px' }}>{th.unread_count}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Chat panel — hidden on mobile when thread list is showing */}
+                    <div style={{ flex: 1, display: (isMobile && mobilePanel === 'threads') ? 'none' : 'flex', flexDirection: 'column', background: '#ece5dd' }}>
+                        {!selectedThread ? (
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6c757d', fontSize: '14px' }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <i className="bi bi-chat-dots fs-1 d-block mb-3" style={{ color: WA_GREEN, opacity: 0.5 }}></i>
+                                    {t('Select a conversation to start chatting')}
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Chat header */}
+                                <div style={{ background: '#075e54', color: '#fff', position: 'relative' }}>
+                                    <div style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        {isMobile && (
+                                            <button className="btn btn-sm" style={{ color: '#fff', padding: '2px 8px' }} onClick={() => { setMobilePanel('threads'); }}>
+                                                <i className="bi bi-arrow-left"></i>
+                                            </button>
+                                        )}
+                                        {(() => {
+                                            const _isSelectedSupplier = selectedThread.sender_type === 'supplier';
+                                            const _isSelectedCustomer = selectedThread.sender_type === 'customer' || !!threadCustomer?.id;
+                                            return (
+                                                <>
+                                                    <i className="bi bi-whatsapp fs-5"></i>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '14px' }}>
+                                                            {selectedThread.sender_name || threadCustomer?.name || selectedThread.contact_phone}
+                                                        </div>
+                                                        <div style={{ fontSize: '11px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                                                            {(selectedThread.sender_name || threadCustomer?.name) && <span>{selectedThread.contact_phone} · </span>}
+                                                            <span>{selectedThread.message_count} {t('messages')}</span>
+                                                            {_isSelectedSupplier && <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}><i className="bi bi-truck me-1"></i>{t('Supplier')}</span>}
+                                                            {_isSelectedCustomer && <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}><i className="bi bi-person me-1"></i>{t('Customer')}</span>}
+                                                        </div>
+                                                    </div>
+                                                    {/* Supplier RFQs button — only for suppliers */}
+                                                    {_isSelectedSupplier && <div ref={rfqHistoryRef} style={{ position: 'relative' }}>
+                                            <button
+                                                title={t('Supplier RFQ History')}
+                                                onClick={() => {
+                                                    const opening = !rfqHistoryOpen;
+                                                    setRfqHistoryOpen(opening);
+                                                    if (opening) { setCustomerRfqOpen(false); loadRFQHistory(selectedThread.contact_phone, true); }
+                                                }}
+                                                style={{ background: rfqHistoryOpen ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', color: '#fff', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}
+                                            >
+                                                <i className="bi bi-file-earmark-text"></i>
+                                                <span style={{ fontSize: '12px' }}>{t('Supplier RFQs')}</span>
+                                                {rfqHistoryList.length > 0 && (
+                                                    <span style={{ background: '#25d366', borderRadius: '10px', fontSize: '11px', fontWeight: 700, padding: '1px 7px', lineHeight: 1.4, color: '#fff' }}>
+                                                        {rfqHistoryList.length}
+                                                    </span>
+                                                )}
+                                                {rfqHistoryLoading && rfqHistoryList.length === 0 && (
+                                                    <span className="spinner-border spinner-border-sm text-white" style={{ width: '10px', height: '10px' }} />
+                                                )}
+                                            </button>
+                                            {/* Supplier RFQ history dropdown */}
+                                            {rfqHistoryOpen && (
+                                                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: '#fff', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', minWidth: '300px', maxWidth: '380px', zIndex: 999, overflow: 'hidden' }}>
+                                                    <div style={{ padding: '10px 14px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef', fontSize: '13px', fontWeight: 600, color: '#212529', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <i className="bi bi-file-earmark-text text-success"></i>
+                                                        {t('Supplier RFQ History')} — {selectedThread.sender_name || threadCustomer?.name || selectedThread.contact_phone}
+                                                    </div>
+                                                    <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                                                        {rfqHistoryLoading && (
+                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d' }}>
+                                                                <span className="spinner-border spinner-border-sm me-2" />
+                                                                {t('Loading…')}
+                                                            </div>
+                                                        )}
+                                                        {!rfqHistoryLoading && rfqHistoryList.length === 0 && (
+                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d', fontSize: '13px' }}>
+                                                                <i className="bi bi-inbox me-2"></i>{t('No RFQs found for this contact')}
+                                                            </div>
+                                                        )}
+                                                        {!rfqHistoryLoading && rfqHistoryList.map(rfq => (
+                                                            <div
+                                                                key={rfq.id}
+                                                                style={{ borderBottom: '1px solid #f0f0f0' }}
+                                                            >
+                                                                <button
+                                                                    onClick={() => { setRfqHistoryOpen(false); fetchAndOpenPreview(rfq.id); }}
+                                                                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px 6px', background: 'none', border: 'none', color: '#212529', cursor: 'pointer', transition: 'background 0.15s' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                                                                >
+                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                            <span style={{ fontWeight: 600, fontSize: '13px', color: '#16a34a' }}>{rfq.code || rfq.id}</span>
+                                                                            {rfq.procurement_message_code && (
+                                                                                <span
+                                                                                    role="button"
+                                                                                    tabIndex={0}
+                                                                                    onClick={e => { e.stopPropagation(); setRfqHistoryOpen(false); fetchAndOpenEmail(rfq.procurement_message_id); }}
+                                                                                    onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); setRfqHistoryOpen(false); fetchAndOpenEmail(rfq.procurement_message_id); } }}
+                                                                                    style={{ background: '#e8f0fe', border: '1px solid #c8d8f5', borderRadius: '10px', padding: '1px 7px', fontSize: '11px', color: '#1a56db', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 500 }}
+                                                                                    title="Open linked email"
+                                                                                >
+                                                                                    <i className="bi bi-envelope" style={{ fontSize: '10px' }}></i>
+                                                                                    {rfq.procurement_message_code}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span style={{ fontSize: '11px', color: '#6c757d', whiteSpace: 'nowrap' }}>
+                                                                            {rfq.created_at ? new Date(rfq.created_at).toLocaleDateString() : ''}
+                                                                        </span>
+                                                                    </div>
+                                                                    {rfq.customer_name && (
+                                                                        <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '3px' }}>
+                                                                            <i className="bi bi-person me-1"></i>{rfq.customer_name}
+                                                                        </div>
+                                                                    )}
+                                                                    {(rfq.products || []).length > 0 && (
+                                                                        <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                                                                            <i className="bi bi-box-seam me-1"></i>
+                                                                            {(rfq.products || []).slice(0, 3).map(p => p.name).join(', ')}
+                                                                            {(rfq.products || []).length > 3 && <span> +{rfq.products.length - 3} more</span>}
+                                                                        </div>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>}
+                                        {/* Customer RFQs button — only for customers */}
+                                        {_isSelectedCustomer && <div ref={customerRfqRef} style={{ position: 'relative' }}>
+                                            <button
+                                                title={t('Customer Quotation History')}
+                                                onClick={() => {
+                                                    const opening = !customerRfqOpen;
+                                                    setCustomerRfqOpen(opening);
+                                                    if (opening) {
+                                                        setRfqHistoryOpen(false);
+                                                        const cid = threadCustomer?.id;
+                                                        if (cid) loadCustomerRfqs(cid, true);
+                                                    }
+                                                }}
+                                                style={{ background: customerRfqOpen ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', color: '#fff', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}
+                                            >
+                                                <i className="bi bi-person-lines-fill"></i>
+                                                <span style={{ fontSize: '12px' }}>{t('Customer RFQs')}</span>
+                                                {customerRfqList.length > 0 && (
+                                                    <span style={{ background: '#0d6efd', borderRadius: '10px', fontSize: '11px', fontWeight: 700, padding: '1px 7px', lineHeight: 1.4, color: '#fff' }}>
+                                                        {customerRfqList.length}
+                                                    </span>
+                                                )}
+                                                {customerRfqLoading && customerRfqList.length === 0 && (
+                                                    <span className="spinner-border spinner-border-sm text-white" style={{ width: '10px', height: '10px' }} />
+                                                )}
+                                            </button>
+                                            {/* Customer RFQ dropdown */}
+                                            {customerRfqOpen && (
+                                                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: '#fff', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', minWidth: '300px', maxWidth: '420px', zIndex: 999, overflow: 'hidden' }}>
+                                                    <div style={{ padding: '10px 14px', background: '#e8f0fe', borderBottom: '1px solid #c8d8f5', fontSize: '13px', fontWeight: 600, color: '#1a56db', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <i className="bi bi-person-lines-fill"></i>
+                                                        {t('Customer RFQs')} — {threadCustomer?.name || selectedThread.sender_name || selectedThread.contact_phone}
+                                                    </div>
+                                                    {!threadCustomer?.id && (
+                                                        <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d', fontSize: '13px' }}>
+                                                            <i className="bi bi-person-x me-2"></i>{t('No customer found for this number')}
+                                                        </div>
+                                                    )}
+                                                    {threadCustomer?.id && (
+                                                        <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                                                            {customerRfqLoading && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d' }}>
+                                                                    <span className="spinner-border spinner-border-sm me-2" />
+                                                                    {t('Loading…')}
+                                                                </div>
+                                                            )}
+                                                            {!customerRfqLoading && customerRfqList.length === 0 && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d', fontSize: '13px' }}>
+                                                                    <i className="bi bi-inbox me-2"></i>{t('No RFQs found for this customer')}
+                                                                </div>
+                                                            )}
+                                                            {!customerRfqLoading && customerRfqList.map(q => (
+                                                                <div key={q.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                                                    <a
+                                                                        href={`/dashboard/rfq-received?edit=${q.id}`}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        onClick={() => setCustomerRfqOpen(false)}
+                                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px 8px', textDecoration: 'none', color: '#212529', transition: 'background 0.15s' }}
+                                                                        onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                                                        onMouseLeave={e => e.currentTarget.style.background = ''}
+                                                                    >
+                                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                                <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a56db' }}>{q.code || q.id}</span>
+                                                                                {q.status && <span className={`badge ${q.status === 'confirmed' ? 'bg-success' : q.status === 'cancelled' ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '10px' }}>{q.status}</span>}
+                                                                            </div>
+                                                                            <span style={{ fontSize: '11px', color: '#6c757d', whiteSpace: 'nowrap' }}>
+                                                                                {q.created_at ? new Date(q.created_at).toLocaleDateString() : ''}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
+                                                                            {q.net_total > 0 && (
+                                                                                <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
+                                                                                    {Number(q.net_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                                </span>
+                                                                            )}
+                                                                            {q.rfq_received_code && (
+                                                                                <span style={{ fontSize: '11px', background: '#e8f4ed', border: '1px solid #b2dfcb', borderRadius: '4px', padding: '1px 5px', color: '#0a7c42', fontWeight: 500 }}>
+                                                                                    <i className="bi bi-file-earmark-text me-1" style={{ fontSize: '10px' }}></i>{q.rfq_received_code}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </a>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                                {/* Messages area */}
+                                <div ref={chatContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {threadMsgLoading && <div className="text-center py-4"><span className="spinner-border spinner-border-sm" /></div>}
+                                    {!threadMsgLoading && threadMessages.map(msg => {
+                                        const isOut = msg.direction === 'out';
+                                        const isHovered = hoveredMsgId === msg.id;
+                                        const isDeleting = deletingMsgId === msg.id;
+
+                                        const doDelete = async () => {
+                                            setDeletingMsgId(msg.id);
+                                            try {
+                                                await fetch(`/v1/procurement-messages/${msg.id}`, { method: 'DELETE', headers: { Authorization: token } });
+                                                setThreadMessages(prev => prev.filter(m => m.id !== msg.id));
+                                            } finally { setDeletingMsgId(null); }
+                                        };
+
+                                        // On mobile the icon is always visible; on desktop it shows on hover.
+                                        const btnVisible = isMobile || isHovered;
+                                        const trans = translations[msg.id];
+                                        const isCopied = copiedMsgId === msg.id;
+
+                                        const MsgMenu = ({ side }) => (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', opacity: btnVisible ? 1 : 0, transition: 'opacity 0.15s' }}>
+                                                {/* Copy */}
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); copyMsg(msg.id, msg.body_text); }}
+                                                    disabled={!msg.body_text}
+                                                    style={{ background: isCopied ? 'rgba(5,150,105,0.75)' : 'rgba(0,0,0,0.22)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    title={t('Copy message')}
+                                                >
+                                                    <i className={`bi ${isCopied ? 'bi-check2' : 'bi-clipboard'}`} style={{ fontSize: '12px', color: '#fff' }}></i>
+                                                </button>
+                                                {/* Translate */}
+                                                {msg.body_text && (
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); translateMsg(msg.id, msg.body_text); }}
+                                                        disabled={trans?.loading}
+                                                        style={{ background: trans?.text ? 'rgba(59,130,246,0.75)' : 'rgba(0,0,0,0.22)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        title={t('Translate to English')}
+                                                    >
+                                                        {trans?.loading
+                                                            ? <span className="spinner-border spinner-border-sm text-white" style={{ width: '10px', height: '10px' }} />
+                                                            : <i className="bi bi-translate" style={{ fontSize: '12px', color: '#fff' }}></i>}
+                                                    </button>
+                                                )}
+                                                {/* Add Quotation Prices to RFQ (PDF or image) */}
+                                                {(msg.attachments || []).some(a => a.content_type === 'application/pdf' || a.filename?.toLowerCase().endsWith('.pdf') || isImageMime(a.content_type)) && (
+                                                    <button
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            setExtractMsg({ ...msg, is_supplier_quotation: true });
+                                                        }}
+                                                        style={{ background: 'rgba(22,163,74,0.80)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        title={t('Add Quotation Prices to RFQ')}
+                                                    >
+                                                        <i className="bi bi-file-earmark-plus" style={{ fontSize: '12px', color: '#fff' }}></i>
+                                                    </button>
+                                                )}
+                                                {/* Forward */}
+                                                <button
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setForwardMsg(msg);
+                                                        setForwardTab('contacts');
+                                                        setForwardSearch('');
+                                                        setForwardSelected(new Set());
+                                                        setForwardStatus(null);
+                                                        setForwardPickedRfq(null);
+                                                        setForwardEmailBody(msg.body_text || '');
+                                                        setForwardEmailSubject('');
+                                                        setForwardEmailStatus(null);
+                                                    }}
+                                                    style={{ background: 'rgba(0,0,0,0.22)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    title={t('Forward message')}
+                                                >
+                                                    <i className="bi bi-forward" style={{ fontSize: '12px', color: '#fff' }}></i>
+                                                </button>
+                                                {/* Delete */}
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); doDelete(); }}
+                                                    disabled={isDeleting}
+                                                    style={{ background: 'rgba(0,0,0,0.22)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    title={t('Delete message')}
+                                                >
+                                                    {isDeleting
+                                                        ? <span className="spinner-border spinner-border-sm text-white" style={{ width: '10px', height: '10px' }} />
+                                                        : <i className="bi bi-trash3" style={{ fontSize: '12px', color: '#fff' }}></i>}
+                                                </button>
+                                            </div>
+                                        );
+
+                                        return (
+                                            <div key={msg.id}
+                                                style={{ display: 'flex', justifyContent: isOut ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '4px', position: 'relative' }}
+                                                onMouseEnter={() => !isMobile && setHoveredMsgId(msg.id)}
+                                                onMouseLeave={() => { if (!isMobile) setHoveredMsgId(null); }}
+                                            >
+                                                {!isOut && <MsgMenu side="left" />}
+
+                                                <div style={{
+                                                    background: isOut ? '#dcf8c6' : '#fff',
+                                                    borderRadius: isOut ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                                                    padding: '8px 12px',
+                                                    maxWidth: '70%',
+                                                    fontSize: '13px',
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word',
+                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                                                    opacity: isDeleting ? 0.4 : 1,
+                                                    transition: 'opacity 0.2s',
+                                                }}>
+                                                    <div>{msg.body_text || <span style={{ color: '#999', fontStyle: 'italic' }}>{t('(media)')}</span>}</div>
+                                                    {/* Inline translation result */}
+                                                    {trans?.text && (
+                                                        <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.1)', color: '#1e40af', fontSize: '12px', fontStyle: 'normal' }}>
+                                                            <span style={{ fontSize: '10px', color: '#6b7280', display: 'block', marginBottom: '2px' }}><i className="bi bi-translate me-1"></i>English</span>
+                                                            {trans.text}
+                                                        </div>
+                                                    )}
+                                                    {trans?.error && (
+                                                        <div style={{ marginTop: '4px', fontSize: '11px', color: '#dc3545' }}>{t('Translation failed')}</div>
+                                                    )}
+                                                    {(msg.attachments || []).map((att, ai) => (
+                                                        <div key={ai} style={{ marginTop: '4px', whiteSpace: 'normal', wordBreak: 'normal' }}>
+                                                            <AttachmentPreview att={att} />
+                                                        </div>
+                                                    ))}
+                                                    <div style={{ fontSize: '10px', color: '#999', textAlign: 'right', marginTop: '2px' }}>
+                                                        {new Date(msg.message_date || msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {isOut && <i className="bi bi-check2-all ms-1" style={{ color: '#34b7f1' }}></i>}
+                                                    </div>
+                                                </div>
+
+                                                {isOut && <MsgMenu side="right" />}
+                                            </div>
+                                        );
+                                    })}
+                                    <div ref={chatBottomRef} />
+                                </div>
+                                {/* Compose box */}
+                                <div style={{ padding: '10px 12px', background: '#f0f0f0', borderTop: '1px solid #ddd' }}>
+                                    {sendMsgError && <div className="text-danger mb-1" style={{ fontSize: '12px' }}>{sendMsgError}</div>}
+
+                                    {/* Attached file preview */}
+                                    {attachedFile && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', borderRadius: '12px', padding: '6px 10px', marginBottom: '8px', fontSize: '12px' }}>
+                                            {attachedFile.type === 'image'
+                                                ? <img src={attachedFile.preview} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                                                : <i className="bi bi-file-earmark fs-4 text-primary"></i>}
+                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{attachedFile.file.name}</span>
+                                            <button className="btn-close" style={{ fontSize: '10px' }} onClick={() => setAttachedFile(null)} />
+                                        </div>
+                                    )}
+
+                                    {/* Voice recording indicator */}
+                                    {recording ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', borderRadius: '20px', padding: '8px 14px' }}>
+                                            <span style={{ color: '#dc3545', fontWeight: 600, fontSize: '13px' }}>
+                                                <i className="bi bi-record-circle me-1"></i>
+                                                {t('Recording')} {String(Math.floor(recSeconds / 60)).padStart(2, '0')}:{String(recSeconds % 60).padStart(2, '0')}
+                                            </span>
+                                            <button className="btn btn-danger btn-sm ms-auto" style={{ borderRadius: '50%', width: '36px', height: '36px', padding: 0 }} onClick={handleStopRecording} title={t('Stop & Send')}>
+                                                <i className="bi bi-stop-fill"></i>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                                            {/* File attach */}
+                                            <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept="image/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                                                onChange={e => {
+                                                    const f = e.target.files[0];
+                                                    if (!f) return;
+                                                    const isImg = f.type.startsWith('image/');
+                                                    const preview = isImg ? URL.createObjectURL(f) : null;
+                                                    setAttachedFile({ file: f, preview, type: isImg ? 'image' : 'doc' });
+                                                    e.target.value = '';
+                                                }}
+                                            />
+                                            <button className="btn btn-outline-secondary btn-sm" style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0, flexShrink: 0 }}
+                                                onClick={() => fileInputRef.current?.click()} title={t('Attach file or photo')} disabled={sendingMsg || sendingMedia}>
+                                                <i className="bi bi-paperclip"></i>
+                                            </button>
+
+                                            {/* Mic / voice record */}
+                                            <button className="btn btn-outline-secondary btn-sm" style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0, flexShrink: 0 }}
+                                                onClick={handleStartRecording} title={t('Record voice message')} disabled={sendingMsg || sendingMedia}>
+                                                <i className="bi bi-mic"></i>
+                                            </button>
+
+                                            {/* Text area */}
+                                            <textarea
+                                                className="form-control"
+                                                rows={2}
+                                                placeholder={t('Type a message… (Shift+Enter for new line)')}
+                                                value={composeText}
+                                                disabled={sendingMsg || sendingMedia}
+                                                style={{ fontSize: '13px', resize: 'none', borderRadius: '20px', padding: '8px 14px' }}
+                                                onChange={e => { setComposeText(e.target.value); setSendMsgError(null); }}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        if (attachedFile) { handleSendMedia(attachedFile.file, attachedFile.file.type, attachedFile.file.name); } else { handleSendInThread(); }
+                                                    }
+                                                }}
+                                            />
+
+                                            {/* Send button */}
+                                            <button
+                                                className="btn btn-success"
+                                                style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0, flexShrink: 0 }}
+                                                disabled={(attachedFile ? sendingMedia : !composeText.trim()) || sendingMsg || sendingMedia}
+                                                onClick={() => { if (attachedFile) { handleSendMedia(attachedFile.file, attachedFile.file.type, attachedFile.file.name); } else { handleSendInThread(); } }}
+                                                title={t('Send (Ctrl+Enter)')}
+                                            >
+                                                {(sendingMsg || sendingMedia)
+                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
+                                                    : <i className="bi bi-send-fill"></i>}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── All Messages view (original flat table) ────────────────────── */}
+            {viewMode === 'messages' && <>
             {/* Count row */}
             {!loading && total > 0 && (
                 <div className="d-flex justify-content-between align-items-center mb-2">
@@ -932,8 +2027,16 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                     <code style={{ fontSize: '11px', color: '#6c757d' }}>{msg.code || '—'}</code>
                                 </td>
                                 <td style={{ verticalAlign: 'middle' }}>{directionBadge(msg.direction)}</td>
-                                <td style={{ verticalAlign: 'middle', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {msg.from || <span className="text-muted">—</span>}
+                                <td style={{ verticalAlign: 'middle', maxWidth: '180px' }}>
+                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.from || <span className="text-muted">—</span>}</div>
+                                    {msg.sender_name && (
+                                        <div style={{ fontSize: '11px', marginTop: '1px' }}>
+                                            <span className={`badge ${msg.sender_type === 'supplier' ? 'bg-warning text-dark' : 'bg-primary'}`} style={{ fontSize: '10px' }}>
+                                                {msg.sender_type === 'supplier' ? <i className="bi bi-truck me-1"></i> : <i className="bi bi-person me-1"></i>}
+                                                {msg.sender_name}
+                                            </span>
+                                        </div>
+                                    )}
                                 </td>
                                 <td style={{ verticalAlign: 'middle', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {msg.processed_as_rfq && (
@@ -1039,6 +2142,7 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                     <button className="btn btn-sm btn-outline-secondary" disabled={page >= totalPages} onClick={() => load(page + 1)}>&raquo;</button>
                 </div>
             )}
+            </>}
 
             {/* Detail Modal */}
             {selected && (
@@ -1138,6 +2242,39 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Reply compose box — only for incoming messages */}
+                                {selected.direction === 'in' && (
+                                    <div style={{ marginTop: '16px', borderTop: '1px solid #e9ecef', paddingTop: '12px' }}>
+                                        <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '8px', color: '#198754' }}>
+                                            <i className="bi bi-reply me-1"></i>{t('Reply to')} {selected.from}
+                                        </div>
+                                        <textarea
+                                            className="form-control"
+                                            rows={3}
+                                            placeholder={t('Type your reply...')}
+                                            value={replyText}
+                                            disabled={sendingReply}
+                                            style={{ fontSize: '13px', resize: 'vertical' }}
+                                            onChange={e => { setReplyText(e.target.value); setReplyError(null); }}
+                                            onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSendReply(); }}
+                                        />
+                                        {replyError && (
+                                            <div className="text-danger" style={{ fontSize: '12px', marginTop: '4px' }}>{replyError}</div>
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                            <button
+                                                className="btn btn-success btn-sm"
+                                                disabled={!replyText.trim() || sendingReply}
+                                                onClick={handleSendReply}
+                                            >
+                                                {sendingReply
+                                                    ? <><span className="spinner-border spinner-border-sm me-1" role="status" />{t('Sending...')}</>
+                                                    : <><i className="bi bi-send me-1"></i>{t('Send Reply')}</>}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button
@@ -1184,7 +2321,308 @@ export default function ProcurementWhatsAppTab({ storeId }) {
             <RFQCreate
                 ref={rfqCreateRef}
                 showToastMessage={showToast}
-                onCreated={() => load(page)}
+                onCreated={newRfq => {
+                    load(page);
+                    if (newRfq?.id) {
+                        try { sessionStorage.setItem('_rfq_auto_send', newRfq.id); } catch (_) {}
+                        history.push('/dashboard/rfq-received?t=' + Date.now());
+                    }
+                }}
+            />
+
+            {/* ── Forward Modal ────────────────────────────────────────────────── */}
+            {forwardMsg && (
+                <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 10200 }} onClick={e => { if (e.target === e.currentTarget) setForwardMsg(null); }}>
+                    <div className="modal-dialog modal-lg" style={{ maxWidth: '540px' }}>
+                        <div className="modal-content">
+                            <div className="modal-header py-2">
+                                <h6 className="modal-title mb-0"><i className="bi bi-forward me-2 text-success"></i>{t('Forward Message')}</h6>
+                                <button className="btn-close" onClick={() => setForwardMsg(null)} />
+                            </div>
+                            {/* Tabs */}
+                            <ul className="nav nav-tabs px-3 pt-2" style={{ borderBottom: '1px solid #dee2e6' }}>
+                                {[
+                                    { key: 'contacts', icon: 'bi-whatsapp', label: t('All Contacts') },
+                                    { key: 'wa',       icon: 'bi-person-check', label: t('Customer WhatsApp') },
+                                    { key: 'email',    icon: 'bi-envelope-arrow-up', label: t('Customer Email') },
+                                ].map(tab => (
+                                    <li key={tab.key} className="nav-item">
+                                        <button className={`nav-link py-1 px-2 ${forwardTab === tab.key ? 'active' : ''}`} style={{ fontSize: '12px' }}
+                                            onClick={() => { setForwardTab(tab.key); setForwardStatus(null); setForwardEmailStatus(null); setForwardPickedRfq(null); }}>
+                                            <i className={`bi ${tab.icon} me-1`}></i>{tab.label}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="modal-body" style={{ maxHeight: '50vh', overflowY: 'auto', padding: '12px' }}>
+                                {/* Original message preview */}
+                                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', fontSize: '12px', color: '#166534' }}>
+                                    <i className="bi bi-chat-text me-1"></i>
+                                    {forwardMsg.body_text ? forwardMsg.body_text.slice(0, 120) + (forwardMsg.body_text.length > 120 ? '…' : '') : t('(media message)')}
+                                    {(forwardMsg.attachments || []).filter(a => a.url).length > 0 && (
+                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                                            {(forwardMsg.attachments || []).filter(a => a.url).map((att, i) => (
+                                                isImageMime(att.content_type)
+                                                    ? <img key={i} src={att.url} alt="" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #bbf7d0' }} />
+                                                    : <span key={i} style={{ fontSize: '11px', background: '#dcfce7', borderRadius: '4px', padding: '2px 6px' }}><i className="bi bi-paperclip me-1"></i>{att.filename || att.content_type}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* ── Tab: All Contacts ── */}
+                                {forwardTab === 'contacts' && (
+                                    <div>
+                                        <input className="form-control form-control-sm mb-2" placeholder={t('Search contacts…')}
+                                            value={forwardSearch} onChange={e => setForwardSearch(e.target.value)} />
+                                        <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                            {threads
+                                                .filter(th => th.contact_phone !== selectedThread?.contact_phone)
+                                                .filter(th => !forwardSearch || (th.sender_name || th.contact_phone || '').toLowerCase().includes(forwardSearch.toLowerCase()))
+                                                .map(th => {
+                                                    const phone = th.contact_phone;
+                                                    const label = th.sender_name ? `${th.sender_name} (${phone})` : phone;
+                                                    const checked = forwardSelected.has(phone);
+                                                    return (
+                                                        <label key={phone} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 4px', cursor: 'pointer', borderRadius: '5px', fontSize: '13px' }}
+                                                            className="hover-bg-light">
+                                                            <input type="checkbox" checked={checked} onChange={() => {
+                                                                setForwardSelected(prev => {
+                                                                    const n = new Set(prev);
+                                                                    if (n.has(phone)) n.delete(phone); else n.add(phone);
+                                                                    return n;
+                                                                });
+                                                            }} />
+                                                            <i className="bi bi-whatsapp text-success" style={{ fontSize: '14px' }}></i>
+                                                            <span style={{ flex: 1 }}>{label}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                        </div>
+                                        {forwardStatus && (
+                                            <div className={`alert alert-${forwardStatus.ok ? 'success' : 'danger'} py-1 px-2 mt-2`} style={{ fontSize: '12px' }}>{forwardStatus.msg}</div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── Tab: Customer WhatsApp ── */}
+                                {forwardTab === 'wa' && (
+                                    <div>
+                                        {rfqHistoryList.length === 0 && <div className="text-muted" style={{ fontSize: '13px' }}>{t('No linked RFQs for this conversation.')}</div>}
+                                        {rfqHistoryList.map(rfq => (
+                                            <div key={rfq.id} style={{ border: '1px solid #dee2e6', borderRadius: '6px', padding: '8px 10px', marginBottom: '6px', background: forwardPickedRfq?.id === rfq.id ? '#f0fdf4' : '#fff', cursor: 'pointer' }}
+                                                onClick={() => setForwardPickedRfq(rfq)}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                                                    <div>
+                                                        <span style={{ fontWeight: 600, fontSize: '12px', color: '#16a34a' }}>{rfq.code}</span>
+                                                        {rfq.customer_name && <span className="ms-2" style={{ fontSize: '12px' }}>{rfq.customer_name}</span>}
+                                                    </div>
+                                                    {rfq.customer_phone
+                                                        ? <span style={{ fontSize: '12px', color: '#0f9d58' }}><i className="bi bi-whatsapp me-1"></i>{rfq.customer_phone}</span>
+                                                        : <span style={{ fontSize: '11px', color: '#dc3545' }}><i className="bi bi-exclamation-circle me-1"></i>{t('No WA number')}</span>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {forwardPickedRfq && !forwardPickedRfq.customer_phone && (
+                                            <div className="alert alert-warning py-1 px-2" style={{ fontSize: '12px' }}>
+                                                {t('No WhatsApp number available for the customer in this RFQ.')}
+                                            </div>
+                                        )}
+                                        {forwardStatus && (
+                                            <div className={`alert alert-${forwardStatus.ok ? 'success' : 'danger'} py-1 px-2 mt-2`} style={{ fontSize: '12px' }}>{forwardStatus.msg}</div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── Tab: Customer Email ── */}
+                                {forwardTab === 'email' && (
+                                    <div>
+                                        {rfqHistoryList.length === 0 && <div className="text-muted" style={{ fontSize: '13px' }}>{t('No linked RFQs for this conversation.')}</div>}
+                                        {rfqHistoryList.map(rfq => (
+                                            <div key={rfq.id} style={{ border: '1px solid #dee2e6', borderRadius: '6px', padding: '8px 10px', marginBottom: '6px', background: forwardPickedRfq?.id === rfq.id ? '#e8f0fe' : '#fff', cursor: 'pointer' }}
+                                                onClick={() => {
+                                                    setForwardPickedRfq(rfq);
+                                                    if (rfq.customer_email) {
+                                                        setForwardEmailSubject(`Fwd: ${rfq.code || 'Message'}`);
+                                                        const attLines = (forwardMsg.attachments || [])
+                                                            .filter(a => a.url)
+                                                            .map(a => `${window.location.origin}${a.url.startsWith('/') ? '' : '/'}${a.url}`);
+                                                        const parts = [forwardMsg.body_text, ...attLines].filter(Boolean);
+                                                        setForwardEmailBody(parts.join('\n\n'));
+                                                    }
+                                                    setForwardEmailStatus(null);
+                                                }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                                                    <div>
+                                                        <span style={{ fontWeight: 600, fontSize: '12px', color: '#1a56db' }}>{rfq.code}</span>
+                                                        {rfq.customer_name && <span className="ms-2" style={{ fontSize: '12px' }}>{rfq.customer_name}</span>}
+                                                    </div>
+                                                    {rfq.customer_email
+                                                        ? <span style={{ fontSize: '12px', color: '#1a73e8' }}><i className="bi bi-envelope me-1"></i>{rfq.customer_email}</span>
+                                                        : <span style={{ fontSize: '11px', color: '#dc3545' }}><i className="bi bi-exclamation-circle me-1"></i>{t('No email')}</span>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {forwardPickedRfq && (
+                                            <div style={{ marginTop: '10px', borderTop: '1px solid #dee2e6', paddingTop: '10px' }}>
+                                                {/* To field */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', padding: '6px 10px', background: forwardPickedRfq.customer_email ? '#eff6ff' : '#fff3cd', borderRadius: '5px', border: `1px solid ${forwardPickedRfq.customer_email ? '#bfdbfe' : '#ffc107'}` }}>
+                                                    <i className={`bi ${forwardPickedRfq.customer_email ? 'bi-envelope-fill text-primary' : 'bi-exclamation-triangle-fill text-warning'}`} style={{ fontSize: '13px' }}></i>
+                                                    <span style={{ fontSize: '12px' }}>
+                                                        <strong>{t('To:')} </strong>
+                                                        {forwardPickedRfq.customer_email
+                                                            ? <span style={{ color: '#1d4ed8' }}>{forwardPickedRfq.customer_email}</span>
+                                                            : <span style={{ color: '#92400e' }}>{t('No email address available for this customer')}</span>}
+                                                    </span>
+                                                </div>
+                                                {forwardPickedRfq.customer_email && (
+                                                    <>
+                                                        <input className="form-control form-control-sm mb-2" placeholder={t('Subject')}
+                                                            value={forwardEmailSubject} onChange={e => setForwardEmailSubject(e.target.value)} />
+                                                        <textarea className="form-control form-control-sm mb-2" rows={4} placeholder={t('Message body…')}
+                                                            value={forwardEmailBody} onChange={e => setForwardEmailBody(e.target.value)} />
+                                                        {(forwardMsg.attachments || []).filter(a => a.url).length > 0 && (
+                                                            <div style={{ fontSize: '11px', color: '#6c757d', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                <i className="bi bi-paperclip"></i>
+                                                                <span>{t('Attachment links included in body:')}{' '}{(forwardMsg.attachments || []).filter(a => a.url).map(a => a.filename || a.content_type).join(', ')}</span>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                        {forwardEmailStatus && (
+                                            <div className={`alert alert-${forwardEmailStatus.ok ? 'success' : 'danger'} py-1 px-2 mt-2`} style={{ fontSize: '12px' }}>{forwardEmailStatus.msg}</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="modal-footer py-2">
+                                <button className="btn btn-secondary btn-sm" onClick={() => setForwardMsg(null)}>{t('Cancel')}</button>
+
+                                {/* Forward to all contacts */}
+                                {forwardTab === 'contacts' && (
+                                    <button className="btn btn-success btn-sm" disabled={forwardSelected.size === 0 || forwardSending}
+                                        onClick={async () => {
+                                            setForwardSending(true);
+                                            setForwardStatus(null);
+                                            const mediaAtts = (forwardMsg.attachments || []).filter(a => a.url);
+                                            // Pre-fetch media blobs once so we don't re-download per contact
+                                            const blobs = await Promise.all(mediaAtts.map(async att => {
+                                                try { const r = await fetch(att.url); return { blob: await r.blob(), att }; }
+                                                catch (_) { return null; }
+                                            }));
+                                            let ok = 0, fail = 0;
+                                            for (const phone of forwardSelected) {
+                                                try {
+                                                    // Send text if present
+                                                    if (forwardMsg.body_text?.trim()) {
+                                                        const res = await fetch(`/v1/procurement-message-threads/${encodeURIComponent(phone)}/send`, {
+                                                            method: 'POST',
+                                                            headers: { Authorization: token, 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ store_id: storeId, text: forwardMsg.body_text }),
+                                                        });
+                                                        if (!res.ok) { fail++; continue; }
+                                                    }
+                                                    // Send each attachment
+                                                    for (const item of blobs.filter(Boolean)) {
+                                                        const fd = new FormData();
+                                                        fd.append('file', new File([item.blob], item.att.filename || 'media', { type: item.att.content_type || item.blob.type }));
+                                                        fd.append('store_id', storeId);
+                                                        await fetch(`/v1/procurement-message-threads/${encodeURIComponent(phone)}/send-media`, {
+                                                            method: 'POST', headers: { Authorization: token }, body: fd,
+                                                        });
+                                                    }
+                                                    ok++;
+                                                } catch (_) { fail++; }
+                                            }
+                                            setForwardSending(false);
+                                            setForwardStatus({ ok: fail === 0, msg: fail === 0 ? `${t('Forwarded to')} ${ok} ${t('contact(s)')}` : `${ok} ${t('sent')}, ${fail} ${t('failed')}` });
+                                            if (fail === 0) setForwardSelected(new Set());
+                                        }}>
+                                        {forwardSending
+                                            ? <><span className="spinner-border spinner-border-sm me-1" />{t('Sending…')}</>
+                                            : <><i className="bi bi-forward me-1"></i>{t('Forward to')} {forwardSelected.size} {t('contact(s)')}</>}
+                                    </button>
+                                )}
+
+                                {/* Forward to customer WhatsApp */}
+                                {forwardTab === 'wa' && forwardPickedRfq?.customer_phone && (
+                                    <button className="btn btn-success btn-sm"
+                                        onClick={async () => {
+                                            const phone = forwardPickedRfq.customer_phone;
+                                            const th = threads.find(t => t.contact_phone === phone) || { contact_phone: phone, sender_name: forwardPickedRfq.customer_name || '' };
+                                            setSelectedThread(th);
+                                            loadThread(phone);
+                                            if (forwardMsg.body_text) setComposeText(forwardMsg.body_text);
+                                            // Set first attachment so user can send it
+                                            const firstAtt = (forwardMsg.attachments || []).find(a => a.url);
+                                            if (firstAtt) {
+                                                try {
+                                                    const blob = await fetch(firstAtt.url).then(r => r.blob());
+                                                    const file = new File([blob], firstAtt.filename || 'media', { type: firstAtt.content_type || blob.type });
+                                                    setAttachedFile({ file, preview: firstAtt.url, type: isImageMime(firstAtt.content_type) ? 'image' : 'doc' });
+                                                } catch (_) {}
+                                            }
+                                            setForwardMsg(null);
+                                        }}>
+                                        <i className="bi bi-whatsapp me-1"></i>{t('Open Chat')}
+                                    </button>
+                                )}
+
+                                {/* Forward to customer Email */}
+                                {forwardTab === 'email' && forwardPickedRfq?.customer_email && forwardEmailBody.trim() && (
+                                    <button className="btn btn-primary btn-sm" disabled={forwardSending}
+                                        onClick={async () => {
+                                            setForwardSending(true);
+                                            setForwardEmailStatus(null);
+                                            try {
+                                                const res = await fetch(`/v1/procurement-email-send?store_id=${storeId}`, {
+                                                    method: 'POST',
+                                                    headers: { Authorization: token, 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ to: forwardPickedRfq.customer_email, subject: forwardEmailSubject, body: forwardEmailBody }),
+                                                });
+                                                const data = await res.json();
+                                                if (res.ok && !data.error) {
+                                                    setForwardEmailStatus({ ok: true, msg: t('Email sent successfully') });
+                                                    setTimeout(() => setForwardMsg(null), 1500);
+                                                } else {
+                                                    setForwardEmailStatus({ ok: false, msg: data.error || t('Failed to send email') });
+                                                }
+                                            } catch (_) {
+                                                setForwardEmailStatus({ ok: false, msg: t('Network error') });
+                                            } finally { setForwardSending(false); }
+                                        }}>
+                                        {forwardSending
+                                            ? <><span className="spinner-border spinner-border-sm me-1" />{t('Sending…')}</>
+                                            : <><i className="bi bi-envelope-arrow-up me-1"></i>{t('Send Email')}</>}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* RFQ Detail modal (opened from RFQ history in WhatsApp conversation header) */}
+            <ForwardDetail
+                rfq={rfqDetailItem}
+                show={rfqDetailShow}
+                onHide={() => setRfqDetailShow(false)}
+                storeId={storeId}
+                onCreateQuotation={handleCreateQuotation}
+            />
+            <QuotationCreate ref={quotationCreateRef} showToastMessage={(msg, type) => showToast(msg, type)} refreshList={() => {}} />
+
+            {/* Email Detail modal (opened from linked email badge in RFQ history) */}
+            <EmailDetailModal
+                msg={emailDetailMsg}
+                show={emailDetailShow}
+                onClose={() => setEmailDetailShow(false)}
+                storeId={storeId}
+                token={token}
             />
         </div>
     );

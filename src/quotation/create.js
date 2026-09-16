@@ -57,6 +57,7 @@ import CustomerDepositCreate from "../customer_deposit/create.js";
 import QuotationSalesReturnUpdateForm from "../quotation_sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import EmailDetailModal from '../store/EmailDetailModal.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
@@ -157,6 +158,13 @@ const QuotationCreate = forwardRef((props, ref) => {
         setEnableProductSelection(true);
       }
 
+      setLinkedRfqCode(null);
+      setLinkedRfqId(null);
+      setLinkedEmailCode(null);
+      setLinkedEmailId(null);
+      setLinkedEmailObj(null);
+      setShowLinkedEmail(false);
+
       formData = {
         vat_percent: 15.0,
         discount: 0.0,
@@ -236,27 +244,38 @@ const QuotationCreate = forwardRef((props, ref) => {
             if (prefill.rfq_received_id) {
               formData.rfq_received_id = prefill.rfq_received_id;
               formData.rfq_received_code = prefill.rfq_received_code || '';
+              setLinkedRfqCode(prefill.rfq_received_code || null);
+              setLinkedRfqId(prefill.rfq_received_id || null);
+              if (prefill.procurement_message_code) setLinkedEmailCode(prefill.procurement_message_code);
+              if (prefill.procurement_message_id) setLinkedEmailId(prefill.procurement_message_id);
             }
             if (prefill.rfq_code) {
               formData.remarks = `RFQ: ${prefill.rfq_code}`;
             }
             if (Array.isArray(prefill.items) && prefill.items.length > 0) {
               // Seed minimal rows immediately so the form shows products right away
-              const newProducts = prefill.items.map(item => ({
+              const _vatPct = formData.vat_percent || 15;
+              const newProducts = prefill.items.map(item => {
+                const qty = item.quantity || 1;
+                const up  = item.unit_price || 0;
+                const upWithVat = parseFloat((up * (1 + _vatPct / 100)).toFixed(2));
+                const cpWithVat = parseFloat(((item.cost_price || 0) * (1 + _vatPct / 100)).toFixed(2));
+                return ({
                 product_id: item.product_id || null,
                 name: item.product_name,
                 part_number: item.part_no || '',
-                quantity: item.quantity || 1,
-                unit_price: item.unit_price || 0,
-                unit_price_with_vat: 0,
+                quantity: qty,
+                unit_price: up,
+                unit_price_with_vat: upWithVat,
                 purchase_unit_price: item.cost_price || 0,
-                purchase_unit_price_with_vat: 0,
-                discount: 0,
-                discount_percent: 0,
-                is_discount_percent: false,
+                purchase_unit_price_with_vat: cpWithVat,
+                line_total: parseFloat((up * qty).toFixed(2)),
+                line_total_with_vat: parseFloat((upWithVat * qty).toFixed(2)),
+                unit_discount: 0, unit_discount_with_vat: 0,
+                discount: 0, discount_percent: 0, is_discount_percent: false,
                 unit: item.unit || '',
                 _rfq_prefill: true,
-              }));
+              });});
               selectedProducts = newProducts;
               setSelectedProducts([...newProducts]);
               formData.products = newProducts;
@@ -274,19 +293,25 @@ const QuotationCreate = forwardRef((props, ref) => {
                     const _p = _data.result;
                     if (!_p) continue;
                     const _ps = _p.product_stores?.[_sid] || {};
+                    const _upQty = _item.quantity || 1;
+                    const _upPrice = _item.unit_price || _ps.retail_unit_price || 0;
+                    const _vatPctUpgrade = formData.vat_percent || 15;
+                    const _cpUpgrade = _item.cost_price || _ps.purchase_unit_price || 0;
                     const _upgraded = {
                       product_id: _p.id,
                       code: _p.item_code || '',
                       prefix_part_number: _p.prefix_part_number || '',
                       part_number: _p.part_number || _item.part_no || '',
                       name: _p.name || _item.product_name,
-                      quantity: _item.quantity || 1,
+                      quantity: _upQty,
                       product_stores: _p.product_stores || {},
-                      unit_price: _item.unit_price || _ps.retail_unit_price || 0,
-                      unit_price_with_vat: (_item.unit_price || _ps.retail_unit_price || 0) * (1 + (store?.vat_percent || 0) / 100),
+                      unit_price: _upPrice,
+                      unit_price_with_vat: parseFloat((_upPrice * (1 + _vatPctUpgrade / 100)).toFixed(2)),
                       unit: _p.unit || _item.unit || '',
-                      purchase_unit_price: _item.cost_price || _ps.purchase_unit_price || 0,
-                      purchase_unit_price_with_vat: _ps.purchase_unit_price_with_vat || 0,
+                      purchase_unit_price: _cpUpgrade,
+                      purchase_unit_price_with_vat: parseFloat((_cpUpgrade * (1 + _vatPctUpgrade / 100)).toFixed(2)),
+                      line_total: parseFloat((_upPrice * _upQty).toFixed(2)),
+                      line_total_with_vat: parseFloat((_upPrice * (1 + _vatPctUpgrade / 100) * _upQty).toFixed(2)),
                       unit_discount: 0, unit_discount_with_vat: 0,
                       unit_discount_percent: 0, unit_discount_percent_vat: 0,
                       stock: _ps.stock || 0,
@@ -448,6 +473,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
   const [show, SetShow] = useState(false);
+  const [linkedRfqCode, setLinkedRfqCode] = useState(null);
+  const [linkedRfqId, setLinkedRfqId] = useState(null);
+  const [linkedEmailCode, setLinkedEmailCode] = useState(null);
+  const [linkedEmailId, setLinkedEmailId] = useState(null);
+  const [linkedEmailObj, setLinkedEmailObj] = useState(null);
+  const [showLinkedEmail, setShowLinkedEmail] = useState(false);
 
   useEffect(() => {
     if (!show || props.fromHistory) return;
@@ -624,7 +655,25 @@ const QuotationCreate = forwardRef((props, ref) => {
           delivery_days: quotation.delivery_days ? quotation.delivery_days : 7,
           delivery_from: quotation.delivery_from || "Payment",
           validity_days: quotation.validity_days ? quotation.validity_days : 2,
+          rfq_received_id: quotation.rfq_received_id || null,
+          rfq_received_code: quotation.rfq_received_code || '',
         };
+        // Set linked RFQ state for header display
+        if (quotation.rfq_received_id) {
+          setLinkedRfqCode(quotation.rfq_received_code || null);
+          setLinkedRfqId(quotation.rfq_received_id || null);
+          // Fetch the RFQ to get its linked email code
+          const _sid = localStorage.getItem('store_id');
+          const _tok = localStorage.getItem('access_token');
+          fetch(`/v1/rfq-received/${quotation.rfq_received_id}?store_id=${_sid}`, { headers: { Authorization: _tok } })
+            .then(r => r.ok ? r.json() : null)
+            .then(d => {
+              const rfq = d?.result || d;
+              if (rfq?.procurement_message_code) setLinkedEmailCode(rfq.procurement_message_code);
+              if (rfq?.procurement_message_id) setLinkedEmailId(rfq.procurement_message_id);
+            })
+            .catch(() => {});
+        }
         if (data.result.status === 'draft') {
           setIsResumingDraft(true);
           formData.date_str = new Date();
@@ -3440,6 +3489,16 @@ async function checkWarning(i) {
       </>}
       <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
+      {linkedEmailObj && (
+        <EmailDetailModal
+          msg={linkedEmailObj}
+          show={showLinkedEmail}
+          onClose={() => setShowLinkedEmail(false)}
+          storeId={localStorage.getItem('store_id')}
+          token={localStorage.getItem('access_token')}
+        />
+      )}
+
       <TableSettingsModal
           show={showProductSearchSettings}
           onHide={() => setShowProductSearchSettings(false)}
@@ -3448,6 +3507,7 @@ async function checkWarning(i) {
           onToggleColumn={handleToggleColumn}
           onDragEnd={onDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
+          zIndex={10500}
       />
       <TableSettingsModal
           show={showCustomerSearchSettings}
@@ -3457,6 +3517,7 @@ async function checkWarning(i) {
           onToggleColumn={handleToggleCustomerCol}
           onDragEnd={handleCustomerColDragEnd}
           onRestoreDefaults={restoreCustomerColDefaults}
+          zIndex={10500}
       />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
@@ -3540,13 +3601,47 @@ async function checkWarning(i) {
         } : {})}
       >
         <Modal.Header>
-          <Modal.Title>
-            {!enableProductSelection && isResumingDraft
-              ? t('Create New Quotation 📝 Draft')
-              : !enableProductSelection && formData.id
-              ? t('Update Quotation #') + formData.code
-              : !enableProductSelection ? t('Create New Quotation') : ""}
-            {enableProductSelection ? t('Select products from quotation #') + formData.code : ""}
+          <Modal.Title style={{ fontSize: '15px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span>
+              {!enableProductSelection && isResumingDraft
+                ? t('Create New Quotation 📝 Draft')
+                : !enableProductSelection && formData.id
+                ? t('Update Quotation #') + formData.code
+                : !enableProductSelection ? t('Create New Quotation') : ""}
+              {enableProductSelection ? t('Select products from quotation #') + formData.code : ""}
+            </span>
+            {linkedRfqCode && (
+              <a
+                href={`/dashboard/rfq-received?edit=${linkedRfqId}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: '12px', fontWeight: 700, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <i className="bi bi-file-earmark-text" style={{ fontSize: '11px' }}></i>
+                {linkedRfqCode}
+              </a>
+            )}
+            {linkedEmailCode && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={async () => {
+                  if (linkedEmailObj) { setShowLinkedEmail(true); return; }
+                  const _sid = localStorage.getItem('store_id');
+                  const _tok = localStorage.getItem('access_token');
+                  const res = await fetch(`/v1/procurement-messages/${linkedEmailId}?store_id=${_sid}`, { headers: { Authorization: _tok } });
+                  const data = await res.json();
+                  if (data?.id || data?.result?.id) {
+                    setLinkedEmailObj(data?.result || data);
+                    setShowLinkedEmail(true);
+                  }
+                }}
+                style={{ fontSize: '12px', fontWeight: 600, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <i className="bi bi-envelope" style={{ fontSize: '11px' }}></i>
+                {linkedEmailCode}
+              </span>
+            )}
           </Modal.Title>
 
           <div className="col align-self-end text-end">

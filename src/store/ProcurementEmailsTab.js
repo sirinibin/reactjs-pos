@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
+import EmailDetailModal from './EmailDetailModal.js';
 
 const PAGE_SIZE = 20;
 
@@ -21,6 +22,7 @@ const providerIcon = p => {
 // ── ExtractModal ──────────────────────────────────────────────────────────────
 function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
     const { t } = useTranslation();
+    const [showEmailDetail, setShowEmailDetail] = useState(false);
 
     const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
 
@@ -68,6 +70,8 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
         setResult(null);
         if (!hasApiKey) { setError(t('No API key saved for this provider. Add it under Store → AI Models.')); return; }
         setExtracting(true);
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(() => ctrl.abort(), 300_000); // 5-minute client timeout
         try {
             const fd = new FormData();
             fd.append('llm_provider', provider);
@@ -77,13 +81,19 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                 method: 'POST',
                 headers: { Authorization: token },
                 body: fd,
+                signal: ctrl.signal,
             });
             const data = await res.json();
             if (!res.ok) { setError(data.error || t('Extraction failed')); return; }
             setResult(data);
         } catch (err) {
-            setError(err.message || t('Network error'));
+            if (err.name === 'AbortError') {
+                setError(t('Request timed out after 5 minutes. Try a faster model or smaller attachment.'));
+            } else {
+                setError(err.message || t('Network error'));
+            }
         } finally {
+            clearTimeout(timeoutId);
             setExtracting(false);
         }
     };
@@ -93,13 +103,34 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
             <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ maxWidth: '860px' }}>
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f0f4ff' }}>
-                        <h6 className="modal-title fw-bold">
-                            <i className="bi bi-magic me-2 text-primary"></i>
+                        <h6 className="modal-title fw-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <i className="bi bi-magic me-1 text-primary"></i>
                             {t('Extract RFQ Data')}
-                            {msg.subject && <small className="text-muted fw-normal ms-2" style={{ fontSize: '13px' }}>— {msg.subject}</small>}
+                            {msg.code && (
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    title="View email"
+                                    onClick={() => setShowEmailDetail(true)}
+                                    style={{ fontSize: '12px', fontWeight: 600, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                    <i className="bi bi-envelope" style={{ fontSize: '11px' }}></i>
+                                    {msg.code}
+                                </span>
+                            )}
+                            {msg.subject && <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>— {msg.subject}</small>}
                         </h6>
                         <button className="btn-close" onClick={onClose} />
                     </div>
+                    {showEmailDetail && (
+                        <EmailDetailModal
+                            msg={msg}
+                            show={showEmailDetail}
+                            onClose={() => setShowEmailDetail(false)}
+                            storeId={storeId}
+                            token={token}
+                        />
+                    )}
                     <div className="modal-body">
                         {/* Provider + Model */}
                         <div className="row g-3 mb-4">
@@ -146,6 +177,13 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                             </div>
                         </div>
 
+                        {/* Slow-model warning */}
+                        {modelsForProvider(provider).find(m => m.value === model)?.badge?.includes('Reasoning') && (
+                            <div className="alert alert-warning py-2 mb-3" style={{ fontSize: '12px' }}>
+                                <i className="bi bi-clock me-1"></i>{t('Reasoning models can take 1–3 minutes. Please wait after clicking Extract.')}
+                            </div>
+                        )}
+
                         {/* What will be sent */}
                         <div className="mb-3" style={{ background: '#f8f9fa', borderRadius: '8px', padding: '12px 14px', fontSize: '13px' }}>
                             <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}><i className="bi bi-info-circle me-1 text-primary"></i>{t('Content that will be sent to the LLM:')}</div>
@@ -163,7 +201,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                         {/* Additional file upload */}
                         <div className="mb-3">
                             <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>
-                                {t('Additional Files')} <span className="text-muted fw-normal" style={{ fontSize: '12px' }}>({t('optional — image, PDF, Excel, CSV, text')})</span>
+                                {t('Additional Files')} <span className="text-muted fw-normal" style={{ fontSize: '12px' }}>({t('optional — image, PDF, Excel, Word (.docx), CSV, text')})</span>
                             </label>
                             <div
                                 style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '14px', textAlign: 'center', cursor: 'pointer', background: '#fafafa' }}
@@ -174,7 +212,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                             >
                                 <i className="bi bi-cloud-upload" style={{ fontSize: '22px', color: '#6c757d' }}></i>
                                 <div style={{ fontSize: '13px', color: '#6c757d', marginTop: '4px' }}>{t('Click or drag files here')}</div>
-                                <input ref={fileInputRef} type="file" multiple hidden onChange={handleFiles} accept=".pdf,.xlsx,.xls,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp" />
+                                <input ref={fileInputRef} type="file" multiple hidden onChange={handleFiles} accept=".pdf,.xlsx,.xls,.docx,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp" />
                             </div>
                             {files.length > 0 && (
                                 <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -308,6 +346,7 @@ export default function ProcurementEmailsTab({ storeId }) {
     const [deleting, setDeleting] = useState(null);
     const [syncing, setSyncing] = useState(false);
     const [deletingAll, setDeletingAll] = useState(false);
+    const [diskUsage, setDiskUsage] = useState(null);
     const [rfqFilter, setRfqFilter] = useState('');
     // eslint-disable-next-line no-unused-vars
     const [creatingRfq, setCreatingRfq] = useState(null); // message id currently creating RFQ
@@ -349,7 +388,13 @@ export default function ProcurementEmailsTab({ storeId }) {
         } finally { setLoading(false); }
     }, [storeId, token, search, direction, rfqFilter]);
 
-    useEffect(() => { load(1); }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        load(1);
+        if (storeId) {
+            fetch(`/v1/procurement-messages/disk-usage?store_id=${storeId}`, { headers: { Authorization: token } })
+                .then(r => r.json()).then(d => setDiskUsage(d.formatted)).catch(() => {});
+        }
+    }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSearch = e => {
         const q = e.target.value;
@@ -395,7 +440,8 @@ export default function ProcurementEmailsTab({ storeId }) {
             });
             const data = await res.json();
             if (res.ok && data.rfq_id) {
-                history.push(`/dashboard/rfq-received?id=${data.rfq_id}`);
+                try { sessionStorage.setItem('_rfq_auto_send', data.rfq_id); } catch (_) {}
+                history.push('/dashboard/rfq-received?t=' + Date.now());
             } else {
                 alert(data.error || t('Failed to create RFQ'));
             }
@@ -508,6 +554,11 @@ export default function ProcurementEmailsTab({ storeId }) {
                 <i className="bi bi-envelope-open" style={{ fontSize: '18px', color: '#2563eb' }}></i>
                 <h5 style={{ margin: 0, fontWeight: 600, fontSize: '15px' }}>{t('Emails')}</h5>
                 <span className="badge bg-secondary ms-auto">{total} {t('messages')}</span>
+                {diskUsage && (
+                    <span className="badge bg-light text-muted border" style={{ fontSize: '11px' }}>
+                        <i className="bi bi-hdd me-1"></i>{diskUsage} {t('used')}
+                    </span>
+                )}
             </div>
 
             {/* Filters */}
@@ -529,6 +580,8 @@ export default function ProcurementEmailsTab({ storeId }) {
                 <select className="form-select form-select-sm" style={{ width: '160px' }} value={rfqFilter} onChange={handleRfqFilter}>
                     <option value="">{t('All emails')}</option>
                     <option value="yes">{t('RFQ Created')}</option>
+                    <option value="quotation">{t('Quotation')}</option>
+                    <option value="other">{t('Other')}</option>
                     <option value="no">{t('No RFQ')}</option>
                 </select>
                 <button
@@ -742,142 +795,17 @@ export default function ProcurementEmailsTab({ storeId }) {
             )}
 
             {/* Detail Modal */}
-            {selected && (
-                <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
-                    <div className="modal-dialog modal-lg modal-dialog-scrollable" style={{ maxWidth: '760px' }}>
-                        <div className="modal-content">
-                            <div className="modal-header" style={{ background: '#f8f9fa' }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                        {directionBadge(selected.direction)}
-                                        <span style={{ fontSize: '11px', color: '#6c757d' }}>
-                                            {providerIcon(selected.provider)} {selected.provider}
-                                        </span>
-                                        {selected.processed_as_rfq && (
-                                            <span className="badge bg-success" style={{ fontSize: '11px' }}>✅ {t('RFQ Created')}</span>
-                                        )}
-                                        {selected.is_supplier_quotation && (
-                                            <span className="badge bg-info text-dark" style={{ fontSize: '11px' }}>
-                                                <i className="bi bi-receipt me-1"></i>{t('Supplier Quotation')}
-                                                {selected.linked_rfq_received_code && ` → ${selected.linked_rfq_received_code}`}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <h6 className="modal-title mt-1" style={{ fontWeight: 600 }}>
-                                        {selected.subject || t('(no subject)')}
-                                    </h6>
-                                </div>
-                                <button className="btn-close" onClick={() => setSelected(null)} />
-                            </div>
-                            <div className="modal-body">
-                                <table className="table table-sm" style={{ fontSize: '13px', marginBottom: '16px' }}>
-                                    <tbody>
-                                        <tr><th style={{ width: 80, fontWeight: 600 }}>{t('From')}</th><td>{selected.from}</td></tr>
-                                        {(selected.to || []).length > 0 && (
-                                            <tr><th style={{ fontWeight: 600 }}>{t('To')}</th><td>{(selected.to || []).join(', ')}</td></tr>
-                                        )}
-                                        <tr>
-                                            <th style={{ fontWeight: 600 }}>{t('Date')}</th>
-                                            <td>{selected.message_date ? new Date(selected.message_date).toLocaleString() : '—'}</td>
-                                        </tr>
-                                        <tr>
-                                            <th style={{ fontWeight: 600 }}>{t('Created At')}</th>
-                                            <td>{selected.created_at ? new Date(selected.created_at).toLocaleString() : '—'}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-
-                                {/* Email body — Gmail-style: rendered HTML preferred, plaintext fallback */}
-                                <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
-                                    <div style={{ maxHeight: '480px', overflow: 'auto', padding: '20px 24px', fontSize: '14px', lineHeight: '1.6', color: '#202124' }}>
-                                        {selected.body_html ? (
-                                            <div dangerouslySetInnerHTML={{ __html: selected.body_html }} />
-                                        ) : (
-                                            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>
-                                                {selected.body_text || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}
-                                            </pre>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Attachment missing warning */}
-                                {selected.attachment_missing && (
-                                    <div className="alert alert-warning mt-3" style={{ fontSize: '13px', padding: '10px 14px' }}>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <i className="bi bi-exclamation-triangle-fill fs-5"></i>
-                                            <div>
-                                                <strong>{t('Attachments missing')}</strong> — {t('The attachment could not be downloaded automatically. You can upload it manually below.')}
-                                                <div className="mt-1 text-muted" style={{ fontSize: '12px' }}>{t('RFQ creation is blocked until attachments are received.')}</div>
-                                            </div>
-                                        </div>
-                                        <label className="btn btn-sm btn-warning mt-2" style={{ cursor: 'pointer' }}>
-                                            {uploadingFor === selected.id
-                                                ? <><i className="bi bi-hourglass-split me-1"></i>{t('Uploading...')}</>
-                                                : <><i className="bi bi-upload me-1"></i>{t('Upload Attachment')}</>}
-                                            <input type="file" style={{ display: 'none' }} disabled={uploadingFor === selected.id} onChange={e => { if (e.target.files[0]) handleUploadAttachment(selected.id, e.target.files[0]); e.target.value = ''; }} />
-                                        </label>
-                                    </div>
-                                )}
-
-                                {/* Attachments — Gmail-style cards */}
-                                {(selected.attachments || []).length > 0 && (
-                                    <div style={{ marginTop: '16px' }}>
-                                        <div style={{ fontSize: '12px', color: '#5f6368', fontWeight: 500, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                            <i className="bi bi-paperclip me-1"></i>{selected.attachments.length} {t('Attachment')}{selected.attachments.length !== 1 ? 's' : ''}
-                                        </div>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            {selected.attachments.map((att, i) => {
-                                                const isPDF = att.content_type === 'application/pdf' || att.filename?.toLowerCase().endsWith('.pdf');
-                                                const isImage = att.content_type?.startsWith('image/');
-                                                const isExcel = att.filename?.match(/\.(xlsx?|csv)$/i);
-                                                const icon = isPDF ? 'bi-file-earmark-pdf text-danger' : isImage ? 'bi-file-earmark-image text-primary' : isExcel ? 'bi-file-earmark-excel text-success' : 'bi-file-earmark text-secondary';
-                                                return (
-                                                    <div key={i} style={{ border: '1px solid #dadce0', borderRadius: '8px', padding: '10px 14px', minWidth: '180px', maxWidth: '220px', background: '#f8f9fa' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                            <i className={`bi ${icon}`} style={{ fontSize: '22px' }}></i>
-                                                            <div style={{ overflow: 'hidden' }}>
-                                                                <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.filename || `Attachment ${i + 1}`}</div>
-                                                                {att.size > 0 && <div style={{ fontSize: '11px', color: '#5f6368' }}>{(att.size / 1024).toFixed(0)} KB</div>}
-                                                            </div>
-                                                        </div>
-                                                        {att.url && (
-                                                            <a href={att.url} target="_blank" rel="noreferrer" download={att.filename}
-                                                                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#1a73e8', textDecoration: 'none', marginTop: '6px' }}>
-                                                                <i className="bi bi-download"></i> Download
-                                                            </a>
-                                                        )}
-                                                        {!att.url && <span style={{ fontSize: '11px', color: '#9aa0a6' }}>Not downloaded</span>}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="modal-footer">
-                                <button
-                                    className={`btn btn-sm ${selected.is_supplier_quotation ? 'btn-info' : 'btn-outline-info'} me-auto`}
-                                    disabled={linkingFor === selected.id}
-                                    title={selected.is_supplier_quotation ? t('Remove Quotation label') : t('Label as Supplier Quotation & auto-match to RFQ')}
-                                    onClick={() => handleLinkAsQuotation(selected)}
-                                >
-                                    {linkingFor === selected.id
-                                        ? <span className="spinner-border spinner-border-sm me-1" role="status" />
-                                        : <i className="bi bi-receipt me-1"></i>}
-                                    {selected.is_supplier_quotation ? t('Remove Quotation Label') : t('Label as Supplier Quotation')}
-                                </button>
-                                <button className="btn btn-outline-primary btn-sm" onClick={() => { setExtractMsg(selected); setSelected(null); }}>
-                                    <i className="bi bi-magic me-1"></i>{t('Extract')}
-                                </button>
-                                <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(selected.id)}>
-                                    <i className="bi bi-trash3 me-1"></i>{t('Delete')}
-                                </button>
-                                <button className="btn btn-secondary btn-sm" onClick={() => setSelected(null)}>{t('Close')}</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <EmailDetailModal
+                msg={selected}
+                show={!!selected}
+                onClose={() => setSelected(null)}
+                storeId={storeId}
+                token={token}
+                onExtract={msg => setExtractMsg(msg)}
+                onLinkQuotation={handleLinkAsQuotation}
+                linkingFor={linkingFor}
+                onDeleted={deletedId => { setSelected(null); setMessages(prev => prev.filter(m => m.id !== deletedId)); }}
+            />
 
             {/* Extract Modal */}
             {extractMsg && (
@@ -899,7 +827,12 @@ export default function ProcurementEmailsTab({ storeId }) {
             <RFQCreate
                 ref={rfqCreateRef}
                 showToastMessage={showToast}
-                onCreated={() => {}}
+                onCreated={newRfq => {
+                    if (newRfq?.id) {
+                        try { sessionStorage.setItem('_rfq_auto_send', newRfq.id); } catch (_) {}
+                        history.push('/dashboard/rfq-received?t=' + Date.now());
+                    }
+                }}
             />
 
         </div>
