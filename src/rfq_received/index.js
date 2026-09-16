@@ -53,6 +53,9 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     const [uploadingFile, setUploadingFile] = useState(false);
     const [uploadedFileName, setUploadedFileName] = useState('');
     const fileInputRef = useRef(null);
+    // Update product prices state
+    const [updatingPrices, setUpdatingPrices] = useState(false);
+    const [priceUpdateResult, setPriceUpdateResult] = useState(null);
 
     // Per-product: selected supplier and margin %
     const products = rfq.products || [];
@@ -95,13 +98,39 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
     const [selectedSupplier, setSelectedSupplier] = useState(defaultSelections);
     const [margins, setMargins] = useState(() => {
         const m = {};
-        // Pre-fill with store default margin
+        // Pre-fill with store default margin; individual product margins loaded in effect below
         products.forEach((_, i) => { m[i] = String(defaultMarginPct); });
         return m;
     });
 
     // Re-run defaults when rfq changes (new reply added)
     useEffect(() => { setSelectedSupplier(defaultSelections()); }, [rfq.id, (rfq.supplier_replies || []).length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Load each product's stored retail_margin_percent and override default margin
+    useEffect(() => {
+        const productIDs = products.map(p => p.product_id).filter(Boolean);
+        if (!productIDs.length) return;
+        let cancelled = false;
+        (async () => {
+            for (let i = 0; i < products.length; i++) {
+                const pid = products[i].product_id;
+                if (!pid) continue;
+                try {
+                    const res = await fetch(
+                        `/v1/product/${pid}?search[store_id]=${storeId}&select=product_stores.${storeId}.retail_margin_percent`,
+                        { headers: { Authorization: token } }
+                    );
+                    const data = await res.json();
+                    if (cancelled) return;
+                    const m = parseFloat(data.result?.product_stores?.[storeId]?.retail_margin_percent);
+                    if (!isNaN(m) && m > 0) {
+                        setMargins(prev => ({ ...prev, [i]: String(m) }));
+                    }
+                } catch (_) {}
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [rfq.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const retailPrice = (productIndex) => {
         const sid = selectedSupplier[productIndex];
@@ -160,6 +189,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
             const retail = retailPrice(i);
             const supplier = sid ? replies.find(r => r.id === sid) : null;
             return {
+                product_id:         prod.product_id || null,
                 product_name:       prod.name,
                 part_no:            prod.part_no || '',
                 quantity:           prod.quantity || 1,
@@ -171,6 +201,50 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                 supplier_phone:     supplier?.supplier_phone || '',
             };
         });
+
+    const handleUpdateProductPrices = async () => {
+        const items = [];
+        products.forEach((prod, i) => {
+            if (!prod.product_id) return;
+            const sid = selectedSupplier[i];
+            if (!sid) return;
+            const priceEntry = priceMap[i]?.[sid];
+            if (!priceEntry) return;
+            const retail = retailPrice(i);
+            items.push({
+                product_index:      i,
+                purchase_unit_price: priceEntry.unit_price,
+                retail_unit_price:  retail ?? priceEntry.unit_price,
+                vat_included:       !!priceEntry.vat_included,
+            });
+        });
+        if (!items.length) {
+            setPriceUpdateResult({ error: t('no_products_to_update') || 'No products with linked catalog entries and selected suppliers.' });
+            return;
+        }
+        setUpdatingPrices(true);
+        setPriceUpdateResult(null);
+        try {
+            const res = await fetch(
+                `/v1/rfq-received/${rfq.id}/update-product-prices?store_id=${storeId}`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: token },
+                    body: JSON.stringify({ items }),
+                }
+            );
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                setPriceUpdateResult({ error: data.error || 'Update failed' });
+            } else {
+                setPriceUpdateResult({ updated: data.updated, skipped: data.skipped });
+            }
+        } catch (e) {
+            setPriceUpdateResult({ error: e.message });
+        } finally {
+            setUpdatingPrices(false);
+        }
+    };
 
     return (
         <div>
@@ -378,15 +452,35 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation }) {
                         </table>
                     </div>
 
-                    <button
-                        type="button"
-                        className="btn btn-success"
-                        onClick={() => onCreateQuotation(buildQuotationItems(), rfq)}
-                    >
-                        <i className="bi bi-file-earmark-plus me-2"></i>
-                        {t('create_quotation')}
-                    </button>
-                    <small className="text-muted ms-2">{t('create_quotation_hint')}</small>
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleUpdateProductPrices}
+                            disabled={updatingPrices}
+                            title={t('update_product_prices_hint') || 'Update purchase & retail prices for linked catalog products'}
+                        >
+                            {updatingPrices
+                                ? <><Spinner animation="border" size="sm" className="me-1" />{t('updating') || 'Updating…'}</>
+                                : <><i className="bi bi-arrow-repeat me-1"></i>{t('update_product_prices') || 'Update Product Prices'}</>}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-success"
+                            onClick={() => onCreateQuotation(buildQuotationItems(), rfq)}
+                        >
+                            <i className="bi bi-file-earmark-plus me-2"></i>
+                            {t('create_quotation')}
+                        </button>
+                        <small className="text-muted">{t('create_quotation_hint')}</small>
+                    </div>
+                    {priceUpdateResult && (
+                        <div className={`mt-2 alert py-1 px-2 ${priceUpdateResult.error ? 'alert-danger' : 'alert-success'}`} style={{ fontSize: '12px' }}>
+                            {priceUpdateResult.error
+                                ? priceUpdateResult.error
+                                : <>{t('prices_updated_ok') || 'Product prices updated:'} <strong>{priceUpdateResult.updated}</strong> {t('updated') || 'updated'}{priceUpdateResult.skipped > 0 && `, ${priceUpdateResult.skipped} ${t('skipped') || 'skipped (no catalog link)'}`}</>}
+                        </div>
+                    )}
                 </div>
             )}
 

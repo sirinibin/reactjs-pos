@@ -241,20 +241,64 @@ const QuotationCreate = forwardRef((props, ref) => {
               formData.remarks = `RFQ: ${prefill.rfq_code}`;
             }
             if (Array.isArray(prefill.items) && prefill.items.length > 0) {
+              // Seed minimal rows immediately so the form shows products right away
               const newProducts = prefill.items.map(item => ({
+                product_id: item.product_id || null,
                 name: item.product_name,
                 part_number: item.part_no || '',
                 quantity: item.quantity || 1,
                 unit_price: item.unit_price || 0,
+                unit_price_with_vat: 0,
                 purchase_unit_price: item.cost_price || 0,
+                purchase_unit_price_with_vat: 0,
                 discount: 0,
                 discount_percent: 0,
                 is_discount_percent: false,
+                unit: item.unit || '',
                 _rfq_prefill: true,
               }));
               selectedProducts = newProducts;
               setSelectedProducts([...newProducts]);
               formData.products = newProducts;
+              // Async: upgrade rows that have product_id with full catalog data
+              const _sid = localStorage.getItem('store_id');
+              const _token = localStorage.getItem('access_token');
+              const _storeSelect = `select=id,item_code,prefix_part_number,part_number,name,unit,is_service,allow_duplicates,product_stores.${_sid}.retail_unit_price,product_stores.${_sid}.retail_unit_price_with_vat,product_stores.${_sid}.purchase_unit_price,product_stores.${_sid}.purchase_unit_price_with_vat,product_stores.${_sid}.stock,product_stores.${_sid}.warehouse_stocks`;
+              setTimeout(async () => {
+                for (let _i = 0; _i < prefill.items.length; _i++) {
+                  const _item = prefill.items[_i];
+                  if (!_item.product_id) continue;
+                  try {
+                    const _res = await fetch(`/v1/product/${_item.product_id}?search[store_id]=${_sid}&${_storeSelect}`, { headers: { Authorization: _token } });
+                    const _data = await _res.json();
+                    const _p = _data.result;
+                    if (!_p) continue;
+                    const _ps = _p.product_stores?.[_sid] || {};
+                    const _upgraded = {
+                      product_id: _p.id,
+                      code: _p.item_code || '',
+                      prefix_part_number: _p.prefix_part_number || '',
+                      part_number: _p.part_number || _item.part_no || '',
+                      name: _p.name || _item.product_name,
+                      quantity: _item.quantity || 1,
+                      product_stores: _p.product_stores || {},
+                      unit_price: _item.unit_price || _ps.retail_unit_price || 0,
+                      unit_price_with_vat: (_item.unit_price || _ps.retail_unit_price || 0) * (1 + (store?.vat_percent || 0) / 100),
+                      unit: _p.unit || _item.unit || '',
+                      purchase_unit_price: _item.cost_price || _ps.purchase_unit_price || 0,
+                      purchase_unit_price_with_vat: _ps.purchase_unit_price_with_vat || 0,
+                      unit_discount: 0, unit_discount_with_vat: 0,
+                      unit_discount_percent: 0, unit_discount_percent_vat: 0,
+                      stock: _ps.stock || 0,
+                      warehouse_stocks: _ps.warehouse_stocks || {},
+                      is_service: _p.is_service || false,
+                      _rfq_prefill: true,
+                    };
+                    selectedProducts[_i] = _upgraded;
+                    setSelectedProducts([...selectedProducts]);
+                  } catch (_e) {}
+                }
+              }, 0);
             }
             setFormData({ ...formData });
             reCalculate();

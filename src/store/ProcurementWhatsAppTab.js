@@ -183,6 +183,24 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
             const data = await res.json();
             if (data.error) { setSaveError(data.error); setAddPhase('mapping'); return; }
             setAddPhase('done');
+            // Auto-update product catalog purchase prices (retail auto-computed from stored margin in backend)
+            try {
+                const priceUpdateItems = priceRows
+                    .filter(r => parseFloat(r.unitPrice) > 0)
+                    .map(r => ({
+                        product_index:      r.productIndex,
+                        purchase_unit_price: parseFloat(r.unitPrice) || 0,
+                        retail_unit_price:  0, // backend will derive from stored margin if available
+                        vat_included:       false,
+                    }));
+                if (priceUpdateItems.length > 0) {
+                    await fetch(`/v1/rfq-received/${selectedRFQ.id}/update-product-prices?store_id=${storeId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', Authorization: token },
+                        body: JSON.stringify({ items: priceUpdateItems }),
+                    });
+                }
+            } catch (_) {}
         } catch (e) { setSaveError(e.message); setAddPhase('mapping'); }
     };
 
