@@ -1,7 +1,57 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { storeLogoUrl } from '../utils/imageUtils';
 import * as XLSX from 'xlsx';
+// Renders each page of a PDF data-URI as images so html2canvas can capture them.
+// pdfjs-dist is loaded lazily (dynamic import) so it is NOT bundled into the main chunk.
+// Sets data-pdf-loading on the wrapper while rendering; RFQPreview polls for this attribute.
+function PdfPagesRenderer({ dataUri }) {
+    const [pages, setPages] = useState([]);
+    const wrapperRef = useRef(null);
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        setPages([]);
+        (async () => {
+            try {
+                const base64 = dataUri.split(',')[1];
+                if (!base64) return;
+                // Dynamic import — only loads pdfjs when a PDF needs to be rendered
+                const pdfjsLib = await import('pdfjs-dist/build/pdf');
+                pdfjsLib.GlobalWorkerOptions.workerSrc = (process.env.PUBLIC_URL || '') + '/pdf.worker.js';
+                const raw = atob(base64);
+                const uint8 = new Uint8Array(raw.length);
+                for (let i = 0; i < raw.length; i++) uint8[i] = raw.charCodeAt(i);
+                const loadingTask = pdfjsLib.getDocument({ data: uint8 });
+                const pdf = await loadingTask.promise;
+                const imgs = [];
+                for (let p = 1; p <= pdf.numPages; p++) {
+                    const page = await pdf.getPage(p);
+                    const viewport = page.getViewport({ scale: 1.8 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    imgs.push(canvas.toDataURL('image/png'));
+                }
+                if (mountedRef.current) setPages(imgs);
+            } catch (_) { if (mountedRef.current) setPages([]); }
+        })();
+        return () => { mountedRef.current = false; };
+    }, [dataUri]);
+    const loading = pages.length === 0;
+    return (
+        <div ref={wrapperRef} data-pdf-loading={loading ? 'true' : undefined}>
+            {loading
+                ? <div style={{ padding: '8px', fontSize: '11px', color: '#666' }}>Loading PDF…</div>
+                : pages.map((src, i) => (
+                    <img key={i} src={src} alt={`page-${i + 1}`}
+                        style={{ width: '100%', display: 'block', marginBottom: i < pages.length - 1 ? '4px' : 0 }} />
+                ))
+            }
+        </div>
+    );
+}
 
 // Parses an Excel data-URI and renders each sheet as a styled table.
 function ExcelSheetTable({ dataUri, filename }) {
@@ -342,11 +392,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                             if (isPDF) {
                                 return (
                                     <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
-                                        <iframe
-                                            src={uri}
-                                            title={`attachment-${i + 1}`}
-                                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                                        />
+                                        <PdfPagesRenderer dataUri={uri} />
                                     </div>
                                 );
                             }
@@ -440,44 +486,81 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                 )}
 
                 {/* ── Additional detail files (below products table) ────────── */}
-                {hasAdditionalAttachments && (
-                    <div style={{ margin: '12px 0' }}>
-                        {additionalAttachmentDataURIs.map((uri, i) => {
-                            const isPDF = uri.startsWith('data:application/pdf');
-                            const isImg = /^data:image\//i.test(uri);
-                            const filename = additionalAttachmentFilenames[i] || '';
-                            const isExcel = /\.(xlsx|xls|csv)$/i.test(filename) ||
-                                /application\/vnd\.(openxmlformats|ms-excel)/.test(uri) ||
-                                uri.startsWith('data:text/csv');
-                            if (isExcel) {
-                                return (
-                                    <div key={i} style={{ marginBottom: '16px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
-                                        <ExcelSheetTable dataUri={uri} filename={filename} />
-                                    </div>
-                                );
-                            }
-                            if (isPDF) {
-                                return (
-                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
-                                        <iframe
-                                            src={uri}
-                                            title={`additional-attachment-${i + 1}`}
-                                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                                        />
-                                    </div>
-                                );
-                            }
-                            if (isImg) {
-                                return (
-                                    <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden', textAlign: 'center' }}>
-                                        <img src={uri} alt={`additional-attachment-${i + 1}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }} />
-                                    </div>
-                                );
-                            }
-                            return null;
-                        })}
-                    </div>
-                )}
+                {hasAdditionalAttachments && (() => {
+                    const imgItems = additionalAttachmentDataURIs
+                        .map((uri, i) => ({ uri, i, filename: additionalAttachmentFilenames[i] || '' }))
+                        .filter(({ uri }) => /^data:image\//i.test(uri));
+                    const nonImgItems = additionalAttachmentDataURIs
+                        .map((uri, i) => ({ uri, i, filename: additionalAttachmentFilenames[i] || '' }))
+                        .filter(({ uri }) => !/^data:image\//i.test(uri));
+                    return (
+                        <div style={{ margin: '12px 0' }}>
+                            {/* Section header */}
+                            <div style={{
+                                background: C.headerBg, color: C.headerText,
+                                padding: '4px 10px', fontSize: '9px', fontWeight: 700,
+                                letterSpacing: '0.6px', marginBottom: '8px',
+                                borderRadius: '3px 3px 0 0',
+                            }}>
+                                ADDITIONAL DETAILS&nbsp;&nbsp;|&nbsp;&nbsp;
+                                <span dir="rtl" lang="ar" style={{ unicodeBidi: 'embed' }}>تفاصيل إضافية</span>
+                            </div>
+
+                            {/* Images in a compact 3-column grid */}
+                            {imgItems.length > 0 && (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: imgItems.length === 1 ? '1fr' : imgItems.length === 2 ? '1fr 1fr' : 'repeat(3, 1fr)',
+                                    gap: '6px',
+                                    marginBottom: nonImgItems.length > 0 ? '10px' : 0,
+                                }}>
+                                    {imgItems.map(({ uri, i }) => (
+                                        <div key={i} style={{
+                                            border: `1px solid ${C.border}`,
+                                            borderRadius: '4px',
+                                            overflow: 'hidden',
+                                            background: '#fafafa',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            minHeight: '120px',
+                                            maxHeight: '220px',
+                                        }}>
+                                            <img
+                                                src={uri}
+                                                alt={`additional-${i + 1}`}
+                                                style={{ maxWidth: '100%', maxHeight: '220px', display: 'block', objectFit: 'contain' }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* PDFs and Excel files at full width */}
+                            {nonImgItems.map(({ uri, i, filename }) => {
+                                const isPDF = uri.startsWith('data:application/pdf');
+                                const isExcel = /\.(xlsx|xls|csv)$/i.test(filename) ||
+                                    /application\/vnd\.(openxmlformats|ms-excel)/.test(uri) ||
+                                    uri.startsWith('data:text/csv');
+                                if (isExcel) {
+                                    return (
+                                        <div key={i} style={{ marginBottom: '10px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+                                            <ExcelSheetTable dataUri={uri} filename={filename} />
+                                        </div>
+                                    );
+                                }
+                                if (isPDF) {
+                                    return (
+                                        <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
+                                            <PdfPagesRenderer dataUri={uri} />
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </div>
+                    );
+                })()}
 
                 {/* ── General Instructions ─────────────────────────────────── */}
                 {rfq.general_instructions && (
