@@ -6,15 +6,17 @@ import { useTranslation } from "react-i18next";
 const EMPTY_SUPPLIER = {
     name: '',
     phone: '',
+    phone2: '',
     address: '',
     categories: [],
     website: '',
+    email: '',
     rating: '',
     is_active: true,
     purchase_market: '',
 };
 
-function SupplierForm({ supplier, onSave, onClose }) {
+export function SupplierForm({ supplier, onSave, onClose }) {
     const { t } = useTranslation('common');
     const [form, setForm] = useState({ ...EMPTY_SUPPLIER, ...supplier });
     const [catInput, setCatInput] = useState('');
@@ -67,6 +69,7 @@ function SupplierForm({ supplier, onSave, onClose }) {
                 <Modal.Title>
                     <i className="bi bi-building me-2"></i>
                     {form.id ? t('edit_supplier') : t('add_supplier')}
+                    {form.code && <span style={{ fontSize: '13px', fontWeight: 700, color: '#1a56db', marginLeft: '10px', letterSpacing: '0.03em' }}>{form.code}</span>}
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -81,6 +84,12 @@ function SupplierForm({ supplier, onSave, onClose }) {
                         </label>
                         <input className="form-control form-control-sm" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder={t('whatsapp_number_placeholder')} />
                     </div>
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">
+                            <i className="bi bi-whatsapp text-success me-1"></i>WhatsApp Number 2 <span className="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <input className="form-control form-control-sm" value={form.phone2 || ''} onChange={e => setForm(f => ({ ...f, phone2: e.target.value }))} placeholder={t('whatsapp_number_placeholder')} />
+                    </div>
                     <div className="col-12">
                         <label className="form-label fw-semibold">{t('address_label')}</label>
                         <input className="form-control form-control-sm" value={form.address || ''} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder={t('address_placeholder')} />
@@ -88,6 +97,11 @@ function SupplierForm({ supplier, onSave, onClose }) {
                     <div className="col-md-6">
                         <label className="form-label fw-semibold">{t('website_label')}</label>
                         <input className="form-control form-control-sm" value={form.website || ''} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." />
+                    </div>
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">Email</label>
+                        <input className="form-control form-control-sm" type="email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="contact@supplier.com" />
+                        <div className="form-text">Auto-filled from website if left blank</div>
                     </div>
                     <div className="col-md-6">
                         <label className="form-label fw-semibold">{t('purchase_market_col')}</label>
@@ -162,6 +176,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const [deleting, setDeleting] = useState(null);
     const [refetching, setRefetching] = useState(null);
     const [backfilling, setBackfilling] = useState(false);
+    const [backfillingEmails, setBackfillingEmails] = useState(false);
 
     const fetchList = useCallback(async ({ silent = false } = {}) => {
         if (!storeId) return;
@@ -275,6 +290,25 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                         {backfilling ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-geo-alt me-1"></i>}
                         Fill Markets
                     </Button>
+                    <Button
+                        variant="outline-success"
+                        size="sm"
+                        disabled={backfillingEmails}
+                        title="Crawl supplier websites and save missing email addresses"
+                        onClick={async () => {
+                            setBackfillingEmails(true);
+                            try {
+                                const res = await fetch(`/v1/rfq-suppliers/backfill-emails?store_id=${storeId}`, { method: 'POST', headers: { Authorization: token } });
+                                const data = await res.json();
+                                if (data.error) { if (showToastMessage) showToastMessage(data.error, 'danger'); }
+                                else { if (showToastMessage) showToastMessage(`Email crawl started for ${data.queued} supplier(s) with websites. Results appear within a minute.`, 'success'); }
+                            } catch (e) { if (showToastMessage) showToastMessage('Backfill emails error: ' + e.message, 'danger'); }
+                            setBackfillingEmails(false);
+                        }}
+                    >
+                        {backfillingEmails ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-envelope-at me-1"></i>}
+                        Backfill Emails
+                    </Button>
                     <Button variant="primary" size="sm" onClick={() => { setEditingSupplier(null); setShowForm(true); }}>
                         <i className="bi bi-plus-lg me-1"></i>{t('add_supplier')}
                     </Button>
@@ -305,20 +339,36 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                     <table className="table table-hover table-sm align-middle">
                         <thead className="table-light">
                             <tr>
+                                <th style={{ whiteSpace: 'nowrap', width: '90px' }}>{t('ID')}</th>
                                 <th>{t('col_supplier')}</th>
                                 <th><i className="bi bi-whatsapp text-success me-1"></i>{t('col_whatsapp')}</th>
                                 <th>{t('col_categories')}</th>
                                 <th>{t('col_rating')}</th>
                                 <th>{t('purchase_market_col')}</th>
                                 <th>{t('col_address')}</th>
+                                <th>Email</th>
                                 <th>{t('col_status')}</th>
                                 <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
                                 <th style={{ width: 90 }}>{t('col_actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {list.map(sup => (
+                            {list.map((sup, idx) => (
                                 <tr key={sup.id}>
+                                    <td style={{ fontSize: '11px', color: '#6c757d', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                                        {sup.code
+                                            ? <div style={{ fontWeight: 700, fontSize: '12px', color: '#1a56db', letterSpacing: '0.02em' }}>{sup.code}</div>
+                                            : <div style={{ fontWeight: 600, color: '#aaa' }}>{idx + 1}</div>
+                                        }
+                                        <button
+                                            className="btn btn-link btn-sm p-0"
+                                            style={{ fontSize: '10px', color: '#aaa' }}
+                                            title={sup.code ? 'Copy Serial ID' : 'Copy ID'}
+                                            onClick={() => navigator.clipboard.writeText(sup.code || sup.id)}
+                                        >
+                                            <i className="bi bi-clipboard" style={{ fontSize: '9px' }}></i>
+                                        </button>
+                                    </td>
                                     <td>
                                         <div className="fw-semibold" style={{ fontSize: '13px' }}>{sup.name}</div>
                                         {sup.website && (
@@ -348,6 +398,13 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                         <a href={`https://wa.me/${sup.phone}`} target="_blank" rel="noreferrer" className="text-success small">
                                             <i className="bi bi-whatsapp me-1"></i>{sup.phone}
                                         </a>
+                                        {sup.phone2 && (
+                                            <div>
+                                                <a href={`https://wa.me/${sup.phone2}`} target="_blank" rel="noreferrer" className="text-success small">
+                                                    <i className="bi bi-whatsapp me-1"></i>{sup.phone2}
+                                                </a>
+                                            </div>
+                                        )}
                                     </td>
                                     <td style={{ maxWidth: '220px' }}>
                                         {sup.categories?.length > 0
@@ -369,6 +426,11 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                         {sup.address
                                             ? <span title={sup.address}>{sup.address.length > 50 ? sup.address.slice(0, 50) + '…' : sup.address}</span>
                                             : <span className="text-muted">—</span>}
+                                    </td>
+                                    <td style={{ fontSize: '12px' }}>
+                                        {sup.email
+                                            ? <a href={`mailto:${sup.email}`} className="text-decoration-none text-primary small">{sup.email}</a>
+                                            : <span className="text-muted small">—</span>}
                                     </td>
                                     <td>
                                         {sup.is_active

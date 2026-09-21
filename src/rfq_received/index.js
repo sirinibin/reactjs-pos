@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useHistory, useLocation } from "react-router-dom";
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import EmailDetailModal from '../store/EmailDetailModal.js';
+import { SupplierForm } from '../rfq_suppliers/index.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -561,10 +562,32 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [emailDetail, setEmailDetail]     = useState(null);
     const [emailDetailShow, setEmailDetailShow] = useState(false);
+    const [supplierSearch, setSupplierSearch] = useState('');
+    const [editingSupplier, setEditingSupplier] = useState(null);
+    const [resolvedSuppliers, setResolvedSuppliers] = useState({});
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
     if (!rfq) return null;
+
+    // Fetch full supplier records when Suppliers tab is active so we can show
+    // market & category values even for older forwarded_to entries that lack them.
+    const fetchResolvedSuppliers = useCallback(async () => {
+        if (!storeId || !rfq?.forwarded_to?.length) return;
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch(`/v1/rfq-suppliers?store_id=${storeId}&limit=500`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const map = {};
+            (data.result || []).forEach(s => {
+                if (s.phone)  map[s.phone]  = s;
+                if (s.phone2) map[s.phone2] = s;
+            });
+            setResolvedSuppliers(map);
+        } catch (_) {}
+    }, [storeId, rfq?.id]);
 
     const handleSendToSuppliers = () => {
         if (onSendToSuppliers) {
@@ -601,6 +624,11 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
         } catch (_) {}
         finally { setPdfLoading(false); }
     };
+
+    // Trigger supplier resolution when the suppliers tab becomes active
+    useEffect(() => {
+        if (activeTab === 'suppliers') fetchResolvedSuppliers();
+    }, [activeTab, fetchResolvedSuppliers]);
 
     const hasReplies = (rfq.supplier_replies || []).length > 0;
     const hasQuotation = (rfq.supplier_replies || []).some(r => r.is_quotation);
@@ -816,97 +844,139 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                     {activeTab === 'suppliers' && (
                         <>
                             {rfq.forwarded_to?.length > 0 ? (
-                                <div className="table-responsive">
-                                    <table className="table table-sm table-bordered align-middle">
-                                        <thead className="table-light">
-                                            <tr>
-                                                <th>{t('col_supplier')}</th>
-                                                <th>{t('col_whatsapp')}</th>
-                                                <th>{t('sent_from')}</th>
-                                                <th>{t('purchase_market_col')}</th>
-                                                <th>{t('col_category')}</th>
-                                                <th>{t('col_status')}</th>
-                                                <th>{t('col_sent_at')}</th>
-                                                <th style={{ width: 80 }}>{t('col_message')}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {rfq.forwarded_to.map((r, i) => (
-                                                <React.Fragment key={i}>
-                                                    <tr>
-                                                        <td>
-                                                            <div>{r.supplier_name || '—'}</div>
-                                                            {r.google_maps_url && (
-                                                                <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                                                                    <a href={r.google_maps_url} target="_blank" rel="noreferrer" className="text-primary me-1">
-                                                                        <i className="bi bi-geo-alt-fill me-1"></i>Maps
+                                <>
+                                    {/* Search bar */}
+                                    <div className="mb-2">
+                                        <input
+                                            className="form-control form-control-sm"
+                                            placeholder={t('search_suppliers_placeholder') || 'Search suppliers…'}
+                                            value={supplierSearch}
+                                            onChange={e => setSupplierSearch(e.target.value)}
+                                            style={{ maxWidth: 320 }}
+                                        />
+                                    </div>
+                                    <div className="table-responsive">
+                                        <table className="table table-sm table-bordered align-middle">
+                                            <thead className="table-light">
+                                                <tr>
+                                                    <th>{t('col_supplier')}</th>
+                                                    <th>{t('col_whatsapp')}</th>
+                                                    <th>{t('sent_from')}</th>
+                                                    <th>{t('purchase_market_col')}</th>
+                                                    <th>{t('col_category')}</th>
+                                                    <th>{t('col_status')}</th>
+                                                    <th>{t('col_sent_at')}</th>
+                                                    <th style={{ width: 100 }}>{t('col_actions') || 'Actions'}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {rfq.forwarded_to
+                                                    .filter(r => {
+                                                        if (!supplierSearch.trim()) return true;
+                                                        const q = supplierSearch.toLowerCase();
+                                                        return (r.supplier_name || '').toLowerCase().includes(q)
+                                                            || (r.phone || '').includes(q);
+                                                    })
+                                                    .map((r, i) => {
+                                                        const resolved = resolvedSuppliers[r.phone] || {};
+                                                        const market   = r.purchase_market || resolved.purchase_market;
+                                                        const category = r.category || (resolved.categories || []).join(', ');
+                                                        return (
+                                                        <React.Fragment key={i}>
+                                                            <tr>
+                                                                <td>
+                                                                    <div>{r.supplier_name || '—'}</div>
+                                                                    {r.google_maps_url && (
+                                                                        <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                                                                            <a href={r.google_maps_url} target="_blank" rel="noreferrer" className="text-primary me-1">
+                                                                                <i className="bi bi-geo-alt-fill me-1"></i>Maps
+                                                                            </a>
+                                                                            <button type="button" className="btn btn-link btn-sm p-0" style={{ fontSize: '11px', verticalAlign: 'baseline' }}
+                                                                                title="Copy Maps link" onClick={() => navigator.clipboard.writeText(r.google_maps_url)}>
+                                                                                <i className="bi bi-clipboard"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noreferrer">
+                                                                        <i className="bi bi-whatsapp text-success me-1"></i>{r.phone}
                                                                     </a>
-                                                                    <button type="button" className="btn btn-link btn-sm p-0" style={{ fontSize: '11px', verticalAlign: 'baseline' }}
-                                                                        title="Copy Maps link" onClick={() => navigator.clipboard.writeText(r.google_maps_url)}>
-                                                                        <i className="bi bi-clipboard"></i>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noreferrer">
-                                                                <i className="bi bi-whatsapp text-success me-1"></i>{r.phone}
-                                                            </a>
-                                                        </td>
-                                                        <td>
-                                                            {r.sent_from_phone
-                                                                ? <a href={`https://wa.me/${r.sent_from_phone}`} target="_blank" rel="noreferrer">
-                                                                    <i className="bi bi-whatsapp text-primary me-1"></i>{r.sent_from_phone}
-                                                                  </a>
-                                                                : '—'}
-                                                        </td>
-                                                        <td>
-                                                            {r.purchase_market
-                                                                ? <span className="badge bg-light text-dark border" style={{ fontSize: '11px' }}><i className="bi bi-geo-alt me-1 text-secondary"></i>{r.purchase_market}</span>
-                                                                : <span className="text-muted">—</span>}
-                                                        </td>
-                                                        <td>
-                                                            {r.category
-                                                                ? <span className="badge bg-info text-dark" style={{ fontSize: '11px' }}>{r.category}</span>
-                                                                : <span className="text-muted">—</span>}
-                                                        </td>
-                                                        <td><StatusBadge status={r.status} /></td>
-                                                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{r.sent_at ? new Date(r.sent_at).toLocaleString() : '—'}</td>
-                                                        <td className="text-center">
-                                                            <button
-                                                                type="button"
-                                                                className={`btn btn-sm ${expandedMsg === i ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                                                onClick={() => setExpandedMsg(expandedMsg === i ? null : i)}
-                                                            >
-                                                                <i className="bi bi-chat-text"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                    {expandedMsg === i && (
-                                                        <tr>
-                                                            <td colSpan={8} className="bg-light p-0">
-                                                                <div className="p-3">
-                                                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                                                        <strong style={{ fontSize: '13px' }}>{t('sent_message_label')}</strong>
-                                                                        <button type="button" className="btn btn-outline-secondary btn-sm"
-                                                                            onClick={() => navigator.clipboard.writeText(r.sent_message || '')}>
-                                                                            <i className="bi bi-clipboard me-1"></i>{t('copy_message')}
+                                                                </td>
+                                                                <td>
+                                                                    {r.sent_from_phone
+                                                                        ? <a href={`https://wa.me/${r.sent_from_phone}`} target="_blank" rel="noreferrer">
+                                                                            <i className="bi bi-whatsapp text-primary me-1"></i>{r.sent_from_phone}
+                                                                          </a>
+                                                                        : '—'}
+                                                                </td>
+                                                                <td>
+                                                                    {market
+                                                                        ? <span className="badge bg-light text-dark border" style={{ fontSize: '11px' }}><i className="bi bi-geo-alt me-1 text-secondary"></i>{market}</span>
+                                                                        : <span className="text-muted">—</span>}
+                                                                </td>
+                                                                <td>
+                                                                    {category
+                                                                        ? <span className="badge bg-info text-dark" style={{ fontSize: '11px' }}>{category}</span>
+                                                                        : <span className="text-muted">—</span>}
+                                                                </td>
+                                                                <td><StatusBadge status={r.status} /></td>
+                                                                <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{r.sent_at ? new Date(r.sent_at).toLocaleString() : '—'}</td>
+                                                                <td className="text-center">
+                                                                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                                                        <button
+                                                                            type="button"
+                                                                            className={`btn btn-sm ${expandedMsg === i ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                                                            title={t('col_message')}
+                                                                            onClick={() => setExpandedMsg(expandedMsg === i ? null : i)}
+                                                                        >
+                                                                            <i className="bi bi-chat-text"></i>
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-outline-warning"
+                                                                            title={t('edit_supplier') || 'Edit Supplier'}
+                                                                            onClick={() => setEditingSupplier(resolved.id ? resolved : { id: r.supplier_id, name: r.supplier_name, phone: r.phone, purchase_market: r.purchase_market || '', category: r.category || '' })}
+                                                                        >
+                                                                            <i className="bi bi-pencil"></i>
                                                                         </button>
                                                                     </div>
-                                                                    {r.sent_message
-                                                                        ? <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px', background: '#fff', border: '1px solid #dee2e6', borderRadius: 4, padding: '10px', margin: 0 }}>{r.sent_message}</pre>
-                                                                        : <span className="text-muted small">{t('no_message_recorded')}</span>}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                                </td>
+                                                            </tr>
+                                                            {expandedMsg === i && (
+                                                                <tr>
+                                                                    <td colSpan={8} className="bg-light p-0">
+                                                                        <div className="p-3">
+                                                                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                                                                <strong style={{ fontSize: '13px' }}>{t('sent_message_label')}</strong>
+                                                                                <button type="button" className="btn btn-outline-secondary btn-sm"
+                                                                                    onClick={() => navigator.clipboard.writeText(r.sent_message || '')}>
+                                                                                    <i className="bi bi-clipboard me-1"></i>{t('copy_message')}
+                                                                                </button>
+                                                                            </div>
+                                                                            {r.sent_message
+                                                                                ? <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px', background: '#fff', border: '1px solid #dee2e6', borderRadius: 4, padding: '10px', margin: 0 }}>{r.sent_message}</pre>
+                                                                                : <span className="text-muted small">{t('no_message_recorded')}</span>}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </>
                             ) : (
                                 <p className="text-muted small">{t('no_suppliers_forwarded')}</p>
+                            )}
+                            {editingSupplier && (
+                                <SupplierForm
+                                    supplier={editingSupplier}
+                                    onSave={() => { setEditingSupplier(null); fetchResolvedSuppliers(); }}
+                                    onClose={() => setEditingSupplier(null)}
+                                />
                             )}
                         </>
                     )}
