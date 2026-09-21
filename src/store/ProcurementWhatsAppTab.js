@@ -722,6 +722,8 @@ export default function ProcurementWhatsAppTab({ storeId }) {
     const [replyText, setReplyText] = useState('');
     const [sendingReply, setSendingReply] = useState(false);
     const [replyError, setReplyError] = useState(null);
+    const [translatingReply, setTranslatingReply] = useState(false);
+    const [translatingCompose, setTranslatingCompose] = useState(false);
     // Conversation threading state
     const [viewMode, setViewMode] = useState('conversations');
     const [threads, setThreads] = useState([]);
@@ -975,6 +977,36 @@ export default function ProcurementWhatsAppTab({ storeId }) {
         clearTimeout(toastTimer.current);
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 4000);
+    };
+
+    const translateReplyText = async () => {
+        if (!replyText.trim()) return;
+        setTranslatingReply(true);
+        try {
+            const res = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text: replyText, target: 'ar' }),
+            });
+            const data = await res.json();
+            if (data?.translatedText) setReplyText(data.translatedText);
+        } catch (_) {}
+        setTranslatingReply(false);
+    };
+
+    const translateComposeText = async () => {
+        if (!composeText.trim()) return;
+        setTranslatingCompose(true);
+        try {
+            const res = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text: composeText, target: 'ar' }),
+            });
+            const data = await res.json();
+            if (data?.translatedText) setComposeText(data.translatedText);
+        } catch (_) {}
+        setTranslatingCompose(false);
     };
 
     const handleSendReply = async () => {
@@ -1706,37 +1738,47 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                                             )}
                                                             {!customerRfqLoading && customerRfqList.map(q => (
                                                                 <div key={q.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                                                    <a
-                                                                        href={`/dashboard/rfq-received?edit=${q.id}`}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        onClick={() => setCustomerRfqOpen(false)}
-                                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px 8px', textDecoration: 'none', color: '#212529', transition: 'background 0.15s' }}
+                                                                    <button
+                                                                        onClick={() => { setCustomerRfqOpen(false); fetchAndOpenPreview(q.id); }}
+                                                                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px 6px', background: 'none', border: 'none', color: '#212529', cursor: 'pointer', transition: 'background 0.15s' }}
                                                                         onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
                                                                         onMouseLeave={e => e.currentTarget.style.background = ''}
                                                                     >
                                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                                                                 <span style={{ fontWeight: 600, fontSize: '13px', color: '#1a56db' }}>{q.code || q.id}</span>
+                                                                                {q.procurement_message_code && (
+                                                                                    <span
+                                                                                        role="button"
+                                                                                        tabIndex={0}
+                                                                                        onClick={e => { e.stopPropagation(); setCustomerRfqOpen(false); fetchAndOpenEmail(q.procurement_message_id); }}
+                                                                                        onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); setCustomerRfqOpen(false); fetchAndOpenEmail(q.procurement_message_id); } }}
+                                                                                        style={{ background: '#e8f0fe', border: '1px solid #c8d8f5', borderRadius: '10px', padding: '1px 7px', fontSize: '11px', color: '#1a56db', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 500 }}
+                                                                                        title="Open linked email"
+                                                                                    >
+                                                                                        <i className="bi bi-envelope" style={{ fontSize: '10px' }}></i>
+                                                                                        {q.procurement_message_code}
+                                                                                    </span>
+                                                                                )}
                                                                                 {q.status && <span className={`badge ${q.status === 'confirmed' ? 'bg-success' : q.status === 'cancelled' ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '10px' }}>{q.status}</span>}
                                                                             </div>
                                                                             <span style={{ fontSize: '11px', color: '#6c757d', whiteSpace: 'nowrap' }}>
                                                                                 {q.created_at ? new Date(q.created_at).toLocaleDateString() : ''}
                                                                             </span>
                                                                         </div>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
-                                                                            {q.net_total > 0 && (
-                                                                                <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
-                                                                                    {Number(q.net_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                                                </span>
-                                                                            )}
-                                                                            {q.rfq_received_code && (
-                                                                                <span style={{ fontSize: '11px', background: '#e8f4ed', border: '1px solid #b2dfcb', borderRadius: '4px', padding: '1px 5px', color: '#0a7c42', fontWeight: 500 }}>
-                                                                                    <i className="bi bi-file-earmark-text me-1" style={{ fontSize: '10px' }}></i>{q.rfq_received_code}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    </a>
+                                                                        {q.net_total > 0 && (
+                                                                            <div style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600, marginTop: '3px' }}>
+                                                                                {Number(q.net_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                            </div>
+                                                                        )}
+                                                                        {(q.products || []).length > 0 && (
+                                                                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                                                                                <i className="bi bi-box-seam me-1"></i>
+                                                                                {(q.products || []).slice(0, 3).map(p => p.name).join(', ')}
+                                                                                {(q.products || []).length > 3 && <span> +{q.products.length - 3} more</span>}
+                                                                            </div>
+                                                                        )}
+                                                                    </button>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -1876,6 +1918,22 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                                             <AttachmentPreview att={att} />
                                                         </div>
                                                     ))}
+                                                    {/* Extract Quotation Prices button — only for incoming messages with PDF attachments */}
+                                                    {!isOut && (msg.attachments || []).some(a =>
+                                                        a.content_type === 'application/pdf' ||
+                                                        (a.filename || '').toLowerCase().endsWith('.pdf')
+                                                    ) && (
+                                                        <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                                                            <button
+                                                                className="btn btn-sm btn-outline-info"
+                                                                style={{ fontSize: '11px', padding: '2px 8px', whiteSpace: 'nowrap' }}
+                                                                title={t('Extract Quotation Prices with AI')}
+                                                                onClick={e => { e.stopPropagation(); setExtractMsg({ ...msg, is_supplier_quotation: true }); }}
+                                                            >
+                                                                <i className="bi bi-receipt me-1"></i>{t('Extract Quotation Prices')}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                     <div style={{ fontSize: '10px', color: '#999', textAlign: 'right', marginTop: '2px' }}>
                                                         {new Date(msg.message_date || msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                         {isOut && <i className="bi bi-check2-all ms-1" style={{ color: '#34b7f1' }}></i>}
@@ -1954,6 +2012,19 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                                     }
                                                 }}
                                             />
+
+                                            {/* Translate to Arabic */}
+                                            <button
+                                                className="btn btn-outline-primary"
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0, flexShrink: 0, fontSize: '14px' }}
+                                                disabled={!composeText.trim() || translatingCompose || sendingMsg}
+                                                onClick={translateComposeText}
+                                                title={t('Translate to Arabic')}
+                                            >
+                                                {translatingCompose
+                                                    ? <span className="spinner-border spinner-border-sm" />
+                                                    : <i className="bi bi-translate"></i>}
+                                            </button>
 
                                             {/* Send button */}
                                             <button
@@ -2262,7 +2333,17 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                                         {replyError && (
                                             <div className="text-danger" style={{ fontSize: '12px', marginTop: '4px' }}>{replyError}</div>
                                         )}
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                            <button
+                                                className="btn btn-outline-primary btn-sm"
+                                                disabled={!replyText.trim() || translatingReply}
+                                                onClick={translateReplyText}
+                                                title="Translate to Arabic"
+                                            >
+                                                {translatingReply
+                                                    ? <span className="spinner-border spinner-border-sm" />
+                                                    : <><i className="bi bi-translate me-1"></i>EN → AR</>}
+                                            </button>
                                             <button
                                                 className="btn btn-success btn-sm"
                                                 disabled={!replyText.trim() || sendingReply}

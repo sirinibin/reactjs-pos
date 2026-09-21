@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
+import CustomerCreate from "../customer/create";
 import RFQPreview from "./RFQPreview";
 import RFQPreviewContent from "./RFQPreviewContent";
 import { Badge, Spinner, Button, Modal, Alert } from "react-bootstrap";
@@ -150,7 +151,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
         if (!sid || !priceMap[productIndex]?.[sid]) return null;
         const cost = priceMap[productIndex][sid].unit_price;
         const m = parseFloat(margins[productIndex]);
-        if (!isNaN(m) && m > 0) return cost * (1 + m / 100);
+        if (!isNaN(m) && m > 0) return parseFloat((cost * (1 + m / 100)).toFixed(8));
         return null;
     };
 
@@ -550,7 +551,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
 
 // ── Forward / Detail Modal ────────────────────────────────────────────────────
 
-export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, liveProgress, onSendToSuppliers, onReload, zIndex }) {
+export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, onOpenQuotation, liveProgress, onSendToSuppliers, onReload, zIndex }) {
     const { t } = useTranslation('common');
     const history = useHistory();
     const [activeTab, setActiveTab] = useState('info');
@@ -560,6 +561,9 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, l
     const [showPdfModal, setShowPdfModal] = useState(false);
     const [emailDetail, setEmailDetail]     = useState(null);
     const [emailDetailShow, setEmailDetailShow] = useState(false);
+    const rfqPreviewRef = useRef(null);
+    const rfqEditRef = useRef(null);
+    const customerEditRef = useRef(null);
     if (!rfq) return null;
 
     const handleSendToSuppliers = () => {
@@ -603,7 +607,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, l
 
     return (
         <>
-        <Modal show={show} onHide={onHide} size="xl" centered {...(zIndex ? { style: { zIndex } } : {})}>
+        <Modal show={show} onHide={onHide} size="xl" centered className="rfq-detail-modal" {...(zIndex ? { style: { zIndex } } : {})}>
             <Modal.Header closeButton>
                 <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1 }}>
                     <i className="bi bi-whatsapp text-success me-1"></i>
@@ -637,9 +641,22 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, l
                                 : rfq.procurement_message_code || t('Linked Email')}
                         </button>
                     )}
+                    {(rfq.quotation_ids || []).length > 0 && (rfq.quotation_codes || []).map((code, ci) => {
+                        const qid = (rfq.quotation_ids || [])[ci];
+                        return (
+                            <button key={ci}
+                                className="btn btn-sm btn-outline-success"
+                                style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                                title={`Open Quotation ${code}`}
+                                onClick={() => onOpenQuotation && onOpenQuotation(qid)}
+                            >
+                                <i className="bi bi-receipt me-1"></i>{code}
+                            </button>
+                        );
+                    })}
                     {rfq.status !== 'cancelled' && (
                         <button
-                            className={`btn btn-sm btn-success${rfq.procurement_message_id ? '' : ' ms-auto'}`}
+                            className={`btn btn-sm btn-success${(rfq.procurement_message_id || (rfq.quotation_ids || []).length > 0) ? '' : ' ms-auto'}`}
                             style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
                             onClick={handleSendToSuppliers}
                             title={`Send ${rfq.code || ''} to Suppliers`}
@@ -647,6 +664,32 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, l
                             <i className="bi bi-send me-1"></i>Send to Suppliers
                         </button>
                     )}
+                    <button
+                        className="btn btn-sm btn-outline-warning"
+                        style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                        onClick={() => rfqEditRef.current?.edit(rfq)}
+                        title="Edit RFQ"
+                    >
+                        <i className="bi bi-pencil me-1"></i>{t('Edit RFQ')}
+                    </button>
+                    {rfq.customer_id && (
+                        <button
+                            className="btn btn-sm btn-outline-info"
+                            style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                            onClick={() => customerEditRef.current?.open(rfq.customer_id)}
+                            title="Edit Customer"
+                        >
+                            <i className="bi bi-person-gear me-1"></i>{t('Edit Customer')}
+                        </button>
+                    )}
+                    <button
+                        className="btn btn-sm btn-outline-secondary ms-auto"
+                        style={{ fontSize: '12px', padding: '3px 10px', whiteSpace: 'nowrap' }}
+                        onClick={() => rfqPreviewRef.current?.open(rfq)}
+                        title="View RFQ Preview"
+                    >
+                        <i className="bi bi-eye me-1"></i>Preview
+                    </button>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body style={{ padding: 0 }}>
@@ -926,6 +969,9 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, l
             storeId={storeId}
             token={localStorage.getItem('access_token')}
         />
+        <RFQPreview ref={rfqPreviewRef} />
+        <RFQCreate ref={rfqEditRef} showToastMessage={() => {}} onCreated={() => {}} />
+        <CustomerCreate ref={customerEditRef} />
         </>
     );
 }
@@ -1157,8 +1203,9 @@ const STAGE_LABELS = {
 
 // ── RFQSendModal ─────────────────────────────────────────────────────────────
 
-function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
+function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
     const token = localStorage.getItem('access_token');
+    const rfqPreviewRef = useRef(null);
 
     const [preview, setPreview]                   = useState(null);
     const [loadingPreview, setLoadingPreview]       = useState(false);
@@ -1168,7 +1215,18 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
     const [supplierStatuses, setSupplierStatuses] = useState({});
     const [sentPhones, setSentPhones]             = useState(new Set()); // phones already successfully sent
     const [error, setError]                       = useState('');
+    const [emailDetail, setEmailDetail]           = useState(null);
+    const [emailDetailShow, setEmailDetailShow]   = useState(false);
     const toTitleCase = s => s.trim().replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+
+    const openLinkedEmail = async () => {
+        if (!rfq?.procurement_message_id) return;
+        try {
+            const res = await fetch(`/v1/procurement-messages/${rfq.procurement_message_id}?store_id=${storeId}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            if (data?.id) { setEmailDetail(data); setEmailDetailShow(true); }
+        } catch (_) {}
+    };
 
     // Supplier selection + manual additions
     const [selectedPhones, setSelectedPhones]     = useState(new Set());
@@ -1536,9 +1594,38 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
         <>
         <Modal show={show} onHide={onHide} size="xl" centered scrollable>
             <Modal.Header closeButton style={{ background: '#f8f9fa' }}>
-                <Modal.Title style={{ fontSize: 17 }}>
+                <Modal.Title style={{ fontSize: 17, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <i className="bi bi-whatsapp me-2" style={{ color: '#25d366' }}></i>
                     {`Send RFQ #${rfq?.code || ''} to Suppliers`}
+                    {onViewDetails && (
+                        <button
+                            className="btn btn-sm btn-outline-secondary"
+                            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal' }}
+                            onClick={onViewDetails}
+                            title="View RFQ details"
+                        >
+                            <i className="bi bi-list-ul me-1"></i>View Details
+                        </button>
+                    )}
+                    {rfq?.procurement_message_id && (
+                        <button
+                            className="btn btn-sm btn-outline-primary"
+                            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal', whiteSpace: 'nowrap' }}
+                            onClick={openLinkedEmail}
+                            title="Open linked email"
+                        >
+                            <i className={`bi ${rfq.procurement_message_code?.startsWith('WA-') ? 'bi-whatsapp text-success' : 'bi-envelope-fill text-primary'} me-1`}></i>
+                            {rfq.procurement_message_code || 'Linked Message'}
+                        </button>
+                    )}
+                    <button
+                        className="btn btn-sm btn-outline-primary"
+                        style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal' }}
+                        onClick={() => rfqPreviewRef.current?.open(rfq)}
+                        title="View RFQ Preview"
+                    >
+                        <i className="bi bi-eye me-1"></i>Preview
+                    </button>
                 </Modal.Title>
             </Modal.Header>
 
@@ -2122,6 +2209,14 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent }) {
                 </Modal.Footer>
             </Modal>
         )}
+        <RFQPreview ref={rfqPreviewRef} />
+        <EmailDetailModal
+            msg={emailDetail}
+            show={emailDetailShow && !!emailDetail}
+            onClose={() => setEmailDetailShow(false)}
+            storeId={storeId}
+            token={token}
+        />
         </>
     );
 }
@@ -2556,7 +2651,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
-    const [pageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(() => { try { return parseInt(localStorage.getItem('rfq_page_size') || '10', 10); } catch (_) { return 10; } });
     const [statusFilter, setStatusFilter] = useState("");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState(null);
@@ -2567,6 +2662,8 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [procMsgModal, setProcMsgModal] = useState({ show: false, loading: false, msg: null, code: '' });
     const [liveProgress, setLiveProgress] = useState(null);
     const [deletingAll, setDeletingAll] = useState(false);
+    const [deletingRFQId, setDeletingRFQId] = useState(null);
+    const [deleteConfirmRFQ, setDeleteConfirmRFQ] = useState(null);
     const rfqCreateRef = useRef(null);
     const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
@@ -2727,6 +2824,21 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         rfqPreviewRef.current?.open(rfq);
     };
 
+    const handleDeleteRFQ = async (rfq) => {
+        setDeleteConfirmRFQ(null);
+        setDeletingRFQId(rfq.id);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfq.id}?store_id=${storeId}`, { method: 'DELETE', headers: { Authorization: token } });
+            if (!res.ok) throw new Error('Delete failed');
+            setList(prev => prev.filter(r => r.id !== rfq.id));
+            if (selected?.id === rfq.id) { setSelected(null); setShowDetail(false); }
+        } catch (e) {
+            if (showToastMessage) showToastMessage('Failed to delete RFQ', 'danger');
+        } finally {
+            setDeletingRFQId(null);
+        }
+    };
+
     const handleDeleteAll = async () => {
         if (!window.confirm(t('Confirm delete ALL RFQ records? This cannot be undone.'))) return;
         setDeletingAll(true);
@@ -2740,6 +2852,12 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         } finally {
             setDeletingAll(false);
         }
+    };
+
+    // Open an existing quotation by ID in the QuotationCreate modal.
+    const handleOpenQuotation = (id) => {
+        if (!id) return;
+        quotationCreateRef.current?.open(id);
     };
 
     // Quotation pre-fill: open QuotationCreate modal inline (no navigation)
@@ -2829,6 +2947,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 show={showSendModal}
                 onHide={() => setShowSendModal(false)}
                 onSent={() => { fetchList(); refreshSelected(rfqForSend?.id); }}
+                onViewDetails={rfqForSend?.id ? () => { setShowSendModal(false); openDetail(rfqForSend.id); } : undefined}
             />
 
             {/* Table */}
@@ -2845,6 +2964,22 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                     <small className="text-muted">
                         Showing {((page - 1) * pageSize + 1).toLocaleString()}–{Math.min(page * pageSize, totalCount).toLocaleString()} of {totalCount.toLocaleString()} | Page {page} of {totalPages.toLocaleString()}
                     </small>
+                    <div className="d-flex align-items-center gap-2">
+                        <small className="text-muted">Rows per page:</small>
+                        <select
+                            className="form-select form-select-sm"
+                            style={{ width: 'auto' }}
+                            value={pageSize}
+                            onChange={e => {
+                                const v = parseInt(e.target.value, 10);
+                                try { localStorage.setItem('rfq_page_size', String(v)); } catch (_) {}
+                                setPageSize(v);
+                                setPage(1);
+                            }}
+                        >
+                            {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                    </div>
                 </div>
                 <div className="table-responsive">
                     <table className="table table-hover table-sm align-middle">
@@ -2929,13 +3064,16 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                         {enableRFQModule && (
                                             <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                                                 {(rfq.quotation_codes || []).length > 0
-                                                    ? rfq.quotation_codes.map((code, ci) => (
-                                                        <Badge key={ci} bg="success" className="me-1" style={{ cursor: 'pointer', fontSize: '11px' }}
-                                                            onClick={() => history.push(`/dashboard/quotations?search=${encodeURIComponent(code)}`)}
-                                                            title={`View Quotation ${code}`}>
-                                                            <i className="bi bi-receipt me-1"></i>{code}
-                                                        </Badge>
-                                                    ))
+                                                    ? rfq.quotation_codes.map((code, ci) => {
+                                                        const qid = (rfq.quotation_ids || [])[ci];
+                                                        return (
+                                                            <Badge key={ci} bg="success" className="me-1" style={{ cursor: 'pointer', fontSize: '11px' }}
+                                                                onClick={() => quotationCreateRef.current?.open(qid)}
+                                                                title={`Open Quotation ${code}`}>
+                                                                <i className="bi bi-receipt me-1"></i>{code}
+                                                            </Badge>
+                                                        );
+                                                    })
                                                     : <span className="text-muted">—</span>}
                                             </td>
                                         )}
@@ -2981,6 +3119,13 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                                         {reprocessing === rfq.id ? <Spinner animation="border" size="sm" /> : <i className="bi bi-arrow-clockwise"></i>}
                                                     </Button>
                                                 )}
+                                                {isAdmin && (
+                                                    <Button variant="outline-danger" size="sm" title="Delete RFQ"
+                                                        onClick={() => setDeleteConfirmRFQ(rfq)}
+                                                        disabled={deletingRFQId === rfq.id}>
+                                                        {deletingRFQId === rfq.id ? <Spinner animation="border" size="sm" /> : <i className="bi bi-trash"></i>}
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -3015,6 +3160,22 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 )}
             </div>
 
+            {/* Delete Confirm Modal */}
+            {deleteConfirmRFQ && (
+                <Modal show onHide={() => setDeleteConfirmRFQ(null)} centered size="sm">
+                    <Modal.Header closeButton>
+                        <Modal.Title style={{ fontSize: '15px' }}>Delete RFQ</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body style={{ fontSize: '14px' }}>
+                        Permanently delete <strong>{deleteConfirmRFQ.code}</strong>? This will also unlink it from any connected email or WhatsApp message.
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" size="sm" onClick={() => setDeleteConfirmRFQ(null)}>Cancel</Button>
+                        <Button variant="danger" size="sm" onClick={() => handleDeleteRFQ(deleteConfirmRFQ)}>Delete</Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+
             {/* Detail Modal */}
             <ForwardDetail
                 rfq={selected}
@@ -3022,6 +3183,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 storeId={storeId}
                 onHide={() => { selectedIdRef.current = null; setShowDetail(false); setSelected(null); }}
                 onCreateQuotation={handleCreateQuotation}
+                onOpenQuotation={handleOpenQuotation}
                 liveProgress={liveProgress?.rfq_id === selected?.id ? liveProgress : null}
                 onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
                 onReload={refreshSelected}

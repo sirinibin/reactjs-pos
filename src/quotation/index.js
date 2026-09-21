@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } 
 import { useTranslation } from "react-i18next";
 import { useLocation, useHistory } from "react-router-dom";
 import QuotationCreate from "./create.js";
+import { ForwardDetail } from "../rfq_received/index.js";
 import QuotationType3Form from "./QuotationType3Form.js";
 import ProductCreate from "../product/create.js";
 import ServiceCreate from "../service/create.js";
@@ -79,6 +80,21 @@ function QuotationIndex(props) {
   let [selectedDate, setSelectedDate] = useState(new Date());
   let [selectedFromDate, setSelectedFromDate] = useState(new Date());
   let [selectedToDate, setSelectedToDate] = useState(new Date());
+
+  const [rfqDetailItem, setRfqDetailItem] = useState(null);
+  const [rfqDetailShow, setRfqDetailShow] = useState(false);
+
+  const fetchAndOpenRfqPreview = useCallback(async (rfqId) => {
+    if (!rfqId) return;
+    try {
+      const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${localStorage.getItem('store_id')}`, {
+        headers: { Authorization: localStorage.getItem('access_token') }
+      });
+      const data = await res.json();
+      const rfq = data.result || data;
+      if (rfq?.id || rfq?._id) { setRfqDetailItem(rfq); setRfqDetailShow(true); }
+    } catch (_) {}
+  }, []);
 
   let [dateValue, setDateValue] = useState("");
   let [fromDateValue, setFromDateValue] = useState("");
@@ -428,7 +444,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount,rfq_received_id,rfq_received_code";
+      "select=id,order_code,order_id,order_codes,order_ids,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount,rfq_received_id,rfq_received_code";
 
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
@@ -2413,12 +2429,22 @@ function QuotationIndex(props) {
                                   }
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                    openSalesUpdateForm(quotation.order_id);
-                                  }}>{quotation.order_code}</span>}
+                                  {quotation.order_codes && quotation.order_codes.length > 1
+                                    ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {quotation.order_codes.map((code, ci) => (
+                                          <span key={ci} style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                            if (quotation.order_ids && quotation.order_ids[ci]) openSalesUpdateForm(quotation.order_ids[ci]);
+                                            else openSalesUpdateForm(quotation.order_id);
+                                          }}>{code}</span>
+                                        ))}
+                                      </span>
+                                    : quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                        openSalesUpdateForm(quotation.order_id);
+                                      }}>{quotation.order_code}</span>
+                                  }
                                 </td>}
                                 {(col.fieldName === "rfq_received_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {quotation.rfq_received_code && <a href={`/dashboard/rfq-received?edit=${quotation.rfq_received_id}`} target="_blank" rel="noreferrer" style={{ color: "blue" }}>{quotation.rfq_received_code}</a>}
+                                  {quotation.rfq_received_code && <span role="button" style={{ color: "blue", cursor: "pointer" }} onClick={() => fetchAndOpenRfqPreview(quotation.rfq_received_id)}>{quotation.rfq_received_code}</span>}
                                 </td>}
                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation[col.key] && !isNaN(new Date(quotation[col.key]).getTime()) ? format(new Date(quotation[col.key]), "MMM dd yyyy h:mma") : ""}
@@ -2568,9 +2594,19 @@ function QuotationIndex(props) {
                             </td> : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                openSalesUpdateForm(quotation.order_id);
-                              }}>{quotation.order_code}</span>}
+                              {quotation.order_codes && quotation.order_codes.length > 1
+                                ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                    {quotation.order_codes.map((code, ci) => (
+                                      <span key={ci} style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                        if (quotation.order_ids && quotation.order_ids[ci]) openSalesUpdateForm(quotation.order_ids[ci]);
+                                        else openSalesUpdateForm(quotation.order_id);
+                                      }}>{code}</span>
+                                    ))}
+                                  </span>
+                                : quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                    openSalesUpdateForm(quotation.order_id);
+                                  }}>{quotation.order_code}</span>
+                              }
                             </td>
 
                             <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2630,6 +2666,12 @@ function QuotationIndex(props) {
           </div>
         </div >
       </div >
+      <ForwardDetail
+        rfq={rfqDetailItem}
+        show={rfqDetailShow}
+        onHide={() => setRfqDetailShow(false)}
+        storeId={localStorage.getItem('store_id')}
+      />
     </>
   );
 }

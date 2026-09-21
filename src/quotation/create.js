@@ -56,6 +56,7 @@ import ReactDraggable from "react-draggable";
 import CustomerDepositCreate from "../customer_deposit/create.js";
 import QuotationSalesReturnUpdateForm from "../quotation_sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
+import { ForwardDetail } from '../rfq_received/index.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import EmailDetailModal from '../store/EmailDetailModal.js';
 import { fetchStore } from '../utils/storeUtils.js';
@@ -63,6 +64,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import Purchases from '../utils/purchases.js';
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -479,6 +481,9 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [linkedEmailId, setLinkedEmailId] = useState(null);
   const [linkedEmailObj, setLinkedEmailObj] = useState(null);
   const [showLinkedEmail, setShowLinkedEmail] = useState(false);
+  const [rfqDetailModal, setRfqDetailModal] = useState(null);
+  const [importPickerData, setImportPickerData] = useState(null); // {source:'sale'|'purchase', code, products[]}
+  const [importPickerSelected, setImportPickerSelected] = useState({});
 
   useEffect(() => {
     if (!show || props.fromHistory) return;
@@ -1556,6 +1561,95 @@ const QuotationCreate = forwardRef((props, ref) => {
     fetchAllProductStocks([...selectedProducts]);
   }
 
+  async function handleImportFromSales(sale) {
+    if (!sale || !sale.id) {
+      console.error('[import] sale missing id', sale);
+      return;
+    }
+    try {
+      const url = '/v1/order/' + sale.id + '?store_id=' + localStorage.getItem('store_id');
+      console.log('[import] fetching sale', url);
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+      });
+      console.log('[import] sale fetch status', res.status, res.ok);
+      const data = res.ok ? await res.json() : null;
+      console.log('[import] sale data products', data?.result?.products?.length);
+      const products = data?.result?.products;
+      if (!products || products.length === 0) {
+        console.error('[import] no products in sale response', data);
+        return;
+      }
+      const initSel = {};
+      products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
+      setImportPickerSelected(initSel);
+      setImportPickerData({ source: 'sale', code: data.result.code || sale.code, products });
+    } catch (e) { console.error('[import] from sales failed', e); }
+  }
+
+  async function handleImportFromPurchases(purchase) {
+    if (!purchase || !purchase.id) {
+      console.error('[import] purchase missing id', purchase);
+      return;
+    }
+    try {
+      const url = '/v1/purchase/' + purchase.id + '?store_id=' + localStorage.getItem('store_id');
+      console.log('[import] fetching purchase', url);
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+      });
+      console.log('[import] purchase fetch status', res.status, res.ok);
+      const data = res.ok ? await res.json() : null;
+      console.log('[import] purchase data products', data?.result?.products?.length);
+      const products = data?.result?.products;
+      if (!products || products.length === 0) {
+        console.error('[import] no products in purchase response', data);
+        return;
+      }
+      const initSel = {};
+      products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
+      setImportPickerSelected(initSel);
+      setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products });
+    } catch (e) { console.error('[import] from purchases failed', e); }
+  }
+
+  function confirmImportPicker() {
+    const src = importPickerData;
+    if (!src) return;
+    src.products.forEach(p => {
+      if (!importPickerSelected[p.product_id]) return;
+      const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+      if (already >= 0) {
+        selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+      } else {
+        selectedProducts.push({
+          product_id: p.product_id,
+          code: p.item_code || p.code || "",
+          part_number: p.part_number || "",
+          name: p.name || "",
+          name_in_arabic: p.name_in_arabic || "",
+          quantity: parseFloat(p.quantity) || 1,
+          unit: p.unit || "",
+          unit_price: src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : 0,
+          unit_price_with_vat: src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : 0,
+          purchase_unit_price: src.source === 'purchase' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.purchase_unit_price) || 0),
+          purchase_unit_price_with_vat: src.source === 'purchase' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.purchase_unit_price_with_vat) || 0),
+          unit_discount: src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0,
+          unit_discount_with_vat: src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0,
+          unit_discount_percent: src.source === 'sale' ? (parseFloat(p.unit_discount_percent) || 0) : 0,
+          stock: 0,
+          product_stores: {},
+        });
+      }
+    });
+    setSelectedProducts([...selectedProducts]);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => reCalculate(), 100);
+    fetchAllProductStocks([...selectedProducts]);
+    setImportPickerData(null);
+    setImportPickerSelected({});
+  }
+
   function addProduct(product) {
     if (!product.id && product.product_id) {
       product.id = product.product_id
@@ -1985,6 +2079,8 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
+  const PurchasesRef = useRef();
+  const salesPickerModeRef = useRef('link'); // 'link' | 'import'
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
     const hasProducts = store?.settings?.enable_products;
@@ -2632,6 +2728,11 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const handleSelectedSale = (selectedSale) => {
+    if (salesPickerModeRef.current === 'import') {
+      salesPickerModeRef.current = 'link';
+      handleImportFromSales(selectedSale);
+      return;
+    }
 
     if (formData.customer_id !== selectedSale.customer_id) {
       infoMessage = "The selected sale is not belongs to the customer " + selectedCustomers[0]?.name;
@@ -2645,6 +2746,11 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.order_code = selectedSale.code;
     setFormData({ ...formData });
   };
+
+  function openSalesForImport() {
+    salesPickerModeRef.current = 'import';
+    SalesRef?.current?.open(true, selectedCustomers);
+  }
 
   let [showInfo, setShowInfo] = useState(false);
   let [infoMessage, setInfoMessage] = useState("");
@@ -3499,6 +3605,14 @@ async function checkWarning(i) {
         />
       )}
 
+      <ForwardDetail
+        rfq={rfqDetailModal}
+        show={!!rfqDetailModal}
+        storeId={localStorage.getItem('store_id')}
+        onHide={() => setRfqDetailModal(null)}
+        zIndex={1500}
+      />
+
       <TableSettingsModal
           show={showProductSearchSettings}
           onHide={() => setShowProductSearchSettings(false)}
@@ -3568,6 +3682,46 @@ async function checkWarning(i) {
         showToastMessage={props.showToastMessage}
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+      <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
+
+      {/* Product picker modal for Import from Sales / Import from Purchases */}
+      {importPickerData && (
+        <Modal show={true} size="lg" onHide={() => setImportPickerData(null)} animation={false} centered style={{ zIndex: 2000 }}>
+          <Modal.Header closeButton>
+            <Modal.Title style={{ fontSize: '15px' }}>
+              {t('Select Products')} — {importPickerData.source === 'sale' ? t('From Sale') : t('From Purchase')} {importPickerData.code}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <table className="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" checked={importPickerData.products.every(p => importPickerSelected[p.product_id])} onChange={e => { const s = {}; importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; }); setImportPickerSelected(s); }} /></th>
+                  <th>{t('Name')}</th>
+                  <th>{t('Qty')}</th>
+                  <th>{t('Unit Price')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importPickerData.products.map((p, i) => (
+                  <tr key={p.product_id || i} onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))} style={{ cursor: 'pointer' }}>
+                    <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
+                    <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
+                    <td>{p.quantity}</td>
+                    <td>{importPickerData.source === 'sale' ? p.unit_price : p.unit_price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setImportPickerData(null)}>{t('Cancel')}</Button>
+            <Button variant="primary" onClick={confirmImportPicker}>
+              {t('Import Selected')} ({Object.values(importPickerSelected).filter(Boolean).length})
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
       <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
@@ -3611,15 +3765,22 @@ async function checkWarning(i) {
               {enableProductSelection ? t('Select products from quotation #') + formData.code : ""}
             </span>
             {linkedRfqCode && (
-              <a
-                href={`/dashboard/rfq-received?edit=${linkedRfqId}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: '12px', fontWeight: 700, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={async () => {
+                  if (rfqDetailModal) { return; }
+                  const _sid = localStorage.getItem('store_id');
+                  const _tok = localStorage.getItem('access_token');
+                  const res = await fetch(`/v1/rfq-received/${linkedRfqId}?store_id=${_sid}`, { headers: { Authorization: _tok } });
+                  const data = await res.json();
+                  if (data?.id) setRfqDetailModal(data);
+                }}
+                style={{ fontSize: '12px', fontWeight: 700, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
                 <i className="bi bi-file-earmark-text" style={{ fontSize: '11px' }}></i>
                 {linkedRfqCode}
-              </a>
+              </span>
             )}
             {linkedEmailCode && (
               <span
@@ -4410,7 +4571,18 @@ async function checkWarning(i) {
                   </Button>
                 )}
                 </div>
-                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />{t('From P.O.')}</button>}
+                <Dropdown>
+                  <Dropdown.Toggle bsPrefix="btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <i className="bi bi-file-earmark-arrow-down" />{t('Import')}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu style={{ zIndex: 9999 }}>
+                    <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
+                    <Dropdown.Item onClick={() => PurchasesRef?.current?.open(true)}><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
+                    {store?.settings?.enable_purchase_order_module && (
+                      <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From P.O.')}</Dropdown.Item>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
                 </div>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>

@@ -12034,6 +12034,9 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 /* Sub-forms that can be opened from history modals — must appear above history (1072 with form-over-history active) */
 .sales-return-create-wrap { z-index: 1080 !important; }
 .quotation-create-wrap { z-index: 1080 !important; }
+/* RFQ detail modal opened from within any form — must render above the form (quotation/sales/etc at ~1080) */
+.rfq-detail-modal { z-index: 1500 !important; }
+.rfq-detail-modal + .modal-backdrop { z-index: 1495 !important; }
 /* Generic class for any modal opened from within the Select Quotation wrapper (z-index 1065) */
 .above-quotations-modal { z-index: 1075 !important; }
 /* Opened from the "Select Quotation" modal (above-sales-modal = 1082 → drops to 1081 when form opens) */
