@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
+import { ForwardDetail } from '../rfq_received/index.js';
 import EmailDetailModal from './EmailDetailModal.js';
 
 const PAGE_SIZE = 20;
@@ -20,7 +21,7 @@ const providerIcon = p => {
 // AI_PROVIDERS and modelsForProvider are imported from ../utils/aiProviders.js
 
 // ── ExtractModal ──────────────────────────────────────────────────────────────
-function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
+export function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
     const { t } = useTranslation();
     const [showEmailDetail, setShowEmailDetail] = useState(false);
 
@@ -336,10 +337,12 @@ export default function ProcurementEmailsTab({ storeId }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
     const history = useHistory();
+    const location = useLocation();
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
+    // Pre-fill search from ?email= URL param so linking from supplier/customer opens filtered view
+    const [search, setSearch] = useState(() => new URLSearchParams(location.search).get('email') || '');
     const [direction, setDirection] = useState('');
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState(null);
@@ -364,6 +367,7 @@ export default function ProcurementEmailsTab({ storeId }) {
     };
     const [uploadingFor, setUploadingFor] = useState(null); // message id for manual upload
     const [linkingFor, setLinkingFor] = useState(null);
+    const [rfqDetail, setRfqDetail] = useState(null);
     const isAdmin = localStorage.getItem('user_role') === 'Admin';
     const searchTimeout = useRef(null);
 
@@ -415,9 +419,13 @@ export default function ProcurementEmailsTab({ storeId }) {
         load(1, search, direction, f);
     };
 
-    const openRfqModal = (rfqId, e) => {
+    const openRfqModal = async (rfqId, e) => {
         e.stopPropagation();
-        history.push(`/dashboard/rfq-received?id=${rfqId}`);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            if (data?.id) setRfqDetail(data);
+        } catch (_) {}
     };
 
     const openMessage = async msg => {
@@ -833,6 +841,14 @@ export default function ProcurementEmailsTab({ storeId }) {
                         history.push('/dashboard/rfq-received?t=' + Date.now());
                     }
                 }}
+            />
+
+            {/* RFQ Detail modal — opened inline from the RFQ column button */}
+            <ForwardDetail
+                rfq={rfqDetail}
+                show={!!rfqDetail}
+                storeId={storeId}
+                onHide={() => setRfqDetail(null)}
             />
 
         </div>

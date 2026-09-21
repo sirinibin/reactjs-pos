@@ -587,7 +587,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
             });
             setResolvedSuppliers(map);
         } catch (_) {}
-    }, [storeId, rfq?.id]);
+    }, [storeId, rfq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSendToSuppliers = () => {
         if (onSendToSuppliers) {
@@ -775,8 +775,22 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             {rfq.customer_name && (
                                 <div className="mb-2">
                                     <strong>{t('customer')}</strong>: {rfq.customer_name}
-                                    {rfq.customer_phone && <span className="text-muted ms-2"><i className="bi bi-telephone ms-1"></i> {rfq.customer_phone}</span>}
-                                    {rfq.customer_email && <span className="text-muted ms-2"><i className="bi bi-envelope ms-1"></i> {rfq.customer_email}</span>}
+                                    {rfq.customer_phone && (
+                                        <>
+                                            <span className="text-muted ms-2"><i className="bi bi-telephone ms-1"></i> {rfq.customer_phone}</span>
+                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(rfq.customer_phone.replace(/^\+/, ''))}`); }} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
+                                                <i className="bi bi-whatsapp text-success"></i>
+                                            </button>
+                                        </>
+                                    )}
+                                    {rfq.customer_email && (
+                                        <>
+                                            <span className="text-muted ms-2"><i className="bi bi-envelope ms-1"></i> {rfq.customer_email}</span>
+                                            <button type="button" title="Open Email Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(rfq.customer_email)}`); }} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
+                                                <i className="bi bi-envelope-fill text-primary"></i>
+                                            </button>
+                                        </>
+                                    )}
                                     {rfq.customer_company && <span className="text-muted ms-2">• {rfq.customer_company}</span>}
                                     {rfq.customer_rfq_id && <span className="ms-2"><i className="bi bi-hash text-muted"></i> <strong>Customer RFQ:</strong> <span className="badge bg-light text-dark border">{rfq.customer_rfq_id}</span></span>}
                                 </div>
@@ -885,7 +899,19 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                                                         <React.Fragment key={i}>
                                                             <tr>
                                                                 <td>
-                                                                    <div>{r.supplier_name || '—'}</div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                                                        <span>{r.supplier_name || '—'}</span>
+                                                                        {r.phone && (
+                                                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(r.phone.replace(/^\+/, ''))}`); }} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
+                                                                                <i className="bi bi-whatsapp text-success"></i>
+                                                                            </button>
+                                                                        )}
+                                                                        {(resolved.email) && (
+                                                                            <button type="button" title="Open Email Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(resolved.email)}`); }} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
+                                                                                <i className="bi bi-envelope-fill text-primary"></i>
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                     {r.google_maps_url && (
                                                                         <div style={{ fontSize: '11px', marginTop: '2px' }}>
                                                                             <a href={r.google_maps_url} target="_blank" rel="noreferrer" className="text-primary me-1">
@@ -1275,6 +1301,7 @@ const STAGE_LABELS = {
 
 function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
     const token = localStorage.getItem('access_token');
+    const history = useHistory();
     const rfqPreviewRef = useRef(null);
 
     const [preview, setPreview]                   = useState(null);
@@ -1919,6 +1946,22 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
                                                             onClick={e => { e.stopPropagation(); setViewingSupplier(s); }}
                                                             style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#6c757d', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
                                                             <i className="bi bi-eye"></i>
+                                                        </button>
+                                                    )}
+                                                    {s.phone && (
+                                                        <button
+                                                            title="Open WhatsApp Conversation"
+                                                            onClick={e => { e.stopPropagation(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(s.phone.replace(/^\+/, ''))}`); }}
+                                                            style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#25d366', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
+                                                            <i className="bi bi-whatsapp"></i>
+                                                        </button>
+                                                    )}
+                                                    {s.email && (
+                                                        <button
+                                                            title="Open Email Conversation"
+                                                            onClick={e => { e.stopPropagation(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(s.email)}`); }}
+                                                            style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#0d6efd', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
+                                                            <i className="bi bi-envelope-fill"></i>
                                                         </button>
                                                     )}
                                                 </div>

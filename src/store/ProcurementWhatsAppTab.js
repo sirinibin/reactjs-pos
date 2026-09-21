@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
 import { ForwardDetail } from '../rfq_received/index.js';
@@ -125,7 +125,7 @@ const AttachmentPreview = ({ att }) => {
 const WA_GREEN = '#25D366';
 
 // ── ExtractModal ──────────────────────────────────────────────────────────────
-function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
+function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) {
     const { t } = useTranslation();
 
     const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
@@ -318,10 +318,23 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
             <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ maxWidth: '860px' }}>
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f0fff4', borderBottom: `3px solid ${WA_GREEN}` }}>
-                        <h6 className="modal-title fw-bold">
+                        <h6 className="modal-title fw-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <i className={`bi ${isQuotationMode ? 'bi-receipt' : 'bi-magic'} me-2 text-success`}></i>
                             {isQuotationMode ? t('Extract Quotation Prices') : t('Extract RFQ Data')}
-                            <small className="text-muted fw-normal ms-2" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from || t('WhatsApp message')}</small>
+                            <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from || t('WhatsApp message')}</small>
+                            {msg.linked_rfq_received_code && msg.linked_rfq_received_id && (
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    title={t('Open linked RFQ')}
+                                    onClick={() => onViewRFQ && onViewRFQ(msg.linked_rfq_received_id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') onViewRFQ && onViewRFQ(msg.linked_rfq_received_id); }}
+                                    style={{ fontSize: '12px', fontWeight: 600, color: '#0d6efd', background: '#e8f0fe', border: '1px solid #c8d8f5', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                    <i className="bi bi-file-earmark-text" style={{ fontSize: '11px' }}></i>
+                                    {msg.linked_rfq_received_code}
+                                </span>
+                            )}
                         </h6>
                         <button className="btn-close" onClick={onClose} />
                     </div>
@@ -476,9 +489,9 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                                 {t('No RFQ ID in document — auto-matched by supplier phone:')}{' '}
                                                 <strong>{result.suggested_rfq_code}</strong>
                                                 <div className="mt-2 d-flex gap-2 flex-wrap">
-                                                    <a href={`/dashboard/rfq-received?edit=${result.suggested_rfq_id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }}>
-                                                        <i className="bi bi-box-arrow-up-right me-1"></i>{t('View')} {result.suggested_rfq_code}
-                                                    </a>
+                                                    <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }} onClick={() => onViewRFQ && onViewRFQ(result.suggested_rfq_id)}>
+                                                        <i className="bi bi-file-earmark-text me-1"></i>{t('View')} {result.suggested_rfq_code}
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -580,9 +593,9 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ }) {
                                             <div className="mt-3 d-flex align-items-center gap-2 p-2" style={{ background: '#d1e7dd', border: '1px solid #a3cfbb', borderRadius: '6px', fontSize: '12px' }}>
                                                 <i className="bi bi-check-circle-fill text-success"></i>
                                                 <span>{t('Prices saved to')} <strong>{selectedRFQ.code}</strong></span>
-                                                <a href={`/dashboard/rfq-received?edit=${selectedRFQ.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success ms-2" style={{ fontSize: '11px' }}>
-                                                    <i className="bi bi-box-arrow-up-right me-1"></i>{t('View RFQ')}
-                                                </a>
+                                                <button className="btn btn-sm btn-outline-success ms-2" style={{ fontSize: '11px' }} onClick={() => onViewRFQ && onViewRFQ(selectedRFQ.id)}>
+                                                    <i className="bi bi-file-earmark-text me-1"></i>{t('View RFQ')}
+                                                </button>
                                                 <button className="btn btn-sm btn-link text-muted ms-auto" style={{ fontSize: '11px' }} onClick={() => setAddPhase(null)}>{t('Dismiss')}</button>
                                             </div>
                                         )}
@@ -702,6 +715,11 @@ export default function ProcurementWhatsAppTab({ storeId }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
     const history = useHistory();
+    const location = useLocation();
+    // Phone from URL param ?phone=... used to auto-open a specific contact's conversation
+    const initialPhoneRef = useRef(
+        new URLSearchParams(location.search).get('phone') || ''
+    );
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -1216,6 +1234,23 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                 .then(r => r.json()).then(d => setDiskUsage(d.formatted)).catch(() => {});
         }
     }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-select thread when arriving via ?phone= URL param
+    useEffect(() => {
+        const phone = initialPhoneRef.current;
+        if (!phone || !threads.length) return;
+        const normalised = phone.replace(/^\+/, '');
+        const found = threads.find(t =>
+            t.contact_phone === phone ||
+            t.contact_phone === '+' + phone ||
+            t.contact_phone === normalised
+        );
+        const thread = found || { contact_phone: phone, contact_name: phone };
+        setSelectedThread(thread);
+        loadThread(phone);
+        setViewMode('conversations');
+        initialPhoneRef.current = ''; // consume so it doesn't re-trigger
+    }, [threads]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Fast poll: refresh active thread every 3 seconds for near-realtime incoming messages.
     const selectedThreadRef = useRef(selectedThread);
@@ -2389,6 +2424,7 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                     storeId={storeId}
                     token={token}
                     onClose={() => setExtractMsg(null)}
+                    onViewRFQ={fetchAndOpenPreview}
                     onCreateRFQ={data => {
                         const msgId = extractMsg?.id;
                         const msgCode = extractMsg?.code;

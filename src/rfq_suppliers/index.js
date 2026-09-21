@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Badge, Spinner, Button, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
+import { useHistory } from "react-router-dom";
 
 const EMPTY_SUPPLIER = {
     name: '',
@@ -163,6 +164,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const { t } = useTranslation('common');
     const storeId = localStorage.getItem("store_id");
     const token = localStorage.getItem("access_token");
+    const history = useHistory();
 
     const [list, setList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -370,7 +372,23 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                         </button>
                                     </td>
                                     <td>
-                                        <div className="fw-semibold" style={{ fontSize: '13px' }}>{sup.name}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                            <span className="fw-semibold" style={{ fontSize: '13px' }}>{sup.name}</span>
+                                            {sup.phone && (
+                                                <button type="button" title="Open WhatsApp Conversation"
+                                                    onClick={() => history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(sup.phone.replace(/^\+/, ''))}`)}
+                                                    style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 13, color: '#25d366', lineHeight: 1 }}>
+                                                    <i className="bi bi-whatsapp"></i>
+                                                </button>
+                                            )}
+                                            {sup.email && (
+                                                <button type="button" title="Open Email Conversation"
+                                                    onClick={() => history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(sup.email)}`)}
+                                                    style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 13, color: '#0d6efd', lineHeight: 1 }}>
+                                                    <i className="bi bi-envelope-fill"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                         {sup.website && (
                                             <a href={sup.website} target="_blank" rel="noreferrer" className="text-muted small">
                                                 <i className="bi bi-globe me-1"></i>{new URL(sup.website.startsWith('http') ? sup.website : 'https://' + sup.website).hostname}
