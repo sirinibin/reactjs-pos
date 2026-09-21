@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
-import { ForwardDetail } from '../rfq_received/index.js';
+import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
 import QuotationCreate from '../quotation/create.js';
 import EmailDetailModal from './EmailDetailModal.js';
 import { ViewButton } from './FileViewerModal.js';
@@ -779,6 +779,8 @@ export default function ProcurementWhatsAppTab({ storeId }) {
     const rfqHistoryPhoneRef = useRef(null); // phone for which history is already loaded
     const [rfqDetailItem, setRfqDetailItem] = useState(null);
     const [rfqDetailShow, setRfqDetailShow] = useState(false);
+    const [rfqForSend, setRfqForSend] = useState(null);
+    const [showSendModal, setShowSendModal] = useState(false);
     const [emailDetailMsg, setEmailDetailMsg] = useState(null);
     const [emailDetailShow, setEmailDetailShow] = useState(false);
     // Forward modal state
@@ -2441,8 +2443,8 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                 onCreated={newRfq => {
                     load(page);
                     if (newRfq?.id) {
-                        try { sessionStorage.setItem('_rfq_auto_send', newRfq.id); } catch (_) {}
-                        history.push('/dashboard/rfq-received?t=' + Date.now());
+                        setRfqDetailItem(newRfq);
+                        setRfqDetailShow(true);
                     }
                 }}
             />
@@ -2730,8 +2732,18 @@ export default function ProcurementWhatsAppTab({ storeId }) {
                 onHide={() => setRfqDetailShow(false)}
                 storeId={storeId}
                 onCreateQuotation={handleCreateQuotation}
+                onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
             />
             <QuotationCreate ref={quotationCreateRef} showToastMessage={(msg, type) => showToast(msg, type)} refreshList={() => {}} />
+
+            {/* Send RFQ modal — stays on this page, no navigation */}
+            <RFQSendModal
+                rfq={rfqForSend}
+                storeId={storeId}
+                show={showSendModal}
+                onHide={() => setShowSendModal(false)}
+                onSent={() => {}}
+            />
 
             {/* Email Detail modal (opened from linked email badge in RFQ history) */}
             <EmailDetailModal

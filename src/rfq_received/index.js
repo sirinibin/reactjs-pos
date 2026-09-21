@@ -568,7 +568,6 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
-    if (!rfq) return null;
 
     // Fetch full supplier records when Suppliers tab is active so we can show
     // market & category values even for older forwarded_to entries that lack them.
@@ -588,6 +587,13 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
             setResolvedSuppliers(map);
         } catch (_) {}
     }, [storeId, rfq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Trigger supplier resolution when the suppliers tab becomes active
+    useEffect(() => {
+        if (activeTab === 'suppliers') fetchResolvedSuppliers();
+    }, [activeTab, fetchResolvedSuppliers]);
+
+    if (!rfq) return null;
 
     const handleSendToSuppliers = () => {
         if (onSendToSuppliers) {
@@ -624,11 +630,6 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
         } catch (_) {}
         finally { setPdfLoading(false); }
     };
-
-    // Trigger supplier resolution when the suppliers tab becomes active
-    useEffect(() => {
-        if (activeTab === 'suppliers') fetchResolvedSuppliers();
-    }, [activeTab, fetchResolvedSuppliers]);
 
     const hasReplies = (rfq.supplier_replies || []).length > 0;
     const hasQuotation = (rfq.supplier_replies || []).some(r => r.is_quotation);
@@ -1299,10 +1300,20 @@ const STAGE_LABELS = {
 
 // ── RFQSendModal ─────────────────────────────────────────────────────────────
 
-function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
+export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
     const token = localStorage.getItem('access_token');
     const history = useHistory();
     const rfqPreviewRef = useRef(null);
+    useEffect(() => {
+        if (!show) return;
+        const apply = () => {
+            const el = document.querySelector('.modal.rfq-send-modal-wrap');
+            if (el) el.style.setProperty('z-index', '1600', 'important');
+        };
+        apply();
+        const t = setTimeout(apply, 80);
+        return () => clearTimeout(t);
+    }, [show]);
 
     const [preview, setPreview]                   = useState(null);
     const [loadingPreview, setLoadingPreview]       = useState(false);
@@ -1689,7 +1700,7 @@ function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
 
     return (
         <>
-        <Modal show={show} onHide={onHide} size="xl" centered scrollable>
+        <Modal show={show} onHide={onHide} size="xl" centered scrollable className="rfq-send-modal-wrap">
             <Modal.Header closeButton style={{ background: '#f8f9fa' }}>
                 <Modal.Title style={{ fontSize: 17, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <i className="bi bi-whatsapp me-2" style={{ color: '#25d366' }}></i>

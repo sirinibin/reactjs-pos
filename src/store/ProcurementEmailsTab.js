@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
-import { ForwardDetail } from '../rfq_received/index.js';
+import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
 import EmailDetailModal from './EmailDetailModal.js';
 
 const PAGE_SIZE = 20;
@@ -368,6 +368,8 @@ export default function ProcurementEmailsTab({ storeId }) {
     const [uploadingFor, setUploadingFor] = useState(null); // message id for manual upload
     const [linkingFor, setLinkingFor] = useState(null);
     const [rfqDetail, setRfqDetail] = useState(null);
+    const [rfqForSend, setRfqForSend] = useState(null);
+    const [showSendModal, setShowSendModal] = useState(false);
     const isAdmin = localStorage.getItem('user_role') === 'Admin';
     const searchTimeout = useRef(null);
 
@@ -837,8 +839,7 @@ export default function ProcurementEmailsTab({ storeId }) {
                 showToastMessage={showToast}
                 onCreated={newRfq => {
                     if (newRfq?.id) {
-                        try { sessionStorage.setItem('_rfq_auto_send', newRfq.id); } catch (_) {}
-                        history.push('/dashboard/rfq-received?t=' + Date.now());
+                        setRfqDetail(newRfq);
                     }
                 }}
             />
@@ -849,6 +850,16 @@ export default function ProcurementEmailsTab({ storeId }) {
                 show={!!rfqDetail}
                 storeId={storeId}
                 onHide={() => setRfqDetail(null)}
+                onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
+            />
+
+            {/* Send RFQ modal — stays on this page, no navigation */}
+            <RFQSendModal
+                rfq={rfqForSend}
+                storeId={storeId}
+                show={showSendModal}
+                onHide={() => setShowSendModal(false)}
+                onSent={() => {}}
             />
 
         </div>
