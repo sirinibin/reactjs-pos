@@ -81,27 +81,41 @@ SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterva
 
 deploy_to() {
     local src="$1"
-    local dest="$2"
+    local dest="${2%/}"   # strip trailing slash: /home/ubuntu/reactjs-pos/build
     local label="$3"
-    local attempt=1
-    local max=3
-    local delay=15
+    local tmp="${dest}_new"   # rsync target: build_new/
+    local old="${dest}_old"   # temporary backup during swap
+    local attempt=1 max=3 delay=15
 
     echo ""
     echo "==> Deploying to $label ($SERVER_HOST:$dest) ..."
+
+    # Ensure temp dir exists on first run so --partial has somewhere to resume into
+    ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" "mkdir -p $tmp" 2>/dev/null || true
+
     while [ "$attempt" -le "$max" ]; do
         [ "$attempt" -gt 1 ] && { echo "==> [$label] Retry $attempt/$max in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
-        # --partial: keep incomplete files on remote so retries resume instead of restarting
-        # --timeout: abort rsync I/O after 60s of silence (catches hung connections)
-        if rsync -az --delete --partial --timeout=60 \
+
+        # rsync into the temp dir — no --delete yet, so the live dir is untouched.
+        # --partial keeps incomplete files so retries resume from the last byte, not scratch.
+        # --timeout aborts after 60s of silence (catches hung connections).
+        if rsync -az --partial --timeout=60 \
             -e "ssh $SSH_OPTS" \
-            "$src/" "$SERVER_USER@$SERVER_HOST:$dest"; then
+            "$src/" "$SERVER_USER@$SERVER_HOST:$tmp/"; then
+
+            # Full transfer succeeded → atomic swap.
+            # Two renames on the same filesystem — each is a single syscall (~1ms total).
+            # Users see either the old or the new build; never a half-deployed mix.
+            echo "==> [$label] Transfer complete. Swapping live directory..."
+            ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" \
+                "mv $dest $old && mv $tmp $dest && rm -rf $old"
             echo "==> [$label] Deploy complete."
             return 0
         fi
+
         attempt=$((attempt + 1))
     done
-    echo "==> [$label] Deploy FAILED after $max attempts."
+    echo "==> [$label] Deploy FAILED after $max attempts. Live site untouched."
     return 1
 }
 
