@@ -77,17 +77,32 @@ build() {
     echo "==> Build complete ($out_dir)."
 }
 
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -i $SSH_KEY"
+
 deploy_to() {
     local src="$1"
     local dest="$2"
     local label="$3"
+    local attempt=1
+    local max=3
+    local delay=15
+
     echo ""
     echo "==> Deploying to $label ($SERVER_HOST:$dest) ..."
-    rsync -az --delete \
-        -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY" \
-        "$src/" \
-        "$SERVER_USER@$SERVER_HOST:$dest"
-    echo "==> Deploy to $label complete."
+    while [ "$attempt" -le "$max" ]; do
+        [ "$attempt" -gt 1 ] && { echo "==> [$label] Retry $attempt/$max in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
+        # --partial: keep incomplete files on remote so retries resume instead of restarting
+        # --timeout: abort rsync I/O after 60s of silence (catches hung connections)
+        if rsync -az --delete --partial --timeout=60 \
+            -e "ssh $SSH_OPTS" \
+            "$src/" "$SERVER_USER@$SERVER_HOST:$dest"; then
+            echo "==> [$label] Deploy complete."
+            return 0
+        fi
+        attempt=$((attempt + 1))
+    done
+    echo "==> [$label] Deploy FAILED after $max attempts."
+    return 1
 }
 
 # ─── main ─────────────────────────────────────────────────────────────────────
