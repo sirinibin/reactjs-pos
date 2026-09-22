@@ -571,9 +571,11 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             </button>
                         </div>
                         {sig.is_html ? (
-                            <div
-                                style={{ fontSize: '12px', maxHeight: '60px', overflow: 'hidden', border: '1px solid #e9ecef', borderRadius: '4px', padding: '4px 8px', background: '#fff' }}
-                                dangerouslySetInnerHTML={{ __html: sig.content }}
+                            <iframe
+                                srcDoc={sig.content}
+                                title={`Preview: ${sig.name}`}
+                                style={{ width: '100%', height: '80px', border: '1px solid #e9ecef', borderRadius: '4px', background: '#fff', display: 'block' }}
+                                sandbox="allow-same-origin"
                             />
                         ) : (
                             <div style={{ fontSize: '12px', color: '#495057', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden' }}>
@@ -628,10 +630,13 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             {sigEditing.is_html ? (
                                 <div style={{ marginTop: '6px' }}>
                                     <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '3px' }}>Live preview:</div>
-                                    <div
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', padding: '8px 12px', background: '#fff', fontSize: '13px', minHeight: '36px' }}
-                                        dangerouslySetInnerHTML={{ __html: sigEditing.content || '<span style="color:#adb5bd">Preview will appear here…</span>' }}
+                                    <iframe
+                                        srcDoc={sigEditing.content || '<p style="color:#adb5bd;font-family:sans-serif;font-size:13px;padding:8px;">Preview will appear here…</p>'}
+                                        title="Signature preview"
+                                        style={{ width: '100%', height: '200px', border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', display: 'block' }}
+                                        sandbox="allow-same-origin"
                                     />
+                                    <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Full HTML rendered — what recipients will see.</div>
                                 </div>
                             ) : (
                                 <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Plain text — line breaks are preserved in the email.</div>
