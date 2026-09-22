@@ -84,6 +84,11 @@ export function SalesType1Header({
                             }} style={{ width: "16px", height: "16px", verticalAlign: "middle", marginRight: "6px" }} /> {t("Report to Zatca")} <br />
                         </div>}
                         <div className="col align-self-end text-end">
+                            {!isUpdateForm && onSwitchToQuotation && (
+                                <><button type="button" onClick={onSwitchToQuotation} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #6c757d', backgroundColor: '#f8f9fa', color: '#495057', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                                </button>&nbsp;&nbsp;</>
+                            )}
                             <Button variant="primary" className="btn btn-primary" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }}>
                                 <i className="bi-chevron-double-left"></i> {t('Previous')}
                             </Button>
@@ -176,11 +181,6 @@ export function SalesType1Header({
                                     <i className="bi bi-tools" style={{ fontSize: '13px' }}></i> {t("View Job Card")}
                                 </button>&nbsp;&nbsp;</>
                             ) : null)}
-                            {!isUpdateForm && onSwitchToQuotation && (
-                                <><button type="button" onClick={onSwitchToQuotation} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #6c757d', backgroundColor: '#f8f9fa', color: '#495057', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
-                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
-                                </button>&nbsp;&nbsp;</>
-                            )}
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
                     </Modal.Header>

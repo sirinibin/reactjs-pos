@@ -290,6 +290,51 @@ const OrderCreate = forwardRef((props, ref) => {
 
             setFormData({ ...formData });
             reCalculate();
+
+            // Apply Quotation→Sales switch prefill if present (new forms only)
+            if (!id) {
+                try {
+                    const rawSwitch = sessionStorage.getItem('quotation_to_sales_switch');
+                    if (rawSwitch) {
+                        sessionStorage.removeItem('quotation_to_sales_switch');
+                        const switchData = JSON.parse(rawSwitch);
+                        setTimeout(() => {
+                            if (switchData.products?.length) {
+                                selectedProducts = [...switchData.products];
+                                setSelectedProducts([...switchData.products]);
+                                formData.products = [...switchData.products];
+                                reCalculate();
+                            }
+                            if (switchData.customer_id) {
+                                formData.customer_id = switchData.customer_id;
+                                formData.customer_name = switchData.customer_name || '';
+                                formData.phone = switchData.customer_phone || '';
+                                setFormData({ ...formData });
+                                const custSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                                const authHeaders = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+                                const storeId = localStorage.getItem('store_id') || '';
+                                fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${custSelect}`, { headers: authHeaders })
+                                    .then(cr => cr.json())
+                                    .then(data => {
+                                        if (data?.result) {
+                                            selectedCustomers = [data.result];
+                                            setSelectedCustomers([data.result]);
+                                        }
+                                    })
+                                    .catch(() => {});
+                            } else if (switchData.customers?.length) {
+                                selectedCustomers = [...switchData.customers];
+                                setSelectedCustomers([...switchData.customers]);
+                            }
+                            if (switchData.remarks) {
+                                formData.remarks = switchData.remarks;
+                                setFormData({ ...formData });
+                            }
+                        }, 100);
+                    }
+                } catch (_) {}
+            }
+
             setShow(true);
         },
         async openAsType5(id) {
@@ -468,51 +513,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
         setFormData({ ...formData });
         reCalculate();
-
-        // Apply Quotation→Sales switch prefill if present (new forms only)
-        if (!id) {
-            try {
-                const rawSwitch = sessionStorage.getItem('quotation_to_sales_switch');
-                if (rawSwitch) {
-                    sessionStorage.removeItem('quotation_to_sales_switch');
-                    const switchData = JSON.parse(rawSwitch);
-                    setTimeout(() => {
-                        if (switchData.products?.length) {
-                            selectedProducts = [...switchData.products];
-                            setSelectedProducts([...switchData.products]);
-                            formData.products = [...switchData.products];
-                            reCalculate();
-                        }
-                        if (switchData.customer_id) {
-                            formData.customer_id = switchData.customer_id;
-                            formData.customer_name = switchData.customer_name || '';
-                            formData.phone = switchData.customer_phone || '';
-                            setFormData({ ...formData });
-                            const custSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
-                            const authHeaders = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
-                            const storeId = localStorage.getItem('store_id') || '';
-                            fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${custSelect}`, { headers: authHeaders })
-                                .then(cr => cr.json())
-                                .then(data => {
-                                    if (data?.result) {
-                                        selectedCustomers = [data.result];
-                                        setSelectedCustomers([data.result]);
-                                    }
-                                })
-                                .catch(() => {});
-                        } else if (switchData.customers?.length) {
-                            selectedCustomers = [...switchData.customers];
-                            setSelectedCustomers([...switchData.customers]);
-                        }
-                        if (switchData.remarks) {
-                            formData.remarks = switchData.remarks;
-                            setFormData({ ...formData });
-                        }
-                    }, 100);
-                }
-            } catch (_) {}
-        }
-
         setShow(true);
 
     }
