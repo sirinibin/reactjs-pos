@@ -157,16 +157,16 @@ function renderProductNotes(notes) {
         if (idx > 0) return { k: seg.slice(0, idx).trim(), v: seg.slice(idx + 1).trim() };
         return null;
     }).filter(Boolean);
-    if (pairs.length < 2) return <span>{notes}</span>;
+    if (pairs.length < 2) return <span style={{ fontSize: '11px', lineHeight: 1.5 }}>{notes}</span>;
     return (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
             <tbody>
                 {pairs.map((p, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? '#f8fafc' : '#ffffff' }}>
-                        <td style={{ padding: '3px 6px', fontWeight: 600, color: '#374151', width: '44%', borderBottom: '1px solid #e5e7eb', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                    <tr key={i} style={{ background: i % 2 === 0 ? '#f1f5f9' : '#ffffff' }}>
+                        <td style={{ padding: '4px 7px', fontWeight: 700, color: '#1e3a5f', width: '42%', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', whiteSpace: 'nowrap', letterSpacing: '0.2px' }}>
                             {p.k}
                         </td>
-                        <td style={{ padding: '3px 6px', color: '#4b5563', borderBottom: '1px solid #e5e7eb', verticalAlign: 'top' }}>
+                        <td style={{ padding: '4px 7px', color: '#374151', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', lineHeight: 1.4 }}>
                             {p.v}
                         </td>
                     </tr>
@@ -412,36 +412,37 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                 {!hasAttachments && products.length > 0 && (
                     <div
                         className="clickable-text"
-                        style={{ overflow: 'hidden', borderRadius: '4px', border: `1px solid ${C.border}` }}
+                        style={{ overflow: 'hidden', borderRadius: '4px', border: `2px solid ${C.navy}`, boxShadow: '0 2px 6px rgba(15,52,96,0.08)' }}
                         onClick={() => selectText('tableBody')}
                     >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs('tableBody') || '11px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs('tableBody') || '12px' }}>
                             <thead>
                                 <tr
                                     style={{ cursor: 'pointer' }}
                                     onClick={(e) => { e.stopPropagation(); selectText('tableHead'); }}
                                 >
                                     {[
-                                        { ar: 'رقم',        en: 'Sn.',         w: '5%'  },
-                                        { ar: 'رقم القطعة', en: 'Part No.',     w: '14%' },
-                                        { ar: 'وصف',        en: 'Description', w: '35%' },
-                                        { ar: 'كمية',       en: 'Qty',         w: '7%'  },
-                                        { ar: 'وحدة',       en: 'Unit',        w: '9%'  },
-                                        { ar: 'ملاحظات',    en: 'Notes',       w: '30%' },
+                                        { ar: 'رقم',        en: 'Sn.',         w: '4%',  align: 'center' },
+                                        { ar: 'رقم القطعة', en: 'Part No.',     w: '13%', align: 'center' },
+                                        { ar: 'الاسم والوصف', en: 'Name / Description', w: '33%', align: 'center' },
+                                        { ar: 'الكمية',     en: 'Qty',         w: '7%',  align: 'center' },
+                                        { ar: 'الوحدة',     en: 'Unit',        w: '9%',  align: 'center' },
+                                        { ar: 'الملاحظات',  en: 'Notes',       w: '34%', align: 'center' },
                                     ].map((col, ci) => (
                                         <th key={ci} style={{
-                                            padding: '7px 6px',
+                                            padding: '9px 8px',
                                             width: col.w,
-                                            textAlign: 'center',
+                                            textAlign: col.align,
                                             background: C.headerBg,
                                             color: C.headerText,
                                             borderRight: ci < 5 ? `1px solid ${C.navyLight}` : undefined,
-                                            fontSize: fs('tableHead') || '10px',
-                                            fontWeight: 600,
+                                            fontSize: fs('tableHead') || '11px',
+                                            fontWeight: 700,
                                             lineHeight: 1.4,
+                                            letterSpacing: '0.3px',
                                         }}>
-                                            <div dir="rtl" lang="ar" style={{ unicodeBidi: 'embed' }}>{col.ar}</div>
-                                            <div>{col.en}</div>
+                                            <div dir="rtl" lang="ar" style={{ unicodeBidi: 'embed', opacity: 0.85, fontSize: '10px', fontWeight: 500 }}>{col.ar}</div>
+                                            <div style={{ marginTop: '2px' }}>{col.en}</div>
                                         </th>
                                     ))}
                                 </tr>
@@ -451,31 +452,65 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                                     <tr
                                         key={product.item_code ?? index}
                                         style={{
-                                            background: index % 2 === 0 ? '#ffffff' : C.rowAlt,
+                                            background: index % 2 === 0 ? '#ffffff' : '#f4f7fb',
                                             borderBottom: `1px solid ${C.border}`,
                                         }}
                                     >
-                                        <td style={{ padding: '6px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#6b7280', fontWeight: 600 }}>
+                                        {/* Sn. */}
+                                        <td style={{ padding: '10px 6px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#94a3b8', fontWeight: 700, fontSize: '11px' }}>
                                             {index + 1}
                                         </td>
-                                        <td style={{ padding: '6px 8px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#374151' }}>
-                                            {product.part_no || product.part_number || ''}
+                                        {/* Part No. */}
+                                        <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: `1px solid ${C.border}` }}>
+                                            {(product.part_no || product.part_number) ? (
+                                                <span style={{
+                                                    display: 'inline-block',
+                                                    background: '#e8f0fe',
+                                                    color: '#1a3d6e',
+                                                    border: '1px solid #b3c9f5',
+                                                    borderRadius: '4px',
+                                                    padding: '2px 7px',
+                                                    fontFamily: 'monospace',
+                                                    fontSize: fs('tableBody') || '11px',
+                                                    fontWeight: 700,
+                                                    letterSpacing: '0.4px',
+                                                    wordBreak: 'break-all',
+                                                }}>
+                                                    {product.part_no || product.part_number}
+                                                </span>
+                                            ) : <span style={{ color: '#cbd5e1' }}>—</span>}
                                         </td>
-                                        <td dir="ltr" style={{ padding: '6px 8px', borderRight: `1px solid ${C.border}`, textAlign: 'left', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                                            <span style={{ display: 'block', fontWeight: 500, color: '#1f2937' }}>{product.name || ''}</span>
+                                        {/* Name / Description */}
+                                        <td dir="ltr" style={{ padding: '10px 10px', borderRight: `1px solid ${C.border}`, textAlign: 'left', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                            <span style={{ display: 'block', fontWeight: 600, color: '#111827', fontSize: fs('tableBody') || '12px', lineHeight: 1.4 }}>{product.name || ''}</span>
                                             {product.name_in_arabic && (
-                                                <span dir="rtl" style={{ display: 'block', color: '#6b7280', fontSize: '10px', marginTop: '1px' }}>
+                                                <span dir="rtl" style={{ display: 'block', color: '#6b7280', fontSize: '11px', marginTop: '3px', lineHeight: 1.4 }}>
                                                     {product.name_in_arabic}
                                                 </span>
                                             )}
                                         </td>
-                                        <td style={{ padding: '6px', textAlign: 'center', borderRight: `1px solid ${C.border}`, fontWeight: 600, color: '#1f2937' }}>
-                                            {product.quantity > 0 ? product.quantity : 1}
+                                        {/* Qty */}
+                                        <td style={{ padding: '10px 6px', textAlign: 'center', borderRight: `1px solid ${C.border}` }}>
+                                            <span style={{
+                                                display: 'inline-block',
+                                                background: '#0f3460',
+                                                color: '#fff',
+                                                borderRadius: '4px',
+                                                padding: '3px 9px',
+                                                fontWeight: 700,
+                                                fontSize: fs('tableBody') || '12px',
+                                                minWidth: '28px',
+                                                textAlign: 'center',
+                                            }}>
+                                                {product.quantity > 0 ? product.quantity : 1}
+                                            </span>
                                         </td>
-                                        <td style={{ padding: '6px 8px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#374151' }}>
-                                            {product.unit || ''}
+                                        {/* Unit */}
+                                        <td style={{ padding: '10px 8px', textAlign: 'center', borderRight: `1px solid ${C.border}`, color: '#374151', fontWeight: 600, fontSize: fs('tableBody') || '12px' }}>
+                                            {product.unit || <span style={{ color: '#cbd5e1' }}>—</span>}
                                         </td>
-                                        <td style={{ padding: '4px 6px', textAlign: 'left', color: '#6b7280', fontSize: fs('tableBody') || '10px' }}>
+                                        {/* Notes */}
+                                        <td style={{ padding: '8px 10px', textAlign: 'left', color: '#4b5563', fontSize: fs('tableBody') || '11px', lineHeight: 1.5 }}>
                                             {renderProductNotes(product.notes)}
                                         </td>
                                     </tr>

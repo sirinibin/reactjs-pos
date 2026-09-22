@@ -711,14 +711,14 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
     );
 }
 
-export default function ProcurementWhatsAppTab({ storeId }) {
+export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialPhoneProp }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
     const history = useHistory();
     const location = useLocation();
-    // Phone from URL param ?phone=... used to auto-open a specific contact's conversation
+    // Phone from initialPhone prop (modal use) or URL param ?phone=... — auto-open a specific contact's conversation
     const initialPhoneRef = useRef(
-        new URLSearchParams(location.search).get('phone') || ''
+        initialPhoneProp || new URLSearchParams(location.search).get('phone') || ''
     );
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);

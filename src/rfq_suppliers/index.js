@@ -3,6 +3,7 @@ import { Badge, Spinner, Button, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
+import { WhatsAppChatModal, EmailChatModal } from '../store/ConversationModal.js';
 
 const EMPTY_SUPPLIER = {
     name: '',
@@ -175,6 +176,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const [search, setSearch] = useState("");
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [showForm, setShowForm] = useState(false);
+    const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const [deleting, setDeleting] = useState(null);
     const [refetching, setRefetching] = useState(null);
     const [backfilling, setBackfilling] = useState(false);
@@ -376,14 +378,14 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                                             <span className="fw-semibold" style={{ fontSize: '13px' }}>{sup.name}</span>
                                             {sup.phone && (
                                                 <button type="button" title="Open WhatsApp Conversation"
-                                                    onClick={() => history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(sup.phone.replace(/^\+/, ''))}`)}
+                                                    onClick={() => setChatModal({ type: 'whatsapp', value: sup.phone.replace(/^\+/, '') })}
                                                     style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 13, color: '#25d366', lineHeight: 1 }}>
                                                     <i className="bi bi-whatsapp"></i>
                                                 </button>
                                             )}
                                             {sup.email && (
                                                 <button type="button" title="Open Email Conversation"
-                                                    onClick={() => history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(sup.email)}`)}
+                                                    onClick={() => setChatModal({ type: 'email', value: sup.email })}
                                                     style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 13, color: '#0d6efd', lineHeight: 1 }}>
                                                     <i className="bi bi-envelope-fill"></i>
                                                 </button>
@@ -522,6 +524,18 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
                     onSave={() => { setShowForm(false); setEditingSupplier(null); fetchList(); if (showToastMessage) showToastMessage(t('supplier_saved'), "success"); }}
                 />
             )}
+            <WhatsAppChatModal
+                show={chatModal.type === 'whatsapp'}
+                phone={chatModal.value}
+                storeId={storeId}
+                onHide={() => setChatModal({ type: null, value: '' })}
+            />
+            <EmailChatModal
+                show={chatModal.type === 'email'}
+                email={chatModal.value}
+                storeId={storeId}
+                onHide={() => setChatModal({ type: null, value: '' })}
+            />
         </div>
     );
 }

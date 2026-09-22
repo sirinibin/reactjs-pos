@@ -11,6 +11,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import EmailDetailModal from '../store/EmailDetailModal.js';
 import { SupplierForm } from '../rfq_suppliers/index.js';
+import { WhatsAppChatModal, EmailChatModal } from '../store/ConversationModal.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -565,6 +566,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const [supplierSearch, setSupplierSearch] = useState('');
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [resolvedSuppliers, setResolvedSuppliers] = useState({});
+    const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
@@ -580,9 +582,16 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
             });
             const data = await res.json();
             const map = {};
+            const addPhone = (phone, supplier) => {
+                if (!phone) return;
+                map[phone] = supplier;
+                // Store both +prefix and no-prefix variants for flexible lookup
+                if (phone.startsWith('+')) map[phone.slice(1)] = supplier;
+                else map['+' + phone] = supplier;
+            };
             (data.result || []).forEach(s => {
-                if (s.phone)  map[s.phone]  = s;
-                if (s.phone2) map[s.phone2] = s;
+                addPhone(s.phone, s);
+                addPhone(s.phone2, s);
             });
             setResolvedSuppliers(map);
         } catch (_) {}
@@ -779,7 +788,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                                     {rfq.customer_phone && (
                                         <>
                                             <span className="text-muted ms-2"><i className="bi bi-telephone ms-1"></i> {rfq.customer_phone}</span>
-                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(rfq.customer_phone.replace(/^\+/, ''))}`); }} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
+                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => setChatModal({ type: 'whatsapp', value: rfq.customer_phone.replace(/^\+/, '') })} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
                                                 <i className="bi bi-whatsapp text-success"></i>
                                             </button>
                                         </>
@@ -787,7 +796,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                                     {rfq.customer_email && (
                                         <>
                                             <span className="text-muted ms-2"><i className="bi bi-envelope ms-1"></i> {rfq.customer_email}</span>
-                                            <button type="button" title="Open Email Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(rfq.customer_email)}`); }} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
+                                            <button type="button" title="Open Email Conversation" onClick={() => setChatModal({ type: 'email', value: rfq.customer_email })} style={{ border: 'none', background: 'none', padding: '0 3px', cursor: 'pointer', fontSize: 13, verticalAlign: 'middle' }}>
                                                 <i className="bi bi-envelope-fill text-primary"></i>
                                             </button>
                                         </>
@@ -903,12 +912,12 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                                                                         <span>{r.supplier_name || '—'}</span>
                                                                         {r.phone && (
-                                                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(r.phone.replace(/^\+/, ''))}`); }} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
+                                                                            <button type="button" title="Open WhatsApp Conversation" onClick={() => setChatModal({ type: 'whatsapp', value: r.phone.replace(/^\+/, '') })} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
                                                                                 <i className="bi bi-whatsapp text-success"></i>
                                                                             </button>
                                                                         )}
                                                                         {(resolved.email) && (
-                                                                            <button type="button" title="Open Email Conversation" onClick={() => { onHide && onHide(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(resolved.email)}`); }} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
+                                                                            <button type="button" title="Open Email Conversation" onClick={() => setChatModal({ type: 'email', value: resolved.email })} style={{ border: 'none', background: 'none', padding: '0 2px', cursor: 'pointer', fontSize: 12 }}>
                                                                                 <i className="bi bi-envelope-fill text-primary"></i>
                                                                             </button>
                                                                         )}
@@ -1069,6 +1078,18 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
         <RFQPreview ref={rfqPreviewRef} />
         <RFQCreate ref={rfqEditRef} showToastMessage={() => {}} onCreated={() => {}} />
         <CustomerCreate ref={customerEditRef} />
+        <WhatsAppChatModal
+            show={chatModal.type === 'whatsapp'}
+            phone={chatModal.value}
+            storeId={storeId}
+            onHide={() => setChatModal({ type: null, value: '' })}
+        />
+        <EmailChatModal
+            show={chatModal.type === 'email'}
+            email={chatModal.value}
+            storeId={storeId}
+            onHide={() => setChatModal({ type: null, value: '' })}
+        />
         </>
     );
 }
@@ -1315,6 +1336,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
         return () => clearTimeout(t);
     }, [show]);
 
+    const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const [preview, setPreview]                   = useState(null);
     const [loadingPreview, setLoadingPreview]       = useState(false);
     const [storeData, setStoreData]               = useState(null);
@@ -1962,7 +1984,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                                     {s.phone && (
                                                         <button
                                                             title="Open WhatsApp Conversation"
-                                                            onClick={e => { e.stopPropagation(); history.push(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(s.phone.replace(/^\+/, ''))}`); }}
+                                                            onClick={e => { e.stopPropagation(); setChatModal({ type: 'whatsapp', value: s.phone.replace(/^\+/, '') }); }}
                                                             style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#25d366', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
                                                             <i className="bi bi-whatsapp"></i>
                                                         </button>
@@ -1970,7 +1992,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                                     {s.email && (
                                                         <button
                                                             title="Open Email Conversation"
-                                                            onClick={e => { e.stopPropagation(); history.push(`/dashboard/procurement-emails?email=${encodeURIComponent(s.email)}`); }}
+                                                            onClick={e => { e.stopPropagation(); setChatModal({ type: 'email', value: s.email }); }}
                                                             style={{ flexShrink: 0, border: 'none', background: 'none', padding: '0 2px', color: '#0d6efd', fontSize: 13, lineHeight: 1, cursor: 'pointer' }}>
                                                             <i className="bi bi-envelope-fill"></i>
                                                         </button>
@@ -2340,6 +2362,18 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             onClose={() => setEmailDetailShow(false)}
             storeId={storeId}
             token={token}
+        />
+        <WhatsAppChatModal
+            show={chatModal.type === 'whatsapp'}
+            phone={chatModal.value}
+            storeId={storeId}
+            onHide={() => setChatModal({ type: null, value: '' })}
+        />
+        <EmailChatModal
+            show={chatModal.type === 'email'}
+            email={chatModal.value}
+            storeId={storeId}
+            onHide={() => setChatModal({ type: null, value: '' })}
         />
         </>
     );

@@ -30,7 +30,7 @@ function stripHtml(html) {
         .trim();
 }
 
-export default function ProcurementEmailConversationTab({ storeId }) {
+export default function ProcurementEmailConversationTab({ storeId, initialEmail: initialEmailProp }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
     const history = useHistory();
@@ -339,6 +339,20 @@ export default function ProcurementEmailConversationTab({ storeId }) {
         } catch (_) {}
         if (!silent) setThreadMsgLoading(false);
     }, [storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-select thread when initialEmail prop is provided (e.g. opened from a modal)
+    const initialEmailRef = useRef(initialEmailProp || '');
+    useEffect(() => {
+        const email = initialEmailRef.current;
+        if (!email || !threads.length) return;
+        const found = threads.find(t =>
+            t.contact_phone === email || (t.contact_phone || '').toLowerCase() === email.toLowerCase()
+        );
+        const thread = found || { contact_phone: email, contact_name: email };
+        setSelectedThread(thread);
+        loadThread(email);
+        initialEmailRef.current = '';
+    }, [threads]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Auto-scroll to bottom when messages load
     useEffect(() => {
