@@ -753,6 +753,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const [sendingMsg, setSendingMsg] = useState(false);
     const [sendMsgError, setSendMsgError] = useState(null);
     const [threadSearch, setThreadSearch] = useState('');
+    const [showNewConvInput, setShowNewConvInput] = useState(false);
+    const [newConvPhone, setNewConvPhone] = useState('');
     const chatBottomRef = useRef(null);
     const chatContainerRef = useRef(null);
     // Responsive: mobile hides one panel at a time
@@ -1106,6 +1108,19 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             }
         } catch (_) {} finally { if (!silent) setThreadMsgLoading(false); }
     }, [storeId, token]);
+
+    const startNewConversation = () => {
+        const phone = newConvPhone.trim().replace(/\s+/g, '');
+        if (!phone) return;
+        const thread = { contact_phone: phone, contact_name: phone };
+        setSelectedThread(thread);
+        loadThread(phone);
+        setComposeText('');
+        setSendMsgError(null);
+        setShowNewConvInput(false);
+        setNewConvPhone('');
+        if (isMobile) setMobilePanel('chat');
+    };
 
     const handleSendInThread = async () => {
         if (!selectedThread || !composeText.trim() || sendingMsg) return;
@@ -1503,16 +1518,47 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                     {/* Contact list — hidden on mobile when chat is open */}
                     <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (isMobile && mobilePanel === 'chat') ? 'none' : 'flex', flexDirection: 'column' }}>
                         <div style={{ padding: '10px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
-                            <input
-                                className="form-control form-control-sm"
-                                placeholder={t('Search contacts...')}
-                                value={threadSearch}
-                                onChange={e => {
-                                    setThreadSearch(e.target.value);
-                                    clearTimeout(searchTimeout.current);
-                                    searchTimeout.current = setTimeout(() => loadThreads(e.target.value), 350);
-                                }}
-                            />
+                            <div style={{ display: 'flex', gap: '6px', marginBottom: showNewConvInput ? '8px' : 0 }}>
+                                <input
+                                    className="form-control form-control-sm"
+                                    placeholder={t('Search contacts...')}
+                                    value={threadSearch}
+                                    onChange={e => {
+                                        setThreadSearch(e.target.value);
+                                        clearTimeout(searchTimeout.current);
+                                        searchTimeout.current = setTimeout(() => loadThreads(e.target.value), 350);
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    title={t('Start new conversation')}
+                                    onClick={() => { setShowNewConvInput(v => !v); setNewConvPhone(''); }}
+                                    style={{ flexShrink: 0, border: 'none', background: WA_GREEN, color: '#fff', borderRadius: '4px', padding: '0 8px', fontSize: '16px', cursor: 'pointer' }}
+                                >
+                                    <i className="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            {showNewConvInput && (
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <input
+                                        className="form-control form-control-sm"
+                                        placeholder={t('Phone number (e.g. 971501234567)')}
+                                        value={newConvPhone}
+                                        autoFocus
+                                        onChange={e => setNewConvPhone(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') startNewConversation(); if (e.key === 'Escape') { setShowNewConvInput(false); setNewConvPhone(''); } }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-success"
+                                        disabled={!newConvPhone.trim()}
+                                        onClick={startNewConversation}
+                                        style={{ flexShrink: 0 }}
+                                    >
+                                        <i className="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             {threadsLoading && <div className="text-center py-3"><span className="spinner-border spinner-border-sm text-success" /></div>}
