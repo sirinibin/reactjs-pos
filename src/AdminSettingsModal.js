@@ -33,6 +33,16 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [migratingInline, setMigratingInline] = useState(false);
     const [migrateInlineResult, setMigrateInlineResult] = useState(null);
     const [migrateInlineProgress, setMigrateInlineProgress] = useState(null);
+    // Verify & Cleanup Disk
+    const [cleanupRunning, setCleanupRunning] = useState(false);
+    const [cleanupCurrentEntity, setCleanupCurrentEntity] = useState(null);
+    const [cleanupEntityStats, setCleanupEntityStats] = useState({});
+    const [cleanupFinalStats, setCleanupFinalStats] = useState(null);
+    const [cleanupError, setCleanupError] = useState(null);
+    // Fix Direct S3 URLs
+    const [fixingS3URLs, setFixingS3URLs] = useState(false);
+    const [fixS3URLsProgress, setFixS3URLsProgress] = useState(null);
+    const [fixS3URLsResult, setFixS3URLsResult] = useState(null);
 
     useEffect(() => {
         if (!show) return;
@@ -288,6 +298,109 @@ export default function AdminSettingsModal({ show, onHide }) {
             setMigratingInline, setMigrateInlineResult, setMigrateInlineProgress,
             ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated}`
         );
+    };
+
+    const handleVerifyCleanup = async () => {
+        if (!window.confirm(
+            'This will check every image, PDF and XML file against S3.\n' +
+            'Files confirmed in S3 will have their local disk copy permanently deleted.\n' +
+            'RFQ records whose inline base64 data has been migrated will be cleaned from MongoDB.\n\n' +
+            '⚠️ This cannot be undone. Files NOT confirmed in S3 are skipped safely.\n\nProceed?'
+        )) return;
+        setCleanupRunning(true);
+        setCleanupEntityStats({});
+        setCleanupFinalStats(null);
+        setCleanupCurrentEntity(null);
+        setCleanupError(null);
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/v1/verify-cleanup-disk', {
+                method: 'POST', headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                setCleanupError(d.error || `HTTP ${resp.status}`);
+                return;
+            }
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+                const lines = buf.split('\n');
+                buf = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const ev = JSON.parse(line.slice(6));
+                        if (ev.type === 'entity_start') {
+                            setCleanupCurrentEntity(ev.name);
+                        } else if (ev.type === 'entity_done') {
+                            setCleanupCurrentEntity(null);
+                            setCleanupEntityStats(prev => ({ ...prev, [ev.name]: ev }));
+                        } else if (ev.type === 'done') {
+                            setCleanupFinalStats(ev);
+                        } else if (ev.type === 'error') {
+                            setCleanupError(ev.error);
+                        }
+                    } catch (_) {}
+                }
+            }
+        } catch (e) {
+            setCleanupError(e.message);
+        } finally {
+            setCleanupRunning(false);
+            setCleanupCurrentEntity(null);
+        }
+    };
+
+    const handleFixS3URLs = async () => {
+        if (!window.confirm(
+            'This will scan all MongoDB records and rewrite any direct S3 URLs\n' +
+            '(e.g. https://bucket.s3.region.amazonaws.com/...) to /cdn/ paths.\n\n' +
+            'This fixes images that load directly from S3 instead of going through /cdn/.\n\nProceed?'
+        )) return;
+        setFixingS3URLs(true);
+        setFixS3URLsProgress(null);
+        setFixS3URLsResult(null);
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/v1/fix-direct-s3-urls', {
+                method: 'POST', headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                setFixS3URLsResult({ ok: false, msg: d.error || `HTTP ${resp.status}` });
+                return;
+            }
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+                const lines = buf.split('\n');
+                buf = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const ev = JSON.parse(line.slice(6));
+                        if (ev.type === 'progress') {
+                            setFixS3URLsProgress(ev);
+                        } else if (ev.type === 'done') {
+                            setFixS3URLsResult({ ok: true, msg: `Done. Scanned: ${ev.scanned}, Fixed: ${ev.fixed}` });
+                        }
+                    } catch (_) {}
+                }
+            }
+        } catch (e) {
+            setFixS3URLsResult({ ok: false, msg: e.message });
+        } finally {
+            setFixingS3URLs(false);
+        }
     };
 
     const enabled = !!settings.s3_enabled;
@@ -549,6 +662,41 @@ export default function AdminSettingsModal({ show, onHide }) {
                             )}
                         </div>
 
+                        {/* Fix direct S3 URLs */}
+                        <div style={{ marginTop: '16px', padding: '16px', background: '#fdf4ff', border: '1px solid #d8b4fe', borderRadius: '8px' }}>
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#581c87', marginBottom: '6px' }}>
+                                Fix Direct S3 URLs → /cdn/ Paths
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#6b21a8', margin: '0 0 12px', lineHeight: 1.6 }}>
+                                Some older records store the full S3 URL (e.g. <code>https://bucket.s3.region.amazonaws.com/…</code>)
+                                instead of the <code>/cdn/</code> path. This scan rewrites them so images always load via the
+                                app's CDN route. Run once after seeing images load directly from S3.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleFixS3URLs}
+                                disabled={fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #9333ea',
+                                    background: '#fff', color: '#581c87', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {fixingS3URLs ? 'Fixing…' : 'Fix Direct S3 URLs'}
+                            </button>
+                            {fixS3URLsProgress && (
+                                <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b21a8', fontFamily: '"Inter", sans-serif' }}>
+                                    Collection: <strong>{fixS3URLsProgress.collection}</strong> — Scanned: <strong>{fixS3URLsProgress.scanned}</strong>, Fixed: <strong>{fixS3URLsProgress.fixed}</strong>
+                                </div>
+                            )}
+                            {fixS3URLsResult && (
+                                <div style={{ marginTop: '8px', fontSize: '13px', color: fixS3URLsResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
+                                    {fixS3URLsResult.ok ? '✓ ' : '✗ '}{fixS3URLsResult.msg}
+                                </div>
+                            )}
+                        </div>
+
                         {/* Migrate inline base64 (MongoDB → S3) */}
                         <div style={{ marginTop: '16px', padding: '16px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px' }}>
                             <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#1e3a8a', marginBottom: '6px' }}>
@@ -590,6 +738,95 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateInlineResult && (
                                 <div style={{ marginTop: '10px', fontSize: '13px', color: migrateInlineResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                                     {migrateInlineResult.ok ? '✓ ' : '✗ '}{migrateInlineResult.msg}
+                                </div>
+                            )}
+                        </div>
+                        {/* Verify & Cleanup Disk */}
+                        <div style={{ marginTop: '16px', padding: '16px', background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '8px' }}>
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#7c2d12', marginBottom: '6px' }}>
+                                Verify S3 &amp; Delete Local Disk Copies
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#9a3412', margin: '0 0 12px', lineHeight: 1.6 }}>
+                                Checks every attachment/image against S3. Files confirmed in S3 have their local disk copy
+                                permanently deleted to free disk space. Files not yet in S3 are skipped safely.
+                                RFQ inline MongoDB data is removed once the corresponding S3 file is confirmed.
+                                <br /><strong>Run after all migrations above are complete.</strong>
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleVerifyCleanup}
+                                disabled={cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #ea580c',
+                                    background: '#fff', color: '#7c2d12', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {cleanupRunning ? 'Verifying & Cleaning…' : 'Verify S3 & Delete Disk Copies'}
+                            </button>
+
+                            {cleanupError && (
+                                <div style={{ marginTop: '10px', fontSize: '13px', color: '#dc2626', fontFamily: '"Inter", sans-serif' }}>
+                                    ✗ {cleanupError}
+                                </div>
+                            )}
+
+                            {(cleanupRunning || Object.keys(cleanupEntityStats).length > 0) && (
+                                <div style={{ marginTop: '14px', overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Inter", sans-serif' }}>
+                                        <thead>
+                                            <tr style={{ background: '#ffedd5' }}>
+                                                <th style={{ textAlign: 'left', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#7c2d12' }}>Entity</th>
+                                                <th style={{ textAlign: 'right', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#7c2d12' }}>Checked</th>
+                                                <th style={{ textAlign: 'right', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#059669' }}>In S3 ✓</th>
+                                                <th style={{ textAlign: 'right', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#2563eb' }}>Disk Deleted</th>
+                                                <th style={{ textAlign: 'right', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#dc2626' }}>Not in S3</th>
+                                                <th style={{ textAlign: 'right', padding: '5px 8px', borderBottom: '1px solid #fdba74', color: '#7c3aed' }}>DB Cleaned</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {[
+                                                'Product Photos', 'Customer Photos', 'Vendor Photos',
+                                                'Receivable Attachments', 'Payable Attachments', 'Expense Attachments',
+                                                'Capital Investment Attachments', 'Drawing Attachments',
+                                                'ZATCA Sales XMLs', 'ZATCA Sales Return XMLs',
+                                                'ZATCA Receivable XMLs', 'ZATCA Payable XMLs',
+                                                'WhatsApp Attachments', 'Email Attachments',
+                                                'RFQ Attachments', 'Store Attachments',
+                                            ].map(name => {
+                                                const st = cleanupEntityStats[name];
+                                                const isCurrent = cleanupCurrentEntity === name;
+                                                return (
+                                                    <tr key={name} style={{ background: isCurrent ? '#fff7ed' : 'transparent', borderBottom: '1px solid #fde8d2' }}>
+                                                        <td style={{ padding: '4px 8px', color: '#7c2d12', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            {isCurrent && <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#ea580c', animation: 'pulse 1s infinite' }} />}
+                                                            {!isCurrent && st && <span style={{ color: '#059669', fontSize: '10px' }}>✓</span>}
+                                                            {name}
+                                                        </td>
+                                                        <td style={{ textAlign: 'right', padding: '4px 8px', color: '#374151' }}>{st ? st.checked : (isCurrent ? '…' : '—')}</td>
+                                                        <td style={{ textAlign: 'right', padding: '4px 8px', color: '#059669', fontWeight: st && st.verified > 0 ? 700 : 400 }}>{st ? st.verified : (isCurrent ? '…' : '—')}</td>
+                                                        <td style={{ textAlign: 'right', padding: '4px 8px', color: '#2563eb', fontWeight: st && st.deleted > 0 ? 700 : 400 }}>{st ? st.deleted : (isCurrent ? '…' : '—')}</td>
+                                                        <td style={{ textAlign: 'right', padding: '4px 8px', color: st && st.not_in_s3 > 0 ? '#dc2626' : '#6b7280' }}>{st ? st.not_in_s3 : (isCurrent ? '…' : '—')}</td>
+                                                        <td style={{ textAlign: 'right', padding: '4px 8px', color: '#7c3aed', fontWeight: st && st.mongo_cleaned > 0 ? 700 : 400 }}>{st ? st.mongo_cleaned : (isCurrent ? '…' : '—')}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                        {cleanupFinalStats && (
+                                            <tfoot>
+                                                <tr style={{ background: '#ffedd5', fontWeight: 700 }}>
+                                                    <td style={{ padding: '5px 8px', color: '#7c2d12', fontSize: '11px' }}>Total</td>
+                                                    <td style={{ textAlign: 'right', padding: '5px 8px', color: '#374151' }}>{cleanupFinalStats.total_checked}</td>
+                                                    <td style={{ textAlign: 'right', padding: '5px 8px', color: '#059669' }}>{cleanupFinalStats.total_verified}</td>
+                                                    <td style={{ textAlign: 'right', padding: '5px 8px', color: '#2563eb' }}>{cleanupFinalStats.total_deleted}</td>
+                                                    <td style={{ textAlign: 'right', padding: '5px 8px', color: '#dc2626' }}>{cleanupFinalStats.total_not_in_s3}</td>
+                                                    <td style={{ textAlign: 'right', padding: '5px 8px', color: '#7c3aed' }}>{cleanupFinalStats.total_mongo_cleaned}</td>
+                                                </tr>
+                                            </tfoot>
+                                        )}
+                                    </table>
+                                    <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
                                 </div>
                             )}
                         </div>
