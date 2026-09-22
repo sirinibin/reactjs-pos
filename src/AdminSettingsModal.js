@@ -145,6 +145,18 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 index: ev.index,
                                 total_stores: ev.total_stores,
                                 percent: Math.round((ev.index - 1) * 100 / ev.total_stores),
+                                store_processed: 0, store_total: 0, store_percent: 0, current_file: '',
+                            }));
+                        } else if (ev.type === 'store_total') {
+                            setMigrateProgress(prev => ({ ...(prev || {}), store_total: ev.total, store_processed: 0, store_percent: 0 }));
+                        } else if (ev.type === 'store_progress') {
+                            setMigrateProgress(prev => ({
+                                ...(prev || {}),
+                                store_processed: ev.processed, store_total: ev.total,
+                                store_percent: ev.percent, current_file: ev.current_file,
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
                             }));
                         } else if (ev.type === 'store_done') {
                             setMigrateProgress(prev => ({
@@ -152,8 +164,10 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 current_store: ev.store_name || ev.store_id,
                                 index: ev.index,
                                 percent: Math.round(ev.index * 100 / (prev?.total_stores || 1)),
-                                uploaded: (prev?.uploaded || 0) + ev.uploaded,
-                                skipped: (prev?.skipped || 0) + ev.skipped,
+                                store_percent: 100, current_file: '',
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
                             }));
                         } else if (ev.type === 'done') {
                             setMigrateProgress(prev => ({ ...(prev || {}), percent: 100, done: true }));
@@ -528,22 +542,40 @@ export default function AdminSettingsModal({ show, onHide }) {
 
                             {migrateProgress && (
                                 <div style={{ marginTop: '14px' }}>
+                                    {/* Overall progress */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#78350f', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
-                                        <span>
-                                            {migrateProgress.done ? 'Complete' : `Store ${migrateProgress.index || '…'}/${migrateProgress.total_stores || '…'}: ${migrateProgress.current_store || '…'}`}
-                                        </span>
-                                        <span>{migrateProgress.percent || 0}%</span>
+                                        <span><strong>Overall</strong> — Store {migrateProgress.index || '…'}/{migrateProgress.total_stores || '…'}</span>
+                                        <span>{migrateProgress.done ? 'Complete' : `${migrateProgress.percent || 0}%`}</span>
                                     </div>
                                     <div style={{ background: '#fde68a', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
                                         <div style={{
                                             background: migrateProgress.done ? '#16a34a' : '#d97706',
                                             width: `${migrateProgress.percent || 0}%`,
-                                            height: '100%',
-                                            transition: 'width 0.2s ease',
-                                            borderRadius: '4px',
+                                            height: '100%', transition: 'width 0.3s ease', borderRadius: '4px',
                                         }} />
                                     </div>
-                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
+
+                                    {/* Per-store sub-progress */}
+                                    {!migrateProgress.done && migrateProgress.current_store && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#92400e', fontFamily: '"Inter", sans-serif', marginBottom: '3px' }}>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
+                                                    {migrateProgress.current_store}
+                                                    {migrateProgress.current_file && <span style={{ color: '#b45309', marginLeft: 4 }}>— {migrateProgress.current_file}</span>}
+                                                </span>
+                                                <span>{migrateProgress.store_processed || 0}/{migrateProgress.store_total || 0}</span>
+                                            </div>
+                                            <div style={{ background: '#fed7aa', borderRadius: '3px', height: '6px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    background: '#f97316',
+                                                    width: `${migrateProgress.store_percent || 0}%`,
+                                                    height: '100%', transition: 'width 0.15s ease', borderRadius: '3px',
+                                                }} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
                                         <span>Uploaded: <strong>{migrateProgress.uploaded || 0}</strong></span>
                                         <span>Skipped: <strong>{migrateProgress.skipped || 0}</strong></span>
                                     </div>
