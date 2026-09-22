@@ -229,7 +229,7 @@ const ArabicNameIndex = forwardRef((props, ref) => {
 
     if (isModal) {
         return (
-            <Modal show={show} fullscreen onHide={() => setShow(false)} animation={false} backdrop="static" dialogClassName="pw-modal">
+            <Modal show={show} fullscreen onHide={() => setShow(false)} animation={false} backdrop="static" dialogClassName="pw-modal" className="above-pw-modal-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={() => setShow(false)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px' }}
