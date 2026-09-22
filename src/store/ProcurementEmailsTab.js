@@ -839,7 +839,8 @@ export default function ProcurementEmailsTab({ storeId }) {
                 showToastMessage={showToast}
                 onCreated={newRfq => {
                     if (newRfq?.id) {
-                        setRfqDetail(newRfq);
+                        setRfqForSend(newRfq);
+                        setShowSendModal(true);
                     }
                 }}
             />

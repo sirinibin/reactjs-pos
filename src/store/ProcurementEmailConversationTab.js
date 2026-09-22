@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import EmailDetailModal from './EmailDetailModal.js';
 import RFQCreate from '../rfq_received/create.js';
 import { ExtractModal } from './ProcurementEmailsTab.js';
-import { ForwardDetail } from '../rfq_received/index.js';
+import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
 
 const EMAIL_ACCENT = '#1a73e8';
 const EMAIL_BG    = '#f1f3f4';
@@ -64,6 +64,8 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
     const rfqCreateRef = useRef(null);
     const [extractMsg, setExtractMsg] = useState(null);
     const [rfqDetail, setRfqDetail] = useState(null);
+    const [rfqForSend, setRfqForSend] = useState(null);
+    const [showSendModal, setShowSendModal] = useState(false);
     const [toast, setToast]       = useState(null);
     const toastTimer              = useRef(null);
 
@@ -1048,8 +1050,8 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                 showToastMessage={showToast}
                 onCreated={newRfq => {
                     if (newRfq?.id) {
-                        try { sessionStorage.setItem('_rfq_auto_send', newRfq.id); } catch (_) {}
-                        history.push('/dashboard/rfq-received?t=' + Date.now());
+                        setRfqForSend(newRfq);
+                        setShowSendModal(true);
                     }
                 }}
             />
@@ -1060,6 +1062,15 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                 show={!!rfqDetail}
                 storeId={localStorage.getItem('store_id')}
                 onHide={() => setRfqDetail(null)}
+            />
+
+            {/* Send RFQ modal — opened after new RFQ creation */}
+            <RFQSendModal
+                rfq={rfqForSend}
+                storeId={localStorage.getItem('store_id')}
+                show={showSendModal}
+                onHide={() => setShowSendModal(false)}
+                onSent={() => {}}
             />
         </div>
     );

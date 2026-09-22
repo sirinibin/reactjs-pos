@@ -2489,8 +2489,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 onCreated={newRfq => {
                     load(page);
                     if (newRfq?.id) {
-                        setRfqDetailItem(newRfq);
-                        setRfqDetailShow(true);
+                        setRfqForSend(newRfq);
+                        setShowSendModal(true);
                     }
                 }}
             />
