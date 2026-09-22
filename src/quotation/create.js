@@ -1590,10 +1590,10 @@ const QuotationCreate = forwardRef((props, ref) => {
   async function handleImportFromPurchases(purchase) {
     if (!purchase || !purchase.id) return;
     try {
-      const url = '/v1/purchase/' + purchase.id + '?search[store_id]=' + localStorage.getItem('store_id');
-      const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
-      });
+      const storeId = localStorage.getItem('store_id');
+      const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
+
+      const res = await fetch('/v1/purchase/' + purchase.id + '?search[store_id]=' + storeId, { headers });
       const data = res.ok ? await res.json() : null;
       if (!res.ok || !data) {
         if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
@@ -1604,10 +1604,29 @@ const QuotationCreate = forwardRef((props, ref) => {
         if (props.showToastMessage) props.showToastMessage('No products found in the selected purchase', 'warning');
         return;
       }
+
+      // Enrich each product with current retail price from the product master.
+      // PurchaseProduct.retail_unit_price is omitempty and usually absent —
+      // the purchase form does not capture retail price.
+      const enriched = await Promise.all(products.map(async p => {
+        try {
+          const pr = await fetch('/v1/product/' + p.product_id + '?search[store_id]=' + storeId, { headers });
+          const pd = pr.ok ? await pr.json() : null;
+          const ps = pd?.result?.product_stores?.[storeId];
+          return {
+            ...p,
+            retail_unit_price: ps?.retail_unit_price ?? 0,
+            retail_unit_price_with_vat: ps?.retail_unit_price_with_vat ?? 0,
+          };
+        } catch (_) {
+          return { ...p, retail_unit_price: 0, retail_unit_price_with_vat: 0 };
+        }
+      }));
+
       const initSel = {};
-      products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
+      enriched.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
       setImportPickerSelected(initSel);
-      setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products });
+      setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products: enriched });
     } catch (e) {
       if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
     }
@@ -3689,51 +3708,129 @@ async function checkWarning(i) {
       <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
 
       {/* Product picker modal for Import from Sales / Import from Purchases */}
-      {importPickerData && (
-        <Modal show={true} size="lg" onHide={() => setImportPickerData(null)} animation={false} centered style={{ zIndex: 2000 }}>
-          <Modal.Header closeButton>
-            <Modal.Title style={{ fontSize: '15px' }}>
-              {t('Select Products')} — {importPickerData.source === 'sale' ? t('From Sale') : t('From Purchase')} {importPickerData.code}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-            <table className="table table-sm table-hover">
-              <thead>
-                <tr>
-                  <th><input type="checkbox" checked={importPickerData.products.every(p => importPickerSelected[p.product_id])} onChange={e => { const s = {}; importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; }); setImportPickerSelected(s); }} /></th>
-                  <th>{t('Part No.')}</th>
-                  <th>{t('Name')}</th>
-                  <th>{t('Qty')}</th>
-                  <th>{t('Unit Price')} ({t('excl. VAT')})</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {importPickerData.products.map((p, i) => (
-                  <tr key={p.product_id || i} onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))} style={{ cursor: 'pointer' }}>
-                    <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
-                    <td style={{ whiteSpace: 'nowrap' }}>{p.part_number || '—'}</td>
-                    <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
-                    <td>{p.quantity}</td>
-                    <td>{importPickerData.source === 'purchase' ? (p.retail_unit_price ?? 0) : p.unit_price}</td>
-                    <td onClick={e => e.stopPropagation()}>
-                      <button type="button" className="btn btn-outline-secondary btn-sm" title={t('Edit product')} onClick={() => openProductUpdateForm(p.product_id)}>
-                        <i className="bi bi-pencil"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setImportPickerData(null)}>{t('Cancel')}</Button>
-            <Button variant="primary" onClick={confirmImportPicker}>
-              {t('Import Selected')} ({Object.values(importPickerSelected).filter(Boolean).length})
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
+      {importPickerData && (() => {
+        const selectedCount = Object.values(importPickerSelected).filter(Boolean).length;
+        const allSelected = importPickerData.products.every(p => importPickerSelected[p.product_id]);
+        const isSale = importPickerData.source === 'sale';
+        return (
+          <Modal show={true} size="xl" onHide={() => setImportPickerData(null)} animation={false} centered style={{ zIndex: 2000 }}>
+            <Modal.Header closeButton style={{ background: isSale ? '#f0f7ff' : '#f0fff4', borderBottom: '1px solid #dee2e6' }}>
+              <div className="d-flex align-items-center gap-2">
+                <span style={{ fontSize: '18px' }}>{isSale ? '🧾' : '📦'}</span>
+                <div>
+                  <Modal.Title style={{ fontSize: '16px', fontWeight: 600, marginBottom: 0 }}>
+                    {t('Select Products to Import')}
+                  </Modal.Title>
+                  <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '2px' }}>
+                    {isSale ? t('From Sale') : t('From Purchase')}: <strong>{importPickerData.code}</strong>
+                    &nbsp;·&nbsp;{importPickerData.products.length} {t('product(s)')}
+                  </div>
+                </div>
+              </div>
+            </Modal.Header>
+            <Modal.Body style={{ padding: 0 }}>
+              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                <table className="table table-sm mb-0" style={{ fontSize: '13px' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: '#f8f9fa', zIndex: 1, boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                    <tr>
+                      <th style={{ width: '36px', padding: '8px 12px' }}>
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={e => {
+                            const s = {};
+                            importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; });
+                            setImportPickerSelected(s);
+                          }}
+                          title={allSelected ? t('Deselect all') : t('Select all')}
+                        />
+                      </th>
+                      <th style={{ padding: '8px 12px', whiteSpace: 'nowrap', color: '#495057' }}>{t('Part No.')}</th>
+                      <th style={{ padding: '8px 12px', color: '#495057' }}>{t('Product Name')}</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap', color: '#495057' }}>{t('Qty')}</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap', color: '#495057' }}>
+                        {t('Retail Price')} <span style={{ fontWeight: 400, color: '#6c757d' }}>({t('excl. VAT')})</span>
+                      </th>
+                      <th style={{ width: '40px', padding: '8px 12px' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importPickerData.products.map((p, i) => {
+                      const checked = !!importPickerSelected[p.product_id];
+                      const price = isSale ? p.unit_price : (p.retail_unit_price ?? 0);
+                      return (
+                        <tr
+                          key={p.product_id || i}
+                          onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))}
+                          style={{
+                            cursor: 'pointer',
+                            background: checked ? (isSale ? '#e8f4ff' : '#e8fff0') : 'transparent',
+                            transition: 'background 0.1s',
+                          }}
+                        >
+                          <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
+                            <input type="checkbox" checked={checked} onChange={() => {}} />
+                          </td>
+                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '12px', background: '#f1f3f5', padding: '2px 6px', borderRadius: '4px' }}>
+                              {p.part_number || '—'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
+                            <div style={{ fontWeight: checked ? 600 : 400 }}>{p.name}</div>
+                            {p.name_in_arabic && (
+                              <div style={{ fontSize: '11px', color: '#6c757d', direction: 'rtl', textAlign: 'right' }}>{p.name_in_arabic}</div>
+                            )}
+                          </td>
+                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', textAlign: 'right', fontWeight: 500 }}>
+                            {p.quantity}
+                          </td>
+                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', textAlign: 'right' }}>
+                            {price > 0
+                              ? <span style={{ fontWeight: 600, color: '#198754' }}>{price}</span>
+                              : <span style={{ color: '#adb5bd' }}>—</span>
+                            }
+                          </td>
+                          <td style={{ padding: '8px 8px', verticalAlign: 'middle' }} onClick={e => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="btn btn-link btn-sm p-0"
+                              title={t('Edit product')}
+                              style={{ color: '#6c757d' }}
+                              onClick={() => openProductUpdateForm(p.product_id)}
+                            >
+                              <i className="bi bi-pencil-square"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Modal.Body>
+            <Modal.Footer style={{ background: '#f8f9fa', justifyContent: 'space-between', padding: '10px 16px' }}>
+              <div style={{ fontSize: '13px', color: '#6c757d' }}>
+                {selectedCount > 0
+                  ? <><strong>{selectedCount}</strong> {t('of')} {importPickerData.products.length} {t('selected')}</>
+                  : t('No products selected')}
+              </div>
+              <div className="d-flex gap-2">
+                <Button variant="outline-secondary" size="sm" onClick={() => setImportPickerData(null)}>{t('Cancel')}</Button>
+                <Button
+                  variant={isSale ? 'primary' : 'success'}
+                  size="sm"
+                  disabled={selectedCount === 0}
+                  onClick={confirmImportPicker}
+                >
+                  <i className="bi bi-box-arrow-in-down me-1"></i>
+                  {t('Import')} {selectedCount > 0 ? `(${selectedCount})` : ''}
+                </Button>
+              </div>
+            </Modal.Footer>
+          </Modal>
+        );
+      })()}
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
       <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
