@@ -76,6 +76,14 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
     const [forwardBody, setForwardBody]       = useState('');
     const [forwarding, setForwarding]         = useState(false);
 
+    // ── Compose new email ────────────────────────────────────────────────────
+    const [composeOpen, setComposeOpen]       = useState(false);
+    const [composeTo, setComposeTo]           = useState('');
+    const [composeSubject, setComposeSubject] = useState('');
+    const [composeBody, setComposeBody]       = useState('');
+    const [composeSending, setComposeSending] = useState(false);
+    const [composeStatus, setComposeStatus]   = useState(null); // {ok, msg}
+
     // ── RFQ history modal ────────────────────────────────────────────────────
     const [rfqHistoryMsg, setRfqHistoryMsg]       = useState(null);
     const [rfqHistory, setRfqHistory]             = useState(null);
@@ -171,6 +179,41 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
             }
         } catch (_) { showToast(t('Network error'), 'danger'); }
         setForwarding(false);
+    };
+
+    const handleCompose = async () => {
+        if (!composeTo.trim() || !composeBody.trim()) return;
+        setComposeSending(true);
+        setComposeStatus(null);
+        try {
+            const res = await fetch('/v1/procurement-email-send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ store_id: storeId, to: composeTo.trim(), subject: composeSubject.trim(), body: composeBody }),
+            });
+            const data = await res.json();
+            if (res.ok && !data.error) {
+                setComposeStatus({ ok: true, msg: t('Email sent successfully') });
+                const toEmail = composeTo.trim().toLowerCase();
+                setTimeout(() => {
+                    setComposeOpen(false);
+                    setComposeTo(''); setComposeSubject(''); setComposeBody(''); setComposeStatus(null);
+                    // Refresh thread list then open the new/existing conversation
+                    loadThreads('', true);
+                    setTimeout(() => {
+                        const found = threads.find(th => (th.contact_phone || '').toLowerCase() === toEmail);
+                        const thread = found || { contact_phone: toEmail, contact_name: toEmail };
+                        setSelectedThread(thread);
+                        loadThread(toEmail);
+                    }, 800);
+                }, 1200);
+            } else {
+                setComposeStatus({ ok: false, msg: data.error || t('Failed to send email') });
+            }
+        } catch (_) {
+            setComposeStatus({ ok: false, msg: t('Network error') });
+        }
+        setComposeSending(false);
     };
 
     const openRfqHistory = async (email) => {
@@ -477,6 +520,13 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                 {/* ── Left: thread list ───────────────────────────────────── */}
                 <div style={{ width: isMobile ? '100%' : '290px', minWidth: isMobile ? undefined : '220px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (isMobile && mobilePanel === 'chat') ? 'none' : 'flex', flexDirection: 'column' }}>
                     <div style={{ padding: '10px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
+                        <button
+                            onClick={() => { setComposeOpen(true); setComposeTo(''); setComposeSubject(''); setComposeBody(''); setComposeStatus(null); }}
+                            className="btn btn-primary btn-sm w-100 mb-2"
+                            style={{ fontSize: '12px', fontWeight: 600 }}
+                        >
+                            <i className="bi bi-pencil-square me-1"></i>{t('Compose')}
+                        </button>
                         <input
                             className="form-control form-control-sm mb-1"
                             placeholder={t('Search by email address...')}
@@ -942,6 +992,76 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                     loadThreads('', true);
                 }}
             />
+
+            {/* Compose new email modal */}
+            {composeOpen && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', borderRadius: '10px', width: '520px', maxWidth: '96vw', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        {/* Header */}
+                        <div style={{ background: '#1558b0', color: '#fff', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 600, fontSize: '15px' }}>
+                                <i className="bi bi-pencil-square me-2"></i>{t('New Email')}
+                            </span>
+                            <button onClick={() => setComposeOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: '20px', lineHeight: 1 }}>×</button>
+                        </div>
+                        {/* Body */}
+                        <div style={{ padding: '18px 20px' }}>
+                            <div className="mb-3">
+                                <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('To')} *</label>
+                                <input
+                                    className="form-control form-control-sm"
+                                    type="email"
+                                    placeholder="recipient@example.com"
+                                    value={composeTo}
+                                    onChange={e => setComposeTo(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="mb-3">
+                                <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('Subject')}</label>
+                                <input
+                                    className="form-control form-control-sm"
+                                    placeholder={t('Email subject')}
+                                    value={composeSubject}
+                                    onChange={e => setComposeSubject(e.target.value)}
+                                />
+                            </div>
+                            <div className="mb-3">
+                                <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>{t('Message')} *</label>
+                                <textarea
+                                    className="form-control"
+                                    rows={7}
+                                    placeholder={t('Write your email here...')}
+                                    value={composeBody}
+                                    onChange={e => setComposeBody(e.target.value)}
+                                    style={{ fontSize: '13px', resize: 'vertical' }}
+                                    onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleCompose(); }}
+                                />
+                                <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>Ctrl+Enter to send</div>
+                            </div>
+                            {composeStatus && (
+                                <div className={`alert alert-${composeStatus.ok ? 'success' : 'danger'} py-2 px-3 mb-2`} style={{ fontSize: '12px' }}>
+                                    {composeStatus.msg}
+                                </div>
+                            )}
+                        </div>
+                        {/* Footer */}
+                        <div style={{ padding: '10px 20px 16px', display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid #dee2e6' }}>
+                            <button onClick={() => setComposeOpen(false)} className="btn btn-outline-secondary btn-sm">{t('Cancel')}</button>
+                            <button
+                                onClick={handleCompose}
+                                disabled={composeSending || !composeTo.trim() || !composeBody.trim()}
+                                className="btn btn-primary btn-sm"
+                                style={{ minWidth: '90px' }}
+                            >
+                                {composeSending
+                                    ? <><span className="spinner-border spinner-border-sm me-1" />{t('Sending…')}</>
+                                    : <><i className="bi bi-send me-1"></i>{t('Send Email')}</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Forward modal */}
             {forwardMsg && (
