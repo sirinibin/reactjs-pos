@@ -283,12 +283,12 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
 
     function handleSigSave() {
         if (!sigEditing) return;
-        const { idx, name, content, is_default } = sigEditing;
+        const { idx, name, content, is_default, is_html } = sigEditing;
         if (!name.trim() || !content.trim()) { setSigSaveErr('Name and content are required.'); return; }
         const id = idx === -1 ? Date.now().toString(36) : (signatures[idx]?.id || Date.now().toString(36));
         let newSigs = idx === -1
-            ? [...signatures, { id, name, content, is_default }]
-            : signatures.map((s, i) => i === idx ? { ...s, name, content, is_default } : s);
+            ? [...signatures, { id, name, content, is_default, is_html: !!is_html }]
+            : signatures.map((s, i) => i === idx ? { ...s, name, content, is_default, is_html: !!is_html } : s);
         if (is_default) newSigs = newSigs.map(s => s.id === id ? s : { ...s, is_default: false });
         saveSignatures(newSigs).then(() => setSigEditing(null));
     }
@@ -516,7 +516,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                         <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => { setSigEditing({ idx: -1, name: '', content: '', is_default: signatures.length === 0 }); setSigSaveErr(''); }}
+                            onClick={() => { setSigEditing({ idx: -1, name: '', content: '', is_default: signatures.length === 0, is_html: false }); setSigSaveErr(''); }}
                             style={{ fontSize: '12px' }}
                         >
                             <i className="bi bi-plus me-1" />Add Signature
@@ -537,6 +537,9 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             {sig.is_default && (
                                 <span className="badge" style={{ background: '#198754', color: '#fff', fontSize: '10px' }}>Default</span>
                             )}
+                            {sig.is_html && (
+                                <span className="badge" style={{ background: '#6f42c1', color: '#fff', fontSize: '10px' }}>HTML</span>
+                            )}
                             {!sig.is_default && (
                                 <button
                                     type="button"
@@ -552,7 +555,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                                 type="button"
                                 className="btn btn-sm btn-outline-secondary"
                                 style={{ fontSize: '11px', padding: '2px 8px' }}
-                                onClick={() => { setSigEditing({ idx, name: sig.name, content: sig.content, is_default: sig.is_default }); setSigSaveErr(''); }}
+                                onClick={() => { setSigEditing({ idx, name: sig.name, content: sig.content, is_default: sig.is_default, is_html: !!sig.is_html }); setSigSaveErr(''); }}
                                 disabled={!!sigEditing}
                             >
                                 <i className="bi bi-pencil" />
@@ -567,9 +570,16 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                                 <i className="bi bi-trash3" />
                             </button>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#495057', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {sig.content}
-                        </div>
+                        {sig.is_html ? (
+                            <div
+                                style={{ fontSize: '12px', maxHeight: '60px', overflow: 'hidden', border: '1px solid #e9ecef', borderRadius: '4px', padding: '4px 8px', background: '#fff' }}
+                                dangerouslySetInnerHTML={{ __html: sig.content }}
+                            />
+                        ) : (
+                            <div style={{ fontSize: '12px', color: '#495057', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden' }}>
+                                {sig.content}
+                            </div>
+                        )}
                     </div>
                 ))}
 
@@ -590,16 +600,42 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             />
                         </div>
                         <div className="mb-2">
-                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>Signature Content</label>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                <label className="form-label mb-0" style={{ fontSize: '12px', fontWeight: 500 }}>Signature Content</label>
+                                <div className="form-check form-check-inline mb-0">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="sig-html"
+                                        checked={!!sigEditing.is_html}
+                                        onChange={e => setSigEditing(s => ({ ...s, is_html: e.target.checked }))}
+                                    />
+                                    <label className="form-check-label" htmlFor="sig-html" style={{ fontSize: '11px', color: '#6f42c1', fontWeight: 600 }}>
+                                        HTML markup
+                                    </label>
+                                </div>
+                            </div>
                             <textarea
                                 className="form-control form-control-sm"
                                 rows={5}
-                                placeholder="Best regards,&#10;[Your Name]&#10;[Company Name]&#10;[Phone]"
+                                placeholder={sigEditing.is_html
+                                    ? '<p>Best regards,</p>\n<p><strong>[Your Name]</strong><br>[Company Name]</p>'
+                                    : 'Best regards,\n[Your Name]\n[Company Name]\n[Phone]'}
                                 value={sigEditing.content}
                                 onChange={e => setSigEditing(s => ({ ...s, content: e.target.value }))}
-                                style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                                style={{ fontFamily: 'monospace', resize: 'vertical', fontSize: '12px' }}
                             />
-                            <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Plain text — line breaks are preserved in the email.</div>
+                            {sigEditing.is_html ? (
+                                <div style={{ marginTop: '6px' }}>
+                                    <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '3px' }}>Live preview:</div>
+                                    <div
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', padding: '8px 12px', background: '#fff', fontSize: '13px', minHeight: '36px' }}
+                                        dangerouslySetInnerHTML={{ __html: sigEditing.content || '<span style="color:#adb5bd">Preview will appear here…</span>' }}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Plain text — line breaks are preserved in the email.</div>
+                            )}
                         </div>
                         <div className="form-check mb-3">
                             <input
