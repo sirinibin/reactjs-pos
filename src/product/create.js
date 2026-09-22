@@ -1997,73 +1997,39 @@ const ProductCreate = forwardRef((props, ref) => {
                     <div className="row g-3">
                       <div className="col-md-4">
                         <Label>{t('Brand')}</Label>
-                        {store?.settings?.enable_arabic_names_list ? (
-                          <div className="d-flex gap-1 align-items-center">
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <Typeahead
-                                id="brand"
-                                labelKey="name"
-                                filterBy={() => true}
-                                positionFixed={true}
-                                options={brandOptions}
-                                selected={selectedBrands}
-                                placeholder={t('-- Select Brand --')}
-                                onInputChange={(searchTerm) => {
-                                  if (searchTerm) suggestBrands(searchTerm);
-                                  else setBrandOptions([]);
-                                }}
-                                onChange={(selectedItems) => {
-                                  if (selectedItems.length === 0) {
-                                    formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = '';
-                                    makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]);
-                                    return;
-                                  }
-                                  const b = selectedItems[0];
-                                  formData.brand_id = b.id; formData.brand_code = b.code || ''; formData.brand_name = b.name;
-                                  makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands(selectedItems);
-                                }}
-                                renderMenuItemChildren={(option) => (
-                                  <span style={{ fontSize: '13px' }}>{option.name}</span>
-                                )}
-                              />
-                            </div>
-                            <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title={t('New Brand')}>
-                              <i className="bi bi-plus-lg"></i>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex gap-1">
-                            <div style={{ position: 'relative', flex: 1 }}>
-                              <input
-                                type="text"
-                                style={{ ...INPUT, height: '34px', padding: '4px 8px' }}
-                                value={brandOpen ? brandSearch : (formData.brand_name || '')}
-                                placeholder={t('-- Select Brand --')}
-                                onFocus={() => { setBrandOpen(true); setBrandSearch(''); }}
-                                onBlur={() => setTimeout(() => setBrandOpen(false), 150)}
-                                onChange={e => setBrandSearch(e.target.value)}
-                              />
-                              {brandOpen && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
-                                  <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
-                                    onMouseDown={() => { formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = ''; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]); setBrandOpen(false); }}>
-                                    {t('-- Select Brand --')}
-                                  </div>
-                                  {brandOptions.filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase())).map(b => (
-                                    <div key={b.id}
-                                      style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: formData.brand_id === b.id ? '#e8f0fe' : undefined }}
-                                      onMouseDown={() => { formData.brand_id = b.id; formData.brand_code = b.code || ''; formData.brand_name = b.name; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([b]); setBrandOpen(false); setBrandSearch(''); }}>
-                                      {b.name}
-                                    </div>
-                                  ))}
-                                </div>
+                        <div className="d-flex gap-1 align-items-center">
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Typeahead
+                              id="brand"
+                              labelKey="name"
+                              filterBy={() => true}
+                              positionFixed={true}
+                              options={brandOptions}
+                              selected={selectedBrands}
+                              placeholder={t('-- Select Brand --')}
+                              onInputChange={(searchTerm) => {
+                                if (searchTerm) suggestBrands(searchTerm);
+                                else setBrandOptions([]);
+                              }}
+                              onChange={(selectedItems) => {
+                                if (selectedItems.length === 0) {
+                                  formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = '';
+                                  makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]);
+                                  return;
+                                }
+                                const b = selectedItems[0];
+                                formData.brand_id = b.id; formData.brand_code = b.code || ''; formData.brand_name = b.name;
+                                makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands(selectedItems);
+                              }}
+                              renderMenuItemChildren={(option) => (
+                                <span style={{ fontSize: '13px' }}>{option.name}</span>
                               )}
-                            </div>
-                            <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title={t('New Brand')}>
-                              <i className="bi bi-plus-lg"></i>
-                            </button>
+                            />
                           </div>
-                        )}
+                          <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title={t('New Brand')}>
+                            <i className="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
                       </div>
                       <div className="col-md-4">
                         <Label>{t('Country of Origin')}</Label>
@@ -2099,73 +2065,39 @@ const ProductCreate = forwardRef((props, ref) => {
                       </div>
                       <div className="col-md-4">
                         <Label>{t('Category')}</Label>
-                        {store?.settings?.enable_arabic_names_list ? (
-                          <div className="d-flex gap-1 align-items-center">
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <Typeahead
-                                id="category"
-                                labelKey="name"
-                                filterBy={() => true}
-                                positionFixed={true}
-                                options={categoryOptions}
-                                selected={selectedCategories}
-                                placeholder={t('-- Select Category --')}
-                                inputProps={{ style: { borderColor: errors.category_id ? '#dc3545' : undefined } }}
-                                onInputChange={(searchTerm) => {
-                                  errors.category_id = ''; setErrors({ ...errors });
-                                  if (searchTerm) suggestCategories(searchTerm);
-                                  else setCategoryOptions([]);
-                                }}
-                                onChange={(selectedItems) => {
-                                  errors.category_id = ''; setErrors({ ...errors });
-                                  if (selectedItems.length === 0) {
-                                    setSelectedCategories([]); setFormData({ ...formData });
-                                    return;
-                                  }
-                                  setSelectedCategories(selectedItems); setFormData({ ...formData });
-                                }}
-                                renderMenuItemChildren={(option) => (
-                                  <span style={{ fontSize: '13px' }}>{option.name}</span>
-                                )}
-                              />
-                            </div>
-                            <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title={t('New Category')}>
-                              <i className="bi bi-plus-lg"></i>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="d-flex gap-1">
-                            <div style={{ position: 'relative', flex: 1 }}>
-                              <input
-                                type="text"
-                                style={{ ...INPUT, height: '34px', padding: '4px 8px', borderColor: errors.category_id ? '#dc3545' : undefined }}
-                                value={categoryOpen ? categorySearch : (selectedCategories[0]?.name || '')}
-                                placeholder={t('-- Select Category --')}
-                                onFocus={() => { setCategoryOpen(true); setCategorySearch(''); }}
-                                onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-                                onChange={e => setCategorySearch(e.target.value)}
-                              />
-                              {categoryOpen && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
-                                  <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
-                                    onMouseDown={() => { errors.category_id = ''; setErrors({ ...errors }); setSelectedCategories([]); setFormData({ ...formData }); setCategoryOpen(false); }}>
-                                    {t('-- Select Category --')}
-                                  </div>
-                                  {categoryOptions.filter(c => !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => (
-                                    <div key={c.id}
-                                      style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: selectedCategories[0]?.id === c.id ? '#e8f0fe' : undefined }}
-                                      onMouseDown={() => { errors.category_id = ''; setErrors({ ...errors }); setSelectedCategories([c]); setFormData({ ...formData }); setCategoryOpen(false); setCategorySearch(''); }}>
-                                      {c.name}
-                                    </div>
-                                  ))}
-                                </div>
+                        <div className="d-flex gap-1 align-items-center">
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Typeahead
+                              id="category"
+                              labelKey="name"
+                              filterBy={() => true}
+                              positionFixed={true}
+                              options={categoryOptions}
+                              selected={selectedCategories}
+                              placeholder={t('-- Select Category --')}
+                              inputProps={{ style: { borderColor: errors.category_id ? '#dc3545' : undefined } }}
+                              onInputChange={(searchTerm) => {
+                                errors.category_id = ''; setErrors({ ...errors });
+                                if (searchTerm) suggestCategories(searchTerm);
+                                else setCategoryOptions([]);
+                              }}
+                              onChange={(selectedItems) => {
+                                errors.category_id = ''; setErrors({ ...errors });
+                                if (selectedItems.length === 0) {
+                                  setSelectedCategories([]); setFormData({ ...formData });
+                                  return;
+                                }
+                                setSelectedCategories(selectedItems); setFormData({ ...formData });
+                              }}
+                              renderMenuItemChildren={(option) => (
+                                <span style={{ fontSize: '13px' }}>{option.name}</span>
                               )}
-                            </div>
-                            <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title={t('New Category')}>
-                              <i className="bi bi-plus-lg"></i>
-                            </button>
+                            />
                           </div>
-                        )}
+                          <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title={t('New Category')}>
+                            <i className="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
                         {errors.category_id && <ErrMsg>{errors.category_id}</ErrMsg>}
                       </div>
                       <div className="col-md-2">
