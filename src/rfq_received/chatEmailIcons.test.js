@@ -2,15 +2,15 @@
  * Source-code tests for WhatsApp chat and Email icons added to RFQ supplier/customer locations.
  *
  * Covers:
- *  1. ForwardDetail Info tab: WhatsApp icon links to /dashboard/procurement-whatsapp?phone=...
- *  2. ForwardDetail Info tab: Email icon links to /dashboard/procurement-emails?email=...
+ *  1. ForwardDetail Info tab: WhatsApp icon opens chat modal for customer_phone
+ *  2. ForwardDetail Info tab: Email icon opens chat modal for customer_email
  *  3. ForwardDetail Suppliers tab: WhatsApp icon per supplier row (uses r.phone)
  *  4. ForwardDetail Suppliers tab: Email icon per supplier row (uses resolved.email)
  *  5. RFQSendModal Recipients: WhatsApp icon per recipient (uses s.phone)
  *  6. RFQSendModal Recipients: Email icon per recipient (uses s.email)
  *  7. ProcurementWhatsAppTab: reads ?phone= URL param via useLocation
  *  8. ProcurementWhatsAppTab: auto-selects thread matching ?phone= param after threads load
- *  9. ProcurementEmailsTab: initialises search state from ?email= URL param
+ *  9. rfq_suppliers: chat icons use setChatModal (not history.push)
  */
 
 const fs = require('fs');
@@ -21,32 +21,34 @@ const waSrc  = fs.readFileSync(path.join(__dirname, '../store/ProcurementWhatsAp
 const emlSrc = fs.readFileSync(path.join(__dirname, '../store/ProcurementEmailsTab.js'), 'utf8');
 const supSrc = fs.readFileSync(path.join(__dirname, '../rfq_suppliers/index.js'), 'utf8');
 
-describe('WhatsApp & Email chat icons', () => {
-    it('1. Info tab customer: WhatsApp button navigates to procurement-whatsapp with phone', () => {
-        expect(rfqSrc).toMatch(/procurement-whatsapp.*phone.*customer_phone|customer_phone.*procurement-whatsapp/);
+describe('WhatsApp & Email chat icons — modal pattern', () => {
+    it('1. Info tab customer: WhatsApp button opens chatModal with customer_phone', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}whatsapp[\s\S]{0,100}customer_phone|customer_phone[\s\S]{0,100}setChatModal[\s\S]{0,50}whatsapp/);
     });
 
-    it('2. Info tab customer: Email button navigates to procurement-emails with customer_email', () => {
-        expect(rfqSrc).toMatch(/procurement-emails.*email.*customer_email|customer_email.*procurement-emails/);
+    it('2. Info tab customer: Email button opens chatModal with customer_email', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}email[\s\S]{0,100}customer_email|customer_email[\s\S]{0,100}setChatModal[\s\S]{0,50}email/);
     });
 
-    it('3. Suppliers tab: WhatsApp button per row uses r.phone to open conversation', () => {
-        // Button: {r.phone && <button...procurement-whatsapp...r.phone.replace...>}
-        expect(rfqSrc).toMatch(/r\.phone\.replace[\s\S]{0,50}procurement-whatsapp|procurement-whatsapp[\s\S]{0,100}r\.phone\.replace/);
+    it('3. Suppliers tab: WhatsApp button per row uses r.phone with setChatModal', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}whatsapp[\s\S]{0,100}r\.phone|r\.phone[\s\S]{0,100}setChatModal[\s\S]{0,100}whatsapp/);
     });
 
-    it('4. Suppliers tab: Email icon per row using resolved.email', () => {
-        expect(rfqSrc).toMatch(/resolved\.email[\s\S]{0,200}procurement-emails|procurement-emails[\s\S]{0,200}resolved\.email/);
+    it('4. Suppliers tab: Email icon per row using resolved.email with setChatModal', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}email[\s\S]{0,100}resolved\.email|resolved\.email[\s\S]{0,100}setChatModal/);
     });
 
-    it('5. Send RFQ Recipients: WhatsApp icon using s.phone', () => {
-        expect(rfqSrc).toMatch(/procurement-whatsapp[\s\S]{0,200}s\.phone|s\.phone[\s\S]{0,200}procurement-whatsapp/);
+    it('5. Send RFQ Recipients: WhatsApp icon uses s.phone with setChatModal', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}whatsapp[\s\S]{0,200}s\.phone|s\.phone[\s\S]{0,200}setChatModal[\s\S]{0,100}whatsapp/);
     });
 
-    it('6. Send RFQ Recipients: Email icon using s.email', () => {
-        // Both procurement-emails navigation and s.email check exist
-        expect(rfqSrc).toMatch(/procurement-emails/);
-        expect(rfqSrc).toMatch(/s\.email[\s\S]{0,100}procurement-emails|procurement-emails[\s\S]{0,1000}s\.email/);
+    it('6. Send RFQ Recipients: Email icon uses s.email with setChatModal', () => {
+        expect(rfqSrc).toMatch(/setChatModal[\s\S]{0,100}email[\s\S]{0,200}s\.email|s\.email[\s\S]{0,100}setChatModal[\s\S]{0,100}email/);
+    });
+
+    it('6b. No remaining history.push to procurement-whatsapp or procurement-emails', () => {
+        expect(rfqSrc).not.toMatch(/history\.push[\s\S]{0,100}procurement-whatsapp/);
+        expect(rfqSrc).not.toMatch(/history\.push[\s\S]{0,100}procurement-emails/);
     });
 });
 
@@ -55,12 +57,12 @@ describe('RFQ Suppliers index table — chat icons', () => {
         expect(supSrc).toMatch(/import.*useHistory.*react-router-dom/);
     });
 
-    it('8. WhatsApp icon links to procurement-whatsapp with sup.phone', () => {
-        expect(supSrc).toMatch(/procurement-whatsapp[\s\S]{0,200}sup\.phone|sup\.phone[\s\S]{0,200}procurement-whatsapp/);
+    it('8. WhatsApp icon uses setChatModal with sup.phone', () => {
+        expect(supSrc).toMatch(/setChatModal[\s\S]{0,100}whatsapp[\s\S]{0,100}sup\.phone|sup\.phone[\s\S]{0,100}setChatModal[\s\S]{0,100}whatsapp/);
     });
 
-    it('9. Email icon links to procurement-emails with sup.email', () => {
-        expect(supSrc).toMatch(/sup\.email[\s\S]{0,200}procurement-emails|procurement-emails[\s\S]{0,200}sup\.email/);
+    it('9. Email icon uses setChatModal with sup.email', () => {
+        expect(supSrc).toMatch(/setChatModal[\s\S]{0,100}email[\s\S]{0,100}sup\.email|sup\.email[\s\S]{0,100}setChatModal[\s\S]{0,100}email/);
     });
 });
 
