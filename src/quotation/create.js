@@ -3712,7 +3712,7 @@ async function checkWarning(i) {
                     <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
                     <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
                     <td>{p.quantity}</td>
-                    <td>{importPickerData.source === 'purchase' ? p.retail_unit_price : p.unit_price}</td>
+                    <td>{importPickerData.source === 'purchase' ? (p.retail_unit_price ?? 0) : p.unit_price}</td>
                   </tr>
                 ))}
               </tbody>
