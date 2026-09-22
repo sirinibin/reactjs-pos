@@ -264,10 +264,10 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSigSaveErr('');
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(`${apiBase}/v1/store/${storeId}`, {
+            const resp = await fetch(`${apiBase}/v1/store/${storeId}/email-signatures`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ settings: { email_signatures: newSigs } }),
+                body: JSON.stringify({ email_signatures: newSigs }),
             });
             if (!resp.ok) {
                 const d = await resp.json().catch(() => ({}));

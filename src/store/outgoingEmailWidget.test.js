@@ -23,6 +23,18 @@ describe('ProcurementOutgoingEmailWidget — auth token key', () => {
     });
 });
 
+describe('ProcurementOutgoingEmailWidget — dedicated signatures endpoint', () => {
+    it('saveSignatures uses dedicated email-signatures endpoint', () => {
+        expect(src).toMatch(/\/email-signatures/);
+    });
+
+    it('saveSignatures sends email_signatures at top-level (not nested under settings)', () => {
+        expect(src).toMatch(/email_signatures.*newSigs/);
+        // must NOT nest under settings: { email_signatures }
+        expect(src).not.toMatch(/settings.*email_signatures.*newSigs/);
+    });
+});
+
 describe('ProcurementOutgoingEmailWidget — smtp port as number', () => {
     it('smtp port is initialized as 0 (number), not empty string', () => {
         expect(src).toMatch(/outgoing_email_smtp_port.*s\.outgoing_email_smtp_port.*\|\|.*0/);
