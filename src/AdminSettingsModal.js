@@ -22,7 +22,6 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [testResult, setTestResult] = useState(null);
     const [migrating, setMigrating] = useState(false);
     const [migrateResult, setMigrateResult] = useState(null);
-    const [migrateStoreId, setMigrateStoreId] = useState('');
     const [migrateProgress, setMigrateProgress] = useState(null);
     const [migratingRFQ, setMigratingRFQ] = useState(false);
     const [migrateRFQResult, setMigrateRFQResult] = useState(null);
@@ -102,13 +101,8 @@ export default function AdminSettingsModal({ show, onHide }) {
     };
 
     const handleMigrate = async () => {
-        if (!migrateStoreId.trim()) {
-            alert('Enter a Store ID to migrate.');
-            return;
-        }
         if (!window.confirm(
-            'This will upload all existing attachment files for Store ID ' + migrateStoreId.trim() +
-            ' to S3 and update their URLs in the database.\n\nOriginal files stay on the server.\n\nProceed?'
+            'This will upload all locally-stored attachment files for ALL stores to S3 and update their links in the database.\n\nOriginal files stay on the server.\n\nProceed?'
         )) return;
 
         setMigrating(true);
@@ -117,7 +111,7 @@ export default function AdminSettingsModal({ show, onHide }) {
 
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(`/v1/store/${migrateStoreId.trim()}/migrate-to-s3`, {
+            const resp = await fetch('/v1/migrate-all-stores-to-s3', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -137,23 +131,35 @@ export default function AdminSettingsModal({ show, onHide }) {
                 if (done) break;
                 buf += decoder.decode(value, { stream: true });
 
-                // Parse complete SSE lines from buffer
                 const lines = buf.split('\n');
-                buf = lines.pop(); // keep incomplete last line
+                buf = lines.pop();
 
                 for (const line of lines) {
                     if (!line.startsWith('data: ')) continue;
                     try {
                         const ev = JSON.parse(line.slice(6));
-                        if (ev.type === 'start') {
-                            setMigrateProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current_file: '' });
-                        } else if (ev.type === 'progress') {
-                            setMigrateProgress(prev => ({ ...prev, ...ev }));
+                        if (ev.type === 'store_start') {
+                            setMigrateProgress(prev => ({
+                                ...(prev || {}),
+                                current_store: ev.store_name || ev.store_id,
+                                index: ev.index,
+                                total_stores: ev.total_stores,
+                                percent: Math.round((ev.index - 1) * 100 / ev.total_stores),
+                            }));
+                        } else if (ev.type === 'store_done') {
+                            setMigrateProgress(prev => ({
+                                ...(prev || {}),
+                                current_store: ev.store_name || ev.store_id,
+                                index: ev.index,
+                                percent: Math.round(ev.index * 100 / (prev?.total_stores || 1)),
+                                uploaded: (prev?.uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) + ev.skipped,
+                            }));
                         } else if (ev.type === 'done') {
-                            setMigrateProgress(prev => ({ ...prev, percent: 100, done: true }));
+                            setMigrateProgress(prev => ({ ...(prev || {}), percent: 100, done: true }));
                             setMigrateResult({
                                 ok: true,
-                                msg: `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}, Messages updated: ${ev.updated_messages}`,
+                                msg: `Done — ${ev.stores} store(s). Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}, Messages updated: ${ev.updated_messages}`,
                             });
                         } else if (ev.type === 'error') {
                             setMigrateResult({ ok: false, msg: ev.error });
@@ -503,56 +509,43 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 Migrate existing files to S3
                             </div>
                             <p style={{ fontSize: '12px', color: '#78350f', margin: '0 0 12px', lineHeight: 1.6 }}>
-                                Uploads all locally-stored attachment files for a specific store to S3 and updates the links in the database.
-                                Run once per store after configuring S3. Original server files are kept.
+                                Uploads all locally-stored attachment files for <strong>all stores</strong> to S3 and updates the links in the database.
+                                Run once after configuring S3. Original server files are kept.
                             </p>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                <input
-                                    style={{ ...inputStyle, width: '260px', fontSize: '12px' }}
-                                    value={migrateStoreId}
-                                    onChange={e => setMigrateStoreId(e.target.value)}
-                                    placeholder="Store ID (hex, from Store form URL)"
-                                    disabled={migrating}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleMigrate}
-                                    disabled={migrating || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                    style={{
-                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
-                                        background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                        cursor: 'pointer', opacity: (migrating || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                        whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    {migrating ? 'Migrating…' : 'Migrate Existing Files to S3'}
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={handleMigrate}
+                                disabled={migrating || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
+                                    background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (migrating || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {migrating ? 'Migrating…' : 'Migrate Existing Files to S3'}
+                            </button>
 
-                            {/* Real-time progress */}
                             {migrateProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#78350f', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
                                         <span>
-                                            {migrateProgress.done ? 'Complete' : `Processing: ${migrateProgress.current_file || '…'}`}
+                                            {migrateProgress.done ? 'Complete' : `Store ${migrateProgress.index || '…'}/${migrateProgress.total_stores || '…'}: ${migrateProgress.current_store || '…'}`}
                                         </span>
-                                        <span>
-                                            {migrateProgress.processed} / {migrateProgress.total} ({migrateProgress.percent}%)
-                                        </span>
+                                        <span>{migrateProgress.percent || 0}%</span>
                                     </div>
-                                    {/* Progress bar */}
                                     <div style={{ background: '#fde68a', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
                                         <div style={{
                                             background: migrateProgress.done ? '#16a34a' : '#d97706',
-                                            width: `${migrateProgress.percent}%`,
+                                            width: `${migrateProgress.percent || 0}%`,
                                             height: '100%',
                                             transition: 'width 0.2s ease',
                                             borderRadius: '4px',
                                         }} />
                                     </div>
                                     <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
-                                        <span>Uploaded: <strong>{migrateProgress.uploaded}</strong></span>
-                                        <span>Skipped: <strong>{migrateProgress.skipped}</strong></span>
+                                        <span>Uploaded: <strong>{migrateProgress.uploaded || 0}</strong></span>
+                                        <span>Skipped: <strong>{migrateProgress.skipped || 0}</strong></span>
                                     </div>
                                 </div>
                             )}
