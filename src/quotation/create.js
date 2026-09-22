@@ -3701,18 +3701,26 @@ async function checkWarning(i) {
               <thead>
                 <tr>
                   <th><input type="checkbox" checked={importPickerData.products.every(p => importPickerSelected[p.product_id])} onChange={e => { const s = {}; importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; }); setImportPickerSelected(s); }} /></th>
+                  <th>{t('Part No.')}</th>
                   <th>{t('Name')}</th>
                   <th>{t('Qty')}</th>
                   <th>{t('Unit Price')} ({t('excl. VAT')})</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {importPickerData.products.map((p, i) => (
                   <tr key={p.product_id || i} onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))} style={{ cursor: 'pointer' }}>
                     <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{p.part_number || '—'}</td>
                     <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
                     <td>{p.quantity}</td>
                     <td>{importPickerData.source === 'purchase' ? (p.retail_unit_price ?? 0) : p.unit_price}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <button type="button" className="btn btn-outline-secondary btn-sm" title={t('Edit product')} onClick={() => openProductUpdateForm(p.product_id)}>
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
