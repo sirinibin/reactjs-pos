@@ -2501,11 +2501,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         {formData.images && formData.images.length > 0 && (
                                             <div style={{ marginBottom: '16px' }}>
                                                 {(() => {
-                                                    const allSaved = (formData.images || []).map((fn, i) => { const bn = fn.includes('/') ? fn.split('/').pop() : fn; return { url: `/images/${localStorage.getItem("store_id")}/customer_deposits/${bn}`, isImg: isImageFile(bn, ""), name: getFileLabel(bn) + " " + (i+1) }; });
+                                                    const allSaved = (formData.images || []).map((fn, i) => { const bn = fn.includes('/') ? fn.split('/').pop() : fn; const u = fn.startsWith('/') ? fn : `/images/${localStorage.getItem("store_id")}/customer_deposits/${bn}`; return { url: u, isImg: isImageFile(bn, ""), name: getFileLabel(bn) + " " + (i+1) }; });
                                                     return formData.images.map((filename, idx) => {
                                                         const storeId = localStorage.getItem('store_id');
                                                         const basename = filename.includes('/') ? filename.split('/').pop() : filename;
-                                                        const url = `/images/${storeId}/customer_deposits/${basename}`;
+                                                        const url = filename.startsWith('/') ? filename : `/images/${storeId}/customer_deposits/${basename}`;
                                                         const isImg = isImageFile(filename, '');
                                                         const label = getFileLabel(filename) + ' ' + (idx + 1);
                                                         const dlName = 'attachment-' + (idx + 1) + '.' + filename.split('.').pop();

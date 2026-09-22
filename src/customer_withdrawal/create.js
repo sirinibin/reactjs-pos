@@ -2517,11 +2517,11 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             {/* Existing saved files */}
                                             {(formData.images || []).map((filename, idx) => {
                                                 const basename = filename.includes('/') ? filename.split('/').pop() : filename;
-                                                const url = `/images/${localStorage.getItem('store_id')}/customer_withdrawals/${basename}`;
+                                                const url = filename.startsWith('/') ? filename : `/images/${localStorage.getItem('store_id')}/customer_withdrawals/${basename}`;
                                                 const isImg = isImageFile(basename, "");
                                                 const label = getFileLabel(basename) + ' ' + (idx + 1);
                                                 const downloadName = 'attachment-' + (idx + 1) + '.' + basename.split('.').pop();
-                                                const allSaved = (formData.images || []).map((fn, i) => { const bn = fn.includes('/') ? fn.split('/').pop() : fn; return { url: `/images/${localStorage.getItem("store_id")}/customer_withdrawals/${bn}`, isImg: isImageFile(bn, ""), name: getFileLabel(bn) + " " + (i+1) }; });
+                                                const allSaved = (formData.images || []).map((fn, i) => { const bn = fn.includes('/') ? fn.split('/').pop() : fn; const u = fn.startsWith('/') ? fn : `/images/${localStorage.getItem("store_id")}/customer_withdrawals/${bn}`; return { url: u, isImg: isImageFile(bn, ""), name: getFileLabel(bn) + " " + (i+1) }; });
                                                 return (
                                                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f7f9fb', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', fontFamily: '"Inter", sans-serif' }}>
                                                         {isImg ? (

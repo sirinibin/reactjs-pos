@@ -27,6 +27,12 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [migratingRFQ, setMigratingRFQ] = useState(false);
     const [migrateRFQResult, setMigrateRFQResult] = useState(null);
     const [migrateRFQProgress, setMigrateRFQProgress] = useState(null);
+    const [migratingEntity, setMigratingEntity] = useState(false);
+    const [migrateEntityResult, setMigrateEntityResult] = useState(null);
+    const [migrateEntityProgress, setMigrateEntityProgress] = useState(null);
+    const [migratingInline, setMigratingInline] = useState(false);
+    const [migrateInlineResult, setMigrateInlineResult] = useState(null);
+    const [migrateInlineProgress, setMigrateInlineProgress] = useState(null);
 
     useEffect(() => {
         if (!show) return;
@@ -213,6 +219,75 @@ export default function AdminSettingsModal({ show, onHide }) {
         } finally {
             setMigratingRFQ(false);
         }
+    };
+
+    const runSSEMigration = async (url, setMigrating, setResult, setProgress, doneMsg) => {
+        setMigrating(true);
+        setResult(null);
+        setProgress(null);
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+            if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}));
+                setResult({ ok: false, msg: data.error || `HTTP ${resp.status}` });
+                return;
+            }
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+                const lines = buf.split('\n');
+                buf = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const ev = JSON.parse(line.slice(6));
+                        if (ev.type === 'start') {
+                            setProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current: '' });
+                        } else if (ev.type === 'progress') {
+                            setProgress(prev => ({ ...prev, ...ev }));
+                        } else if (ev.type === 'done') {
+                            setProgress(prev => ({ ...prev, percent: 100, done: true }));
+                            setResult({ ok: true, msg: doneMsg(ev) });
+                        } else if (ev.type === 'error') {
+                            setResult({ ok: false, msg: ev.error });
+                        }
+                    } catch (_) {}
+                }
+            }
+        } catch (e) {
+            setResult({ ok: false, msg: e.message });
+        } finally {
+            setMigrating(false);
+        }
+    };
+
+    const handleMigrateEntity = () => {
+        if (!window.confirm(
+            'This will scan the images/ and zatca/ directories on disk,\n' +
+            'upload all files to S3, and update MongoDB records to use /cdn/ URLs.\n\nProceed?'
+        )) return;
+        runSSEMigration(
+            '/v1/migrate-entity-images-to-s3',
+            setMigratingEntity, setMigrateEntityResult, setMigrateEntityProgress,
+            ev => `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}`
+        );
+    };
+
+    const handleMigrateInline = () => {
+        if (!window.confirm(
+            'This will migrate inline base64 image data stored in MongoDB\n' +
+            '(expenses, capitals, deposits, withdrawals, etc.) to S3.\n\nProceed?'
+        )) return;
+        runSSEMigration(
+            '/v1/migrate-inline-images-to-s3',
+            setMigratingInline, setMigrateInlineResult, setMigrateInlineProgress,
+            ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated}`
+        );
     };
 
     const enabled = !!settings.s3_enabled;
@@ -425,6 +500,96 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateRFQResult && (
                                 <div style={{ marginTop: '10px', fontSize: '13px', color: migrateRFQResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                                     {migrateRFQResult.ok ? '✓ ' : '✗ '}{migrateRFQResult.msg}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Migrate entity images (disk → S3) */}
+                        <div style={{ marginTop: '16px', padding: '16px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px' }}>
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#14532d', marginBottom: '6px' }}>
+                                Migrate Entity Images to S3
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#166534', margin: '0 0 12px', lineHeight: 1.6 }}>
+                                Scans the local <code>images/</code> and <code>zatca/</code> directories, uploads every file to S3,
+                                and updates MongoDB records (products, customers, vendors, expenses, etc.) to use <code>/cdn/</code> URLs.
+                                Run once after enabling S3.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleMigrateEntity}
+                                disabled={migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #16a34a',
+                                    background: '#fff', color: '#14532d', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {migratingEntity ? 'Migrating…' : 'Migrate Entity Images to S3'}
+                            </button>
+                            {migrateEntityProgress && (
+                                <div style={{ marginTop: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#166534', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
+                                        <span>{migrateEntityProgress.done ? 'Complete' : `Processing: ${migrateEntityProgress.current || '…'}`}</span>
+                                        <span>{migrateEntityProgress.processed} / {migrateEntityProgress.total} ({migrateEntityProgress.percent}%)</span>
+                                    </div>
+                                    <div style={{ background: '#bbf7d0', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
+                                        <div style={{ background: migrateEntityProgress.done ? '#16a34a' : '#22c55e', width: `${migrateEntityProgress.percent}%`, height: '100%', transition: 'width 0.2s ease', borderRadius: '4px' }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#166534', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateEntityProgress.uploaded}</strong></span>
+                                        <span>Skipped: <strong>{migrateEntityProgress.skipped}</strong></span>
+                                    </div>
+                                </div>
+                            )}
+                            {migrateEntityResult && (
+                                <div style={{ marginTop: '10px', fontSize: '13px', color: migrateEntityResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
+                                    {migrateEntityResult.ok ? '✓ ' : '✗ '}{migrateEntityResult.msg}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Migrate inline base64 (MongoDB → S3) */}
+                        <div style={{ marginTop: '16px', padding: '16px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px' }}>
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#1e3a8a', marginBottom: '6px' }}>
+                                Migrate Inline Base64 Images to S3
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#1d4ed8', margin: '0 0 12px', lineHeight: 1.6 }}>
+                                Some older records (expenses, capital investments, drawings, receivables, payables) store images
+                                as inline base64 data inside MongoDB. This migration uploads each image to S3 and replaces
+                                the inline data with a <code>/cdn/</code> URL.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleMigrateInline}
+                                disabled={migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #3b82f6',
+                                    background: '#fff', color: '#1e3a8a', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {migratingInline ? 'Migrating…' : 'Migrate Inline Images to S3'}
+                            </button>
+                            {migrateInlineProgress && (
+                                <div style={{ marginTop: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
+                                        <span>{migrateInlineProgress.done ? 'Complete' : `Processing…`}</span>
+                                        <span>{migrateInlineProgress.processed} / {migrateInlineProgress.total} ({migrateInlineProgress.percent}%)</span>
+                                    </div>
+                                    <div style={{ background: '#bfdbfe', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
+                                        <div style={{ background: migrateInlineProgress.done ? '#16a34a' : '#3b82f6', width: `${migrateInlineProgress.percent}%`, height: '100%', transition: 'width 0.2s ease', borderRadius: '4px' }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateInlineProgress.uploaded}</strong></span>
+                                        <span>Skipped: <strong>{migrateInlineProgress.skipped}</strong></span>
+                                    </div>
+                                </div>
+                            )}
+                            {migrateInlineResult && (
+                                <div style={{ marginTop: '10px', fontSize: '13px', color: migrateInlineResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
+                                    {migrateInlineResult.ok ? '✓ ' : '✗ '}{migrateInlineResult.msg}
                                 </div>
                             )}
                         </div>
