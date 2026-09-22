@@ -1562,55 +1562,55 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   async function handleImportFromSales(sale) {
-    if (!sale || !sale.id) {
-      console.error('[import] sale missing id', sale);
-      return;
-    }
+    if (!sale || !sale.id) return;
     try {
       const url = '/v1/order/' + sale.id + '?store_id=' + localStorage.getItem('store_id');
-      console.log('[import] fetching sale', url);
       const res = await fetch(url, {
         headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
       });
-      console.log('[import] sale fetch status', res.status, res.ok);
       const data = res.ok ? await res.json() : null;
-      console.log('[import] sale data products', data?.result?.products?.length);
+      if (!res.ok || !data) {
+        if (props.showToastMessage) props.showToastMessage('Failed to load sale details', 'danger');
+        return;
+      }
       const products = data?.result?.products;
       if (!products || products.length === 0) {
-        console.error('[import] no products in sale response', data);
+        if (props.showToastMessage) props.showToastMessage('No products found in the selected sale', 'warning');
         return;
       }
       const initSel = {};
       products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
       setImportPickerSelected(initSel);
       setImportPickerData({ source: 'sale', code: data.result.code || sale.code, products });
-    } catch (e) { console.error('[import] from sales failed', e); }
+    } catch (e) {
+      if (props.showToastMessage) props.showToastMessage('Failed to load sale details', 'danger');
+    }
   }
 
   async function handleImportFromPurchases(purchase) {
-    if (!purchase || !purchase.id) {
-      console.error('[import] purchase missing id', purchase);
-      return;
-    }
+    if (!purchase || !purchase.id) return;
     try {
       const url = '/v1/purchase/' + purchase.id + '?store_id=' + localStorage.getItem('store_id');
-      console.log('[import] fetching purchase', url);
       const res = await fetch(url, {
         headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
       });
-      console.log('[import] purchase fetch status', res.status, res.ok);
       const data = res.ok ? await res.json() : null;
-      console.log('[import] purchase data products', data?.result?.products?.length);
+      if (!res.ok || !data) {
+        if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
+        return;
+      }
       const products = data?.result?.products;
       if (!products || products.length === 0) {
-        console.error('[import] no products in purchase response', data);
+        if (props.showToastMessage) props.showToastMessage('No products found in the selected purchase', 'warning');
         return;
       }
       const initSel = {};
       products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
       setImportPickerSelected(initSel);
       setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products });
-    } catch (e) { console.error('[import] from purchases failed', e); }
+    } catch (e) {
+      if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
+    }
   }
 
   function confirmImportPicker() {
@@ -2080,7 +2080,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
   const PurchasesRef = useRef();
-  const salesPickerModeRef = useRef('link'); // 'link' | 'import'
+  const SalesImportRef = useRef();
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
     const hasProducts = store?.settings?.enable_products;
@@ -2728,12 +2728,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const handleSelectedSale = (selectedSale) => {
-    if (salesPickerModeRef.current === 'import') {
-      salesPickerModeRef.current = 'link';
-      handleImportFromSales(selectedSale);
-      return;
-    }
-
     if (formData.customer_id !== selectedSale.customer_id) {
       infoMessage = "The selected sale is not belongs to the customer " + selectedCustomers[0]?.name;
       setInfoMessage(infoMessage);
@@ -2748,8 +2742,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   };
 
   function openSalesForImport() {
-    salesPickerModeRef.current = 'import';
-    SalesRef?.current?.open(true, selectedCustomers);
+    SalesImportRef?.current?.open(true, selectedCustomers);
   }
 
   let [showInfo, setShowInfo] = useState(false);
@@ -3641,6 +3634,7 @@ async function checkWarning(i) {
         onClose={() => setShowInfo(false)}
       />
       <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
+      <Sales ref={SalesImportRef} onSelectSale={handleImportFromSales} showToastMessage={props.showToastMessage} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
@@ -3708,7 +3702,7 @@ async function checkWarning(i) {
                     <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
                     <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
                     <td>{p.quantity}</td>
-                    <td>{importPickerData.source === 'sale' ? p.unit_price : p.unit_price}</td>
+                    <td>{p.unit_price}</td>
                   </tr>
                 ))}
               </tbody>

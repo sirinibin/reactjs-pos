@@ -494,7 +494,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                         .map((uri, i) => ({ uri, i, filename: additionalAttachmentFilenames[i] || '' }))
                         .filter(({ uri }) => !/^data:image\//i.test(uri));
                     return (
-                        <div style={{ margin: '12px 0' }}>
+                        <div className="additional-attachment" style={{ margin: '12px 0' }}>
                             {/* Section header */}
                             <div style={{
                                 background: C.headerBg, color: C.headerText,

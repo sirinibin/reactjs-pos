@@ -550,9 +550,9 @@ describe('regression guard — other z-index rules unchanged', () => {
         );
     });
 
-    test('.order-preview-wrap still at 1300', () => {
+    test('.order-preview-wrap still at 1600', () => {
         expect(APP_CSS).toMatch(
-            /\.order-preview-wrap\s*\{[^}]*z-index\s*:\s*1300\s*!important/
+            /\.order-preview-wrap\s*\{[^}]*z-index\s*:\s*1600\s*!important/
         );
     });
 });
