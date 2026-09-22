@@ -33,6 +33,12 @@ describe('ProcurementOutgoingEmailWidget — dedicated signatures endpoint', () 
         // must NOT nest under settings: { email_signatures }
         expect(src).not.toMatch(/settings.*email_signatures.*newSigs/);
     });
+
+    it('all fetch calls use relative paths (no apiBase / absolute URLs)', () => {
+        // No absolute URL construction via REACT_APP_API_URL
+        expect(src).not.toMatch(/REACT_APP_API_URL/);
+        expect(src).not.toMatch(/apiBase/);
+    });
 });
 
 describe('ProcurementOutgoingEmailWidget — smtp port as number', () => {

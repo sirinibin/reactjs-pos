@@ -195,8 +195,6 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSignatures((settings || {}).email_signatures || []);
     }, [settings]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const apiBase = process.env.REACT_APP_API_URL || '';
-
     const selectedProvider = PROVIDERS.find(p => p.value === creds.outgoing_email_provider) || null;
 
     function handleFieldChange(key, value) {
@@ -219,7 +217,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSaveErr('');
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(`${apiBase}/v1/store/${storeId}`, {
+            const resp = await fetch(`/v1/store/${storeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ settings: creds }),
@@ -244,7 +242,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setTestResult(null);
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(`${apiBase}/v1/outgoing-email/test?store_id=${storeId}`, {
+            const resp = await fetch(`/v1/outgoing-email/test?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ to: testTo }),
@@ -264,7 +262,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSigSaveErr('');
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(`${apiBase}/v1/store/${storeId}/email-signatures`, {
+            const resp = await fetch(`/v1/store/${storeId}/email-signatures`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ email_signatures: newSigs }),
