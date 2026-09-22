@@ -162,7 +162,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
             outgoing_email_from_name:           s.outgoing_email_from_name || '',
             outgoing_email_from_address:        s.outgoing_email_from_address || '',
             outgoing_email_smtp_host:           s.outgoing_email_smtp_host || '',
-            outgoing_email_smtp_port:           s.outgoing_email_smtp_port || '',
+            outgoing_email_smtp_port:           parseInt(s.outgoing_email_smtp_port, 10) || 0,
             outgoing_email_smtp_username:       s.outgoing_email_smtp_username || '',
             outgoing_email_smtp_password:       s.outgoing_email_smtp_password || '',
             outgoing_email_smtp_use_tls:        s.outgoing_email_smtp_use_tls !== false,
@@ -200,7 +200,8 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
     const selectedProvider = PROVIDERS.find(p => p.value === creds.outgoing_email_provider) || null;
 
     function handleFieldChange(key, value) {
-        const next = { ...creds, [key]: value };
+        const coerced = key === 'outgoing_email_smtp_port' ? (parseInt(value, 10) || 0) : value;
+        const next = { ...creds, [key]: coerced };
         setCreds(next);
     }
 

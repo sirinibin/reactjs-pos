@@ -23,6 +23,20 @@ describe('ProcurementOutgoingEmailWidget — auth token key', () => {
     });
 });
 
+describe('ProcurementOutgoingEmailWidget — smtp port as number', () => {
+    it('smtp port is initialized as 0 (number), not empty string', () => {
+        expect(src).toMatch(/outgoing_email_smtp_port.*s\.outgoing_email_smtp_port.*\|\|.*0/);
+    });
+
+    it('handleFieldChange coerces smtp port to integer', () => {
+        expect(src).toMatch(/outgoing_email_smtp_port.*parseInt/);
+    });
+
+    it('smtp port is never initialized as empty string', () => {
+        expect(src).not.toMatch(/outgoing_email_smtp_port.*\|\|.*''/);
+    });
+});
+
 describe('ProcurementOutgoingEmailWidget — iframe preview', () => {
     it('list preview iframe has min-width of 600px', () => {
         expect(src).toMatch(/minWidth.*600px/);
