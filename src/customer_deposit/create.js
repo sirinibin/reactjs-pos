@@ -31,6 +31,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import ZatcaConnect from '../store/zatca_connect.js';
+import { useTranslation } from "react-i18next";
 
 const columnStyle = {
     width: '20%',
@@ -41,6 +42,7 @@ const columnStyle = {
 };
 
 const CustomerDepositCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     useImperativeHandle(ref, () => ({
         open(id) {
             setErrors({});
@@ -700,7 +702,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         let haveErrors = false;
 
         if (!formData.payments || formData.payments?.length === 0) {
-            errors["payments"] = "At lease one payment is required";
+            errors["payments"] = t("At lease one payment is required");
             setErrors({ ...errors });
             haveErrors = true;
         }
@@ -713,23 +715,23 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
 
             if (!formData.payments[key].amount) {
-                errors["customer_receivable_payment_amount_" + key] = "Payment amount is required";
+                errors["customer_receivable_payment_amount_" + key] = t("Payment amount is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             } else if (formData.payments[key].amount <= 0) {
-                errors["customer_receivable_payment_amount_" + key] = "Amount should be greater than zero";
+                errors["customer_receivable_payment_amount_" + key] = t("Amount should be greater than zero");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             if (!formData.payments[key].date_str) {
-                errors["customer_receivable_payment_date_" + key] = "Payment date is required";
+                errors["customer_receivable_payment_date_" + key] = t("Payment date is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             if (!formData.payments[key].method) {
-                errors["customer_receivable_payment_method_" + key] = "Payment method is required";
+                errors["customer_receivable_payment_method_" + key] = t("Payment method is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -1357,19 +1359,19 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
             >
                 <Modal.Header closeButton className="cursor-move">
-                    <Modal.Title>Select Invoice Type</Modal.Title>
+                    <Modal.Title>{t("Select Invoice Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     {formData.type === "customer" && <>
                         <Button variant="primary" onClick={() => {
                             openSales();
                         }}>
-                            Sales Invoices
+                            {t("Sales Invoices")}
                         </Button>
                         <Button variant="secondary" onClick={() => {
                             openQuotationSales();
                         }}>
-                            Quotation Invoices
+                            {t("Quotation Invoices")}
                         </Button>
                     </>}
                 </Modal.Body>
@@ -1401,36 +1403,36 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t("Back")}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? "Update Receipt" : "Create New Receipt"}
+                        {formData.id ? t("Update Receipt") : t("Create New Receipt")}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         <button type="button"
                             style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                             onClick={openPreview}>
-                            <i className="bi bi-printer me-1"></i>Print
+                            <i className="bi bi-printer me-1"></i>{t("Print")}
                         </button>
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t("View Detail")}
                             </button>
                         )}
                         {zatcaLocked
                             ? <span style={{ background: '#fff3cd', color: '#856404', border: '1px solid #ffc107', borderRadius: '4px', padding: '5px 12px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                                <i className="bi bi-lock-fill"></i> ZATCA Reported
+                                <i className="bi bi-lock-fill"></i> {t("ZATCA Reported")}
                               </span>
                             : <button type="button"
                                 style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                 onClick={handleCreate} disabled={isProcessing}>
                                 {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                                {formData.id ? 'Update' : 'Create'}
+                                {formData.id ? t('Update') : t('Create')}
                               </button>
                         }
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t("Close")} />
                     </div>
                 </Modal.Header>
 
@@ -1484,7 +1486,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     <div style={{ background: '#fff8e1', border: '1px solid #ffc107', borderRadius: '8px', padding: '10px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <i className="bi bi-lock-fill" style={{ color: '#856404', fontSize: '16px', flexShrink: 0 }}></i>
                                         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#856404', fontWeight: 500 }}>
-                                            This record has been reported to ZATCA and cannot be modified.
+                                            {t("This record has been reported to ZATCA and cannot be modified.")}
                                         </span>
                                     </div>
                                 )}
@@ -1504,7 +1506,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 {/* ── Customer / Vendor ── */}
                                 <>
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-people">Customer / Vendor</SectionTitle>
+                                            <SectionTitle icon="bi-people">{t("Customer / Vendor")}</SectionTitle>
 
                                             <div className="entity-header-grid" style={{ alignItems: 'stretch' }}>
                                                 {/* LEFT: Type/Date/Remarks + active Typeahead */}
@@ -1512,7 +1514,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     <div className="row g-3">
                                                         {/* Type */}
                                                         <div className="col-md-2">
-                                                            <Label required>Type</Label>
+                                                            <Label required>{t("Type")}</Label>
                                                             <select
                                                                 value={formData.type}
                                                                 onChange={(e) => {
@@ -1532,10 +1534,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                 }}
                                                                 style={INPUT}
                                                             >
-                                                                <option value="customer">Customer</option>
-                                                                <option value="vendor">Vendor</option>
+                                                                <option value="customer">{t("Customer")}</option>
+                                                                <option value="vendor">{t("Vendor")}</option>
                                                                 {store?.settings?.enable_employee_module && (
-                                                                    <option value="employee">Employee</option>
+                                                                    <option value="employee">{t("Employee")}</option>
                                                                 )}
                                                             </select>
                                                             {errors?.type && <ErrMsg>{errors.type}</ErrMsg>}
@@ -1543,7 +1545,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                                         {/* Date */}
                                                         <div className="col-md-2">
-                                                            <Label required>Date</Label>
+                                                            <Label required>{t("Date")}</Label>
                                                             <div className="input-group">
                                                                 <DatePicker
                                                                     id="date_str"
@@ -1569,7 +1571,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                                         {/* Remarks */}
                                                         <div className="col-md-8">
-                                                            <Label>Remarks</Label>
+                                                            <Label>{t("Remarks")}</Label>
                                                             <textarea
                                                                 value={formData.remarks ? formData.remarks : ""}
                                                                 type='string'
@@ -1582,7 +1584,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                 }}
                                                                 style={{ ...INPUT, minHeight: '34px', resize: 'vertical', maxWidth: '400px' }}
                                                                 id="remarks"
-                                                                placeholder="Remarks"
+                                                                placeholder={t("Remarks")}
                                                             />
                                                             {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
                                                         </div>
@@ -1591,7 +1593,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     {/* Customer Typeahead */}
                                                     {formData.type === "customer" && (
                                                         <div style={{ marginTop: '12px' }}>
-                                                            <Label required>Customer</Label>
+                                                            <Label required>{t("Customer")}</Label>
                                                             <div className="d-flex gap-1 align-items-start">
                                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                                     <Typeahead
@@ -1621,7 +1623,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                             setOpenCustomerSearchResult(false);
                                                                         }}
                                                                         options={customerOptions}
-                                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                                        placeholder={t("Customer Name / Mob / VAT # / ID")}
                                                                         selected={selectedCustomers}
                                                                         highlightOnlyResult={true}
                                                                         ref={customerSearchRef}
@@ -1654,12 +1656,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                 <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                                     <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                                            <div style={{ width: '10%' }}>ID</div>
-                                                                                            <div style={{ width: '50%' }}>Name</div>
-                                                                                            <div style={{ width: '10%' }}>Phone</div>
-                                                                                            <div style={{ width: '13%' }}>VAT</div>
-                                                                                            <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                                            <div style={{ width: '7%' }}>Credit Limit</div>
+                                                                                            <div style={{ width: '10%' }}>{t("ID")}</div>
+                                                                                            <div style={{ width: '50%' }}>{t("Name")}</div>
+                                                                                            <div style={{ width: '10%' }}>{t("Phone")}</div>
+                                                                                            <div style={{ width: '13%' }}>{t("VAT")}</div>
+                                                                                            <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
+                                                                                            <div style={{ width: '7%' }}>{t("Credit Limit")}</div>
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                     {results.map((option, index) => {
@@ -1702,11 +1704,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <Button onClick={openCustomerCreateForm} className="btn btn-primary btn-sm" type="button" title="New Customer">
+                                                                <Button onClick={openCustomerCreateForm} className="btn btn-primary btn-sm" type="button" title={t("New Customer")}>
                                                                     <i className="bi bi-plus-lg"></i>
                                                                 </Button>
-                                                                {selectedCustomers.length > 0 && formData.customer_id && <Button onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)} className="btn btn-primary btn-sm" type="button" title="Edit Customer"><i className="bi bi-pencil"></i></Button>}
-                                                                <Button className="btn btn-primary btn-sm" onClick={openCustomers} title="List Customers">
+                                                                {selectedCustomers.length > 0 && formData.customer_id && <Button onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)} className="btn btn-primary btn-sm" type="button" title={t("Edit Customer")}><i className="bi bi-pencil"></i></Button>}
+                                                                <Button className="btn btn-primary btn-sm" onClick={openCustomers} title={t("List Customers")}>
                                                                     <i className="bi bi-list"></i>
                                                                 </Button>
                                                             </div>
@@ -1717,7 +1719,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     {/* Vendor Typeahead */}
                                                     {formData.type === "vendor" && (
                                                         <div style={{ marginTop: '12px' }}>
-                                                            <Label required>Vendor</Label>
+                                                            <Label required>{t("Vendor")}</Label>
                                                             <div className="d-flex gap-1 align-items-start">
                                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                                     <Typeahead
@@ -1747,7 +1749,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                             setOpenVendorSearchResult(false);
                                                                         }}
                                                                         options={vendorOptions}
-                                                                        placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                        placeholder={t("Vendor Name | Mob | VAT # | ID")}
                                                                         selected={selectedVendors}
                                                                         highlightOnlyResult={true}
                                                                         ref={vendorSearchRef}
@@ -1779,12 +1781,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                 <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                                     <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                                            <div style={{ width: '10%' }}>ID</div>
-                                                                                            <div style={{ width: '50%' }}>Name</div>
-                                                                                            <div style={{ width: '10%' }}>Phone</div>
-                                                                                            <div style={{ width: '13%' }}>VAT</div>
-                                                                                            <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                                            <div style={{ width: '7%' }}>Credit Limit</div>
+                                                                                            <div style={{ width: '10%' }}>{t("ID")}</div>
+                                                                                            <div style={{ width: '50%' }}>{t("Name")}</div>
+                                                                                            <div style={{ width: '10%' }}>{t("Phone")}</div>
+                                                                                            <div style={{ width: '13%' }}>{t("VAT")}</div>
+                                                                                            <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
+                                                                                            <div style={{ width: '7%' }}>{t("Credit Limit")}</div>
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                     {results.map((option, index) => {
@@ -1827,11 +1829,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <Button onClick={openVendorCreateForm} className="btn btn-primary btn-sm" type="button" title="New Vendor">
+                                                                <Button onClick={openVendorCreateForm} className="btn btn-primary btn-sm" type="button" title={t("New Vendor")}>
                                                                     <i className="bi bi-plus-lg"></i>
                                                                 </Button>
-                                                                {selectedVendors.length > 0 && formData.vendor_id && <Button onClick={() => VendorCreateFormRef.current.open(formData.vendor_id)} className="btn btn-primary btn-sm" type="button" title="Edit Vendor"><i className="bi bi-pencil"></i></Button>}
-                                                                <Button className="btn btn-primary btn-sm" onClick={openVendors} title="List Vendors">
+                                                                {selectedVendors.length > 0 && formData.vendor_id && <Button onClick={() => VendorCreateFormRef.current.open(formData.vendor_id)} className="btn btn-primary btn-sm" type="button" title={t("Edit Vendor")}><i className="bi bi-pencil"></i></Button>}
+                                                                <Button className="btn btn-primary btn-sm" onClick={openVendors} title={t("List Vendors")}>
                                                                     <i className="bi bi-list"></i>
                                                                 </Button>
                                                             </div>
@@ -1842,7 +1844,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     {/* Employee Typeahead */}
                                                     {formData.type === "employee" && (
                                                         <div style={{ marginTop: '12px' }}>
-                                                            <Label required>Employee</Label>
+                                                            <Label required>{t("Employee")}</Label>
                                                             <div className="d-flex gap-1 align-items-start">
                                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                                     <Typeahead
@@ -1868,7 +1870,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                             setOpenEmployeeSearchResult(false);
                                                                         }}
                                                                         options={employeeOptions}
-                                                                        placeholder="Employee Name / Code"
+                                                                        placeholder={t("Employee Name / Code")}
                                                                         selected={selectedEmployees}
                                                                         highlightOnlyResult={true}
                                                                         ref={employeeSearchRef}
@@ -1895,9 +1897,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                 <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '60vw', maxWidth: '60vw', minWidth: '300px', zIndex: 9999 }}>
                                                                                     <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                                            <div style={{ width: '20%' }}>ID</div>
-                                                                                            <div style={{ width: '60%' }}>Name</div>
-                                                                                            <div style={{ width: '20%' }}>Phone</div>
+                                                                                            <div style={{ width: '20%' }}>{t("ID")}</div>
+                                                                                            <div style={{ width: '60%' }}>{t("Name")}</div>
+                                                                                            <div style={{ width: '20%' }}>{t("Phone")}</div>
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                     {results.map((option, index) => {
@@ -1918,11 +1920,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         }}
                                                                     />
                                                                 </div>
-                                                                <Button onClick={openEmployeeCreateForm} className="btn btn-primary btn-sm" type="button" title="New Employee">
+                                                                <Button onClick={openEmployeeCreateForm} className="btn btn-primary btn-sm" type="button" title={t("New Employee")}>
                                                                     <i className="bi bi-plus-lg"></i>
                                                                 </Button>
-                                                                {selectedEmployees.length > 0 && formData.employee_id && <Button onClick={() => EmployeeCreateFormRef.current.open(formData.employee_id)} className="btn btn-primary btn-sm" type="button" title="Edit Employee"><i className="bi bi-pencil"></i></Button>}
-                                                                <Button className="btn btn-primary btn-sm" onClick={openEmployees} title="List Employees">
+                                                                {selectedEmployees.length > 0 && formData.employee_id && <Button onClick={() => EmployeeCreateFormRef.current.open(formData.employee_id)} className="btn btn-primary btn-sm" type="button" title={t("Edit Employee")}><i className="bi bi-pencil"></i></Button>}
+                                                                <Button className="btn btn-primary btn-sm" onClick={openEmployees} title={t("List Employees")}>
                                                                     <i className="bi bi-list"></i>
                                                                 </Button>
                                                             </div>
@@ -2009,7 +2011,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                 {/* ── Payments ── */}
                                 <div style={CARD} className="pw-card">
-                                        <SectionTitle icon="bi-cash-stack">Payments</SectionTitle>
+                                        <SectionTitle icon="bi-cash-stack">{t("Payments")}</SectionTitle>
                                         {errors.payments && <ErrMsg>{errors.payments}</ErrMsg>}
 
                                         <div className="table-responsive">
@@ -2020,30 +2022,30 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                 {formData.payments && formData.payments.length > 0 &&
                                                     <thead style={{ textAlign: "center" }}>
                                                         <th style={{ minWidth: "190px" }}>
-                                                            Date
+                                                            {t("Date")}
                                                         </th>
                                                         <th style={{ minWidth: "130px" }}>
-                                                            Amount
+                                                            {t("Amount")}
                                                         </th>
                                                         <th style={{ minWidth: "130px" }}>
-                                                            Discount
+                                                            {t("Discount")}
                                                         </th>
                                                         {formData.type !== "employee" && (
                                                         <th style={{ minWidth: "180px" }}>
-                                                            Invoice
+                                                            {t("Invoice")}
                                                         </th>
                                                         )}
                                                         <th style={{ minWidth: "130px" }}>
-                                                            Payment method
+                                                            {t("Payment method")}
                                                         </th>
                                                         <th style={{ minWidth: "140px" }}>
-                                                            Bank Reference #
+                                                            {t("Bank Reference #")}
                                                         </th>
                                                         <th style={{ minWidth: "140px" }} >
-                                                            Description
+                                                            {t("Description")}
                                                         </th>
                                                         <th style={{ minWidth: "100px" }}>
-                                                            Action
+                                                            {t("Action")}
                                                         </th>
                                                     </thead>}
                                                 <tbody>
@@ -2267,14 +2269,14 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                             console.log(formData);
                                                                         }}
                                                                     >
-                                                                        <option value="">Select</option>
-                                                                        <option value="cash">Cash</option>
-                                                                        <option value="debit_card">Debit Card</option>
-                                                                        <option value="credit_card">Credit Card</option>
-                                                                        <option value="bank_card">Bank Card</option>
-                                                                        <option value="bank_transfer">Bank Transfer</option>
-                                                                        <option value="bank_cheque">Bank Cheque</option>
-                                                                        <option value="purchase_fund">Purchase Fund A/c</option>
+                                                                        <option value="">{t("Select")}</option>
+                                                                        <option value="cash">{t("Cash")}</option>
+                                                                        <option value="debit_card">{t("Debit Card")}</option>
+                                                                        <option value="credit_card">{t("Credit Card")}</option>
+                                                                        <option value="bank_card">{t("Bank Card")}</option>
+                                                                        <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                                                        <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                                                        <option value="purchase_fund">{t("Purchase Fund A/c")}</option>
                                                                     </select>
                                                                     {errors["customer_receivable_payment_method_" + key] && (
                                                                         <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>{errors["customer_receivable_payment_method_" + key]}</div>
@@ -2384,7 +2386,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                     <Button variant="danger" onClick={(event) => {
                                                                         removePayment(key);
                                                                     }}>
-                                                                        Remove
+                                                                        {t("Remove")}
                                                                     </Button>
 
                                                                 </td>
@@ -2392,7 +2394,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         ))}
                                                     <tr>
                                                         <td className="text-end">
-                                                            <b>Total</b>
+                                                            <b>{t("Total")}</b>
                                                         </td>
 
                                                         <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
@@ -2407,7 +2409,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     </tr>
                                                     <tr>
                                                         <td className="text-end">
-                                                            <b>Total Discount</b>
+                                                            <b>{t("Total Discount")}</b>
                                                         </td>
 
                                                         <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalDiscountAmount)}</b>
@@ -2425,7 +2427,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         const exVat = parseFloat(trimTo2Decimals(netTotalPaymentAmount - vatAmt));
                                                         return (<>
                                                             <tr>
-                                                                <td className="text-end"><b>Amount (Excl. VAT)</b></td>
+                                                                <td className="text-end"><b>{t("Amount (Excl. VAT)")}</b></td>
                                                                 <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(exVat)}</b></td>
                                                                 <td colSpan={6}></td>
                                                             </tr>
@@ -2438,7 +2440,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     })()}
                                                     <tr>
                                                         <td className="text-end">
-                                                            <b>Net Total</b>
+                                                            <b>{t("Net Total")}</b>
                                                         </td>
                                                         <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(netTotalPaymentAmount)}</b>
                                                             {errors["net_total_payment"] && (
@@ -2458,7 +2460,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 {/* ── ZATCA Reporting ── */}
                                 {!formData.id && store?.zatca?.phase === "2" && store?.zatca?.connected && store?.settings?.enable_zatca_reporting_for_receivables && (
                                     <div style={CARD} className="pw-card">
-                                        <SectionTitle icon="bi-shield-check">ZATCA Reporting (Debit Note)</SectionTitle>
+                                        <SectionTitle icon="bi-shield-check">{t("ZATCA Reporting (Debit Note)")}</SectionTitle>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <input
                                                 type="checkbox"
@@ -2471,7 +2473,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                 }}
                                             />
                                             <label htmlFor="enable_report_to_zatca_deposit" style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>
-                                                Report to ZATCA as Debit Note on Create
+                                                {t("Report to ZATCA as Debit Note on Create")}
                                             </label>
                                         </div>
                                     </div>
@@ -2479,13 +2481,13 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                 {/* ── Attachments ── */}
                                 <div style={CARD} className="pw-card">
-                                        <SectionTitle icon="bi-paperclip">Attachments</SectionTitle>
+                                        <SectionTitle icon="bi-paperclip">{t("Attachments")}</SectionTitle>
 
                                         {/* Drag-drop upload area */}
                                         <label style={{ display: 'block', border: '2px dashed #c3c6d7', borderRadius: '8px', padding: '32px', background: '#f7f9fb', cursor: 'pointer', textAlign: 'center', marginBottom: '20px' }}>
                                             <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#004ac6', display: 'block', marginBottom: '8px' }}></i>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>Click or drag files here</div>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>Images, PDFs, and any file type</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>{t("Click or drag files here")}</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>{t("Images, PDFs, and any file type")}</div>
                                             <input
                                                 type="file"
                                                 accept="*/*"
@@ -2516,10 +2518,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                 )}
                                                                 <span style={{ flex: 1, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
                                                                 <button type="button" onClick={() => isImg ? openLightbox(allSaved, idx) : window.open(url, '_blank')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '2px 6px', fontSize: '13px' }}>
-                                                                    <i className="bi bi-eye me-1"></i>View
+                                                                    <i className="bi bi-eye me-1"></i>{t("View")}
                                                                 </button>
                                                                 <button type="button" onClick={() => downloadServerFile(url, dlName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '2px 6px', fontSize: '13px' }}>
-                                                                    <i className="bi bi-download me-1"></i>Download
+                                                                    <i className="bi bi-download me-1"></i>{t("Download")}
                                                                 </button>
                                                                 <button type="button" onClick={() => removeExistingAttachment(filename)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ba1a1a', flexShrink: 0, padding: '2px 6px' }}>
                                                                     <i className="bi bi-trash"></i>
@@ -2547,7 +2549,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             <span style={{ fontSize: '12px', color: '#737686', flexShrink: 0 }}>{formatBytes(file.size)}</span>
                                                             {isImg && (
                                                                 <button type="button" onClick={() => { const pendingImgItems = pendingAttachments.map(f => ({ url: f.dataUrl, isImg: isImageFile(f.name, f.type), name: f.name })); openLightbox(pendingImgItems, idx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '2px 6px', fontSize: '13px' }}>
-                                                                    <i className="bi bi-eye me-1"></i>View
+                                                                    <i className="bi bi-eye me-1"></i>{t("View")}
                                                                 </button>
                                                             )}
                                                             <button type="button" onClick={() => downloadDataUrl(file.dataUrl, file.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '2px 6px', fontSize: '13px' }}>
@@ -2565,7 +2567,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         {/* Empty state */}
                                         {(!formData.images || formData.images.length === 0) && pendingAttachments.length === 0 && (
                                             <div style={{ color: '#737686', fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>
-                                                No attachments yet.
+                                                {t("No attachments yet.")}
                                             </div>
                                         )}
                                 </div>

@@ -130,7 +130,9 @@ describe('create.js — ImageDropzone confirm prompt', () => {
     });
 
     test('5.2  confirm message references the image label', () => {
-        expect(SRC).toMatch(/window\.confirm\(`Remove this \$\{label\}/);
+        // Code uses i18n t() with {{label}} placeholder syntax
+        expect(SRC).toMatch(/window\.confirm\(t\(/);
+        expect(SRC).toMatch(/\{\{label\}\}/);
     });
 
     test('5.3  confirm message mentions deletion happens on save', () => {
@@ -158,11 +160,13 @@ describe('create.js — Save Changes button label in header', () => {
     });
 
     test('6.2  Save Changes is the label when formData.id exists', () => {
-        expect(SRC).toMatch(/formData\.id\s*\?\s*['"]Save Changes['"]/);
+        // Code uses t('Save Changes') for i18n
+        expect(SRC).toMatch(/formData\.id\s*\?\s*t\(['"]/);
     });
 
     test('6.3  "Create" label is used for new stores', () => {
-        expect(SRC).toMatch(/['"]Save Changes['"]\s*:\s*['"]Create['"]/);
+        // Code uses t('Save Changes') : t('Create') pattern
+        expect(SRC).toMatch(/t\(['"]Save Changes['"]\)\s*:\s*t\(['"]Create['"]\)/);
     });
 });
 
@@ -212,7 +216,8 @@ describe('create.js — logo removed from General Info tab', () => {
     test('8.2  the Logo ImageDropzone is inside the Logo tab block', () => {
         const logoTabStart = SRC.indexOf("activeTab === 'logo'");
         const logoTabEnd   = SRC.indexOf("activeTab === 'invoice_background'");
-        const dropzoneIdx  = SRC.indexOf("label=\"Logo\"", logoTabStart);
+        // Code uses label={t('Logo')} — match either form
+        const dropzoneIdx  = SRC.indexOf("label={t('Logo')}", logoTabStart);
         expect(dropzoneIdx).toBeGreaterThan(logoTabStart);
         expect(dropzoneIdx).toBeLessThan(logoTabEnd);
     });

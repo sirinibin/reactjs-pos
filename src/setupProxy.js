@@ -14,7 +14,7 @@ module.exports = function (app) {
 
     // HTTP proxy for all other API paths
     app.use(
-        ['/v1', '/zatca', '/pdfs', '/images', '/socket.io/'],
+        ['/v1', '/zatca', '/pdfs', '/images', '/attachments', '/socket.io/'],
         createProxyMiddleware({
             target: process.env.REACT_APP_PROXY_HOST,
             changeOrigin: true,

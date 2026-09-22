@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import UserRoleCreate from "./create.js";
 import UserRoleView from "./view.js";
 import { Button, Spinner } from "react-bootstrap";
@@ -6,6 +7,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function UserRoleIndex(props) {
+    const { t } = useTranslation('common');
     const [roleList, setRoleList] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize] = useState(10);
@@ -68,7 +70,7 @@ function UserRoleIndex(props) {
     }
 
     async function handleDelete(id) {
-        if (!window.confirm("Delete this role?")) return;
+        if (!window.confirm(t("Delete this role?"))) return;
         const storeId = localStorage.getItem("store_id");
         const res = await fetch("/v1/user-role/" + id + "?search[store_id]=" + storeId, {
             method: "DELETE",
@@ -79,12 +81,12 @@ function UserRoleIndex(props) {
         }).then(r => r.json()).catch(() => ({}));
 
         if (!res.status) {
-            const msg = res.errors?.delete || "Failed to delete role";
+            const msg = res.errors?.delete || t("Failed to delete role");
             if (props.showToastMessage) props.showToastMessage(msg, "danger");
             else alert(msg);
             return;
         }
-        if (props.showToastMessage) props.showToastMessage("Role deleted", "success");
+        if (props.showToastMessage) props.showToastMessage(t("Role deleted"), "success");
         list();
     }
 
@@ -98,22 +100,22 @@ function UserRoleIndex(props) {
             <UserRoleView ref={viewRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateView={id => createRef.current?.open(id)} />
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
-                <h4 style={{ margin: 0, fontFamily: '"Hanken Grotesk", sans-serif', fontWeight: 700 }}>User Roles</h4>
+                <h4 style={{ margin: 0, fontFamily: '"Hanken Grotesk", sans-serif', fontWeight: 700 }}>{t('User Roles')}</h4>
                 <Button size="sm" style={{ background: "#004ac6", border: "none" }} onClick={() => createRef.current?.open()}>
-                    <i className="bi bi-plus-lg me-1" /> New Role
+                    <i className="bi bi-plus-lg me-1" /> {t('New Role')}
                 </Button>
             </div>
 
             <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
                 <input
                     className="form-control form-control-sm"
-                    placeholder="Search by name..."
+                    placeholder={t('Search by name...')}
                     value={searchName}
                     onChange={e => setSearchName(e.target.value)}
                     style={{ flex: "1 1 180px", minWidth: "0" }}
                 />
-                <Button type="submit" size="sm" variant="outline-secondary">Search</Button>
-                {searchName && <Button size="sm" variant="outline-danger" onClick={() => { setSearchName(""); setPage(1); setTimeout(list, 0); }}>Clear</Button>}
+                <Button type="submit" size="sm" variant="outline-secondary">{t('Search')}</Button>
+                {searchName && <Button size="sm" variant="outline-danger" onClick={() => { setSearchName(""); setPage(1); setTimeout(list, 0); }}>{t('Clear')}</Button>}
             </form>
 
             {isListLoading ? (
@@ -124,15 +126,15 @@ function UserRoleIndex(props) {
                         <thead style={{ background: "#f2f4f6" }}>
                             <tr>
                                 <th>#</th>
-                                <th>Role Name</th>
-                                <th>Permissions</th>
-                                <th>Created By</th>
-                                <th>Actions</th>
+                                <th>{t('Role Name')}</th>
+                                <th>{t('Permissions')}</th>
+                                <th>{t('Created By')}</th>
+                                <th>{t('Actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {roleList.length === 0 ? (
-                                <tr><td colSpan={5} className="text-center text-muted py-4">No roles found</td></tr>
+                                <tr><td colSpan={5} className="text-center text-muted py-4">{t('No roles found')}</td></tr>
                             ) : roleList.map((role, idx) => (
                                 <tr key={role.id}>
                                     <td>{(page - 1) * pageSize + idx + 1}</td>
@@ -144,7 +146,7 @@ function UserRoleIndex(props) {
                                     </td>
                                     <td>
                                         <span style={{ fontSize: "12px", color: "#555" }}>
-                                            {role.permissions?.length || 0} resource{role.permissions?.length !== 1 ? "s" : ""}
+                                            {role.permissions?.length || 0} {role.permissions?.length !== 1 ? t("resources") : t("resource")}
                                         </span>
                                     </td>
                                     <td>{role.created_by_name || "—"}</td>

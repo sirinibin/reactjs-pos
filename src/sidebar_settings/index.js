@@ -4,7 +4,6 @@ import { DEFAULT_MENU, loadSidebarConfig, saveSidebarConfig } from "../sidebar_m
 
 export default function SidebarSettings() {
     const [items, setItems]       = useState([]);
-    const [saved, setSaved]       = useState(false);
     const [serverLoading, setServerLoading] = useState(false);
     const [syncError, setSyncError] = useState(null);
     const dragIndex               = useRef(null);
@@ -86,31 +85,16 @@ export default function SidebarSettings() {
     function onDragEnd() {
         dragIndex.current = null;
         setDraggingId(null);
-    }
-
-    // ── Actions ─────────────────────────────────────────────────────────────
-    function toggleVisible(id) {
-        setItems(prev => prev.map(item => item.id === id ? { ...item, visible: !item.visible } : item));
-        setSaved(false);
-    }
-
-    function setAsLanding(id) {
-        // Move the chosen item to the front and make it visible
+        // Auto-save after drag completes — items state is updated by onDragEnter
         setItems(prev => {
-            const idx  = prev.findIndex(i => i.id === id);
-            if (idx <= 0) return prev.map(i => i.id === id ? { ...i, visible: true } : i);
-            const next = [...prev];
-            const [target] = next.splice(idx, 1);
-            next.unshift({ ...target, visible: true });
-            return next;
+            doSave(prev);
+            return prev;
         });
-        setSaved(false);
     }
 
-    function handleSave() {
+    function doSave(currentItems) {
         setSyncError(null);
-        const result = saveSidebarConfig(items);
-        setSaved(true);
+        const result = saveSidebarConfig(currentItems);
         window.dispatchEvent(new StorageEvent('storage', { key: 'sidebar_config' }));
         if (result && typeof result.then === 'function') {
             result.then(r => {
@@ -121,13 +105,31 @@ export default function SidebarSettings() {
         }
     }
 
+    // ── Actions ─────────────────────────────────────────────────────────────
+    function toggleVisible(id) {
+        setItems(prev => {
+            const next = prev.map(item => item.id === id ? { ...item, visible: !item.visible } : item);
+            doSave(next);
+            return next;
+        });
+    }
+
+    function setAsLanding(id) {
+        setItems(prev => {
+            const idx  = prev.findIndex(i => i.id === id);
+            const next = idx <= 0
+                ? prev.map(i => i.id === id ? { ...i, visible: true } : i)
+                : (() => { const a = [...prev]; const [t] = a.splice(idx, 1); a.unshift({ ...t, visible: true }); return a; })();
+            doSave(next);
+            return next;
+        });
+    }
+
     function handleReset() {
         setSyncError(null);
         const defaults = DEFAULT_MENU.map(m => ({ ...m, visible: true }));
-        saveSidebarConfig(defaults);
+        doSave(defaults);
         setItems(defaults);
-        setSaved(false);
-        window.dispatchEvent(new StorageEvent('storage', { key: 'sidebar_config' }));
     }
 
     const landingId     = items.find(i => i.visible)?.id;
@@ -141,24 +143,15 @@ export default function SidebarSettings() {
                     <i className="bi bi-list-ul me-2 text-primary" />
                     {t('Menu Settings')}
                 </h5>
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 align-items-center">
+                    {serverLoading && <span className="spinner-border spinner-border-sm text-secondary" />}
                     <button className="btn btn-sm btn-outline-secondary" onClick={handleReset}>
                         <i className="bi bi-arrow-counterclockwise me-1" />{t('Reset')}
-                    </button>
-                    <button
-                        className={`btn btn-sm ${saved ? "btn-success" : "btn-primary"}`}
-                        onClick={handleSave}
-                        disabled={serverLoading}
-                    >
-                        {serverLoading
-                            ? <><span className="spinner-border spinner-border-sm me-1" />{t('Loading...')}</>
-                            : <><i className={`bi bi-${saved ? "check2" : "floppy"} me-1`} />{saved ? t('Saved!') : t('Save & Apply')}</>
-                        }
                     </button>
                 </div>
             </div>
             <p className="text-muted small mb-3">
-                {t('Drag to reorder, toggle to show/hide, the first')} <i className="bi bi-grip-vertical" />
+                {t('Drag to reorder, toggle to show/hide. Changes are saved automatically. The first')} <i className="bi bi-grip-vertical" />
                 <span className="badge bg-success ms-1 me-1" style={{ fontSize: "0.65rem" }}>
                     <i className="bi bi-house-fill me-1" />{t('Landing')}
                 </span>
@@ -272,8 +265,8 @@ export default function SidebarSettings() {
             <p className="text-muted small mt-3 mb-0">
                 <i className="bi bi-info-circle me-1" />
                 {serverSyncEnabled
-                    ? t('Changes apply immediately after saving. Your settings are synced to the server and shared across devices.')
-                    : t('Changes apply immediately after saving. Your settings are stored in this browser.')}
+                    ? t('Changes are saved automatically and synced to the server across devices.')
+                    : t('Changes are saved automatically in this browser.')}
             </p>
         </div>
     );

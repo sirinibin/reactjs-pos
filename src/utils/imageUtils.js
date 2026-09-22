@@ -9,6 +9,20 @@
  * @param {string} category  - directory name under the store folder (e.g. "store", "signatures", "products")
  * @param {string} [entityId] - optional sub-directory (e.g. product ID or vendor ID)
  */
+/**
+ * Returns the store logo URL with a stable cache-buster derived from the store's
+ * updated_at timestamp. The browser caches the image until the store is actually
+ * updated — avoids the 3× per-page fetch caused by Date.now().
+ *
+ * @param {object} store - store object with id, logo, and updated_at fields
+ */
+export function storeLogoUrl(store) {
+    if (!store?.logo) return null;
+    const base = resolveImageUrl(store.logo, store.id, "store");
+    const v = store.updated_at ? new Date(store.updated_at).getTime() : 0;
+    return `${base}?v=${v}`;
+}
+
 export function resolveImageUrl(filename, storeId, category, entityId = null) {
     if (!filename) return filename;
     if (filename.startsWith('/')) {

@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words'
 import { trimTo2Decimals } from "../utils/numberUtils";
@@ -82,7 +82,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="quotation-logo text-center">
-                            {props.model?.store?.logo ? <img width="70" height="70" style={{ objectFit: 'contain', objectPosition: 'center' }} src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Quotation logo" /> : null}
+                            {props.model?.store?.logo ? <img width="70" height="70" style={{ objectFit: 'contain', objectPosition: 'center' }} src={storeLogoUrl(props.model.store)} alt="Quotation logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
@@ -491,7 +491,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             style={{ padding: "2px" }}
 
                                         >
-                                            <span dir="ltr"> Within {props.model.delivery_days} days from the date of payment | خلال {props.model.delivery_days} أيام من تاريخ الدفع</span>
+                                            <span dir="ltr"> Within {props.model.delivery_days} days from the date of {props.model.delivery_from || "Payment"} | خلال {props.model.delivery_days} أيام من تاريخ {(props.model.delivery_from || "Payment") === "Approval" ? "الموافقة" : "الدفع"}</span>
                                         </th>
                                     </tr>
                                     {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account && props.model.store?.bank_account?.bank_name ? <tr >

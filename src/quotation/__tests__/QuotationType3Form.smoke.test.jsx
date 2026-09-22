@@ -140,6 +140,21 @@ jest.mock('../../utils/product_non_vat_sales_return_history.js', () => ({
     default: require('react').forwardRef(() => null),
 }));
 
+jest.mock('../../purchase_order/PurchaseOrderPicker.js', () => ({
+    __esModule: true,
+    default: require('react').forwardRef(() => null),
+}));
+
+jest.mock('../../utils/sales.js', () => ({
+    __esModule: true,
+    default: require('react').forwardRef(() => null),
+}));
+
+jest.mock('../../utils/purchases.js', () => ({
+    __esModule: true,
+    default: require('react').forwardRef(() => null),
+}));
+
 // ── utility mocks ─────────────────────────────────────────────────────────────
 jest.mock('../../utils/numberUtils', () => ({
     trimTo2Decimals: (v) => v,

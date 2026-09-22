@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 
 import KPICards from "./charts/KPICards";
 import PostingIndex from '../posting/index.js';
@@ -31,13 +32,15 @@ import {
 
 
 
-const TABS = [
-    { id: "overview", label: "Overview", icon: "bi-speedometer2" },
-    { id: "revenue", label: "Revenue", icon: "bi-graph-up" },
-    { id: "payments", label: "Payments", icon: "bi-credit-card" },
-    { id: "products", label: "Products & Inventory", icon: "bi-box-seam" },
-    { id: "customers", label: "Customers & Finance", icon: "bi-people" },
-];
+function getTabs(t) {
+    return [
+        { id: "overview", label: t("Overview"), icon: "bi-speedometer2" },
+        { id: "revenue", label: t("Revenue"), icon: "bi-graph-up" },
+        { id: "payments", label: t("Payments"), icon: "bi-credit-card" },
+        { id: "products", label: t("Products & Inventory"), icon: "bi-box-seam" },
+        { id: "customers", label: t("Customers & Finance"), icon: "bi-people" },
+    ];
+}
 
 function SectionTitle({ children }) {
     return (
@@ -118,6 +121,7 @@ async function uploadChartAndGetShareUrl(blob, filename) {
 
 // ── Fallback modal shown only when filebin upload fails ───────────────────────
 function WhatsAppFallbackModal({ dataUrl, title, onClose }) {
+    const { t } = useTranslation('common');
     const filename = (title || "chart").replace(/[^a-z0-9]+/gi, "_").toLowerCase() + ".png";
 
     function handleDownload() {
@@ -146,18 +150,18 @@ function WhatsAppFallbackModal({ dataUrl, title, onClose }) {
             }}>
                 <div className="d-flex align-items-center justify-content-between mb-3">
                     <span className="fw-bold" style={{ fontSize: "0.95rem" }}>
-                        <i className="bi bi-whatsapp text-success me-2" />Share via WhatsApp
+                        <i className="bi bi-whatsapp text-success me-2" />{t("Share via WhatsApp")}
                     </span>
                     <button className="btn-close" onClick={onClose} />
                 </div>
                 <div className="alert alert-warning small py-2 mb-3">
                     <i className="bi bi-exclamation-triangle-fill me-2" />
-                    Could not upload to filebin.net. Download the image and share it manually.
+                    {t("Could not upload to filebin.net. Download the image and share it manually.")}
                 </div>
                 <img src={dataUrl} alt={title}
                     style={{ width: "100%", borderRadius: "8px", border: "1px solid #dee2e6", marginBottom: "16px" }} />
                 <button className="btn btn-outline-secondary w-100" onClick={handleDownload}>
-                    <i className="bi bi-download me-2" />Download image
+                    <i className="bi bi-download me-2" />{t("Download image")}
                 </button>
             </div>
         </div>
@@ -166,6 +170,7 @@ function WhatsAppFallbackModal({ dataUrl, title, onClose }) {
 
 // ── ChartCard ─────────────────────────────────────────────────────────────────
 function ChartCard({ children }) {
+    const { t } = useTranslation('common');
     const chartRef = useRef(null);
     const [busyLabel, setBusyLabel] = useState(null); // null = idle
     const [shareError, setShareError] = useState(null); // { dataUrl, title } on upload failure
@@ -192,7 +197,7 @@ function ChartCard({ children }) {
     }
 
     async function handleWhatsApp() {
-        setBusyLabel("Sharing…");
+        setBusyLabel(t("Sharing…"));
         try {
             const dataUrl = await svgToPng(chartRef.current);
             if (!dataUrl) return;
@@ -229,7 +234,7 @@ function ChartCard({ children }) {
                         style={{ fontSize: "0.72rem", padding: "2px 8px" }}
                     >
                         <i className="bi bi-download me-1" />
-                        Download
+                        {t("Download")}
                     </button>
                     <button
                         className="btn btn-sm btn-outline-success"
@@ -239,7 +244,7 @@ function ChartCard({ children }) {
                         style={{ fontSize: "0.72rem", padding: "2px 8px" }}
                     >
                         <i className="bi bi-whatsapp me-1" />
-                        {busyLabel || "WhatsApp"}
+                        {busyLabel || t("WhatsApp")}
                     </button>
                 </div>
                 <div ref={chartRef}>
@@ -258,12 +263,13 @@ function ChartCard({ children }) {
 }
 
 function Spinner() {
+    const { t } = useTranslation('common');
     return (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "200px" }}>
             <div className="spinner-border text-primary" role="status">
                 <span className="visually-hidden">Loading...</span>
             </div>
-            <span className="ms-3 text-muted">Loading dashboard data…</span>
+            <span className="ms-3 text-muted">{t("Loading dashboard data…")}</span>
         </div>
     );
 }
@@ -272,6 +278,7 @@ function Spinner() {
 const PAYMENT_METHODS = ["cash", "debit_card", "bank_card", "credit_card", "bank_transfer", "bank_cheque", "customer_account"];
 
 export default function BusinessDashboard() {
+    const { t } = useTranslation('common');
     const postingRef = useRef();
     const [activeTab, setActiveTab] = useState("overview");
     const [loading, setLoading] = useState(true);
@@ -311,6 +318,8 @@ export default function BusinessDashboard() {
     const dataMinMonth = monthlyData.length > 0 ? monthlyData[0].month_str : "";
     const dataMaxMonth = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].month_str : "";
 
+
+    const TABS = getTabs(t);
 
     const storeId = localStorage.getItem("store_id") || "";
 
@@ -509,7 +518,7 @@ export default function BusinessDashboard() {
             <div className="d-flex align-items-center justify-content-between mb-3">
                 <h4 className="mb-0 fw-bold">
                     <i className="bi bi-speedometer2 me-2 text-primary" />
-                    Business Dashboard
+                    {t("Business Dashboard")}
                 </h4>
                 <div className="d-flex align-items-center gap-2">
                     <span className="text-muted small">
@@ -554,7 +563,7 @@ export default function BusinessDashboard() {
                         }}
                     >
                         <i className={`bi bi-database-gear${recomputing ? " spin" : ""}`} />
-                        {recomputing ? ` Recomputing… ${recomputeCountdown}s` : " Recompute"}
+                        {recomputing ? ` ${t("Recomputing…")} ${recomputeCountdown}s` : ` ${t("Recompute")}`}
                     </button>
                 </div>
             </div>
@@ -571,7 +580,7 @@ export default function BusinessDashboard() {
                             setAppliedFrom(""); setAppliedTo("");
                         }}
                     >
-                        <i className="bi bi-calendar-date me-1" />Single Month
+                        <i className="bi bi-calendar-date me-1" />{t("Single Month")}
                     </button>
                     <button
                         type="button"
@@ -582,7 +591,7 @@ export default function BusinessDashboard() {
                             setAppliedFrom(""); setAppliedTo("");
                         }}
                     >
-                        <i className="bi bi-calendar-range me-1" />Month Range
+                        <i className="bi bi-calendar-range me-1" />{t("Month Range")}
                     </button>
                     <button
                         type="button"
@@ -593,7 +602,7 @@ export default function BusinessDashboard() {
                             setAppliedFrom(""); setAppliedTo("");
                         }}
                     >
-                        <i className="bi bi-calendar3 me-1" />Year
+                        <i className="bi bi-calendar3 me-1" />{t("Year")}
                     </button>
                 </div>
 
@@ -628,7 +637,7 @@ export default function BusinessDashboard() {
                                 setAppliedFrom(e.target.value);
                             }}
                         />
-                        <span className="text-muted small">to</span>
+                        <span className="text-muted small">{t("to")}</span>
                         <input
                             type="month"
                             className="form-control form-control-sm"
@@ -671,7 +680,7 @@ export default function BusinessDashboard() {
                             setAppliedFrom(""); setAppliedTo("");
                         }}
                     >
-                        Clear
+                        {t("Clear")}
                     </button>
                 )}
 
@@ -716,7 +725,7 @@ export default function BusinessDashboard() {
                     {/* ── Tab 1: Overview ── */}
                     {activeTab === "overview" && (
                         <div>
-                            <SectionTitle>Key Performance Indicators</SectionTitle>
+                            <SectionTitle>{t("Key Performance Indicators")}</SectionTitle>
                             <KPICards
                                 store={store}
                                 orderStats={kpiStats.orderStats}
@@ -766,7 +775,7 @@ export default function BusinessDashboard() {
                     {/* ── Tab 2: Revenue ── */}
                     {activeTab === "revenue" && (
                         <div>
-                            <SectionTitle>Revenue Trends</SectionTitle>
+                            <SectionTitle>{t("Revenue Trends")}</SectionTitle>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
@@ -799,7 +808,7 @@ export default function BusinessDashboard() {
                     {/* ── Tab 3: Payments ── */}
                     {activeTab === "payments" && (
                         <div>
-                            <SectionTitle>Payment Analysis</SectionTitle>
+                            <SectionTitle>{t("Payment Analysis")}</SectionTitle>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
@@ -825,7 +834,7 @@ export default function BusinessDashboard() {
                     {/* ── Tab 4: Products & Inventory ── */}
                     {activeTab === "products" && (
                         <div>
-                            <SectionTitle>Product Performance</SectionTitle>
+                            <SectionTitle>{t("Product Performance")}</SectionTitle>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
@@ -845,7 +854,7 @@ export default function BusinessDashboard() {
                                     </ChartCard>
                                 </div>
                             </div>
-                            <SectionTitle>Inventory Health</SectionTitle>
+                            <SectionTitle>{t("Inventory Health")}</SectionTitle>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
@@ -855,22 +864,22 @@ export default function BusinessDashboard() {
                                 <div className="col-lg-6">
                                     <div className="card mb-4 shadow-sm">
                                         <div className="card-body">
-                                            <h6 className="text-muted mb-3">Stock Summary</h6>
+                                            <h6 className="text-muted mb-3">{t("Stock Summary")}</h6>
                                             <div>
                                                 <div className="d-flex justify-content-between py-2 border-bottom">
-                                                    <span><i className="bi bi-circle-fill text-danger me-2" />Out of Stock</span>
-                                                    <strong>{(stockSummary.out_of_stock || 0).toLocaleString()} products</strong>
+                                                    <span><i className="bi bi-circle-fill text-danger me-2" />{t("Out of Stock")}</span>
+                                                    <strong>{(stockSummary.out_of_stock || 0).toLocaleString()} {t("products")}</strong>
                                                 </div>
                                                 <div className="d-flex justify-content-between py-2 border-bottom">
-                                                    <span><i className="bi bi-circle-fill text-warning me-2" />Low Stock (&lt; 5 units)</span>
-                                                    <strong>{(stockSummary.low_stock || 0).toLocaleString()} products</strong>
+                                                    <span><i className="bi bi-circle-fill text-warning me-2" />{t("Low Stock (< 5 units)")}</span>
+                                                    <strong>{(stockSummary.low_stock || 0).toLocaleString()} {t("products")}</strong>
                                                 </div>
                                                 <div className="d-flex justify-content-between py-2">
-                                                    <span><i className="bi bi-circle-fill text-success me-2" />Healthy Stock</span>
-                                                    <strong>{(stockSummary.healthy_stock || 0).toLocaleString()} products</strong>
+                                                    <span><i className="bi bi-circle-fill text-success me-2" />{t("Healthy Stock")}</span>
+                                                    <strong>{(stockSummary.healthy_stock || 0).toLocaleString()} {t("products")}</strong>
                                                 </div>
                                                 <div className="d-flex justify-content-between py-2 border-top mt-2">
-                                                    <span className="fw-bold">Total Products</span>
+                                                    <span className="fw-bold">{t("Total Products")}</span>
                                                     <strong>{(stockSummary.total || 0).toLocaleString()}</strong>
                                                 </div>
                                             </div>
@@ -884,7 +893,7 @@ export default function BusinessDashboard() {
                     {/* ── Tab 5: Customers & Finance ── */}
                     {activeTab === "customers" && (
                         <div>
-                            <SectionTitle>Customer Intelligence</SectionTitle>
+                            <SectionTitle>{t("Customer Intelligence")}</SectionTitle>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
@@ -897,7 +906,7 @@ export default function BusinessDashboard() {
                                     </ChartCard>
                                 </div>
                             </div>
-                            <SectionTitle>Financial Overview</SectionTitle>
+                            <SectionTitle>{t("Financial Overview")}</SectionTitle>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>

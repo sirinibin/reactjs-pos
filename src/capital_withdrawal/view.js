@@ -3,8 +3,10 @@ import { Modal } from 'react-bootstrap';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatPaymentMethod } from '../utils/dateUtils.js';
+import { useTranslation } from "react-i18next";
 
 const CapitalWithdrawalView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -106,7 +108,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                     <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                    Back
+                                    {t('Back')}
                                 </button>
                                 <h1 style={{
                                     margin: 0,
@@ -117,7 +119,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                     fontFamily: "'Hanken Grotesk', sans-serif",
                                     color: '#191c1e',
                                 }}>
-                                    Capital Withdrawal {model.code ? `#${model.code}` : ''}
+                                    {t('Capital Withdrawal')} {model.code ? `#${model.code}` : ''}
                                 </h1>
                                 {model.payment_method && (
                                     <span style={{
@@ -136,7 +138,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                             </div>
                             {model.date && (
                                 <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                    Withdrawal recorded on {formatDateShort(model.date)}
+                                    {t('Withdrawal recorded on')} {formatDateShort(model.date)}
                                 </p>
                             )}
                         </div>
@@ -153,7 +155,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                     }}
                                 >
                                     <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
-                                    Create
+                                    {t('Create')}
                                 </button>
                             )}
                             {props.openUpdateForm && (
@@ -168,7 +170,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                     }}
                                 >
                                     <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
-                                    Edit
+                                    {t('Edit')}
                                 </button>
                             )}
                         </div>
@@ -186,7 +188,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px',
                             }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
-                                    Amount
+                                    {t('Amount')}
                                 </span>
                                 <span style={{
                                     fontSize: '24px', fontWeight: 600, lineHeight: '32px',
@@ -197,7 +199,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 </span>
                                 <div style={{ marginTop: '4px', fontSize: '12px', color: '#ba1a1a', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <i className="bi bi-arrow-down-right" style={{ fontSize: '14px' }}></i>
-                                    Withdrawn
+                                    {t('Withdrawn')}
                                 </div>
                             </div>
 
@@ -207,7 +209,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px',
                             }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
-                                    Payment Method
+                                    {t('Payment Method')}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
@@ -226,7 +228,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px',
                             }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
-                                    Withdrawn By
+                                    {t('Withdrawn By')}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <div style={{
@@ -254,7 +256,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px',
                             }}>
                                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
-                                    Date
+                                    {t('Date')}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
@@ -289,7 +291,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif",
                                             color: '#191c1e',
                                         }}>
-                                            Withdrawal Details
+                                            {t('Withdrawal Details')}
                                         </h3>
                                     </div>
                                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -300,7 +302,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             alignItems: 'center', padding: '12px 0',
                                             borderBottom: '1px solid #c3c6d7',
                                         }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Code</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Code')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', fontFamily: 'monospace' }}>
                                                 {model.code || '—'}
                                             </span>
@@ -312,7 +314,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             alignItems: 'center', padding: '12px 0',
                                             borderBottom: '1px solid #c3c6d7',
                                         }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Amount</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Amount')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 700, color: '#ba1a1a' }}>
                                                 {model.amount != null ? model.amount.toLocaleString() : '—'}
                                             </span>
@@ -324,7 +326,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             alignItems: 'center', padding: '12px 0',
                                             borderBottom: '1px solid #c3c6d7',
                                         }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Payment Method</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Payment Method')}</span>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <i className="bi bi-credit-card" style={{ fontSize: '14px', color: '#505f76' }}></i>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
@@ -339,7 +341,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             alignItems: 'center', padding: '12px 0',
                                             borderBottom: '1px solid #c3c6d7',
                                         }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Date</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Date')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                                 {formatDateShort(model.date)}
                                             </span>
@@ -351,7 +353,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                                 display: 'flex', justifyContent: 'space-between',
                                                 alignItems: 'flex-start', gap: '16px', padding: '12px 0',
                                             }}>
-                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Description</span>
+                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Description')}</span>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>
                                                     {model.description}
                                                 </span>
@@ -381,7 +383,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif",
                                             color: '#191c1e',
                                         }}>
-                                            Metadata
+                                            {t('Metadata')}
                                         </h3>
                                     </div>
                                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -392,7 +394,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                             alignItems: 'center', paddingBottom: '8px',
                                             borderBottom: '1px solid #c3c6d7',
                                         }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created By')}</span>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <div style={{
                                                     width: '24px', height: '24px', borderRadius: '50%',
@@ -417,7 +419,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                                 alignItems: 'center', paddingBottom: '8px',
                                                 borderBottom: '1px solid #c3c6d7',
                                             }}>
-                                                <span style={{ fontSize: '14px', color: '#434655' }}>Withdrawn By</span>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Withdrawn By')}</span>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                                     {model.withdrawn_by_user_name}
                                                 </span>
@@ -433,7 +435,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                                 alignItems: 'flex-start', gap: '8px',
                                                 paddingBottom: '8px', borderBottom: '1px solid #c3c6d7',
                                             }}>
-                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Created At</span>
+                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Created At')}</span>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>
                                                     {formatDate(model.created_at)}
                                                 </span>
@@ -447,7 +449,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                                 alignItems: 'center', paddingBottom: '8px',
                                                 borderBottom: '1px solid #c3c6d7',
                                             }}>
-                                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                                     {model.updated_by_name}
                                                 </span>
@@ -460,7 +462,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                                 display: 'flex', justifyContent: 'space-between',
                                                 alignItems: 'flex-start', gap: '8px',
                                             }}>
-                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                                <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Last Updated')}</span>
                                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>
                                                     {formatDate(model.updated_at)}
                                                 </span>
@@ -485,7 +487,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                             fontWeight: 600, cursor: 'pointer',
                         }}
                     >
-                        Cancel
+                        {t('Cancel')}
                     </button>
                     {props.openUpdateForm && (
                         <button
@@ -496,7 +498,7 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
                                 fontWeight: 700, cursor: 'pointer',
                             }}
                         >
-                            Edit Withdrawal
+                            {t('Edit Withdrawal')}
                         </button>
                     )}
                 </Modal.Footer>

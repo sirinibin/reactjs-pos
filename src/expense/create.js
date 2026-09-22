@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -63,6 +64,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }
 
     useEnterKeyNavigation({ stayClass: "description", onStay: (el) => { el.value += "\r\n"; } });
+    const { t } = useTranslation('common');
 
 
     /* function resizeFIle(file, w, h, cb) {
@@ -116,12 +118,12 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }
 
     function removePendingAttachment(idx) {
-        if (!window.confirm('Remove this attachment? Unsaved files will be discarded.')) return;
+        if (!window.confirm(t('Remove this attachment? Unsaved files will be discarded.'))) return;
         setPendingAttachments(prev => prev.filter((_, i) => i !== idx));
     }
 
     function removeExistingAttachment(filename) {
-        if (!window.confirm('Delete this attachment permanently? This cannot be undone.')) return;
+        if (!window.confirm(t('Delete this attachment permanently? This cannot be undone.'))) return;
         formData.images = (formData.images || []).filter(f => f !== filename);
         setFormData({ ...formData });
     }
@@ -395,9 +397,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Expense updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Expense updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Expense created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Expense created successfully!"), "success");
                 }
 
                 if (props.refreshList) {
@@ -414,7 +416,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process expense!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process expense!"), "danger");
             });
     }
 
@@ -619,8 +621,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
     );
 
     const NAV_TABS = [
-        { id: 'details', label: 'Details', icon: 'bi-receipt' },
-        { id: 'attachments', label: 'Attachments', icon: 'bi-paperclip' },
+        { id: 'details', label: t('Details'), icon: 'bi-receipt' },
+        { id: 'attachments', label: t('Attachments'), icon: 'bi-paperclip' },
     ];
 
     const [activeTab, setActiveTab] = useState("details");
@@ -681,24 +683,24 @@ const ExpenseCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Expense — ${formData.description || ''}` : 'Create New Expense'}
+                        {formData.id ? `${t('Update Expense')} — ${formData.description || ''}` : t('Create New Expense')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -745,9 +747,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                         <aside className="pw-sidebar">
                             <div className="pw-sidebar-header">
                                 <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                                    {formData.id ? 'Edit Expense' : 'New Expense'}
+                                    {formData.id ? t('Edit Expense') : t('New Expense')}
                                 </div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Expense Wizard</div>
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>{t('Expense Wizard')}</div>
                             </div>
                             {NAV_TABS.map((tab) => (
                                 <button key={tab.id} type="button"
@@ -801,10 +803,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                     <>
                                         {/* Vendor */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-shop">Vendor</SectionTitle>
+                                            <SectionTitle icon="bi-shop">{t('Vendor')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-10">
-                                                    <Label>Vendor</Label>
+                                                    <Label>{t('Vendor')}</Label>
                                                     <div className="d-flex gap-1">
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <Typeahead
@@ -837,7 +839,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                     setSelectedVendors(selectedItems);
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t('Vendor Name / Mob / VAT # / ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -873,12 +875,12 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                             {/* Header */}
                                                                             <MenuItem disabled>
                                                                                 <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                                    <div style={{ width: '10%' }}>ID</div>
-                                                                                    <div style={{ width: '47%' }}>Name</div>
-                                                                                    <div style={{ width: '10%' }}>Phone</div>
-                                                                                    <div style={{ width: '13%' }}>VAT</div>
-                                                                                    <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                                    <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                                    <div style={{ width: '10%' }}>{t('ID')}</div>
+                                                                                    <div style={{ width: '47%' }}>{t('Name')}</div>
+                                                                                    <div style={{ width: '10%' }}>{t('Phone')}</div>
+                                                                                    <div style={{ width: '13%' }}>{t('VAT')}</div>
+                                                                                    <div style={{ width: '10%' }}>{t('Credit Balance')}</div>
+                                                                                    <div style={{ width: '10%' }}>{t('Credit Limit')}</div>
                                                                                 </div>
                                                                             </MenuItem>
 
@@ -930,10 +932,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                 }}
                                                             />
                                                         </div>
-                                                        <button type="button" style={ICON_BTN} onClick={() => { setOpenVendorCreateForm(true); }} title="New Vendor">
+                                                        <button type="button" style={ICON_BTN} onClick={() => { setOpenVendorCreateForm(true); }} title={t('New Vendor')}>
                                                             <i className="bi bi-plus-lg"></i>
                                                         </button>
-                                                        <button type="button" style={ICON_BTN} onClick={() => { setOpenVendors(true); }} title="Browse Vendors">
+                                                        <button type="button" style={ICON_BTN} onClick={() => { setOpenVendors(true); }} title={t('Browse Vendors')}>
                                                             <i className="bi bi-list"></i>
                                                         </button>
                                                     </div>
@@ -944,10 +946,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                                         {/* Date & Amount */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-calendar-event">Date & Amount</SectionTitle>
+                                            <SectionTitle icon="bi-calendar-event">{t('Date & Amount')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-4">
-                                                    <Label required>Date</Label>
+                                                    <Label required>{t('Date')}</Label>
                                                     <DatePicker
                                                         id="date_str"
                                                         selected={formData.date_str ? new Date(formData.date_str) : null}
@@ -968,7 +970,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                     {errors.date_str && <ErrMsg>{errors.date_str}</ErrMsg>}
                                                 </div>
                                                 <div className="col-md-3">
-                                                    <Label required>Amount</Label>
+                                                    <Label required>{t('Amount')}</Label>
                                                     <input
                                                         value={formData.amount}
                                                         type='number'
@@ -997,12 +999,12 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         style={INPUT}
                                                         id="amount"
-                                                        placeholder="Amount"
+                                                        placeholder={t('Amount')}
                                                     />
                                                     {errors.amount && <ErrMsg>{errors.amount}</ErrMsg>}
                                                 </div>
                                                 <div className="col-md-4">
-                                                    <Label>Vendor Invoice No.</Label>
+                                                    <Label>{t('Vendor Invoice No.')}</Label>
                                                     <input
                                                         id="purchase_vendor_invoice_no"
                                                         name="purchase_vendor_invoice_no"
@@ -1016,7 +1018,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Vendor Invoice No."
+                                                        placeholder={t('Vendor Invoice No.')}
                                                     />
                                                     {errors.vendor_invoice_no && <ErrMsg>{errors.vendor_invoice_no}</ErrMsg>}
                                                 </div>
@@ -1025,10 +1027,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                                         {/* Description & Payment */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-card-text">Description & Payment</SectionTitle>
+                                            <SectionTitle icon="bi-card-text">{t('Description & Payment')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-6">
-                                                    <Label required>Description</Label>
+                                                    <Label required>{t('Description')}</Label>
                                                     <textarea
                                                         value={formData.description ? formData.description : ""}
                                                         onChange={(e) => {
@@ -1041,12 +1043,12 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                         style={{ ...INPUT, minHeight: '80px', resize: 'vertical' }}
                                                         className="description"
                                                         id="description"
-                                                        placeholder="Description"
+                                                        placeholder={t('Description')}
                                                     />
                                                     {errors.description && <ErrMsg>{errors.description}</ErrMsg>}
                                                 </div>
                                                 <div className="col-md-4">
-                                                    <Label required>Payment Method</Label>
+                                                    <Label required>{t('Payment Method')}</Label>
                                                     <select
                                                         value={formData.payment_method}
                                                         onChange={(e) => {
@@ -1067,14 +1069,14 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         style={INPUT}
                                                     >
-                                                        <option value="">Select</option>
-                                                        <option value="cash">Cash</option>
-                                                        <option value="debit_card">Debit Card</option>
-                                                        <option value="credit_card">Credit Card</option>
-                                                        <option value="bank_card">Bank Card</option>
-                                                        <option value="bank_transfer">Bank Transfer</option>
-                                                        <option value="bank_cheque">Bank Cheque</option>
-                                                        <option value="purchase_fund">Purchase Fund A/c</option>
+                                                        <option value="">{t('Select')}</option>
+                                                        <option value="cash">{t('Cash')}</option>
+                                                        <option value="debit_card">{t('Debit Card')}</option>
+                                                        <option value="credit_card">{t('Credit Card')}</option>
+                                                        <option value="bank_card">{t('Bank Card')}</option>
+                                                        <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                                        <option value="bank_cheque">{t('Bank Cheque')}</option>
+                                                        <option value="purchase_fund">{t('Purchase Fund A/c')}</option>
                                                     </select>
                                                     {errors.payment_method && <ErrMsg>{errors.payment_method}</ErrMsg>}
                                                 </div>
@@ -1082,10 +1084,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         </div>
                                         {/* Categories */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-folder2-open">Expense Categories</SectionTitle>
+                                            <SectionTitle icon="bi-folder2-open">{t('Expense Categories')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-8">
-                                                    <Label required>Categories</Label>
+                                                    <Label required>{t('Categories')}</Label>
                                                     <div className="d-flex gap-1">
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <Typeahead
@@ -1106,7 +1108,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                     setSelectedCategories(selectedItems);
                                                                 }}
                                                                 options={categoryOptions}
-                                                                placeholder="Select Categories"
+                                                                placeholder={t('Select Categories')}
                                                                 selected={selectedCategories}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1121,7 +1123,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                 }}
                                                             />
                                                         </div>
-                                                        <button type="button" style={ICON_BTN} onClick={openExpenseCategoryCreateForm} title="New Category">
+                                                        <button type="button" style={ICON_BTN} onClick={openExpenseCategoryCreateForm} title={t('New Category')}>
                                                             <i className="bi bi-plus-lg"></i>
                                                         </button>
                                                     </div>
@@ -1134,8 +1136,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                                                         <thead>
                                                             <tr style={{ background: '#eceef0' }}>
-                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</th>
-                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Action</th>
+                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Category')}</th>
+                                                                <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Action')}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -1152,7 +1154,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                                 const updated = selectedCategories.filter((_, i) => i !== index);
                                                                                 setSelectedCategories(updated);
                                                                             }}
-                                                                            title="Remove"
+                                                                            title={t('Remove')}
                                                                         >
                                                                             <i className="bi bi-x-lg"></i>
                                                                         </button>
@@ -1171,7 +1173,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 {activeTab === 'attachments' && (
                                     <>
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-paperclip">Attachments</SectionTitle>
+                                            <SectionTitle icon="bi-paperclip">{t('Attachments')}</SectionTitle>
 
                                             {/* Upload area */}
                                             <label style={{
@@ -1185,10 +1187,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                             >
                                                 <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#004ac6' }}></i>
                                                 <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>
-                                                    Click or drag files here
+                                                    {t('Click or drag files here')}
                                                 </span>
                                                 <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>
-                                                    Images, PDFs, Word, Excel — any file type
+                                                    {t('Images, PDFs, Word, Excel — any file type')}
                                                 </span>
                                                 <input type="file" multiple accept="*/*" style={{ display: 'none' }}
                                                     onChange={e => { addAttachments(e.target.files); e.target.value = ''; }} />
@@ -1198,7 +1200,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                             {formData.images && formData.images.length > 0 && (
                                                 <div style={{ marginBottom: '16px' }}>
                                                     <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-                                                        Saved Files ({formData.images.length})
+                                                        {t('Saved Files')} ({formData.images.length})
                                                     </div>
                                                     {formData.images.map((filename, idx) => {
                                                         const storeId = localStorage.getItem('store_id');
@@ -1218,11 +1220,11 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                 </span>
                                                                 <button type="button" onClick={() => isImg ? openLightbox(allSaved, idx) : window.open(url, '_blank')}
                                                                     style={{ background: '#e8f0fe', color: '#004ac6', border: 'none', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                                    <i className="bi bi-eye"></i> View
+                                                                    <i className="bi bi-eye"></i> {t('View')}
                                                                 </button>
                                                                 <button type="button" onClick={() => downloadServerFile(url, `attachment-${idx + 1}.${filename.split('.').pop()}`)}
                                                                     style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                                    <i className="bi bi-download"></i> Download
+                                                                    <i className="bi bi-download"></i> {t('Download')}
                                                                 </button>
                                                                 <button type="button" onClick={() => removeExistingAttachment(filename)}
                                                                     style={{ background: 'none', border: 'none', color: '#ba1a1a', cursor: 'pointer', padding: '4px', fontSize: '16px' }}>
@@ -1238,7 +1240,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                             {pendingAttachments.length > 0 && (
                                                 <div>
                                                     <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-                                                        New Files ({pendingAttachments.length}) — will save on Create/Update
+                                                        {t('New Files')} ({pendingAttachments.length}) — {t('will save on Create/Update')}
                                                     </div>
                                                     {pendingAttachments.map((file, idx) => {
                                                         const isImg = isImageFile(file.name, file.type);
@@ -1274,7 +1276,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                                             {(!formData.images || formData.images.length === 0) && pendingAttachments.length === 0 && (
                                                 <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#737686', textAlign: 'center', paddingTop: '8px' }}>
-                                                    No attachments yet.
+                                                    {t('No attachments yet.')}
                                                 </div>
                                             )}
                                         </div>
@@ -1288,11 +1290,11 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)} style={{ background: prevTab ? "#d0e1fb" : "#f0f2f4", color: prevTab ? "#54647a" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: prevTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
                                         <i className="bi bi-arrow-left"></i>
-                                        {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : "Previous"}
+                                        {prevTab ? NAV_TABS.find(tab => tab.id === prevTab)?.label : t("Previous")}
                                     </button>
                                     <span style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#737686" }}>{currentTabIndex + 1} / {tabIds.length}</span>
                                     <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)} style={{ background: nextTab ? "#004ac6" : "#f0f2f4", color: nextTab ? "#ffffff" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: nextTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : "Next"}
+                                        {nextTab ? NAV_TABS.find(tab => tab.id === nextTab)?.label : t("Next")}
                                         <i className="bi bi-arrow-right"></i>
                                     </button>
                                 </div>

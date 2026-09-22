@@ -7,22 +7,56 @@ import { fetchStore } from '../utils/storeUtils.js';
 
 //import { useHistory } from "react-router-dom";
 
+// ── Brute-force lockout constants ─────────────────────────────────────────────
+const LOCKOUT_LIMIT   = 5;       // failures before lockout
+const LOCKOUT_SECONDS = 15 * 60; // 15 minutes
+
+function lockoutKey(email) {
+    return 'pos_login_lock_' + email.toLowerCase().trim();
+}
+function getLockout(email) {
+    try {
+        const raw = localStorage.getItem(lockoutKey(email));
+        return raw ? JSON.parse(raw) : { failures: 0, lockedUntil: 0 };
+    } catch { return { failures: 0, lockedUntil: 0 }; }
+}
+function saveLockout(email, data) {
+    try { localStorage.setItem(lockoutKey(email), JSON.stringify(data)); } catch {}
+}
+function clearLockout(email) {
+    try { localStorage.removeItem(lockoutKey(email)); } catch {}
+}
+
 function Login() {
 
     // const history = useHistory();
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors]           = useState({});
     const [isProcessing, setProcessing] = useState(false);
+    const [lockoutUntil, setLockoutUntil] = useState(0);   // epoch ms
+    const [countdown, setCountdown]     = useState('');     // "MM:SS" string
 
 
     useEffect(() => {
-
         let at = localStorage.getItem("access_token");
         if (at) {
-            // history.push("/dashboard/quotations");
-            //window.location = "/dashboard/analytics";
             window.location = getLandingPath();
         }
     }, []);
+
+    // Countdown ticker — runs while lockoutUntil is in the future.
+    useEffect(() => {
+        if (!lockoutUntil) return;
+        const tick = () => {
+            const secs = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+            const m = String(Math.floor(secs / 60)).padStart(2, '0');
+            const s = String(secs % 60).padStart(2, '0');
+            setCountdown(m + ':' + s);
+            if (secs <= 0) setLockoutUntil(0);
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, [lockoutUntil]);
 
     async function me() {
         console.log("inside me");
@@ -74,6 +108,7 @@ function Login() {
                     }
                     localStorage.setItem("store_name", storeName);
                     localStorage.setItem("store_id", storeId);
+                    if (storeId) localStorage.setItem("last_store_" + userId, storeId);
                     if (storeId) {
                         await getStore(storeId);
                     }
@@ -84,6 +119,7 @@ function Login() {
                             if (storeData) {
                                 localStorage.setItem("store_id", storeData.id);
                                 localStorage.setItem("store_name", storeData.name);
+                                localStorage.setItem("last_store_" + userId, storeData.id);
                                 if (storeData.branch_name) {
                                     localStorage.setItem("branch_name", storeData.branch_name);
                                 } else {
@@ -93,13 +129,13 @@ function Login() {
                                     localStorage.setItem("_store_settings_cache", JSON.stringify(storeData.settings));
                                 }
                             } else {
-                                await getFirstStore();
+                                await getFirstStore(userId);
                             }
                         } catch (_) {
-                            await getFirstStore();
+                            await getFirstStore(userId);
                         }
                     } else {
-                        await getFirstStore();
+                        await getFirstStore(userId);
                     }
                 }
 
@@ -149,7 +185,7 @@ function Login() {
             });
     }
 
-    async function getFirstStore() {
+    async function getFirstStore(userId = null) {
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -158,7 +194,7 @@ function Login() {
             },
         };
 
-        await fetch('/v1/store', requestOptions)
+        await fetch('/v1/store?select=id,name,branch_name&limit=1', requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -172,6 +208,12 @@ function Login() {
                     const first = stores[0];
                     localStorage.setItem("store_name", first.name);
                     localStorage.setItem("store_id", first.id);
+                    if (first.branch_name) {
+                        localStorage.setItem("branch_name", first.branch_name);
+                    } else {
+                        localStorage.removeItem("branch_name");
+                    }
+                    if (userId) localStorage.setItem("last_store_" + userId, first.id);
                     if (first.id) {
                         await getStore(first.id);
                     }
@@ -241,17 +283,21 @@ function Login() {
 
 
     function handleSubmit(event) {
-        console.log("Inside handle Submit");
         event.preventDefault();
-        var data = {
-            email: event.target[0].value,
-            password: event.target[1].value,
-        };
+        const email    = event.target[0].value.trim();
+        const password = event.target[1].value;
+
+        // Check client-side lockout before hitting the server.
+        const lock = getLockout(email);
+        if (lock.lockedUntil > Date.now()) {
+            setLockoutUntil(lock.lockedUntil);
+            return;
+        }
 
         const requestOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ email, password })
         };
 
         setProcessing(true);
@@ -260,30 +306,43 @@ function Login() {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
-                // check for error response
+                // nginx / Go rate limit hit
+                if (response.status === 429) {
+                    setProcessing(false);
+                    setErrors({ email: 'Too many login attempts from your network. Please wait 15 minutes.' });
+                    return;
+                }
+
                 if (!response.ok) {
-                    // get error message from body or default to response status
-                    const error = (data && data.errors);
-                    //const error = data.errors
+                    // Record failed attempt and enforce lockout if threshold reached.
+                    const d = getLockout(email);
+                    d.failures++;
+                    if (d.failures >= LOCKOUT_LIMIT) {
+                        d.lockedUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+                    }
+                    saveLockout(email, d);
+
+                    if (d.lockedUntil > Date.now()) {
+                        setLockoutUntil(d.lockedUntil);
+                        setProcessing(false);
+                        return;
+                    }
+
+                    const remaining = LOCKOUT_LIMIT - d.failures;
+                    const hint = remaining > 0 ? ` (${remaining} attempt${remaining !== 1 ? 's' : ''} left)` : '';
+                    const error = (data && data.errors) || { email: 'Incorrect email or password.' + hint };
                     return Promise.reject(error);
                 }
 
+                // Success — clear lockout record.
+                clearLockout(email);
                 setErrors({});
-
-                console.log("Response:");
-                console.log(data);
-
                 getAccessToken(data.result.code);
             })
             .catch(error => {
                 setProcessing(false);
-                console.log("Inside catch");
-                console.log(error);
                 setErrors(error || {});
-                console.error('There was an error!', error);
             });
-
-
     }
 
     return (<>
@@ -311,6 +370,11 @@ function Login() {
                                                     height="132"
                                                 />
                                             </div>
+                                            {lockoutUntil > 0 && (
+                                                <div className="alert alert-danger" role="alert">
+                                                    Too many failed attempts. Try again in <strong>{countdown}</strong>.
+                                                </div>
+                                            )}
                                             <form onSubmit={handleSubmit}>
                                                 <div className="mb-3">
                                                     <label className="form-label">Email</label>
@@ -319,16 +383,18 @@ function Login() {
                                                         type="email"
                                                         name="email"
                                                         placeholder="Enter your email"
+                                                        disabled={lockoutUntil > 0}
                                                     />
                                                     <span style={{ color: "red" }} >{errors.email}</span>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label className="form-label">Password {isProcessing}</label>
+                                                    <label className="form-label">Password</label>
                                                     <input
                                                         className="form-control form-control-lg"
                                                         type="password"
                                                         name="password"
                                                         placeholder="Enter your password"
+                                                        disabled={lockoutUntil > 0}
                                                     />
                                                     <span style={{ color: "red" }} >{errors.password}</span>
                                                     {/*
@@ -364,7 +430,7 @@ function Login() {
                                                         </button> : null}
 
                                                     {!isProcessing ?
-                                                        <button className="btn btn-lg btn-primary" type="submit">Login</button>
+                                                        <button className="btn btn-lg btn-primary" type="submit" disabled={lockoutUntil > 0}>Login</button>
                                                         : null}
 
                                                 </div>

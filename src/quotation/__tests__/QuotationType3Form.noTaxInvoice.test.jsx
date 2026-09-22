@@ -63,6 +63,9 @@ jest.mock('../../utils/product_quotation_sales_return_history.js', () => ({ __es
 jest.mock('../../utils/product_delivery_note_history.js',          () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
 jest.mock('../../utils/product_non_vat_sales_history.js',          () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
 jest.mock('../../utils/product_non_vat_sales_return_history.js',   () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
+jest.mock('../../purchase_order/PurchaseOrderPicker.js',           () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
+jest.mock('../../utils/sales.js',                                  () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
+jest.mock('../../utils/purchases.js',                              () => ({ __esModule: true, default: require('react').forwardRef(() => null) }));
 jest.mock('../../utils/numberUtils', () => ({
     trimTo2Decimals: (v) => parseFloat(parseFloat(v).toFixed(2)),
     trimTo8Decimals: (v) => parseFloat(parseFloat(v).toFixed(8)),

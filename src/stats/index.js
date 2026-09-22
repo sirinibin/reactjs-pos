@@ -12,8 +12,10 @@ import "./../utils/stickyHeader.css";
 import { Button, Modal } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { useTranslation } from "react-i18next";
 
 const StatsIndex = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     //deploy to master
     const { lastMessage } = useContext(WebSocketContext);
     //Date filter
@@ -1207,7 +1209,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem", marginRight: "4px" }} />
-                        {" "}Statistics Section Settings
+                        {" "}{t('Statistics Section Settings')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -1237,7 +1239,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                                                 checked={section.visible !== false}
                                                                 onChange={() => handleToggleSection(index)}
                                                             />
-                                                            {section.label}
+                                                            {t(section.label)}
                                                         </div>
                                                         <span style={{ cursor: "grab" }}>☰</span>
                                                     </li>
@@ -1253,19 +1255,19 @@ const StatsIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSectionSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button variant="primary" onClick={restoreDefaultSections}>
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
             <div className="container-fluid p-0">
                 <div className="d-flex align-items-center justify-content-between mb-2">
-                    <h1 className="mb-0">Statistics</h1>
+                    <h1 className="mb-0">{t('Statistics')}</h1>
                     <button
                         className="btn btn-outline-secondary btn-sm"
-                        title="Section Settings"
+                        title={t("Section Settings")}
                         onClick={() => setShowSectionSettings(true)}
                     >
                         <i className="bi bi-gear-fill" />
@@ -1273,7 +1275,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 </div>
                 <div className="row">
                     <div className="col-1" style={{ width: "50px" }}>
-                        Date:
+                        {t('Date:')}
                     </div>
                     <div id="calendar-portal" className="col-3 date-picker " style={{ minWidth: "125px" }}>
 
@@ -1307,13 +1309,13 @@ const StatsIndex = forwardRef((props, ref) => {
                             }}
                             onClick={(e) => setShowDateRange(!showDateRange)}
                         >
-                            {showDateRange ? "Less.." : "More.."}
+                            {showDateRange ? t("Less..") : t("More..")}
                         </small>
                         <br />
 
                         {showDateRange ? (
                             <span className="text-left">
-                                From:{" "}
+                                {t('From:')}{" "}
                                 <DatePicker
                                     id="from_date"
                                     autoComplete="off"
@@ -1333,7 +1335,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                         setSelectedFromDate(date);
                                     }}
                                 />
-                                To:{" "}
+                                {t('To:')}{" "}
                                 <DatePicker
                                     id="to_date"
                                     autoComplete="off"
@@ -1363,7 +1365,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Profit / Loss Statement"
+                                        title={t("Profit / Loss Statement")}
                                         stats={{
                                             "Revenue": profitLossRevenueNum,
                                             "Expense": profitLossExpenseNum,
@@ -1443,7 +1445,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Overall Summary"
+                                        title={t("Overall Summary")}
                                         stats={{
                                             "SALES(with VAT)": (totalSales - totalSalesReturn),
                                             "PURCHASE(with VAT)": (totalPurchase - totalPurchaseReturn),
@@ -1514,7 +1516,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Sales Summary"
+                                        title={t("Sales Summary")}
                                         stats={{
                                             "Sales": totalSales,
                                             "Cash Sales": totalCashSales,
@@ -1610,7 +1612,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Sales Return Summary"
+                                        title={t("Sales Return Summary")}
                                         stats={{
                                             "Sales Return": totalSalesReturn,
                                             "Cash Sales Return": totalCashSalesReturn,
@@ -1699,7 +1701,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Purchase Summary"
+                                        title={t("Purchase Summary")}
                                         stats={{
                                             "Cash purchase": totalCashPurchase,
                                             "Credit purchase": totalUnPaidPurchase,
@@ -1784,7 +1786,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Purchase Return Summary"
+                                        title={t("Purchase Return Summary")}
                                         stats={{
                                             "Cash Purchase Return": totalCashPurchaseReturn,
                                             "Credit Purchase Return": totalUnPaidPurchaseReturn,
@@ -1861,7 +1863,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Expense Summary"
+                                        title={t("Expense Summary")}
                                         stats={{
                                             "Total Expense": totalExpense,
                                             "Cash Expense": totalExpenseCash,
@@ -1905,7 +1907,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Quotation Summary"
+                                        title={t("Quotation Summary")}
                                         stats={{
                                             "Quotation": totalQuotation,
                                             "Profit": quotationProfit,
@@ -1946,7 +1948,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Qtn. Sales Summary"
+                                        title={t("Qtn. Sales Summary")}
                                         stats={{
                                             "Sales": totalQtnSales,
                                             "Cash Sales": totalQtnSalesCash,
@@ -2033,7 +2035,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Qtn. Sales Return Summary"
+                                        title={t("Qtn. Sales Return Summary")}
                                         stats={{
                                             "Sales Return": totalQtnSalesReturn,
                                             "Cash Sales Return": totalQtnSalesReturnCash,
@@ -2120,7 +2122,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Receivables Summary"
+                                        title={t("Receivables Summary")}
                                         storageKey="stats_receivables_summary"
                                         stats={{
                                             "Total": totalDeposit,
@@ -2207,7 +2209,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "revenue_forecast") }}>
                                 <div className="col">
                                     <StatsSummary store={store}
-                                        title="Revenue Forecast (Next 6 Months)"
+                                        title={t("Revenue Forecast (Next 6 Months)")}
                                         storageKey="stats_revenue_forecast_summary"
                                         stats={{
                                             "Total 6-Month Predicted Revenue": totalRev,
@@ -2259,7 +2261,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "expense_forecast") }}>
                                 <div className="col">
                                     <StatsSummary store={store}
-                                        title="Expense Forecast (Next 6 Months)"
+                                        title={t("Expense Forecast (Next 6 Months)")}
                                         storageKey="stats_expense_forecast_summary"
                                         stats={{
                                             "Total 6-Month Predicted Expense": totalExp,
@@ -2308,7 +2310,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "profit_forecast") }}>
                                 <div className="col">
                                     <StatsSummary store={store}
-                                        title="Profit / Loss Forecast (Next 6 Months)"
+                                        title={t("Profit / Loss Forecast (Next 6 Months)")}
                                         storageKey="stats_profit_forecast_summary"
                                         stats={{
                                             "6-Month Predicted Profit / Loss": totalProfit,
@@ -2344,7 +2346,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary store={store}
-                                        title="Payables Summary"
+                                        title={t("Payables Summary")}
                                         storageKey="stats_payables_summary"
                                         stats={{
                                             "Total": totalWithdrawal,

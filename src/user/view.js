@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 import { formatInStoreTimezone } from '../utils/dateUtils.js';
+import { useTranslation } from "react-i18next";
 
 
 const UserView = forwardRef((props, ref) => {
@@ -14,6 +15,7 @@ const UserView = forwardRef((props, ref) => {
         },
     }));
 
+    const { t } = useTranslation('common');
     let [model, setModel] = useState({});
 
 
@@ -57,7 +59,7 @@ const UserView = forwardRef((props, ref) => {
 
     // Function to format battery level as a percentage
     const formatBattery = (battery) => {
-        return battery !== 'N/A' ? `${(parseFloat(battery) * 100).toFixed(0)}%` : 'Unknown';
+        return battery !== 'N/A' ? `${(parseFloat(battery) * 100).toFixed(0)}%` : t('Unknown');
     };
 
     const infoCard = (label, value, icon) => (
@@ -82,7 +84,7 @@ const UserView = forwardRef((props, ref) => {
                         type="button"
                         className="btn-close"
                         onClick={handleClose}
-                        aria-label="Close"
+                        aria-label={t('Close')}
                         style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
                     ></button>
 
@@ -92,10 +94,10 @@ const UserView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                     <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                    Back
+                                    {t('Back')}
                                 </button>
                                 <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                                    {model.name || 'Details of User'}
+                                    {model.name || t('Details of User')}
                                 </h1>
                                 {model.role && (
                                     <span style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
@@ -104,7 +106,7 @@ const UserView = forwardRef((props, ref) => {
                                 )}
                                 {model.admin && (
                                     <span style={{ backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
-                                        Admin
+                                        {t('Admin')}
                                     </span>
                                 )}
                             </div>
@@ -118,13 +120,13 @@ const UserView = forwardRef((props, ref) => {
                             {props.openUpdateForm && (
                                 <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
                                     <i className="bi bi-pencil" style={{ fontSize: '16px' }}></i>
-                                    Edit
+                                    {t('Edit')}
                                 </button>
                             )}
                             {props.openCreateForm && (
                                 <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                     <i className="bi bi-plus" style={{ fontSize: '16px' }}></i>
-                                    Create
+                                    {t('Create')}
                                 </button>
                             )}
                         </div>
@@ -135,20 +137,20 @@ const UserView = forwardRef((props, ref) => {
 
                         {/* Profile Info Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
-                            {infoCard('Name', model.name, 'bi-person')}
-                            {infoCard('Email', model.email, 'bi-envelope')}
-                            {infoCard('Mobile', model.mob, 'bi-phone')}
-                            {infoCard('Role', model.role, 'bi-shield')}
-                            {infoCard('Admin', model.admin ? 'Yes' : 'No', 'bi-person-check')}
-                            {infoCard('Password', '***********', 'bi-lock')}
+                            {infoCard(t('Name'), model.name, 'bi-person')}
+                            {infoCard(t('Email'), model.email, 'bi-envelope')}
+                            {infoCard(t('Mobile'), model.mob, 'bi-phone')}
+                            {infoCard(t('Role'), model.role, 'bi-shield')}
+                            {infoCard(t('Admin'), model.admin ? t('Yes') : t('No'), 'bi-person-check')}
+                            {infoCard(t('Password'), '***********', 'bi-lock')}
                         </div>
 
                         {/* Audit Info Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
-                            {infoCard('Created At', formatInStoreTimezone(model.created_at), 'bi-calendar-plus')}
-                            {infoCard('Updated At', formatInStoreTimezone(model.updated_at), 'bi-calendar-check')}
-                            {infoCard('Created By', model.created_by_name, 'bi-person-plus')}
-                            {infoCard('Updated By', model.updated_by_name, 'bi-person-gear')}
+                            {infoCard(t('Created At'), formatInStoreTimezone(model.created_at), 'bi-calendar-plus')}
+                            {infoCard(t('Updated At'), formatInStoreTimezone(model.updated_at), 'bi-calendar-check')}
+                            {infoCard(t('Created By'), model.created_by_name, 'bi-person-plus')}
+                            {infoCard(t('Updated By'), model.updated_by_name, 'bi-person-gear')}
                         </div>
 
                         {/* Devices Section */}
@@ -156,11 +158,11 @@ const UserView = forwardRef((props, ref) => {
                             <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
                                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
                                     <i className="bi bi-laptop" style={{ marginRight: '8px', color: '#505f76' }}></i>
-                                    User Devices
+                                    {t('User Devices')}
                                 </h3>
                                 {model.devices && (
                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
-                                        {Object.keys(model.devices).length} Device(s)
+                                        {Object.keys(model.devices).length} {t('Device(s)')}
                                     </span>
                                 )}
                             </div>
@@ -182,36 +184,36 @@ const UserView = forwardRef((props, ref) => {
                                                         border: `1px solid ${device.connected ? '#bbf7d0' : '#fecaca'}`,
                                                         padding: '2px 8px', borderRadius: '2px', fontSize: '11px', fontWeight: 500
                                                     }}>
-                                                        {device.connected ? 'Online' : 'Offline'}
+                                                        {device.connected ? t('Online') : t('Offline')}
                                                     </span>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg" style={{ gap: '16px' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Device Type</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Device Type')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>{device.device_type || '—'}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Platform</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Platform')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>{device.platform || '—'}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Screen Resolution</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Screen Resolution')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>{device.screen_width} x {device.screen_height}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Touch</span>
-                                                        <span style={{ fontSize: '14px', color: '#191c1e' }}>{device.touch ? 'Yes' : 'No'}</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Touch')}</span>
+                                                        <span style={{ fontSize: '14px', color: '#191c1e' }}>{device.touch ? t('Yes') : t('No')}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Battery Level</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Battery Level')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatBattery(device.battery)}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>IP Address</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('IP Address')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e', fontFamily: 'monospace' }}>{device.ip_address || '—'}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Connected</span>
+                                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Last Connected')}</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>
                                                             {device.last_connected_at ? formatInStoreTimezone(device.last_connected_at) : '—'}
                                                         </span>
@@ -224,7 +226,7 @@ const UserView = forwardRef((props, ref) => {
                             ) : (
                                 <div style={{ padding: '40px 24px', textAlign: 'center', color: '#6b7280' }}>
                                     <i className="bi bi-laptop" style={{ fontSize: '32px', display: 'block', marginBottom: '8px', opacity: 0.4 }}></i>
-                                    <span style={{ fontSize: '14px' }}>No devices available for this user.</span>
+                                    <span style={{ fontSize: '14px' }}>{t('No devices available for this user.')}</span>
                                 </div>
                             )}
                         </section>
@@ -234,7 +236,7 @@ const UserView = forwardRef((props, ref) => {
                     {/* Modal Footer */}
                     <div style={{ padding: '16px 32px', borderTop: '1px solid #c3c6d7', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#f7f9fb' }}>
                         <button onClick={handleClose} style={{ border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                            Close
+                            {t('Close')}
                         </button>
                     </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import { DEFAULT_MENU } from '../sidebar_menu_config.js';
 
 const ACTIONS = ["read", "create", "update", "delete"];
@@ -25,6 +26,7 @@ const UserRoleCreate = forwardRef((props, ref) => {
         },
     }));
 
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [formData, setFormData] = useState({});
     const [permissions, setPermissions] = useState(defaultPermissions());
@@ -134,12 +136,12 @@ const UserRoleCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 if (!r.ok) {
                     setErrors(data.errors || {});
-                    if (props.showToastMessage) props.showToastMessage("Failed to save role!", "danger");
+                    if (props.showToastMessage) props.showToastMessage(t("Failed to save role!"), "danger");
                     return;
                 }
                 setErrors({});
                 if (props.showToastMessage)
-                    props.showToastMessage(formData.id ? "Role updated!" : "Role created!", "success");
+                    props.showToastMessage(formData.id ? t("Role updated!") : t("Role created!"), "success");
                 localStorage.setItem("rbac_role_updated", Date.now().toString());
                 window.dispatchEvent(new CustomEvent("rbac_role_updated"));
                 if (props.refreshList) props.refreshList();
@@ -148,7 +150,7 @@ const UserRoleCreate = forwardRef((props, ref) => {
             })
             .catch(() => {
                 setProcessing(false);
-                if (props.showToastMessage) props.showToastMessage("Failed to save role!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to save role!"), "danger");
             });
     }
 
@@ -170,32 +172,32 @@ const UserRoleCreate = forwardRef((props, ref) => {
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#434655", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", padding: "4px 8px", borderRadius: "4px", flexShrink: 0 }}
                     onMouseEnter={e => e.currentTarget.style.background = "#f0f2f4"}
                     onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }} /> Back
+                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }} /> {t('Back')}
                 </button>
                 <Modal.Title className="ur-title">
-                    {formData.id ? `Edit Role — ${formData.name}` : "Create New Role"}
+                    {formData.id ? `${t('Edit Role')} — ${formData.name}` : t("Create New Role")}
                 </Modal.Title>
                 <button type="button"
                     style={{ background: "#004ac6", color: "#fff", border: "none", borderRadius: "4px", padding: "6px 14px", fontSize: "13px", fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", flexShrink: 0 }}
                     onClick={handleSubmit} disabled={isProcessing}>
                     {isProcessing && <Spinner as="span" animation="border" size="sm" />}
-                    {formData.id ? "Update" : "Create"}
+                    {formData.id ? t("Update") : t("Create")}
                 </button>
-                <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" />
+                <button type="button" className="btn-close" onClick={handleClose} aria-label={t('Close')} />
             </Modal.Header>
 
             <Modal.Body className="ur-body">
                 {/* Role Name */}
                 <div style={{ marginBottom: "24px", maxWidth: "420px" }}>
                     <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#191c1e", marginBottom: "4px" }}>
-                        Role Name <span style={{ color: "#ba1a1a" }}>*</span>
+                        {t('Role Name')} <span style={{ color: "#ba1a1a" }}>*</span>
                     </label>
                     <input
                         type="text"
                         value={formData.name || ""}
                         onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
                         style={{ border: "1px solid #c3c6d7", borderRadius: "4px", padding: "8px 12px", fontSize: "13px", width: "100%", outline: "none" }}
-                        placeholder="e.g. Sales Manager"
+                        placeholder={t('e.g. Sales Manager')}
                     />
                     {errors.name && <div style={{ color: "#ba1a1a", fontSize: "12px", marginTop: "3px" }}>{errors.name}</div>}
                 </div>
@@ -203,13 +205,13 @@ const UserRoleCreate = forwardRef((props, ref) => {
                 {/* Permission Matrix */}
                 <div>
                     <div style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e", marginBottom: "12px", fontFamily: '"Hanken Grotesk", sans-serif' }}>
-                        Permissions
+                        {t('Permissions')}
                     </div>
                     <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: '"Inter", sans-serif' }}>
                             <thead>
                                 <tr style={{ background: "#f2f4f6" }}>
-                                    <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, minWidth: "200px" }}>Module</th>
+                                    <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, minWidth: "200px" }}>{t('Module')}</th>
                                     {ACTIONS.map(action => (
                                         <th key={action} style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, minWidth: "90px" }}>
                                             <div style={{ textTransform: "capitalize", marginBottom: "4px" }}>{action}</div>
@@ -221,12 +223,12 @@ const UserRoleCreate = forwardRef((props, ref) => {
                                                     onChange={e => toggleAll(action, e.target.checked)}
                                                     style={{ cursor: "pointer", width: "14px", height: "14px" }}
                                                 />
-                                                <span style={{ fontSize: "10px", color: "#666" }}>All</span>
+                                                <span style={{ fontSize: "10px", color: "#666" }}>{t('All')}</span>
                                             </div>
                                         </th>
                                     ))}
                                     <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, minWidth: "80px" }}>
-                                        <div style={{ marginBottom: "4px" }}>All</div>
+                                        <div style={{ marginBottom: "4px" }}>{t('All')}</div>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
                                             <input
                                                 type="checkbox"
@@ -236,7 +238,7 @@ const UserRoleCreate = forwardRef((props, ref) => {
                                                 }}
                                                 style={{ cursor: "pointer", width: "14px", height: "14px" }}
                                             />
-                                            <span style={{ fontSize: "10px", color: "#666" }}>All</span>
+                                            <span style={{ fontSize: "10px", color: "#666" }}>{t('All')}</span>
                                         </div>
                                     </th>
                                 </tr>

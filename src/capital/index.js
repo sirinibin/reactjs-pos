@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import CapitalCreate from "./create.js";
 import CapitalView from "./view.js";
 
@@ -17,7 +18,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 
 function CapitalIndex(props) {
 
-
+    const { t } = useTranslation('common');
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
@@ -370,7 +371,7 @@ function CapitalIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            {t('Total')}: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalCapitals}
                                     displayType={"text"}
@@ -388,7 +389,7 @@ function CapitalIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Capital Investments</h1>
+                        <h1 className="h3">{t('Capital Investments')}</h1>
                     </div>
 
 
@@ -400,7 +401,7 @@ function CapitalIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -420,7 +421,7 @@ function CapitalIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Capital to display</p>
+                                            <p className="text-start">{t('No Capital to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -444,7 +445,7 @@ function CapitalIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -491,7 +492,7 @@ function CapitalIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        ID
+                                                        {t('ID')}
                                                         {sortField === "code" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -511,7 +512,7 @@ function CapitalIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('Date')}
                                                         {sortField === "date" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -531,7 +532,7 @@ function CapitalIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('Amount')}
                                                         {sortField === "amount" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -550,7 +551,7 @@ function CapitalIndex(props) {
                                                             sort("payment_method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t('Payment Method')}
                                                         {sortField === "payment_method" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -569,7 +570,7 @@ function CapitalIndex(props) {
                                                             sort("description");
                                                         }}
                                                     >
-                                                        Description
+                                                        {t('Description')}
                                                         {sortField === "description" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -588,7 +589,7 @@ function CapitalIndex(props) {
                                                             sort("invested_by_user_name");
                                                         }}
                                                     >
-                                                        InvestedByUser
+                                                        {t('InvestedByUser')}
                                                         {sortField === "invested_by_user_name" &&
                                                             sortCapital === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
@@ -609,7 +610,7 @@ function CapitalIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('Created By')}
                                                         {sortField === "created_by_name" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -628,7 +629,7 @@ function CapitalIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('Created At')}
                                                         {sortField === "created_at" && sortCapital === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -637,7 +638,7 @@ function CapitalIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -677,13 +678,13 @@ function CapitalIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From')}:{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -699,7 +700,7 @@ function CapitalIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To')}:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -760,7 +761,7 @@ function CapitalIndex(props) {
                                                             );
                                                         }}
                                                         options={investedbyuserOptions}
-                                                        placeholder="Select investedbyusers"
+                                                        placeholder={t('Select investedbyusers')}
                                                         selected={selectedInvestedByUsers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -781,7 +782,7 @@ function CapitalIndex(props) {
                                                             );
                                                         }}
                                                         options={capitalOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('Select Users')}
                                                         selected={selectedCreatedByCapitals}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -816,13 +817,13 @@ function CapitalIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -838,7 +839,7 @@ function CapitalIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

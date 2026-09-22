@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words';
 import { trimTo2Decimals } from "../utils/numberUtils";
@@ -281,7 +281,7 @@ const PreviewContentType2 = forwardRef((props, ref) => {
                                     <div style={{ textAlign: "center" }}>
                                         {st?.logo ? (
                                             <img
-                                                src={resolveImageUrl(st.logo, st.id, "store") + "?" + Date.now()}
+                                                src={storeLogoUrl(st)}
                                                 alt="logo"
                                                 style={{
                                                     width: "64px", height: "64px", objectFit: "contain",

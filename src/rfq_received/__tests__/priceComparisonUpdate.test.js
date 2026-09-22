@@ -13,7 +13,7 @@ function normalisePurchasePrice(unitPrice, vatIncluded, vatPercent) {
 
 function computeRetailPrice(purchaseExcl, marginPct) {
     if (!purchaseExcl || purchaseExcl <= 0 || !marginPct || marginPct <= 0) return null;
-    return purchaseExcl * (1 + marginPct / 100);
+    return parseFloat((purchaseExcl * (1 + marginPct / 100)).toFixed(8));
 }
 
 function buildUpdateItems(products, selectedSupplier, priceMap, margins) {
@@ -108,5 +108,40 @@ describe('Retail price computation', () => {
 
     test('returns null for negative margin (guard prevents below-cost)', () => {
         expect(computeRetailPrice(100, -10)).toBeNull();
+    });
+
+    // Regression test: floating-point multiplication (e.g. 3 * 1.0333…) can
+    // produce 15+ decimal places.  The Quotation form rejects unit_price with
+    // more than 8 decimal places ("Max decimal points allowed is 8").
+    test('result has at most 8 decimal places', () => {
+        // 100 / 3 = 33.333… → margin gives a repeating decimal
+        const cost = 100 / 3;
+        const result = computeRetailPrice(cost, 15);
+        const decimals = (result.toString().split('.')[1] || '').length;
+        expect(decimals).toBeLessThanOrEqual(8);
+    });
+
+    test('precise value: 10.00 cost + 33.33% margin rounds to ≤8 dp', () => {
+        const result = computeRetailPrice(10.00, 33.33);
+        const decimals = (result.toString().split('.')[1] || '').length;
+        expect(decimals).toBeLessThanOrEqual(8);
+    });
+});
+
+describe('rfq_received/index.js — retailPrice decimal cap (source)', () => {
+    const fs   = require('fs');
+    const path = require('path');
+    const SRC  = fs.readFileSync(
+        path.join(__dirname, '..', 'index.js'),
+        'utf8'
+    );
+
+    test('retailPrice uses toFixed(8) to cap decimal places', () => {
+        expect(SRC).toMatch(/toFixed\s*\(\s*8\s*\)/);
+    });
+
+    test('retailPrice does not return bare cost * (1 + m / 100) without rounding', () => {
+        // The unrounded form must not be the return value any more
+        expect(SRC).not.toMatch(/return\s+cost\s*\*\s*\(1\s*\+\s*m\s*\/\s*100\)/);
     });
 });

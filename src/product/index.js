@@ -37,6 +37,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { useTranslation } from "react-i18next";
+import * as XLSX from "xlsx";
 
 const columnStyle = {
     width: '20%',
@@ -127,6 +128,50 @@ function ProductIndex(props) {
             const data = await fetchStore(id);
             setStore({ ...data });
         } catch (error) { }
+    }
+
+    const [exportingExcel, setExportingExcel] = useState(false);
+
+    async function exportToExcel() {
+        setExportingExcel(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const token = localStorage.getItem("access_token");
+            const select = `select=id,prefix_part_number,part_number,name,name_in_arabic,ean_12,category_name,brand_name,country_name,rack,unit,product_stores,created_at`;
+            const exportParams = { ...searchParams.current, store_id: storeId };
+            const queryParams = ObjectToSearchQueryParams(exportParams);
+            const res = await fetch(`/v1/product?${select}&${queryParams}&sort=-created_at&page=1&limit=5000`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const items = data.result || [];
+            const rows = items.map((p, i) => {
+                const ps = p.product_stores?.[storeId] || {};
+                const partNo = p.prefix_part_number ? `${p.prefix_part_number}-${p.part_number}` : (p.part_number || "");
+                return {
+                    "#": i + 1,
+                    "Name": p.name || "",
+                    "Name (Arabic)": p.name_in_arabic || "",
+                    "Part Number": partNo,
+                    "Barcode": p.ean_12 || "",
+                    "Category": Array.isArray(p.category_name) ? p.category_name.join(", ") : (p.category_name || ""),
+                    "Brand": p.brand_name || "",
+                    "Country": p.country_name || "",
+                    "Rack": p.rack || "",
+                    "Unit": p.unit || "",
+                    "Purchase Price": ps.purchase_unit_price ?? "",
+                    "Wholesale Price": ps.wholesale_unit_price ?? "",
+                    "Retail Price": ps.retail_unit_price ?? "",
+                    "Stock": ps.stock ?? "",
+                    "Created At": p.created_at ? new Date(p.created_at).toLocaleDateString() : "",
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Products");
+            XLSX.writeFile(wb, `products_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (e) { console.error("Export error:", e); }
+        setExportingExcel(false);
     }
 
     //Search params
@@ -2135,7 +2180,19 @@ function ProductIndex(props) {
                         <h1 className="h3 mb-0">{t('Products')}</h1>
                     </div>
 
-                    <div className="col-auto">
+                    <div className="col-auto d-flex gap-2 align-items-center">
+                        <Button
+                            variant="success"
+                            className="btn btn-success mb-1"
+                            onClick={exportToExcel}
+                            disabled={exportingExcel}
+                            title="Export all products matching current filters to Excel"
+                        >
+                            {exportingExcel
+                                ? <Spinner as="span" animation="border" size="sm" className="me-1" />
+                                : <i className="bi bi-file-earmark-excel me-1"></i>}
+                            Export Excel
+                        </Button>
                         <Button
                             hide={true.toString()}
                             variant="primary"

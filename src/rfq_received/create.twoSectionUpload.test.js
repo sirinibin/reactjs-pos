@@ -106,13 +106,15 @@ describe('create.js — addProductFiles separates Excel from non-Excel', () => {
         expect(SRC).toMatch(/["']xlsx["'].*["']xls["']|["']xls["'].*["']xlsx["']/);
     });
 
-    test('4.3  Excel files trigger extractFromExcel', () => {
-        expect(SRC).toMatch(/excelFiles.*extractFromExcel|extractFromExcel.*excelFiles/s);
+    test('4.3  addProductFiles adds all files (incl. Excel) as-is to productFiles', () => {
+        // Excel is no longer auto-extracted in the Products section.
+        // All files go to productFiles for display as-is.
+        expect(SRC).toMatch(/addProductFiles/);
+        expect(SRC).toMatch(/setProductFiles/);
     });
 
-    test('4.4  non-Excel files are added to productFiles state', () => {
+    test('4.4  addProductFiles adds files to productFiles state', () => {
         expect(SRC).toMatch(/setProductFiles/);
-        expect(SRC).toMatch(/otherFiles/);
     });
 });
 

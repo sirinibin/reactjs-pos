@@ -276,7 +276,7 @@ function PurchaseOrderIndex(props) {
 
             {/* Stats summary */}
             <StatsSummary
-                title="Purchase Order Summary"
+                title={t("Purchase Order Summary")}
                 stats={{
                     "Net Total": totalNetTotal,
                     "VAT": totalVatPrice,

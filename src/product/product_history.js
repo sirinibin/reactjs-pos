@@ -26,9 +26,11 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
+import { useTranslation } from "react-i18next";
 //import Draggable2 from "react-draggable";
 
 const ProductHistory = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [statsOpen, setStatsOpen] = useState(false);
 
     /*
@@ -736,7 +738,7 @@ const ProductHistory = forwardRef((props, ref) => {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -849,7 +851,7 @@ const ProductHistory = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Product History Settings"
+                title={t('Product History Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -918,45 +920,45 @@ const ProductHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Product History Summary"
+                                title={t('Product History Summary')}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { [t('Vendor')]: selectedVendors.map(v => v.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Sales": totalSales,
-                                    "Sales Net Profit": totalSalesProfit,
-                                    "Sales Net Loss": totalSalesLoss,
-                                    "Sales VAT Collected": totalSalesVat,
+                                    [t('Sales')]: totalSales,
+                                    [t('Sales Net Profit')]: totalSalesProfit,
+                                    [t('Sales Net Loss')]: totalSalesLoss,
+                                    [t('Sales VAT Collected')]: totalSalesVat,
 
-                                    "Sales Return": totalSalesReturn,
-                                    "Sales Return Net Profit": totalSalesReturnProfit,
-                                    "Sales Return Net Loss": totalSalesReturnLoss,
-                                    "Sales Return VAT": totalSalesReturnVat,
+                                    [t('Sales Return')]: totalSalesReturn,
+                                    [t('Sales Return Net Profit')]: totalSalesReturnProfit,
+                                    [t('Sales Return Net Loss')]: totalSalesReturnLoss,
+                                    [t('Sales Return VAT')]: totalSalesReturnVat,
 
-                                    "Purchase": totalPurchase,
-                                    "Purchase VAT": totalPurchaseVat,
-                                    "Purchase Return": totalPurchaseReturn,
-                                    "Purchase Return VAT": totalPurchaseReturnVat,
+                                    [t('Purchase')]: totalPurchase,
+                                    [t('Purchase VAT')]: totalPurchaseVat,
+                                    [t('Purchase Return')]: totalPurchaseReturn,
+                                    [t('Purchase Return VAT')]: totalPurchaseReturnVat,
 
-                                    "Quotation": totalQuotation,
-                                    "Quotation Net Profit": totalQuotationProfit,
-                                    "Quotation Net Loss": totalQuotationLoss,
-                                    "Quotation VAT Collected": totalQuotationVat,
+                                    [t('Quotation')]: totalQuotation,
+                                    [t('Quotation Net Profit')]: totalQuotationProfit,
+                                    [t('Quotation Net Loss')]: totalQuotationLoss,
+                                    [t('Quotation VAT Collected')]: totalQuotationVat,
 
-                                    "Quotation Sales": totalQuotationSales,
-                                    "Quotation Sales Net Profit": totalQuotationSalesProfit,
-                                    "Quotation Sales Net Loss": totalQuotationSalesLoss,
-                                    "Quotation Sales VAT Collected": totalQuotationSalesVat,
+                                    [t('Quotation Sales')]: totalQuotationSales,
+                                    [t('Quotation Sales Net Profit')]: totalQuotationSalesProfit,
+                                    [t('Quotation Sales Net Loss')]: totalQuotationSalesLoss,
+                                    [t('Quotation Sales VAT Collected')]: totalQuotationSalesVat,
 
-                                    "Quotation Sales Return": totalQuotationSalesReturn,
-                                    "Quotation Sales Return Net Profit": totalQuotationSalesReturnProfit,
-                                    "Quotation Sales Return Net Loss": totalQuotationSalesReturnLoss,
-                                    "Quotation Sales Return VAT Collected": totalQuotationSalesReturnVat,
+                                    [t('Quotation Sales Return')]: totalQuotationSalesReturn,
+                                    [t('Quotation Sales Return Net Profit')]: totalQuotationSalesReturnProfit,
+                                    [t('Quotation Sales Return Net Loss')]: totalQuotationSalesReturnLoss,
+                                    [t('Quotation Sales Return VAT Collected')]: totalQuotationSalesReturnVat,
 
-                                    "Delivery Note Quantity": totalDeliveryNoteQuantity,
+                                    [t('Delivery Note Quantity')]: totalDeliveryNoteQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -1026,7 +1028,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No History to display</p>
+                                            <p className="text-start">{t('No History to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1051,7 +1053,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -1062,7 +1064,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -1132,14 +1134,13 @@ const ProductHistory = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t('showing {{from}}-{{to}} of {{total}}', { from: offset + 1, to: offset + currentPageItemsCount, total: totalItems })}
                                                 </p>
                                             </div>
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t('page {{page}} of {{totalPages}}', { page, totalPages })}
                                                 </p>
                                             </div>
                                         </>
@@ -1161,7 +1162,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1445,7 +1446,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -1476,7 +1477,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                placeholder={t('Vendor Name | Mob | VAT # | ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -1505,18 +1506,18 @@ const ProductHistory = forwardRef((props, ref) => {
 
                                                                 }}
                                                             >
-                                                                <option value="" >All</option>
-                                                                <option value="sales" >Sales</option>
-                                                                <option value="sales_return" >Sales Return</option>
-                                                                <option value="purchase" >Purchase</option>
-                                                                <option value="purchase_return" >Purchase Return</option>
-                                                                <option value="quotation" >Quotation</option>
-                                                                <option value="quotation_invoice" >Qtn. Sales</option>
-                                                                <option value="quotation_sales_return" >Qtn. Sales Return</option>
-                                                                <option value="delivery_note">Delivery Note</option>
-                                                                <option value="stock_adjustment_by_adding">Stock Adjustment By Adding</option>
-                                                                <option value="stock_adjustment_by_removing">Stock Adjustment By Removing</option>
-                                                                <option value="stock_transfer" >Stock Transfer</option>
+                                                                <option value="" >{t('All')}</option>
+                                                                <option value="sales" >{t('Sales')}</option>
+                                                                <option value="sales_return" >{t('Sales Return')}</option>
+                                                                <option value="purchase" >{t('Purchase')}</option>
+                                                                <option value="purchase_return" >{t('Purchase Return')}</option>
+                                                                <option value="quotation" >{t('Quotation')}</option>
+                                                                <option value="quotation_invoice" >{t('Qtn. Sales')}</option>
+                                                                <option value="quotation_sales_return" >{t('Qtn. Sales Return')}</option>
+                                                                <option value="delivery_note">{t('Delivery Note')}</option>
+                                                                <option value="stock_adjustment_by_adding">{t('Stock Adjustment By Adding')}</option>
+                                                                <option value="stock_adjustment_by_removing">{t('Stock Adjustment By Removing')}</option>
+                                                                <option value="stock_transfer" >{t('Stock Transfer')}</option>
                                                             </select>
                                                         </th>}
                                                         {(col.key === "reference_code" ||
@@ -1580,13 +1581,13 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1605,7 +1606,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1662,13 +1663,13 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1687,7 +1688,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1732,7 +1733,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -1882,7 +1883,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     </span> : history.reference_code}
                                                                 </td>}
                                                                 {(col.key === "reference_type") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    {getTypeLabel(history.reference_type)}
+                                                                    {t(getTypeLabel(history.reference_type))}
                                                                 </td>}
                                                                 {(col.key === "unit_price" || col.key === "unit_price_with_vat") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {history[col.key] && typeof history[col.key] === "number" ?
@@ -1940,7 +1941,7 @@ const ProductHistory = forwardRef((props, ref) => {
 
                                                                         const details = orderedEntries
                                                                             .map(([key, value]) => {
-                                                                                let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                let name = key === "main_store" ? t('Main Store') : key.replace(/^wh/, "WH").toUpperCase();
                                                                                 return `${name}: ${value}`;
                                                                             })
                                                                             .join(", ");
@@ -1959,7 +1960,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                     {orderedEntries.length > 0 && (
                                                                                         <div style={{ fontSize: "0.75em", color: "#555", marginTop: "2px", whiteSpace: "nowrap" }}>
                                                                                             {orderedEntries.map(([key, value]) => {
-                                                                                                const name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                                const name = key === "main_store" ? t('Main Store') : key.replace(/^wh/, "WH").toUpperCase();
                                                                                                 return <div key={key}>{name}: {value}</div>;
                                                                                             })}
                                                                                         </div>
@@ -1974,9 +1975,9 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         {(() => {
                                                                             if (history.is_service) return "—";
                                                                             const type = history.reference_type;
-                                                                            const warehouse = history["warehouse_code"] || "Main Store";
-                                                                            const from_warehouse_code = history["from_warehouse_code"] || "Main Store";
-                                                                            const to_warehouse_code = history["to_warehouse_code"] || "Main Store";
+                                                                            const warehouse = history["warehouse_code"] || t('Main Store');
+                                                                            const from_warehouse_code = history["from_warehouse_code"] || t('Main Store');
+                                                                            const to_warehouse_code = history["to_warehouse_code"] || t('Main Store');
 
                                                                             if (
                                                                                 type === "sales" ||
@@ -1985,7 +1986,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 type === "quotation_invoice" ||
                                                                                 type === "stock_adjustment_by_removing"
                                                                             ) {
-                                                                                return `Stock Removed from ${warehouse}`;
+                                                                                return t('Stock Removed from {{warehouse}}', { warehouse });
                                                                             }
                                                                             if (
                                                                                 type === "sales_return" ||
@@ -1993,7 +1994,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 type === "quotation_sales_return" ||
                                                                                 type === "stock_adjustment_by_adding"
                                                                             ) {
-                                                                                return `Stock Added to ${warehouse}`;
+                                                                                return t('Stock Added to {{warehouse}}', { warehouse });
                                                                             }
 
                                                                             if (
@@ -2002,10 +2003,10 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 type === "quotation_sales_return" ||
                                                                                 type === "stock_adjustment_by_adding"
                                                                             ) {
-                                                                                return `Stock Added to ${warehouse}`;
+                                                                                return t('Stock Added to {{warehouse}}', { warehouse });
                                                                             }
                                                                             if (type === "stock_transfer") {
-                                                                                return `Stock Transferred from ${from_warehouse_code} to ${to_warehouse_code}`;
+                                                                                return t('Stock Transferred from {{from}} to {{to}}', { from: from_warehouse_code, to: to_warehouse_code });
                                                                             }
                                                                             // For any other type, display nothing
                                                                             return "";

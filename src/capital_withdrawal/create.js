@@ -10,8 +10,10 @@ import { format } from "date-fns";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const CapitalWithdrawalCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     //Store Auto Suggestion
     let [selectedStores, setSelectedStores] = useState([]);
@@ -283,9 +285,9 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Drawing updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Drawing updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Drawing created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Drawing created successfully!"), "success");
                 }
                 if (props.refreshList) {
                     props.refreshList();
@@ -304,7 +306,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process drawing", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process drawing"), "danger");
             });
     }
 
@@ -339,7 +341,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Drawings #" + formData.description : "Create New Drawing"}
+                        {formData.id ? t("Update Drawings") + " #" + formData.description : t("Create New Drawing")}
                     </Modal.Title>
 
 
@@ -349,7 +351,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t('View Detail')}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -364,20 +366,20 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t("Update") : !isProcessing ? t("Create") : ""}
                         </Button>
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t('Close')}
                         ></button>
                     </div>
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
+                            <label className="form-label">{t('Store')}*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
@@ -391,7 +393,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                         errors["product_id"] = "";
                                         setErrors(errors);
                                         if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
+                                            errors.store_id = t("Invalid Store selected");
                                             setErrors(errors);
                                             setFormData({ ...formData });
                                             setSelectedStores([]);
@@ -405,7 +407,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                     }
                                     }
                                     options={storeOptions}
-                                    placeholder="Select Store"
+                                    placeholder={t("Select Store")}
                                     selected={selectedStores}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
@@ -421,7 +423,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                             </div>
                         </div> : ""}
                         <div className="col-md-6">
-                            <label className="form-label">Withdrawn By User*</label>
+                            <label className="form-label">{t('Withdrawn By User')}*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
@@ -434,7 +436,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                         errors.withdrawn_by_user_id = "";
                                         setErrors(errors);
                                         if (selectedItems.length === 0) {
-                                            errors.withdrawn_by_user_id = "Invalid User selected";
+                                            errors.withdrawn_by_user_id = t("Invalid User selected");
                                             setErrors(errors);
                                             formData.withdrawn_by_user_id = "";
                                             setFormData({ ...formData });
@@ -446,7 +448,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                         setSelectedWithdrawnByUsers(selectedItems);
                                     }}
                                     options={withdrawnbyuserOptions}
-                                    placeholder="Select WithdrawnByUser"
+                                    placeholder={t("Select WithdrawnByUser")}
                                     selected={selectedWithdrawnByUsers}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
@@ -464,7 +466,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Amount*</label>
+                            <label className="form-label">{t('Amount')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -479,7 +481,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="amount"
-                                    placeholder="Amount"
+                                    placeholder={t("Amount")}
                                 />
                                 {errors.amount && (
                                     <div style={{ color: "red" }}>
@@ -490,7 +492,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                 {formData.amount && !errors.amount && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('Looks good!')}
                                     </div>
                                 )}
                             </div>
@@ -499,7 +501,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">Description*</label>
+                            <label className="form-label">{t('Description')}*</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.description ? formData.description : ""}
@@ -513,7 +515,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control description"
                                     id="description"
-                                    placeholder="Description"
+                                    placeholder={t("Description")}
                                 />
                                 {errors.description && (
                                     <div style={{ color: "red" }}>
@@ -524,13 +526,13 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                 {formData.description && !errors.description && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('Looks good!')}
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div className="col-md-6">
-                            <label className="form-label">Date Time*</label>
+                            <label className="form-label">{t('Date Time')}*</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
@@ -562,7 +564,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Payment method*</label>
+                            <label className="form-label">{t('Payment method')}*</label>
 
                             <div className="input-group mb-3">
                                 <select
@@ -585,13 +587,13 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
-                                    <option value="">Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="bank_card">Bank Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="bank_cheque">Bank Cheque</option>
+                                    <option value="">{t('Select')}</option>
+                                    <option value="cash">{t('Cash')}</option>
+                                    <option value="debit_card">{t('Debit Card')}</option>
+                                    <option value="credit_card">{t('Credit Card')}</option>
+                                    <option value="bank_card">{t('Bank Card')}</option>
+                                    <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                    <option value="bank_cheque">{t('Bank Cheque')}</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -603,7 +605,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Image(Optional)</label>
+                            <label className="form-label">{t('Image(Optional)')}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -675,7 +677,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                 {formData.image && !errors.image && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('Looks good!')}
                                     </div>
                                 )}
                             </div>
@@ -685,7 +687,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('Close')}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -697,7 +699,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                         aria-hidden={true}
                                     /> + " Processing..."
 
-                                    : formData.id ? "Update" : "Create"
+                                    : formData.id ? t("Update") : t("Create")
                                 }
                             </Button>
                         </Modal.Footer>

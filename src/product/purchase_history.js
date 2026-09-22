@@ -18,8 +18,10 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
+import { useTranslation } from "react-i18next";
 
 const PurchaseHistory = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [statsOpen, setStatsOpen] = useState(false);
     let [product, setProduct] = useState({});
 
@@ -457,7 +459,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -480,7 +482,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Purchase History Settings"
+                title={t('Purchase History Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -536,17 +538,17 @@ const PurchaseHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase History Summary"
+                                title={t('Purchase History Summary')}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { [t('Vendor')]: selectedVendors.map(v => v.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Purchase": totalPurchase,
-                                    "VAT Collected": totalVat,
-                                    "Total Quantity": totalQuantity,
+                                    [t('Purchase')]: totalPurchase,
+                                    [t('VAT Collected')]: totalVat,
+                                    [t('Total Quantity')]: totalQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -566,7 +568,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Purchase History to display</p>
+                                            <p className="text-start">{t('No Purchase History to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -591,7 +593,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -602,7 +604,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -673,14 +675,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t('showing {{from}}-{{to}} of {{total}}', { from: offset + 1, to: offset + currentPageItemsCount, total: totalItems })}
                                                 </p>
                                             </div>
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t('page {{page}} of {{totalPages}}', { page, totalPages })}
                                                 </p>
                                             </div>
                                         </>
@@ -702,7 +703,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -971,7 +972,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                placeholder={t('Vendor Name | Mob | VAT # | ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -1049,13 +1050,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1074,7 +1075,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1130,13 +1131,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1155,7 +1156,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1210,7 +1211,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                placeholder={t('Vendor Name | Mob | VAT # | ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -1347,7 +1348,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 ) &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {col.key === "warehouse_code" ? (
-                                                                            history[col.key] || "Main Store"
+                                                                            history[col.key] || t('Main Store')
                                                                         ) : (
                                                                             history[col.key] && typeof history[col.key] === "number" ?
                                                                                 <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]

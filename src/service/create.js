@@ -97,6 +97,8 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     let [selectedCategories, setSelectedCategories] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
+    const [categorySearch, setCategorySearch] = useState('');
+    const [categoryOpen, setCategoryOpen] = useState(false);
     // eslint-disable-next-line no-unused-vars
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
 
@@ -443,20 +445,32 @@ const ServiceCreate = forwardRef((props, ref) => {
                                 <div className="col-md-5">
                                     <Label>{t('Service Category')}</Label>
                                     <div className="d-flex gap-1">
-                                        <select
-                                            style={{ flex: 1, border: `1px solid ${errors.service_category_id ? '#dc3545' : '#c3c6d7'}`, borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: '"Inter",sans-serif', background: '#fff', color: '#191c1e', height: '34px' }}
-                                            value={formData.service_category_id || ''}
-                                            onChange={(e) => {
-                                                clearError('service_category_id');
-                                                const selected = categoryOptions.find(c => c.id === e.target.value);
-                                                formData.service_category_id = selected?.id || '';
-                                                formData.service_category_name = selected?.name || '';
-                                                setFormData({ ...formData });
-                                                setSelectedCategories(selected ? [selected] : []);
-                                            }}>
-                                            <option value="">{t('-- Select category --')}</option>
-                                            {categoryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                        </select>
+                                        <div style={{ position: 'relative', flex: 1 }}>
+                                            <input
+                                                type="text"
+                                                style={{ width: '100%', border: `1px solid ${errors.service_category_id ? '#dc3545' : '#c3c6d7'}`, borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: '"Inter",sans-serif', background: '#fff', color: '#191c1e', height: '34px', outline: 'none' }}
+                                                value={categoryOpen ? categorySearch : (formData.service_category_name || '')}
+                                                placeholder={t('-- Select category --')}
+                                                onFocus={() => { setCategoryOpen(true); setCategorySearch(''); }}
+                                                onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
+                                                onChange={e => setCategorySearch(e.target.value)}
+                                            />
+                                            {categoryOpen && (
+                                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
+                                                    <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
+                                                        onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = ''; formData.service_category_name = ''; setFormData({ ...formData }); setSelectedCategories([]); setCategoryOpen(false); }}>
+                                                        {t('-- Select category --')}
+                                                    </div>
+                                                    {categoryOptions.filter(c => !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => (
+                                                        <div key={c.id}
+                                                            style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: formData.service_category_id === c.id ? '#e8f0fe' : undefined }}
+                                                            onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = c.id; formData.service_category_name = c.name; setFormData({ ...formData }); setSelectedCategories([c]); setCategoryOpen(false); setCategorySearch(''); }}>
+                                                            {c.name}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <button type="button"
                                             style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
                                             onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>

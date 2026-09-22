@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Spinner, Button } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import VendorCategoryCreate from "./create.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
@@ -11,6 +12,8 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
             SetShow(true);
         },
     }));
+
+    const { t } = useTranslation('common');
 
     const [show, SetShow] = useState(false);
     function handleClose() { SetShow(false); }
@@ -65,7 +68,7 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
     }
 
     function deleteCategory(id) {
-        if (!window.confirm("Delete this category?")) return;
+        if (!window.confirm(t("Delete this category?"))) return;
         setDeletingId(id);
 
         let searchParams = {};
@@ -87,11 +90,11 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
                 if (!response.ok) { return Promise.reject(data && data.errors); }
                 setDeletingId(null);
                 list();
-                if (props.showToastMessage) props.showToastMessage("Category deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Category deleted successfully!"), "success");
             })
             .catch(() => {
                 setDeletingId(null);
-                if (props.showToastMessage) props.showToastMessage("Failed to delete category!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to delete category!"), "danger");
             });
     }
 
@@ -109,7 +112,7 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable>
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '14px 20px' }}>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
-                        Vendor Categories
+                        {t('Vendor Categories')}
                     </Modal.Title>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
@@ -117,7 +120,7 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
                             style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             onClick={() => openCreateForm()}
                         >
-                            <i className="bi bi-plus-lg"></i> New Category
+                            <i className="bi bi-plus-lg"></i> {t('New Category')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -128,7 +131,7 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                         <input
                             type="text"
-                            placeholder="Search categories..."
+                            placeholder={t('Search categories...')}
                             value={searchName}
                             onChange={(e) => {
                                 setSearchName(e.target.value);
@@ -153,20 +156,20 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
                         </div>
                     ) : categoryList.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '40px', fontFamily: '"Inter", sans-serif', fontSize: '14px', color: '#737686' }}>
-                            No categories found.{' '}
+                            {t('No categories found.')}{' '}
                             <span
                                 style={{ color: '#004ac6', cursor: 'pointer', textDecoration: 'underline' }}
                                 onClick={() => openCreateForm()}
-                            >Create one</span>
+                            >{t('Create one')}</span>
                         </div>
                     ) : (
                         <div style={{ overflowX: 'auto', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr>
-                                        <th style={TH}>Name</th>
-                                        <th style={TH}>Created By</th>
-                                        <th style={{ ...TH, textAlign: 'center', width: '120px' }}>Actions</th>
+                                        <th style={TH}>{t('Name')}</th>
+                                        <th style={TH}>{t('Created By')}</th>
+                                        <th style={{ ...TH, textAlign: 'center', width: '120px' }}>{t('Actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -213,7 +216,7 @@ const VendorCategoryIndex = forwardRef((props, ref) => {
                         onClick={handleClose}
                         style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '8px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                     >
-                        Close
+                        {t('Close')}
                     </button>
                 </Modal.Footer>
             </Modal>

@@ -1,7 +1,9 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
+import { useTranslation } from "react-i18next";
 
 const ProductJson = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(content) {
@@ -45,7 +47,7 @@ const ProductJson = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Json </Modal.Title>
+                <Modal.Title>{t('Json')} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {/*
@@ -69,7 +71,7 @@ const ProductJson = forwardRef((props, ref) => {
                 <div className="row">
                     <div className="col-md-12 align-self-end text-end">
                         <Button variant="primary" onClick={copy} >
-                            {copied ? "Copied" : "Copy"}
+                            {copied ? t('Copied') : t('Copy')}
 
                         </Button>
                     </div>

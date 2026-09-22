@@ -12037,6 +12037,15 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 /* RFQ detail modal opened from within any form — must render above the form (quotation/sales/etc at ~1080) */
 .rfq-detail-modal { z-index: 1500 !important; }
 .rfq-detail-modal + .modal-backdrop { z-index: 1495 !important; }
+/* Modals that open on top of the RFQ detail modal (z-index 1500) */
+.rfq-create-form-modal { z-index: 1600 !important; }
+.rfq-create-form-modal + .modal-backdrop { z-index: 1595 !important; }
+.rfq-send-modal-wrap { z-index: 1600 !important; }
+.rfq-send-modal-wrap + .modal-backdrop { z-index: 1595 !important; }
+.order-preview-wrap { z-index: 1600 !important; }
+/* Product import picker — must appear above the quotation form (z-index 1080) and Sales modal (1090) */
+.quotation-import-picker-modal { z-index: 2000 !important; }
+.quotation-import-picker-modal + .modal-backdrop { z-index: 1995 !important; }
 /* Generic class for any modal opened from within the Select Quotation wrapper (z-index 1065) */
 .above-quotations-modal { z-index: 1075 !important; }
 /* Opened from the "Select Quotation" modal (above-sales-modal = 1082 → drops to 1081 when form opens) */
@@ -12077,8 +12086,7 @@ body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
 body.quotation-form-pending-open .draggable-history-modal { z-index: 1097 !important; }
 body.sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
 body.quotation-sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
-.order-preview-wrap { z-index: 1300 !important; }
-.modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
+.modal-backdrop.order-preview-wrap { z-index: 1595 !important; }
 /* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both
    a parent-form class AND form-over-history are active simultaneously — beats any (0-2-1) rule. */
 body.purchase-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }

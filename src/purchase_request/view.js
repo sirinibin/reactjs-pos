@@ -1,4 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, Badge, Table } from "react-bootstrap";
 import PurchaseOrderCreate from '../purchase_order/create.js';
 import Preview from '../order/preview.js';
@@ -11,6 +12,7 @@ const STATUS_META = {
 };
 
 const PurchaseRequestView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [pr, setPr] = useState(null);
     const [isReceiver, setIsReceiver] = useState(false);
@@ -67,7 +69,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
             await loadPR(pr.id);
             if (props.onSave) props.onSave();
         } else {
-            setActionError(Object.values(data.errors || {}).join(". ") || "Action failed");
+            setActionError(Object.values(data.errors || {}).join(". ") || t("Action failed"));
         }
     }
 
@@ -88,7 +90,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
         <Modal show={show} onHide={() => setShow(false)} size="lg" fullscreen="sm-down" scrollable>
             <Modal.Header closeButton>
                 <Modal.Title className="fs-6 fw-bold d-flex align-items-center gap-2 me-2">
-                    {pr ? <>P.R {pr.code} <Badge bg={statusMeta?.variant}>{statusMeta?.label}</Badge></> : "Purchase Request"}
+                    {pr ? <>{t("P.R")} {pr.code} <Badge bg={statusMeta?.variant}>{t(statusMeta?.label)}</Badge></> : t("Purchase Request")}
                 </Modal.Title>
                 {pr && (
                     <div className="d-flex gap-1 ms-auto me-2">
@@ -114,30 +116,30 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                         {/* Meta info */}
                         <div className="row g-2 mb-3">
                             <div className="col-6 col-md-3">
-                                <div className="small text-muted">Date</div>
+                                <div className="small text-muted">{t("Date")}</div>
                                 <div className="fw-semibold">{formatDate(pr.date)}</div>
                             </div>
                             <div className="col-6 col-md-3">
-                                <div className="small text-muted">Created By</div>
+                                <div className="small text-muted">{t("Created By")}</div>
                                 <div className="fw-semibold">{pr.created_by_name || "—"}</div>
                             </div>
                             <div className="col-6 col-md-3">
-                                <div className="small text-muted">Assigned To</div>
+                                <div className="small text-muted">{t("Assigned To")}</div>
                                 <div className="fw-semibold">{pr.assigned_to_name || "—"}</div>
                             </div>
                             <div className="col-6 col-md-3">
-                                <div className="small text-muted">Status</div>
-                                <Badge bg={statusMeta?.variant}>{statusMeta?.label}</Badge>
+                                <div className="small text-muted">{t("Status")}</div>
+                                <Badge bg={statusMeta?.variant}>{t(statusMeta?.label)}</Badge>
                             </div>
                             {pr.notes && (
                                 <div className="col-12">
-                                    <div className="small text-muted">Notes</div>
+                                    <div className="small text-muted">{t("Notes")}</div>
                                     <div>{pr.notes}</div>
                                 </div>
                             )}
                             {pr.purchase_order_code && (
                                 <div className="col-12">
-                                    <div className="small text-muted">Purchase Order Created</div>
+                                    <div className="small text-muted">{t("Purchase Order Created")}</div>
                                     <div className="text-success fw-semibold">
                                         <i className="bi bi-check-circle me-1"></i>
                                         {pr.purchase_order_code}
@@ -147,7 +149,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                         </div>
 
                         {/* Products - mobile cards */}
-                        <h6 className="fw-bold mb-2">Products</h6>
+                        <h6 className="fw-bold mb-2">{t("Products")}</h6>
 
                         {/* Mobile */}
                         <div className="d-md-none">
@@ -155,9 +157,9 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                                 <div key={idx} className="border rounded p-2 mb-2 small">
                                     <div className="fw-semibold">{p.name}</div>
                                     <div className="d-flex justify-content-between text-muted mt-1">
-                                        <span>Qty: {p.quantity}</span>
-                                        <span>Price: {p.purchase_unit_price?.toFixed(2)}</span>
-                                        {p.unit_discount > 0 && <span>Disc: {p.unit_discount?.toFixed(2)}</span>}
+                                        <span>{t("Qty:")} {p.quantity}</span>
+                                        <span>{t("Price:")} {p.purchase_unit_price?.toFixed(2)}</span>
+                                        {p.unit_discount > 0 && <span>{t("Disc:")} {p.unit_discount?.toFixed(2)}</span>}
                                         <span className="fw-semibold text-dark">
                                             {((p.quantity || 0) * ((p.purchase_unit_price || 0) - (p.unit_discount || 0))).toFixed(2)}
                                         </span>
@@ -172,11 +174,11 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                                 <thead className="table-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Product</th>
-                                        <th className="text-end">Qty</th>
-                                        <th className="text-end">Unit Price</th>
-                                        <th className="text-end">Discount</th>
-                                        <th className="text-end">Line Total</th>
+                                        <th>{t("Product")}</th>
+                                        <th className="text-end">{t("Qty")}</th>
+                                        <th className="text-end">{t("Unit Price")}</th>
+                                        <th className="text-end">{t("Discount")}</th>
+                                        <th className="text-end">{t("Line Total")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -199,12 +201,12 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                         {/* Totals */}
                         <div className="d-flex flex-column align-items-end gap-1 mt-2">
                             {pr.discount > 0 && (
-                                <div className="small text-muted">Discount: {pr.discount?.toFixed(2)}</div>
+                                <div className="small text-muted">{t("Discount:")} {pr.discount?.toFixed(2)}</div>
                             )}
                             {pr.vat_price > 0 && (
-                                <div className="small text-muted">VAT: {pr.vat_price?.toFixed(2)}</div>
+                                <div className="small text-muted">{t("VAT:")} {pr.vat_price?.toFixed(2)}</div>
                             )}
-                            <div className="fw-bold">Net Total: {pr.net_total?.toFixed(2)}</div>
+                            <div className="fw-bold">{t("Net Total:")} {pr.net_total?.toFixed(2)}</div>
                         </div>
 
                         {/* Action error */}
@@ -221,7 +223,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                                     disabled={isActing}
                                     onClick={() => doAction("accept", { partial: false })}
                                 >
-                                    {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-check-circle me-1"></i>Accept</>}
+                                    {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-check-circle me-1"></i>{t("Accept")}</>}
                                 </Button>
                                 <Button
                                     variant="danger"
@@ -229,7 +231,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                                     disabled={isActing}
                                     onClick={() => doAction("reject")}
                                 >
-                                    {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-x-circle me-1"></i>Reject</>}
+                                    {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-x-circle me-1"></i>{t("Reject")}</>}
                                 </Button>
                             </div>
                         )}
@@ -245,7 +247,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
                                         poCreateRef.current?.openFromPR(pr);
                                     }}
                                 >
-                                    <i className="bi bi-cart-plus me-1"></i>Create Purchase Order
+                                    <i className="bi bi-cart-plus me-1"></i>{t("Create Purchase Order")}
                                 </Button>
                             </div>
                         )}
@@ -254,7 +256,7 @@ const PurchaseRequestView = forwardRef((props, ref) => {
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="outline-secondary" size="sm" onClick={() => setShow(false)}>
-                    Close
+                    {t("Close")}
                 </Button>
             </Modal.Footer>
         </Modal>

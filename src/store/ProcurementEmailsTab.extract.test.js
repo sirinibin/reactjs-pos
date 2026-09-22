@@ -154,7 +154,7 @@ describe('4. Extract button in table row', () => {
 describe('5. Extract button in detail modal', () => {
     it('5.1 detail modal footer has Extract button', () => {
         const footerIdx = TAB_SRC.indexOf('modal-footer');
-        const afterFooter = TAB_SRC.indexOf('setExtractMsg(selected)', footerIdx);
+        const afterFooter = TAB_SRC.indexOf('handleExtract', footerIdx);
         expect(afterFooter).toBeGreaterThan(footerIdx);
     });
 });

@@ -156,7 +156,8 @@ function Topbar(props) {
         localStorage.removeItem("branch_name");
         localStorage.removeItem("store_id");
         localStorage.removeItem("admin");
-        window.location = "/";
+        const isWorkshop = window.location.hostname === 'workshop.gulfunionozone.com';
+        window.location = isWorkshop ? '/login.html' : '/';
     }
 
     // Add a notification, avoiding duplicates by id.

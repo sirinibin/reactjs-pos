@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import PostingIndex from '../../posting/index.js';
 import WhatsAppModal from '../../utils/WhatsAppModal';
 import { addCommasToInfoValue, stripSarBreakdown } from '../../utils/numberUtils';
@@ -335,6 +336,7 @@ export default function KPICards({
     vatBoxStats,
 }) {
     const PostingRef = useRef();
+    const { t } = useTranslation('common');
 
     // ── Store flags — identical to stats/index.js ──────────────────────────
     const qtnInvoiceAccounting = store?.settings?.enable_sales_in_quotation === true;
@@ -422,94 +424,94 @@ export default function KPICards({
     // ── Tooltip line definitions  (exact numbers shown on hover) ──────────
 
     const revenueTooltip = [
-        { label: "Gross Sales", value: `${fmt(totalSales)}` },
-        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales", value: `+ ${fmt(totalQtnSales)}` }] : []),
-        { label: "Sales Returns", value: `− ${fmt(totalSalesReturn)}` },
-        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns", value: `− ${fmt(totalQtnSalesReturn)}` }] : []),
-        { divider: true, label: "Net Revenue (with VAT)", value: `SAR ${fmt(revenue)}`, bold: true },
+        { label: t("Gross Sales"), value: `${fmt(totalSales)}` },
+        ...(qtnInvoiceAccounting ? [{ label: t("Qtn. Sales"), value: `+ ${fmt(totalQtnSales)}` }] : []),
+        { label: t("Sales Returns"), value: `− ${fmt(totalSalesReturn)}` },
+        ...(qtnInvoiceAccounting ? [{ label: t("Qtn. Returns"), value: `− ${fmt(totalQtnSalesReturn)}` }] : []),
+        { divider: true, label: t("Net Revenue (with VAT)"), value: `SAR ${fmt(revenue)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(revenueVat)}` },
-        { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmt(revenueWithoutVAT)}`, bold: true },
+        { divider: true, label: t("Net Revenue (without VAT)"), value: `SAR ${fmt(revenueWithoutVAT)}`, bold: true },
         ...(enableNonVatSales ? [
-            { divider: true, label: "— Non-VAT Sales —", value: "", bold: true, color: "#a5d6a7" },
-            { label: "Non-VAT Sales",         value: `SAR ${fmt(nonVatSales)}`,       color: "#a5d6a7" },
-            { label: "Non-VAT Sales Returns", value: `− ${fmt(nonVatSalesReturn)}`,   color: "#ffa8a8" },
-            { divider: true, label: "Non-VAT Net Revenue", value: `SAR ${fmt(nonVatNetRevenue)}`, bold: true, color: "#a5d6a7" },
-            { divider: true, label: "Total Revenue", value: `SAR ${fmt(totalRevenue)}`, bold: true, color: "#69db7c" },
+            { divider: true, label: t("Non-VAT Sales"), value: "", bold: true, color: "#a5d6a7" },
+            { label: t("Non-VAT Sales"),         value: `SAR ${fmt(nonVatSales)}`,       color: "#a5d6a7" },
+            { label: t("Non-VAT Sales Returns"), value: `− ${fmt(nonVatSalesReturn)}`,   color: "#ffa8a8" },
+            { divider: true, label: t("Non-VAT Net Revenue"), value: `SAR ${fmt(nonVatNetRevenue)}`, bold: true, color: "#a5d6a7" },
+            { divider: true, label: t("Total Revenue"), value: `SAR ${fmt(totalRevenue)}`, bold: true, color: "#69db7c" },
         ] : []),
     ];
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
-        { label: "Expenses", value: `${fmt(totalExpense)}` },
-        ...(store?.settings?.enable_employee_module ? [{ label: "Salary Paid", value: `+ ${fmt(totalSalaryPaid)}` }] : []),
-        { label: "Purchase Return Fund Rcvd", value: `− ${fmt(totalDepositPurchaseFund)}` },
-        { label: "Accounted Purchases", value: `+ ${fmt(totalAccountedPurchase)}` },
-        { label: "Accounted Pur. Returns", value: `− ${fmt(totalAccountedPurchaseReturn)}` },
-        { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
-        { label: "Acct. Pur. Return C.D.", value: `+ ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return C.D.", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
-        { label: "Acct. Purchase C.D.", value: `− ${fmt(totalAccountedPurchaseCashDiscount)}` },
+        { label: t("Expenses"), value: `${fmt(totalExpense)}` },
+        ...(store?.settings?.enable_employee_module ? [{ label: t("Salary Paid"), value: `+ ${fmt(totalSalaryPaid)}` }] : []),
+        { label: t("Purchase Return Fund Rcvd"), value: `− ${fmt(totalDepositPurchaseFund)}` },
+        { label: t("Accounted Purchases"), value: `+ ${fmt(totalAccountedPurchase)}` },
+        { label: t("Accounted Pur. Returns"), value: `− ${fmt(totalAccountedPurchaseReturn)}` },
+        { label: t("Sales Cash Discount"), value: `+ ${fmt(totalCashDiscount)}` },
+        { label: t("Acct. Pur. Return C.D."), value: `+ ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
+        { label: t("Sales Return C.D."), value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: t("Acct. Purchase C.D."), value: `− ${fmt(totalAccountedPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: t("Qtn. Sales C.D."), value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: t("Qtn. Sales Ret. C.D."), value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
-        { label: "Sales Commission", value: `+ ${fmt(totalSalesCommission)}` },
-        { label: "Sales Return Commission", value: `− ${fmt(totalSalesReturnCommission)}` },
-        { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { label: t("Sales Commission"), value: `+ ${fmt(totalSalesCommission)}` },
+        { label: t("Sales Return Commission"), value: `− ${fmt(totalSalesReturnCommission)}` },
+        { divider: true, label: t("Total Expense (with VAT)"), value: `SAR ${fmt(expenseTotal)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
-        { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
+        { divider: true, label: t("Total Expense (without VAT)"), value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
     ] : [
-        { label: "Expenses", value: `${fmt(totalExpense)}` },
-        ...(store?.settings?.enable_employee_module ? [{ label: "Salary Paid", value: `+ ${fmt(totalSalaryPaid)}` }] : []),
-        { label: "Purchases", value: `+ ${fmt(totalPurchase)}` },
-        { label: "Purchase Returns", value: `− ${fmt(totalPurchaseReturn)}` },
-        { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
-        { label: "Pur. Return C.D.", value: `+ ${fmt(totalPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return C.D.", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
-        { label: "Purchase C.D.", value: `− ${fmt(totalPurchaseCashDiscount)}` },
+        { label: t("Expenses"), value: `${fmt(totalExpense)}` },
+        ...(store?.settings?.enable_employee_module ? [{ label: t("Salary Paid"), value: `+ ${fmt(totalSalaryPaid)}` }] : []),
+        { label: t("Purchases"), value: `+ ${fmt(totalPurchase)}` },
+        { label: t("Purchase Returns"), value: `− ${fmt(totalPurchaseReturn)}` },
+        { label: t("Sales Cash Discount"), value: `+ ${fmt(totalCashDiscount)}` },
+        { label: t("Pur. Return C.D."), value: `+ ${fmt(totalPurchaseReturnCashDiscount)}` },
+        { label: t("Sales Return C.D."), value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: t("Purchase C.D."), value: `− ${fmt(totalPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: t("Qtn. Sales C.D."), value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: t("Qtn. Sales Ret. C.D."), value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
-        { label: "Sales Commission", value: `+ ${fmt(totalSalesCommission)}` },
-        { label: "Sales Return Commission", value: `− ${fmt(totalSalesReturnCommission)}` },
-        { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { label: t("Sales Commission"), value: `+ ${fmt(totalSalesCommission)}` },
+        { label: t("Sales Return Commission"), value: `− ${fmt(totalSalesReturnCommission)}` },
+        { divider: true, label: t("Total Expense (with VAT)"), value: `SAR ${fmt(expenseTotal)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
-        { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
+        { divider: true, label: t("Total Expense (without VAT)"), value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
     ];
 
     const profitTooltip = [
-        { label: enableNonVatSales ? "Total Revenue" : "Net Revenue", value: `${fmt(totalRevenue)}` },
-        { label: "Total Expense", value: `− ${fmt(expenseTotal)}` },
-        { divider: true, label: isProfitable ? "Net Profit (with VAT)" : "Net Loss (with VAT)", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
+        { label: enableNonVatSales ? t("Total Revenue") : t("Net Revenue"), value: `${fmt(totalRevenue)}` },
+        { label: t("Total Expense"), value: `− ${fmt(expenseTotal)}` },
+        { divider: true, label: isProfitable ? t("Net Profit (with VAT)") : t("Net Loss (with VAT)"), value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(Math.abs(profitLossVat))}` },
-        { divider: true, label: isProfitable ? "Net Profit (without VAT)" : "Net Loss (without VAT)", value: `SAR ${fmt(Math.abs(profitLossWithoutVAT))}`, bold: true },
+        { divider: true, label: isProfitable ? t("Net Profit (without VAT)") : t("Net Loss (without VAT)"), value: `SAR ${fmt(Math.abs(profitLossWithoutVAT))}`, bold: true },
     ];
 
     const ordersTooltip = [
-        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
-        { label: "Avg per Order", value: `SAR ${fmt(avgOrderValue)}` },
-        { divider: true, label: "Total Orders", value: `${totalOrders.toLocaleString()}`, bold: true },
+        { label: t("Gross Sales"), value: `SAR ${fmt(totalSales)}` },
+        { label: t("Avg per Order"), value: `SAR ${fmt(avgOrderValue)}` },
+        { divider: true, label: t("Total Orders"), value: `${totalOrders.toLocaleString()}`, bold: true },
     ];
 
     const avgTooltip = [
-        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
+        { label: t("Gross Sales"), value: `SAR ${fmt(totalSales)}` },
         { label: "Orders", value: `÷ ${totalOrders}` },
-        { divider: true, label: "Avg Order Value (with VAT)", value: `SAR ${fmt(avgOrderValue)}`, bold: true },
+        { divider: true, label: t("Avg Order Value (with VAT)"), value: `SAR ${fmt(avgOrderValue)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(avgOrderValueVat)}` },
-        { divider: true, label: "Avg Order Value (without VAT)", value: `SAR ${fmt(avgOrderValueWithoutVAT)}`, bold: true },
+        { divider: true, label: t("Avg Order Value (without VAT)"), value: `SAR ${fmt(avgOrderValueWithoutVAT)}`, bold: true },
     ];
 
     const returnTooltip = [
-        { label: "Sales Returns", value: `SAR ${fmt(totalSalesReturn)}` },
-        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
-        { divider: true, label: "Return Rate", value: `${returnRate.toFixed(2)}%`, bold: true },
+        { label: t("Sales Returns"), value: `SAR ${fmt(totalSalesReturn)}` },
+        { label: t("Gross Sales"), value: `SAR ${fmt(totalSales)}` },
+        { divider: true, label: t("Return Rate"), value: `${returnRate.toFixed(2)}%`, bold: true },
     ];
 
     return (
         <>
         <div className="row">
             <KPICard filters={filters} store={store}
-                title={enableNonVatSales ? "Total Revenue" : "Net Revenue"}
+                title={enableNonVatSales ? t("Total Revenue") : t("Net Revenue")}
                 tooltip={revenueTooltip}
                 fieldValue={enableNonVatSales ? totalRevenue : revenue}
                 value={`${fmtCompact(enableNonVatSales ? totalRevenue : revenue)}`}
@@ -517,33 +519,33 @@ export default function KPICards({
                     ? `${fmt(totalRevenue)}`
                     : `${fmt(revenue)} (w/ VAT) · ${fmt(revenueWithoutVAT)} (w/o VAT)`}
                 sub2={enableNonVatSales
-                    ? `w/o VAT: ${fmtCompact(revenueWithoutVAT)}`
-                    : `w/o VAT: ${fmtCompact(revenueWithoutVAT)}`}
+                    ? `${t("w/o VAT:")} ${fmtCompact(revenueWithoutVAT)}`
+                    : `${t("w/o VAT:")} ${fmtCompact(revenueWithoutVAT)}`}
                 icon="bi bi-currency-dollar"
                 color="#4e73df"
             />
             <KPICard filters={filters} store={store}
-                title="Total Expense"
+                title={t("Total Expense")}
                 tooltip={expenseTooltip}
                 fieldValue={expenseTotal}
                 value={`${fmtCompact(expenseTotal)}`}
                 exact={`${fmt(expenseTotal)} (w/ VAT) · ${fmt(expenseWithoutVAT)} (w/o VAT)`}
-                sub2={`w/o VAT: ${fmtCompact(expenseWithoutVAT)}`}
+                sub2={`${t("w/o VAT:")} ${fmtCompact(expenseWithoutVAT)}`}
                 icon="bi bi-receipt-cutoff"
                 color="#e74a3b"
             />
             <KPICard filters={filters} store={store}
-                title={isProfitable ? "Net Profit" : "Net Loss"}
+                title={isProfitable ? t("Net Profit") : t("Net Loss")}
                 tooltip={profitTooltip}
                 fieldValue={Math.abs(profitLoss)}
                 value={`${fmtCompact(Math.abs(profitLoss))}`}
                 exact={`${fmt(Math.abs(profitLoss))} (w/ VAT) · ${fmt(Math.abs(profitLossWithoutVAT))} (w/o VAT)`}
-                sub2={`w/o VAT: ${fmtCompact(Math.abs(profitLossWithoutVAT))}`}
+                sub2={`${t("w/o VAT:")} ${fmtCompact(Math.abs(profitLossWithoutVAT))}`}
                 icon={isProfitable ? "bi bi-graph-up-arrow" : "bi bi-graph-down-arrow"}
                 color={isProfitable ? "#1cc88a" : "#e74a3b"}
             />
             <KPICard filters={filters} store={store}
-                title="Total Orders"
+                title={t("Total Orders")}
                 tooltip={ordersTooltip}
                 fieldValue={`${totalOrders.toLocaleString()} orders`}
                 value={totalOrders.toLocaleString()}
@@ -551,17 +553,17 @@ export default function KPICards({
                 color="#5c6bc0"
             />
             <KPICard filters={filters} store={store}
-                title="Avg Order Value"
+                title={t("Avg Order Value")}
                 tooltip={avgTooltip}
                 fieldValue={avgOrderValue}
                 value={`${fmtCompact(avgOrderValue)}`}
                 exact={`${fmt(avgOrderValue)} (w/ VAT) · ${fmt(avgOrderValueWithoutVAT)} (w/o VAT)`}
-                sub2={`w/o VAT: ${fmtCompact(avgOrderValueWithoutVAT)}`}
+                sub2={`${t("w/o VAT:")} ${fmtCompact(avgOrderValueWithoutVAT)}`}
                 icon="bi bi-bag"
                 color="#36b9cc"
             />
             <KPICard filters={filters} store={store}
-                title="Return Rate"
+                title={t("Return Rate")}
                 tooltip={returnTooltip}
                 fieldValue={`${returnRate.toFixed(2)}%`}
                 value={`${returnRate.toFixed(1)}%`}
@@ -571,21 +573,21 @@ export default function KPICards({
             />
             {enableVATBox && (
                 <KPICard filters={filters} store={store}
-                    title="VAT"
+                    title={t("VAT")}
                     tooltip={[
-                        { label: "Sales VAT",           value: `SAR ${fmt(vatSales)}`,          color: "#a5d6a7" },
-                        { label: "Sales Return VAT",    value: `− ${fmt(vatSalesReturn)}`,       color: "#ffa8a8" },
-                        { label: "Purchase VAT",        value: `− ${fmt(vatPurchase)}`,          color: "#ffa8a8" },
-                        { label: "Purchase Return VAT", value: `+ ${fmt(vatPurchaseReturn)}`,    color: "#a5d6a7" },
-                        { label: "Expense VAT (w/ Vendor Inv.)", value: `+ ${fmt(vatExpense)}`, color: "#a5d6a7" },
-                        { divider: true, label: "Net VAT Payable", value: `SAR ${fmt(vatNet)}`, bold: true, color: vatNet >= 0 ? "#ffa8a8" : "#a5d6a7" },
-                        ...(disablePurchasesOnAccounts ? [{ label: "(Accounted purchases only)", value: "", color: "#6c757d" }] : []),
+                        { label: t("Sales VAT"),           value: `SAR ${fmt(vatSales)}`,          color: "#a5d6a7" },
+                        { label: t("Sales Return VAT"),    value: `− ${fmt(vatSalesReturn)}`,       color: "#ffa8a8" },
+                        { label: t("Purchase VAT"),        value: `− ${fmt(vatPurchase)}`,          color: "#ffa8a8" },
+                        { label: t("Purchase Return VAT"), value: `+ ${fmt(vatPurchaseReturn)}`,    color: "#a5d6a7" },
+                        { label: t("Expense VAT (w/ Vendor Inv.)"), value: `+ ${fmt(vatExpense)}`, color: "#a5d6a7" },
+                        { divider: true, label: t("Net VAT Payable"), value: `SAR ${fmt(vatNet)}`, bold: true, color: vatNet >= 0 ? "#ffa8a8" : "#a5d6a7" },
+                        ...(disablePurchasesOnAccounts ? [{ label: t("(Accounted purchases only)"), value: "", color: "#6c757d" }] : []),
                     ]}
                     fieldValue={vatNet}
                     value={`${fmtCompact(Math.abs(vatNet))}`}
                     exact={fmt(vatNet)}
                     valueColor={vatNet >= 0 ? "#ba1a1a" : "#1a7a3a"}
-                    sub2={vatNet >= 0 ? "Payable to Authority" : "Refundable"}
+                    sub2={vatNet >= 0 ? t("Payable to Authority") : t("Refundable")}
                     sub2Color={vatNet >= 0 ? "#ba1a1a" : "#1a7a3a"}
                     icon="bi bi-cash-stack"
                     color="#6610f2"
@@ -593,12 +595,12 @@ export default function KPICards({
             )}
             {store?.settings?.enable_employee_module && (
                 <KPICard filters={filters} store={store}
-                    title="Salary Balance"
+                    title={t("Salary Balance")}
                     tooltip={[
                         { label: "SAR", value: fmt(Math.abs(salaryBalance)), bold: true },
                         ...(employeeStats?.employee_breakdown?.length ? [
-                            { divider: true, label: "By Employee", bold: true },
-                            { label: "(−) Store owes employee  ·  (+) Employee owes store", value: '' },
+                            { divider: true, label: t("By Employee"), bold: true },
+                            { label: t("(−) Store owes employee  ·  (+) Employee owes store"), value: '' },
                             ...employeeStats.employee_breakdown.map(e => ({
                                 label: e.name,
                                 value: (e.direction === 'owed_to_employee' ? '−' : '+') + 'SAR ' + fmt(e.balance),
@@ -611,7 +613,7 @@ export default function KPICards({
                     value={fmtCompact(Math.abs(salaryBalance))}
                     exact={fmt(Math.abs(salaryBalance))}
                     valueColor={salaryBalance < 0 ? '#ba1a1a' : (salaryBalance > 0 ? '#0a58ca' : undefined)}
-                    sub2={salaryBalance < 0 ? "Owed to Employees" : (salaryBalance > 0 ? "Employees Owe Us" : "Settled")}
+                    sub2={salaryBalance < 0 ? t("Owed to Employees") : (salaryBalance > 0 ? t("Employees Owe Us") : t("Settled"))}
                     sub2Color={salaryBalance < 0 ? '#ba1a1a' : (salaryBalance > 0 ? '#0a58ca' : '#6c757d')}
                     icon="bi bi-person-badge"
                     color="#ba1a1a"

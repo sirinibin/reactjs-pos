@@ -12,8 +12,10 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 function ProductCategoryIndex(props) {
+    const { t } = useTranslation('common');
     //list
     const [productcategoryList, setProductCategoryList] = useState([]);
 
@@ -293,7 +295,7 @@ function ProductCategoryIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Restored successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -334,7 +336,7 @@ function ProductCategoryIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Deleted successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -346,7 +348,7 @@ function ProductCategoryIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to delete this product category?');
+        const result = await confirm(t('Are you sure, you want to delete this product category?'));
         console.log(result);
         if (result) {
             deleteProductCategory(id);
@@ -355,7 +357,7 @@ function ProductCategoryIndex(props) {
 
     const confirmRestore = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to restore this product category?');
+        const result = await confirm(t('Are you sure, you want to restore this product category?'));
         console.log(result);
         if (result) {
             restoreProductCategory(id);
@@ -381,7 +383,7 @@ function ProductCategoryIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Product Categories</h1>
+                        <h1 className="h3">{t('Product Categories')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -391,7 +393,7 @@ function ProductCategoryIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -408,7 +410,7 @@ function ProductCategoryIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Product Categories to display</p>
+                                            <p className="text-start">{t('No Product Categories to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -433,7 +435,7 @@ function ProductCategoryIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -444,7 +446,7 @@ function ProductCategoryIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -498,7 +500,7 @@ function ProductCategoryIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('Name')}
                                                         {sortField === "name" && sortProductCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -517,7 +519,7 @@ function ProductCategoryIndex(props) {
                                                             sort("parent_name");
                                                         }}
                                                     >
-                                                        Parent
+                                                        {t('Parent')}
                                                         {sortField === "parent_name" && sortProductCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -537,7 +539,7 @@ function ProductCategoryIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('Created By')}
                                                         {sortField === "created_by_name" && sortProductCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -556,7 +558,7 @@ function ProductCategoryIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('Created At')}
                                                         {sortField === "created_at" && sortProductCategory === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -565,8 +567,8 @@ function ProductCategoryIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
-                                                <th>Deleted</th>
+                                                <th>{t('Actions')}</th>
+                                                <th>{t('Deleted')}</th>
                                             </tr>
                                         </thead>
 
@@ -626,7 +628,7 @@ function ProductCategoryIndex(props) {
                                                             );
                                                         }}
                                                         options={productcategoryOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('Select Users')}
                                                         selected={selectedCreatedByProductCategorys}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -683,13 +685,13 @@ function ProductCategoryIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From:')}{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -716,7 +718,7 @@ function ProductCategoryIndex(props) {
                                                                     }
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To:')}{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
@@ -760,8 +762,8 @@ function ProductCategoryIndex(props) {
                                                             }
                                                         }}
                                                     >
-                                                        <option value="0" >NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="0">{t('NO')}</option>
+                                                        <option value="1">{t('YES')}</option>
                                                     </select>
                                                 </th>
                                             </tr>
@@ -824,7 +826,7 @@ function ProductCategoryIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
-                                                        <td>{productcategory.deleted ? "YES" : "NO"}</td>
+                                                        <td>{productcategory.deleted ? t('YES') : t('NO')}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
 import { Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
@@ -28,6 +29,8 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
     }
 
     useEnterKeyNavigation();
+
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -107,9 +110,9 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
                 setErrors({});
                 setProcessing(false);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Vendor category updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Vendor category updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Vendor category created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Vendor category created successfully!"), "success");
                 }
                 if (props.refreshList) props.refreshList();
                 handleClose();
@@ -118,7 +121,7 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
             .catch((error) => {
                 setProcessing(false);
                 setErrors({ ...error });
-                if (props.showToastMessage) props.showToastMessage("Failed to process vendor category!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process vendor category!"), "danger");
             });
     }
 
@@ -152,17 +155,17 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Vendor Category — ${formData.name}` : 'Create New Vendor Category'}
+                        {formData.id ? t('Update Vendor Category') + ' — ' + formData.name : t('Create New Vendor Category')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -185,7 +188,7 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
                                 <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
                                     <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                        {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                        {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                     </div>
                                     <ul style={{ margin: 0, paddingLeft: '18px' }}>
                                         {allErrors.map(([k, v]) => (
@@ -196,10 +199,10 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
                             </div>
 
                             <div style={CARD} className="pw-card">
-                                <SectionTitle icon="bi-tag">Category Details</SectionTitle>
+                                <SectionTitle icon="bi-tag">{t('Category Details')}</SectionTitle>
                                 <div className="row g-3">
                                     <div className="col-md-12">
-                                        <Label required>Name</Label>
+                                        <Label required>{t('Name')}</Label>
                                         <input
                                             value={formData.name || ''}
                                             type="text"
@@ -211,7 +214,7 @@ const VendorCategoryCreate = forwardRef((props, ref) => {
                                             }}
                                             style={INPUT}
                                             id="vendor_category_name"
-                                            placeholder="Category name"
+                                            placeholder={t('Category name')}
                                         />
                                         <ErrMsg>{errors.name}</ErrMsg>
                                     </div>

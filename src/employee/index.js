@@ -336,7 +336,7 @@ function EmployeeIndex(props) {
                 <div className="row">
                     <div className="col">
                         <StatsSummary
-                            title="Employees Summary"
+                            title={t("Employees Summary")}
                             storageKey="employee_summary"
                             stats={{
                                 "Total Employees": totalEmployees,

@@ -80,21 +80,26 @@ describe('SidebarSettings smoke test', () => {
     expect(screen.getByText('Menu Settings')).toBeInTheDocument();
   });
 
-  test('Save & Apply button is rendered regardless of role', () => {
+  test('Save & Apply button is NOT rendered (auto-save replaces it)', () => {
     localStorage.setItem('user_role', 'Staff');
     renderComponent();
-    expect(screen.getByRole('button', { name: /save & apply/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save & apply/i })).not.toBeInTheDocument();
   });
 
-  test('Save & Apply button is rendered for Admin role', () => {
+  test('Save & Apply button is NOT rendered for Admin role either', () => {
     localStorage.setItem('user_role', 'Admin');
     renderComponent();
-    expect(screen.getByRole('button', { name: /save & apply/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save & apply/i })).not.toBeInTheDocument();
   });
 
   test('Reset button is rendered', () => {
     renderComponent();
     expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
+  });
+
+  test('auto-save info text is shown (changes saved automatically)', () => {
+    renderComponent();
+    expect(screen.getAllByText(/saved automatically/i).length).toBeGreaterThan(0);
   });
 
   test('renders visible item labels (Dashboard, Sales)', () => {
@@ -181,25 +186,17 @@ describe('SidebarSettings smoke test', () => {
     expect(screen.queryByText('Purchase Requests')).not.toBeInTheDocument();
   });
 
-  test('clicking Save & Apply calls saveSidebarConfig and changes label to Saved!', () => {
+  test('toggling a visibility switch auto-saves (calls saveSidebarConfig)', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
     renderComponent();
-    const saveBtn = screen.getByRole('button', { name: /save & apply/i });
-    act(() => { fireEvent.click(saveBtn); });
+    const switches = screen.getAllByRole('switch');
+    expect(switches.length).toBeGreaterThan(0);
+    act(() => { fireEvent.click(switches[0]); });
     expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: /saved!/i })).toBeInTheDocument();
-  });
-
-  test('clicking Reset calls saveSidebarConfig with all items set to visible', () => {
-    renderComponent();
-    const resetBtn = screen.getByRole('button', { name: /reset/i });
-    act(() => { fireEvent.click(resetBtn); });
-    expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
-    const savedArg = saveSidebarConfig.mock.calls[0][0];
-    expect(Array.isArray(savedArg)).toBe(true);
-    expect(savedArg.every(item => item.visible === true)).toBe(true);
   });
 
   test('toggling a visibility switch flips its checked state', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
     renderComponent();
     const switches = screen.getAllByRole('switch');
     expect(switches.length).toBeGreaterThan(0);
@@ -207,6 +204,17 @@ describe('SidebarSettings smoke test', () => {
     const wasChecked = firstSwitch.checked;
     act(() => { fireEvent.click(firstSwitch); });
     expect(firstSwitch.checked).toBe(!wasChecked);
+  });
+
+  test('clicking Reset calls saveSidebarConfig with all items set to visible', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
+    renderComponent();
+    const resetBtn = screen.getByRole('button', { name: /reset/i });
+    act(() => { fireEvent.click(resetBtn); });
+    expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
+    const savedArg = saveSidebarConfig.mock.calls[0][0];
+    expect(Array.isArray(savedArg)).toBe(true);
+    expect(savedArg.every(item => item.visible === true)).toBe(true);
   });
 
   test('at-least-one-visible warning appears when all items are toggled off', () => {
@@ -342,7 +350,7 @@ describe('SidebarSettings server sync', () => {
 
   test('shows browser-only note when flag is disabled', () => {
     renderComponent();
-    expect(screen.getByText(/stored in this browser/i)).toBeInTheDocument();
+    expect(screen.getByText(/saved automatically in this browser/i)).toBeInTheDocument();
   });
 
   test('updates localStorage cache after loading from server', async () => {
@@ -364,10 +372,10 @@ describe('SidebarSettings save error visibility', () => {
   test('shows sync error alert when saveSidebarConfig resolves with synced:false and error', async () => {
     saveSidebarConfig.mockResolvedValue({ synced: false, error: 'Unauthorized' });
     renderComponent();
+    // Trigger auto-save by toggling a switch
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+      fireEvent.click(screen.getAllByRole('switch')[0]);
     });
-    // Wait for async state update
     await act(async () => {});
     expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
     expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
@@ -377,7 +385,7 @@ describe('SidebarSettings save error visibility', () => {
     saveSidebarConfig.mockResolvedValue({ synced: true });
     renderComponent();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+      fireEvent.click(screen.getAllByRole('switch')[0]);
     });
     await act(async () => {});
     expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
@@ -387,27 +395,37 @@ describe('SidebarSettings save error visibility', () => {
     saveSidebarConfig.mockReturnValue(undefined);
     renderComponent();
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
+      fireEvent.click(screen.getAllByRole('switch')[0]);
     });
     await act(async () => {});
     expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
   });
 
-  test('sync error clears on next save attempt', async () => {
-    // First save: fails
+  test('sync error clears on next toggle', async () => {
+    // First toggle: fails
     saveSidebarConfig.mockResolvedValueOnce({ synced: false, error: 'Timeout' });
     renderComponent();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save & apply/i }));
-    });
+    const switches = screen.getAllByRole('switch');
+    await act(async () => { fireEvent.click(switches[0]); });
     await act(async () => {});
     expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
 
-    // Second save: succeeds — error should disappear
+    // Second toggle: succeeds — error should disappear
     saveSidebarConfig.mockResolvedValueOnce({ synced: true });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /saved!/i }));
-    });
+    await act(async () => { fireEvent.click(switches[1]); });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('Reset clears sync error', async () => {
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false, error: 'Timeout' });
+    renderComponent();
+    await act(async () => { fireEvent.click(screen.getAllByRole('switch')[0]); });
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /reset/i })); });
     await act(async () => {});
     expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
   });

@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Modal, Spinner } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 
 const ACCENT = '#004ac6';
 
@@ -54,6 +55,8 @@ const ChangePasswordModal = forwardRef((props, ref) => {
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
+    const { t } = useTranslation('common');
+
     useImperativeHandle(ref, () => ({
         // open(userId, userName, skipCurrent)
         // skipCurrent=true: Manager changing another user's password (no old pw needed)
@@ -79,17 +82,17 @@ const ChangePasswordModal = forwardRef((props, ref) => {
     function validate() {
         const errs = {};
         if (!skipCurrentPassword && !currentPw) {
-            errs.current_password = 'Current password is required';
+            errs.current_password = t('Current password is required');
         }
         if (!newPw) {
-            errs.new_password = 'New password is required';
+            errs.new_password = t('New password is required');
         } else if (newPw.length < 6) {
-            errs.new_password = 'Must be at least 6 characters';
+            errs.new_password = t('Must be at least 6 characters');
         }
         if (!confirmPw) {
-            errs.confirm_password = 'Please confirm your new password';
+            errs.confirm_password = t('Please confirm your new password');
         } else if (newPw !== confirmPw) {
-            errs.confirm_password = 'Passwords do not match';
+            errs.confirm_password = t('Passwords do not match');
         }
         return errs;
     }
@@ -118,23 +121,23 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                 const data = await res.json();
                 setSaving(false);
                 if (!res.ok || !data.status) {
-                    setErrors(data.errors || { new_password: 'Failed to change password' });
+                    setErrors(data.errors || { new_password: t('Failed to change password') });
                     return;
                 }
-                setSuccessMsg('Password changed successfully!');
+                setSuccessMsg(t('Password changed successfully!'));
                 setTimeout(() => setShow(false), 1500);
-                if (props.showToastMessage) props.showToastMessage('Password changed successfully!', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Password changed successfully!'), 'success');
             })
             .catch(() => {
                 setSaving(false);
-                setErrors({ new_password: 'Network error — please try again' });
+                setErrors({ new_password: t('Network error — please try again') });
             });
     }
 
     const isSelf = !targetUserId || targetUserId === localStorage.getItem('user_id');
     const title = isSelf
-        ? 'Change Your Password'
-        : `Change Password — ${targetUserName}`;
+        ? t('Change Your Password')
+        : t('Change Password For User', { name: targetUserName });
 
     return (
         <Modal show={show} onHide={handleClose} centered animation={false} backdrop="static" size="sm">
@@ -168,7 +171,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                         </div>
                         {!isSelf && (
                             <div style={{ fontSize: '12px', opacity: 0.8, marginLeft: '46px' }}>
-                                No current password required
+                                {t('No current password required')}
                             </div>
                         )}
                     </div>
@@ -208,7 +211,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                         {!skipCurrentPassword && (
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                                    Current Password <span style={{ color: '#dc2626' }}>*</span>
+                                    {t('Current Password')} <span style={{ color: '#dc2626' }}>*</span>
                                 </label>
                                 <div style={{ position: 'relative' }}>
                                     <input
@@ -216,7 +219,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                                         value={currentPw}
                                         onChange={e => { setCurrentPw(e.target.value); setErrors(p => ({ ...p, current_password: '' })); }}
                                         style={{ ...INPUT, borderColor: errors.current_password ? '#dc2626' : '#c3c6d7' }}
-                                        placeholder="Enter current password"
+                                        placeholder={t('Enter current password')}
                                         autoFocus
                                     />
                                     <EyeToggle show={showCurrent} onToggle={() => setShowCurrent(v => !v)} />
@@ -232,7 +235,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                         {/* New Password */}
                         <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                                New Password <span style={{ color: '#dc2626' }}>*</span>
+                                {t('New Password')} <span style={{ color: '#dc2626' }}>*</span>
                             </label>
                             <div style={{ position: 'relative' }}>
                                 <input
@@ -240,7 +243,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                                     value={newPw}
                                     onChange={e => { setNewPw(e.target.value); setErrors(p => ({ ...p, new_password: '' })); }}
                                     style={{ ...INPUT, borderColor: errors.new_password ? '#dc2626' : '#c3c6d7' }}
-                                    placeholder="Enter new password"
+                                    placeholder={t('Enter new password')}
                                     autoFocus={!!skipCurrentPassword}
                                 />
                                 <EyeToggle show={showNew} onToggle={() => setShowNew(v => !v)} />
@@ -258,7 +261,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                                         ))}
                                     </div>
                                     <div style={{ fontSize: '11px', color: strength.color, fontWeight: 600 }}>
-                                        {strength.label}
+                                        {t(strength.label)}
                                     </div>
                                 </div>
                             )}
@@ -272,7 +275,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                         {/* Confirm Password */}
                         <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                                Confirm New Password <span style={{ color: '#dc2626' }}>*</span>
+                                {t('Confirm New Password')} <span style={{ color: '#dc2626' }}>*</span>
                             </label>
                             <div style={{ position: 'relative' }}>
                                 <input
@@ -284,13 +287,13 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                                         borderColor: errors.confirm_password ? '#dc2626'
                                             : (confirmPw && confirmPw === newPw) ? '#16a34a' : '#c3c6d7',
                                     }}
-                                    placeholder="Repeat new password"
+                                    placeholder={t('Repeat new password')}
                                 />
                                 <EyeToggle show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
                             </div>
                             {confirmPw && confirmPw === newPw && !errors.confirm_password && (
                                 <div style={{ color: '#16a34a', fontSize: '12px', marginTop: '4px' }}>
-                                    <i className="bi bi-check-circle me-1"></i>Passwords match
+                                    <i className="bi bi-check-circle me-1"></i>{t('Passwords match')}
                                 </div>
                             )}
                             {errors.confirm_password && (
@@ -314,7 +317,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                             background: '#fff', color: '#374151', cursor: 'pointer',
                             fontSize: '14px', fontWeight: 600, fontFamily: '"Inter", sans-serif',
                         }}>
-                        Cancel
+                        {t('Cancel')}
                     </button>
                     <button type="submit" disabled={saving}
                         style={{
@@ -325,7 +328,7 @@ const ChangePasswordModal = forwardRef((props, ref) => {
                             display: 'inline-flex', alignItems: 'center', gap: '8px',
                         }}>
                         {saving && <Spinner animation="border" size="sm" />}
-                        {saving ? 'Changing…' : 'Change Password'}
+                        {saving ? t('Changing…') : t('Change Password')}
                     </button>
                 </div>
             </form>

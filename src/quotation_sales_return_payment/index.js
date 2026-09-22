@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import QuotationSalesReturnPaymentCreate from "./create.js";
 import QuotationSalesReturnPaymentView from "./view.js";
 
@@ -14,7 +15,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function QuotationSalesReturnPaymentIndex(props) {
-
+    const { t } = useTranslation('common');
 
 
     const selectedDate = new Date();
@@ -323,7 +324,7 @@ function QuotationSalesReturnPaymentIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure?');
+        const result = await confirm(t('Are you sure?'));
         console.log(result);
         if (result) {
             deleteQuotationSalesReturnPayment(id);
@@ -365,7 +366,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                 }
 
 
-                if (props.showToastMessage) props.showToastMessage("QuotationSales return payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("QuotationSales return payment deleted successfully!"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -399,19 +400,19 @@ function QuotationSalesReturnPaymentIndex(props) {
                     <div className="col">
                         {paymentStatus === "paid" ?
                             <span className="badge bg-success">
-                                Paid
+                                {t("Paid")}
                             </span> : ""}
                         {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
-                                Paid Partially
+                                {t("Paid Partially")}
                             </span> : ""}
                         {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
-                                Not Paid
+                                {t("Not Paid")}
                             </span> : ""}
 
                         <h1 className="text-end">
-                            Total paid amount: <Badge bg="secondary">
+                            {t("Total paid amount:")} <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -422,7 +423,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                             </Badge>
                         </h1>
                         {props.quotationsalesReturn ? <h4 className="text-end">
-                            Balance amount: <Badge bg="secondary">
+                            {t("Balance amount:")} <Badge bg="secondary">
                                 <NumberFormat
                                     value={balanceAmount.toFixed(2)}
                                     displayType={"text"}
@@ -437,7 +438,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="h3">Qtn. Sales Return Payments</h1>
+                        <h1 className="h3">{t("Qtn. Sales Return Payments")}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -447,7 +448,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button> : ""}
                     </div>
                 </div>
@@ -466,7 +467,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No quotationsales return payments to display</p>
+                                            <p className="text-start">{t("No quotationsales return payments to display")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -491,7 +492,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t("Loading...")}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -502,7 +503,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t("Size:")}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -557,7 +558,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                         }}
                                                     >
 
-                                                        Qtn. Sales Return ID
+                                                        {t("Qtn. Sales Return ID")}
                                                         {sortField === "quotation_sales_return_code" && sortQuotationSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -576,7 +577,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t("Date")}
                                                         {sortField === "date" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -595,7 +596,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t("Amount")}
                                                         {sortField === "amount" && sortQuotationSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -615,7 +616,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             sort("method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t("Payment Method")}
                                                         {sortField === "method" && sortQuotationSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -635,7 +636,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t("Created By")}
                                                         {sortField === "created_by_name" && sortQuotationSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -654,7 +655,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t("Created At")}
                                                         {sortField === "created_at" && sortQuotationSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -663,8 +664,8 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
-                                                <th >Deleted</th>
+                                                <th>{t("Actions")}</th>
+                                                <th>{t("Deleted")}</th>
                                             </tr>
                                         </thead>
 
@@ -704,13 +705,13 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t("Less..") : t("More..")}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t("From:")}{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -726,7 +727,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t("To:")}{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -777,7 +778,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             );
                                                         }}
                                                         options={quotationsalesreturnpaymentOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t("Select Users")}
                                                         selected={selectedCreatedByQuotationSalesReturnPayments}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -812,13 +813,13 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t("From:")}{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -834,7 +835,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t("To:")}{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
@@ -867,8 +868,8 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                             }
                                                         }}
                                                     >
-                                                        <option value="0">NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="0">{t("NO")}</option>
+                                                        <option value="1">{t("YES")}</option>
                                                     </select>
                                                 </th>
                                             </tr>
@@ -926,7 +927,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
-                                                        <td>{quotationsalesreturnpayment.deleted ? "YES" : "NO"}</td>
+                                                        <td>{quotationsalesreturnpayment.deleted ? t("YES") : t("NO")}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

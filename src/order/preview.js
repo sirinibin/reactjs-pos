@@ -61,7 +61,12 @@ const Preview = forwardRef((props, ref) => {
 
                 setModel({ ...model })
                 if (model.id) {
+                    const _formDeliveryFrom = modelObj.delivery_from;
                     await getModel(model.id, modelName);
+                    if (_formDeliveryFrom) {
+                        model.delivery_from = _formDeliveryFrom;
+                        setModel({ ...model });
+                    }
                 }
 
                 if (model.order_id) {

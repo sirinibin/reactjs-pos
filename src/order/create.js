@@ -174,8 +174,14 @@ const OrderCreate = forwardRef((props, ref) => {
             reCalculate();
             setShow(true);
         },
-        async open(id) {
+        async open(id, operationType) {
             draftFlashShownRef.current = false;
+            setSelectedIds([]);
+            if (operationType === "product_selection") {
+                setEnableProductSelection(true);
+            } else {
+                setEnableProductSelection(false);
+            }
             if (id) {
                 isUpdateForm = true;
             } else {
@@ -1420,6 +1426,8 @@ const OrderCreate = forwardRef((props, ref) => {
     //Delivered By Signature Auto Suggestion
 
     const [show, setShow] = useState(false);
+    const [enableProductSelection, setEnableProductSelection] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
     const fromJobCardRef = useRef(false);
     const forcedFormTypeRef = useRef(null);
     const repairJobIdsRef = useRef(null);
@@ -1429,9 +1437,29 @@ const OrderCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         draftFlashShownRef.current = false;
+        setEnableProductSelection(false);
+        setSelectedIds([]);
         setShow(false);
         props.onClose?.();
     }
+
+    const handleProductSelectionSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(selectedProducts.map(p => p.product_id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+    const handleProductSelectionToggle = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+    const handleSendSelectedFromSale = () => {
+        const chosen = selectedProducts.filter(p => selectedIds.includes(p.product_id));
+        if (props.onSelectProducts) {
+            props.onSelectProducts(chosen, selectedCustomers, "sale", formData.id, formData.code, formData.remarks, formData);
+        }
+        handleClose();
+    };
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");
@@ -3966,6 +3994,10 @@ const OrderCreate = forwardRef((props, ref) => {
             if (modelName === "quotation") {
                 formData.quotation_id = modelID;
                 formData.quotation_code = modelCode;
+                if (!formData.quotation_ids) formData.quotation_ids = [];
+                if (!formData.quotation_ids.includes(modelID)) formData.quotation_ids.push(modelID);
+                if (!formData.quotation_codes) formData.quotation_codes = [];
+                if (!formData.quotation_codes.includes(modelCode)) formData.quotation_codes.push(modelCode);
             } else if (modelName === "delivery_note") {
                 formData.delivery_note_id = modelID;
             }
@@ -5619,7 +5651,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1097 : 1096} !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: ${props.modalClass === 'above-pending-modal' ? 1096 : 1082} !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: ${enableProductSelection ? 1092 : props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1097 : 1096} !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: ${props.modalClass === 'above-pending-modal' ? 1096 : 1082} !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5974,9 +6006,15 @@ const OrderCreate = forwardRef((props, ref) => {
                             <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
                                 <i className="bi bi-file-earmark-pdf" style={{ fontSize: '14px' }}></i> {t('Print A4')}
                             </button>
+                            {enableProductSelection ? (
+                                <button type="button" onClick={handleSendSelectedFromSale} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                    <i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {t('Select')} {selectedIds.length} {t('Products')}
+                                </button>
+                            ) : (
                             <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                 {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {(isUpdateForm && !isResumingDraft) ? t('Update') : t('Create')}</>}
                             </button>
+                            )}
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
                                     {store?.settings?.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
@@ -6988,8 +7026,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 );
                                                 return (
                                                     <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
+                                                        {enableProductSelection && <th key="sel-all" style={{ ...thStyle, width: '32px' }}><input type="checkbox" checked={selectedIds.length === selectedProducts.length && selectedProducts.length > 0} onChange={handleProductSelectionSelectAll} /></th>}
                                                         {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                            if (col.key === 'delete') return <th key={col.key} style={{ ...thStyle, padding: 0 }}><button type="button" title={t("Table Settings")} onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color = '#191c1e'} onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
+                                                            if (col.key === 'delete') return enableProductSelection ? null : <th key={col.key} style={{ ...thStyle, padding: 0 }}><button type="button" title={t("Table Settings")} onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color = '#191c1e'} onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
                                                             if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
                                                             if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
                                                             if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
@@ -7024,8 +7063,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
                                                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                                        {enableProductSelection && <td style={{ verticalAlign: 'middle', padding: '4px 8px', width: '32px' }}><input type="checkbox" checked={selectedIds.includes(product.product_id)} onChange={() => handleProductSelectionToggle(product.product_id)} /></td>}
                                                         {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                            if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }} >
+                                                            if (col.key === 'delete') return enableProductSelection ? null : (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }} >
                                                                 <div
                                                                     style={{ color: "red", cursor: isZatcaReported ? "not-allowed" : "pointer", opacity: isZatcaReported ? 0.4 : 1, pointerEvents: isZatcaReported ? "none" : undefined }}
                                                                     onClick={() => {

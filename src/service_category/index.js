@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import ServiceCategoryCreate from "./create.js";
 import { format } from "date-fns";
 import { Button, Spinner } from "react-bootstrap";
@@ -7,6 +8,7 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 function ServiceCategoryIndex(props) {
+    const { t } = useTranslation('common');
     const [list, setList] = useState([]);
     let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('service_category_pageSize') || '10'));
     let [page, setPage] = useState(1);
@@ -54,7 +56,7 @@ function ServiceCategoryIndex(props) {
     }
 
     async function handleDelete(id) {
-        const confirmed = await confirm("Delete this service category?");
+        const confirmed = await confirm(t("Delete this service category?"));
         if (!confirmed) return;
         const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
         const storeId = localStorage.getItem("store_id");
@@ -66,11 +68,11 @@ function ServiceCategoryIndex(props) {
         <div className="container-fluid">
             <div className="row mb-2">
                 <div className="col">
-                    <h1 className="h3 mb-0">Service Categories</h1>
+                    <h1 className="h3 mb-0">{t('Service Categories')}</h1>
                 </div>
                 <div className="col-auto">
                     <Button variant="primary" onClick={() => createFormRef.current?.open()}>
-                        <i className="bi bi-plus-lg"></i> Create
+                        <i className="bi bi-plus-lg"></i> {t('Create')}
                     </Button>
                 </div>
             </div>
@@ -82,13 +84,13 @@ function ServiceCategoryIndex(props) {
                     <input
                         type="text"
                         className="form-control form-control-sm"
-                        placeholder="Search by name..."
+                        placeholder={t('Search by name...')}
                         onChange={(e) => { handleSearch('name', e.target.value); }}
                     />
                 </div>
                 <div className="col-auto">
                     <Button variant="outline-secondary" size="sm" onClick={fetchList}>
-                        {isListLoading ? <Spinner as="span" animation="border" size="sm" /> : <i className="bi bi-search"></i>} Search
+                        {isListLoading ? <Spinner as="span" animation="border" size="sm" /> : <i className="bi bi-search"></i>} {t('Search')}
                     </Button>
                 </div>
             </div>
@@ -98,18 +100,18 @@ function ServiceCategoryIndex(props) {
                     <thead className="table-light">
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Parent Category</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
+                            <th>{t('Name')}</th>
+                            <th>{t('Parent Category')}</th>
+                            <th>{t('Created At')}</th>
+                            <th>{t('Actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {isListLoading && (
-                            <tr><td colSpan={5} className="text-center py-4"><Spinner animation="border" size="sm" /> Loading...</td></tr>
+                            <tr><td colSpan={5} className="text-center py-4"><Spinner animation="border" size="sm" /> {t('Loading...')}</td></tr>
                         )}
                         {!isListLoading && list.length === 0 && (
-                            <tr><td colSpan={5} className="text-center py-4 text-muted">No service categories found</td></tr>
+                            <tr><td colSpan={5} className="text-center py-4 text-muted">{t('No service categories found')}</td></tr>
                         )}
                         {list.map((item, i) => (
                             <tr key={item.id}>
@@ -157,7 +159,7 @@ function ServiceCategoryIndex(props) {
                     <select className="form-select form-select-sm" style={{ width: 'auto' }}
                         value={pageSize}
                         onChange={(e) => { pageSize = parseInt(e.target.value); setPageSize(pageSize); localStorage.setItem('service_category_pageSize', pageSize); page = 1; setPage(1); fetchList(); }}>
-                        {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
+                        {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n} {t('/ page')}</option>)}
                     </select>
                 </div>
             )}

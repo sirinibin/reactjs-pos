@@ -240,7 +240,7 @@ function SalaryIndex(props) {
                 <div className="row">
                     <div className="col">
                         <StatsSummary
-                            title="Salaries Summary"
+                            title={t("Salaries Summary")}
                             storageKey="salary_summary"
                             stats={{
                                 "Total Payments": totalPayments,

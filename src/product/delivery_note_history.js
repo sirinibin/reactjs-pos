@@ -11,10 +11,12 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 //function ProductIndex(props) {
 
 const DeliveryNoteHistory = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     /*
     useImperativeHandle(ref, () => ({
@@ -420,7 +422,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Quantity: <Badge bg="secondary">
+                            {t('Quantity:')} <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDeliveryNoteQuantity}
                                     displayType={"text"}
@@ -446,7 +448,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No DeliveryNote History to display</p>
+                                            <p className="text-start">{t('No DeliveryNote History to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -471,7 +473,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -482,7 +484,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -543,7 +545,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('Date')}
                                                         {sortField === "date" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -563,7 +565,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             sort("store_name");
                                                         }}
                                                     >
-                                                        Store
+                                                        {t('Store')}
                                                         {sortField === "store_name" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -582,7 +584,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             sort("delivery_note_code");
                                                         }}
                                                     >
-                                                        DeliveryNote ID
+                                                        {t('DeliveryNote ID')}
                                                         {sortField === "delivery_note_code" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -602,7 +604,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             sort("customer_name");
                                                         }}
                                                     >
-                                                        Customer
+                                                        {t('Customer')}
                                                         {sortField === "customer_name" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -622,7 +624,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             sort("quantity");
                                                         }}
                                                     >
-                                                        Quantity
+                                                        {t('Quantity')}
                                                         {sortField === "quantity" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -667,13 +669,13 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                 setShowDateRange(!showDateRange)
                                                             }
                                                         >
-                                                            {showDateRange ? "Less.." : "More.."}
+                                                            {showDateRange ? t('Less..') : t('More..')}
                                                         </small>
                                                         <br />
 
                                                         {showDateRange ? (
                                                             <span className="text-left">
-                                                                From:{" "}
+                                                                {t('From:')}{" "}
                                                                 <DatePicker
                                                                     id="date_from"
                                                                     value={fromDateValue}
@@ -692,7 +694,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                         setSelectedFromDate(date);
                                                                     }}
                                                                 />
-                                                                To:{" "}
+                                                                {t('To:')}{" "}
                                                                 <DatePicker
                                                                     id="date_to"
                                                                     value={toDateValue}
@@ -750,7 +752,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             );
                                                         }}
                                                         options={customerOptions}
-                                                        placeholder="Customer Name | Mob | VAT # | ID"
+                                                        placeholder={t('Customer Name | Mob | VAT # | ID')}
                                                         selected={selectedCustomers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -792,7 +794,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             {history.date ? format(
                                                                 new Date(history.date),
                                                                 "MMM dd yyyy h:mma"
-                                                            ) : "Not set"}
+                                                            ) : t('Not set')}
                                                         </td>
                                                         {!localStorage.getItem("store_id") ? <td>{history.store_name}</td> : ""}
                                                         <td style={{

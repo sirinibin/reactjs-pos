@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import VendorCreate from "./create.js";
 import VendorView from "./view.js";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -21,6 +22,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function VendorIndex(props) {
+    const { t } = useTranslation('common');
 
     let [enableSelection, setEnableSelection] = useState(false);
 
@@ -476,7 +478,7 @@ function VendorIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Vendor restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Vendor restored successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -517,7 +519,7 @@ function VendorIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Vendor deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Vendor deleted successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -528,7 +530,7 @@ function VendorIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to delete this vendor?');
+        const result = await confirm(t('Are you sure, you want to delete this vendor?'));
         console.log(result);
         if (result) {
             deleteVendor(id);
@@ -537,7 +539,7 @@ function VendorIndex(props) {
 
     const confirmRestore = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to restore this vendor?');
+        const result = await confirm(t('Are you sure, you want to restore this vendor?'));
         console.log(result);
         if (result) {
             restoreVendor(id);
@@ -595,7 +597,7 @@ function VendorIndex(props) {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t("Successfully restored to default settings!"));
     }
 
 
@@ -613,7 +615,7 @@ function VendorIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Vendor Settings"
+                title={t('Vendor Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -632,7 +634,7 @@ function VendorIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Vendor Stats Summary"
+                                title={t('Vendor Stats Summary')}
                                 filters={{
                                     ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
                                     ...Object.fromEntries(
@@ -645,24 +647,24 @@ function VendorIndex(props) {
                                     ),
                                 }}
                                 stats={{
-                                    "Credit Balance": creditBalance,
+                                    [t("Credit Balance")]: creditBalance,
                                     //Purchase
-                                    "Purchase": purchase,
-                                    "Purchase Paid": purchasePaid,
-                                    "Purchase Credit Balance": purchaseCreditBalance,
-                                    "Purchase Count": purchaseCount,
-                                    "Purchase Paid Count": purchasePaidCount,
-                                    "Purchase Paid Partially Count": purchasePaidPartiallyCount,
-                                    "Purchase UnPaid Count": purchaseUnPaidCount,
+                                    [t("Purchase")]: purchase,
+                                    [t("Purchase Paid")]: purchasePaid,
+                                    [t("Purchase Credit Balance")]: purchaseCreditBalance,
+                                    [t("Purchase Count")]: purchaseCount,
+                                    [t("Purchase Paid Count")]: purchasePaidCount,
+                                    [t("Purchase Paid Partially Count")]: purchasePaidPartiallyCount,
+                                    [t("Purchase UnPaid Count")]: purchaseUnPaidCount,
 
                                     //Purchase Return
-                                    "Purchase Return": purchaseReturn,
-                                    "Purchase Return Paid": purchaseReturnPaid,
-                                    "Purchase Return Credit Balance": purchaseReturnCreditBalance,
-                                    "Purchase Return Count": purchaseReturnCount,
-                                    "Purchase Return Paid Count": purchaseReturnPaidCount,
-                                    "Purchase Return Paid Partially Count": purchaseReturnPaidPartiallyCount,
-                                    "Purchase Return UnPaid Count": purchaseReturnUnPaidCount,
+                                    [t("Purchase Return")]: purchaseReturn,
+                                    [t("Purchase Return Paid")]: purchaseReturnPaid,
+                                    [t("Purchase Return Credit Balance")]: purchaseReturnCreditBalance,
+                                    [t("Purchase Return Count")]: purchaseReturnCount,
+                                    [t("Purchase Return Paid Count")]: purchaseReturnPaidCount,
+                                    [t("Purchase Return Paid Partially Count")]: purchaseReturnPaidPartiallyCount,
+                                    [t("Purchase Return UnPaid Count")]: purchaseReturnUnPaidCount,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -672,7 +674,7 @@ function VendorIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Vendors</h1>
+                        <h1 className="h3">{t('Vendors')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -682,7 +684,7 @@ function VendorIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
 
                     </div>
@@ -700,7 +702,7 @@ function VendorIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Vendors to display</p>
+                                            <p className="text-start">{t('No Vendors to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -724,7 +726,7 @@ function VendorIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -765,7 +767,7 @@ function VendorIndex(props) {
                                                     className=""
                                                     id="ignoreOpeningBalance"
 
-                                                /> &nbsp;Ignore Zero Credit Balance
+                                                /> &nbsp;{t('Ignore Zero Credit Balance')}
                                             </span>
                                         </p>
                                     </div>
@@ -795,8 +797,8 @@ function VendorIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
-                                                        {(col.key === "deleted" || col.key === "actions") && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
+                                                        {(col.key === "deleted" || col.key === "actions") && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
@@ -807,7 +809,7 @@ function VendorIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortVendor === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1244,8 +1246,8 @@ function VendorIndex(props) {
                                                                     }
                                                                 }}
                                                             >
-                                                                <option value="0" >NO</option>
-                                                                <option value="1">YES</option>
+                                                                <option value="0" >{t('NO')}</option>
+                                                                <option value="1">{t('YES')}</option>
                                                             </select>
                                                         </th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
@@ -1263,7 +1265,7 @@ function VendorIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t('Vendor Name / Mob / VAT # / ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -1357,7 +1359,7 @@ function VendorIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1396,13 +1398,14 @@ function VendorIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From:')}
+                                                                    {" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
@@ -1421,7 +1424,8 @@ function VendorIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To:')}
+                                                                    {" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
@@ -1791,10 +1795,10 @@ function VendorIndex(props) {
                                                             return (<React.Fragment key={col.key}>
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(vendor); }}>
-                                                                        Select
+                                                                        {t('Select')}
                                                                     </Button>
                                                                 </td>}
-                                                                {(col.key === "deleted") && <td>{vendor.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "deleted") && <td>{vendor.deleted ? t("YES") : t("NO")}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {!vendor.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
                                                                         confirmDelete(vendor.id);

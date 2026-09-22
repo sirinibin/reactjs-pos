@@ -299,10 +299,10 @@ describe('AI RFQ Bot menu entries', () => {
         expect(entry.requiresAIRFQBot).toBe(true);
     });
 
-    test('24. only rfq_received and rfq_suppliers have requiresAIRFQBot set', () => {
+    test('24. only RFQ-related entries have requiresAIRFQBot set', () => {
         const flagged = DEFAULT_MENU.filter(m => m.requiresAIRFQBot);
         const flaggedIds = flagged.map(m => m.id).sort();
-        expect(flaggedIds).toEqual(['rfq_received', 'rfq_suppliers'].sort());
+        expect(flaggedIds).toEqual(['procurement_emails', 'procurement_whatsapp', 'rfq_received', 'rfq_suppliers'].sort());
     });
 
     test('25. rfq_received resource field matches its id', () => {

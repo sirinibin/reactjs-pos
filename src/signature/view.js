@@ -4,8 +4,10 @@ import { Modal, Table } from 'react-bootstrap';
 
 import { Button } from "react-bootstrap";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { useTranslation } from "react-i18next";
 
 const SignatureView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -73,27 +75,27 @@ const SignatureView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Signature #{model.name} </Modal.Title>
+                <Modal.Title>{t('details_of_signature')} #{model.name} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
                     }}>
-                        <i className="bi bi-plus"></i> Create
+                        <i className="bi bi-plus"></i> {t('create')}
                     </Button>
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openUpdateForm(model.id);
                     }}>
-                        <i className="bi bi-pencil"></i> Edit
+                        <i className="bi bi-pencil"></i> {t('edit')}
                     </Button>
                     <button
                         type="button"
                         className="btn-close"
                         onClick={handleClose}
-                        aria-label="Close"
+                        aria-label={t('close')}
                     ></button>
 
                 </div>
@@ -102,19 +104,19 @@ const SignatureView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Name:</th><td> {model.name}</td>
+                            <th>{t('name')}:</th><td> {model.name}</td>
                         </tr>
                         <tr>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
+                            <th>{t('created_at')}:</th><td> {model.created_at}</td>
+                            <th>{t('updated_at')}:</th><td> {model.updated_at}</td>
                         </tr>
                         <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                            <th>{t('created_by')}:</th><td> {model.created_by_name}</td>
+                            <th>{t('updated_by')}:</th><td> {model.updated_by_name}</td>
                         </tr>
                     </tbody>
                 </Table>
-                <div>Signature:<img alt="Signature" src={resolveImageUrl(model.signature, model.store_id, "signatures") + "?" + Date.now()} key={model.signature} style={{ width: 100, height: 80 }} /></div>
+                <div>{t('signature')}:<img alt={t('signature')} src={resolveImageUrl(model.signature, model.store_id, "signatures") + "?" + Date.now()} key={model.signature} style={{ width: 100, height: 80 }} /></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

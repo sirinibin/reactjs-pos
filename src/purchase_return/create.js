@@ -7115,7 +7115,7 @@ async function reCalculate(productIndex) {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleTogglePurchaseReturnSPColumn(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>
@@ -7150,7 +7150,7 @@ async function reCalculate(productIndex) {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleTogglePurchaseReturnSPType3Column(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>

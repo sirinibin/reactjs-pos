@@ -1736,7 +1736,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 </Button>
                             )}
                             <StatsSummary
-                                title={'Sales Summary'}
+                                title={t("Sales Summary")}
                                 filters={{
                                     ...(dateValue ? { 'Date': dateValue } : {}),
                                     ...(fromDateValue ? { 'From Date': fromDateValue } : {}),

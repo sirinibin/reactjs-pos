@@ -181,7 +181,7 @@ describe('RFQSuppliersIndex smoke tests', () => {
 
         await waitFor(() => {
             expect(screen.getByPlaceholderText('supplier_name_placeholder')).toBeTruthy();
-            expect(screen.getByPlaceholderText('whatsapp_number_placeholder')).toBeTruthy();
+            expect(screen.getAllByPlaceholderText('whatsapp_number_placeholder').length).toBeGreaterThanOrEqual(1);
         });
     });
 

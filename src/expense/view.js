@@ -1,10 +1,12 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button } from 'react-bootstrap';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 
 const ExpenseView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -94,10 +96,10 @@ const ExpenseView = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                 <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                Back
+                                {t('Back')}
                             </button>
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                                Expense #{model.code}
+                                {t('Expense')} #{model.code}
                             </h1>
                             {model.payment_method && (
                                 <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
@@ -107,7 +109,7 @@ const ExpenseView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Expense recorded on {formatInStoreTimezone(model.date, store?.country_code)}
+                                {t('Expense recorded on')} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -115,13 +117,13 @@ const ExpenseView = forwardRef((props, ref) => {
                         {props.openCreateForm && (
                             <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
                                 <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
-                                Create
+                                {t('Create')}
                             </button>
                         )}
                         {props.openUpdateForm && (
                             <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                 <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
-                                Edit
+                                {t('Edit')}
                             </button>
                         )}
                     </div>
@@ -135,7 +137,7 @@ const ExpenseView = forwardRef((props, ref) => {
 
                         {/* Amount */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Amount</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Amount')}</span>
                             <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#004ac6', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 {model.amount != null ? Number(model.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                             </span>
@@ -143,7 +145,7 @@ const ExpenseView = forwardRef((props, ref) => {
 
                         {/* Category */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Category</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Category')}</span>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                                 {model.category_name && model.category_name.length > 0
                                     ? model.category_name.map((name, i) => (
@@ -156,7 +158,7 @@ const ExpenseView = forwardRef((props, ref) => {
 
                         {/* Payment Method */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Payment Method</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Payment Method')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -167,7 +169,7 @@ const ExpenseView = forwardRef((props, ref) => {
 
                         {/* Date */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Date</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Date')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '18px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -186,25 +188,25 @@ const ExpenseView = forwardRef((props, ref) => {
                             {/* Expense Details */}
                             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Expense Details</h3>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Expense Details')}</h3>
                                 </div>
                                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '0' }}>
 
                                     {/* Code */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #eceef0' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>Code</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>{t('Code')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e', fontFamily: 'monospace' }}>{model.code || '—'}</span>
                                     </div>
 
                                     {/* Description */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid #eceef0', gap: '16px' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500, flexShrink: 0 }}>Description</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500, flexShrink: 0 }}>{t('Description')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{model.description || '—'}</span>
                                     </div>
 
                                     {/* Amount */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #eceef0' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>Amount</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>{t('Amount')}</span>
                                         <span style={{ fontSize: '16px', fontWeight: 700, color: '#004ac6' }}>
                                             {model.amount != null ? Number(model.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
                                         </span>
@@ -212,7 +214,7 @@ const ExpenseView = forwardRef((props, ref) => {
 
                                     {/* Payment Method */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #eceef0' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>Payment Method</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>{t('Payment Method')}</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <i className="bi bi-credit-card" style={{ fontSize: '14px', color: '#505f76' }}></i>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatPaymentMethod(model.payment_method)}</span>
@@ -221,13 +223,13 @@ const ExpenseView = forwardRef((props, ref) => {
 
                                     {/* Date */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #eceef0' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>Date</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>{t('Date')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatDate(model.date)}</span>
                                     </div>
 
                                     {/* Categories */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', gap: '16px' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500, flexShrink: 0 }}>Categories</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500, flexShrink: 0 }}>{t('Categories')}</span>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                                             {model.category_name && model.category_name.length > 0
                                                 ? model.category_name.map((name, i) => (
@@ -241,7 +243,7 @@ const ExpenseView = forwardRef((props, ref) => {
                             </section>
 
                             {/* Images */}
-                            <AttachmentsViewer images={model.images} title="Attachments" />
+                            <AttachmentsViewer images={model.images} title={t('Attachments')} />
                         </div>
 
                         {/* Right Column: Metadata Sidebar */}
@@ -249,13 +251,13 @@ const ExpenseView = forwardRef((props, ref) => {
 
                             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Metadata')}</h3>
                                 </div>
                                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                                     {/* Created By */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created By')}</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
                                                 {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '?'}
@@ -269,7 +271,7 @@ const ExpenseView = forwardRef((props, ref) => {
                                     {/* Updated By */}
                                     {model.updated_by_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
                                         </div>
                                     )}
@@ -277,7 +279,7 @@ const ExpenseView = forwardRef((props, ref) => {
                                     {/* Created At */}
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Created At</span>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Created At')}</span>
                                             <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
@@ -285,7 +287,7 @@ const ExpenseView = forwardRef((props, ref) => {
                                     {/* Last Updated */}
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Last Updated')}</span>
                                             <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
@@ -297,10 +299,10 @@ const ExpenseView = forwardRef((props, ref) => {
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>
-                    Cancel
+                    {t('Cancel')}
                 </Button>
                 <Button variant="primary" onClick={handleClose}>
-                    Close
+                    {t('Close')}
                 </Button>
             </Modal.Footer>
         </Modal>

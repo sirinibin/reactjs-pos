@@ -7,6 +7,7 @@ import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 
 
@@ -45,6 +46,7 @@ const UserCreate = forwardRef((props, ref) => {
     const storeId = localStorage.getItem("store_id");
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
 
     let [errors, setErrors] = useState({});
@@ -167,7 +169,7 @@ const UserCreate = forwardRef((props, ref) => {
 
         // Prevent Manager from assigning Admin role
         if (managerMode && formData.role && !MANAGER_ALLOWED_ROLES.includes(formData.role)) {
-            setErrors({ ...errors, role: 'You can only assign Manager or SalesMan roles' });
+            setErrors({ ...errors, role: t('You can only assign Manager or SalesMan roles') });
             return;
         }
 
@@ -231,9 +233,9 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("User updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("User updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("User created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("User created successfully!"), "success");
                 }
                 if (props.refreshList) {
                     props.refreshList();
@@ -250,7 +252,7 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process user!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process user!"), "danger");
             });
     }
 
@@ -398,8 +400,8 @@ const UserCreate = forwardRef((props, ref) => {
     );
 
     const NAV_TABS = [
-        { id: 'account',     label: 'Account',     icon: 'bi-person-circle' },
-        { id: 'permissions', label: 'Permissions',  icon: 'bi-shield-check'  },
+        { id: 'account',     label: t('Account'),     icon: 'bi-person-circle' },
+        { id: 'permissions', label: t('Permissions'),  icon: 'bi-shield-check'  },
     ];
 
     const [activeTab, setActiveTab] = useState("account");
@@ -415,7 +417,7 @@ const UserCreate = forwardRef((props, ref) => {
     const allErrors = Object.entries(errors).filter(([, v]) => v);
     const totalErrors = allErrors.length;
 
-    const tabIds = NAV_TABS.map(t => t.id);
+    const tabIds = NAV_TABS.map(tab => tab.id);
     const currentTabIndex = tabIds.indexOf(activeTab);
     const prevTab = tabIds[currentTabIndex - 1];
     const nextTab = tabIds[currentTabIndex + 1];
@@ -428,26 +430,26 @@ const UserCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update User — ${formData.name}` : 'Create New User'}
+                        {formData.id ? `${t('Update User')} — ${formData.name}` : t('Create New User')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
                     </div>
                 </Modal.Header>
                 <style>{`
@@ -493,9 +495,9 @@ const UserCreate = forwardRef((props, ref) => {
                         <aside className="pw-sidebar">
                             <div className="pw-sidebar-header">
                                 <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                                    {formData.id ? 'Edit User' : 'New User'}
+                                    {formData.id ? t('Edit User') : t('New User')}
                                 </div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>User Wizard</div>
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>{t('User Wizard')}</div>
                             </div>
                             {NAV_TABS.map((tab) => (
                                 <button key={tab.id} type="button"
@@ -523,7 +525,7 @@ const UserCreate = forwardRef((props, ref) => {
                                   <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
                                     <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
                                       <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
-                                      {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                      {totalErrors} {totalErrors > 1 ? t("errors") : t("error")} — {t("please fix before saving:")}
                                     </div>
                                     {NAV_TABS.map((tab) => {
                                       const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
@@ -548,11 +550,11 @@ const UserCreate = forwardRef((props, ref) => {
                                     {activeTab === 'account' && (
                                         <>
                                             <div style={CARD} className="pw-card">
-                                                <SectionTitle icon="bi-person-circle">Account Information</SectionTitle>
+                                                <SectionTitle icon="bi-person-circle">{t('Account Information')}</SectionTitle>
                                                 <div className="row g-3">
 
                                                     <div className="col-md-6">
-                                                        <Label required>Name</Label>
+                                                        <Label required>{t('Name')}</Label>
                                                         <input
                                                             value={formData.name ? formData.name : ""}
                                                             type="text"
@@ -565,13 +567,13 @@ const UserCreate = forwardRef((props, ref) => {
                                                             }}
                                                             style={INPUT}
                                                             id="name1"
-                                                            placeholder="Name"
+                                                            placeholder={t('Name')}
                                                         />
                                                         {errors.name && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.name}</ErrMsg>}
                                                     </div>
 
                                                     <div className="col-md-6">
-                                                        <Label required>Email</Label>
+                                                        <Label required>{t('Email')}</Label>
                                                         <input
                                                             value={formData.email ? formData.email : ""}
                                                             type="text"
@@ -584,14 +586,14 @@ const UserCreate = forwardRef((props, ref) => {
                                                             }}
                                                             style={INPUT}
                                                             id="email1"
-                                                            placeholder="Email"
+                                                            placeholder={t('Email')}
                                                         />
                                                         {errors.email && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.email}</ErrMsg>}
                                                     </div>
 
                                                     {!formData.id && (
                                                     <div className="col-md-6">
-                                                        <Label required={!formData.id}>Password</Label>
+                                                        <Label required={!formData.id}>{t('Password')}</Label>
                                                         <input
                                                             value={formData.password ? formData.password : ""}
                                                             type="password"
@@ -604,14 +606,14 @@ const UserCreate = forwardRef((props, ref) => {
                                                             }}
                                                             style={INPUT}
                                                             id="password1"
-                                                            placeholder={formData.id ? "Change password" : "Password"}
+                                                            placeholder={formData.id ? t('Change password') : t('Password')}
                                                         />
                                                         {errors.password && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.password}</ErrMsg>}
                                                     </div>
                                                     )}
 
                                                     <div className="col-md-6">
-                                                        <Label required>Phone</Label>
+                                                        <Label required>{t('Phone')}</Label>
                                                         <input
                                                             value={formData.mob ? formData.mob : ""}
                                                             type="text"
@@ -624,7 +626,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                             }}
                                                             style={INPUT}
                                                             id="mob1"
-                                                            placeholder="Mobile number"
+                                                            placeholder={t('Mobile number')}
                                                         />
                                                         {errors.mob && <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.mob}</ErrMsg>}
                                                     </div>
@@ -634,39 +636,39 @@ const UserCreate = forwardRef((props, ref) => {
 
                                             {/* ── Opening Balance ── */}
                                             <div style={CARD} className="pw-card">
-                                                <SectionTitle icon="bi-arrow-left-right">Opening Balance</SectionTitle>
+                                                <SectionTitle icon="bi-arrow-left-right">{t('Opening Balance')}</SectionTitle>
                                                 <p style={{ fontSize: '12px', color: '#5c6470', fontFamily: '"Inter", sans-serif', marginBottom: '12px' }}>
-                                                    If this user has an outstanding balance from your previous system, enter the amount and date.
-                                                    {formData.opening_balance_posted && ' (An opening balance entry has already been posted — changing values below will update it.)'}
+                                                    {t('If this user has an outstanding balance from your previous system, enter the amount and date.')}
+                                                    {formData.opening_balance_posted && ' ' + t('(An opening balance entry has already been posted — changing values below will update it.)')}
                                                 </p>
                                                 <div className="row g-3">
                                                     <div className="col-12">
-                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Balance Direction</label>
+                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>{t('Balance Direction')}</label>
                                                         <div style={{ display: 'flex', gap: '24px' }}>
                                                             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                                                                 <input type="radio" name="user_ob_type" value="payable"
                                                                     checked={(formData.opening_balance_type || 'payable') === 'payable'}
                                                                     onChange={() => { formData.opening_balance_type = 'payable'; setFormData({ ...formData }); }} />
-                                                                Store owes User
+                                                                {t('Store owes User')}
                                                             </label>
                                                             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                                                                 <input type="radio" name="user_ob_type" value="receivable"
                                                                     checked={formData.opening_balance_type === 'receivable'}
                                                                     onChange={() => { formData.opening_balance_type = 'receivable'; setFormData({ ...formData }); }} />
-                                                                User owes Store
+                                                                {t('User owes Store')}
                                                             </label>
                                                         </div>
                                                         {errors.opening_balance_type && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance_type}</div>}
                                                     </div>
                                                     <div className="col-md-6">
-                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Opening Balance Amount</label>
+                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>{t('Opening Balance Amount')}</label>
                                                         <input type="number" step="0.01" min="0" style={INPUT}
                                                             value={formData.opening_balance ?? ''}
                                                             onChange={e => { formData.opening_balance = e.target.value === '' ? '' : parseFloat(e.target.value); setFormData({ ...formData }); }} />
                                                         {errors.opening_balance && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance}</div>}
                                                     </div>
                                                     <div className="col-md-6">
-                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>As Of Date</label>
+                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>{t('As Of Date')}</label>
                                                         <DatePicker
                                                             selected={formData.opening_balance_date ? new Date(formData.opening_balance_date) : null}
                                                             onChange={(value) => { formData.opening_balance_date = value; setFormData({ ...formData }); }}
@@ -674,7 +676,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                             timeIntervals={1}
                                                             dateFormat="MMMM d, yyyy h:mm aa"
                                                             locale={enUS}
-                                                            placeholderText="Select date & time"
+                                                            placeholderText={t('Select date & time')}
                                                             isClearable
                                                             className={`form-control form-control-sm${errors.opening_balance_date ? " is-invalid" : ""}`}
                                                         />
@@ -689,18 +691,18 @@ const UserCreate = forwardRef((props, ref) => {
                                     {activeTab === 'permissions' && (
                                         <>
                                             <div style={CARD} className="pw-card">
-                                                <SectionTitle icon="bi-shield-check">Role & Store Access</SectionTitle>
+                                                <SectionTitle icon="bi-shield-check">{t('Role & Store Access')}</SectionTitle>
                                                 <div className="row g-3">
 
                                                     <div className="col-md-4">
-                                                        <Label required>Role</Label>
+                                                        <Label required>{t('Role')}</Label>
                                                         <select
                                                             value={formData.role}
                                                             disabled={roleDisabled}
                                                             onChange={(e) => {
                                                                 if (!e.target.value) {
                                                                     formData.role = "";
-                                                                    errors["role"] = "Invalid role";
+                                                                    errors["role"] = t("Invalid role");
                                                                     setErrors({ ...errors });
                                                                     return;
                                                                 }
@@ -712,27 +714,27 @@ const UserCreate = forwardRef((props, ref) => {
                                                             }}
                                                             style={{ ...INPUT, appearance: 'auto' }}
                                                         >
-                                                            <option value="Manager">Manager</option>
-                                                            <option value="SalesMan">Sales Man</option>
-                                                            {currentUserCanAssignAdmin && <option value="Admin">Admin</option>}
+                                                            <option value="Manager">{t('Manager')}</option>
+                                                            <option value="SalesMan">{t('Sales Man')}</option>
+                                                            {currentUserCanAssignAdmin && <option value="Admin">{t('Admin')}</option>}
                                                         </select>
                                                         {roleDisabled && (
-                                                            <small style={{ color: '#6b7280', fontSize: '11px' }}>You cannot change your own role.</small>
+                                                            <small style={{ color: '#6b7280', fontSize: '11px' }}>{t('You cannot change your own role.')}</small>
                                                         )}
                                                         {errors.role && <ErrMsg>{errors.role}</ErrMsg>}
                                                     </div>
 
                                                     <div className="col-md-8">
-                                                        <Label>Stores</Label>
+                                                        <Label>{t('Stores')}</Label>
                                                         <div style={{ border: errors.store_ids ? '1px solid #dc3545' : '1px solid #c3c6d7', borderRadius: '6px', background: '#fff', minHeight: '44px', padding: '6px 10px', display: 'flex', flexWrap: 'wrap', gap: '5px', alignItems: 'center' }}>
                                                             {selectedStores.length === 0 && (
-                                                                <span style={{ color: '#9aa0b0', fontSize: '13px', userSelect: 'none' }}>No stores selected</span>
+                                                                <span style={{ color: '#9aa0b0', fontSize: '13px', userSelect: 'none' }}>{t('No stores selected')}</span>
                                                             )}
                                                             {selectedStores.map(store => (
                                                                 <span key={store.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#e8f0fe', color: '#1a56db', borderRadius: '5px', padding: '3px 8px', fontSize: '12px', fontWeight: 500, fontFamily: 'Inter, sans-serif', maxWidth: '220px' }}>
                                                                     <i className="bi bi-shop" style={{ fontSize: '11px', flexShrink: 0 }} />
                                                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{store.name}</span>
-                                                                    <button type="button" onClick={() => removeStore(store.id)} style={{ background: 'none', border: 'none', padding: '0 0 0 2px', cursor: 'pointer', color: '#4b6cb7', lineHeight: 1, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} title="Remove store">
+                                                                    <button type="button" onClick={() => removeStore(store.id)} style={{ background: 'none', border: 'none', padding: '0 0 0 2px', cursor: 'pointer', color: '#4b6cb7', lineHeight: 1, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} title={t('Remove store')}>
                                                                         <i className="bi bi-x" style={{ fontSize: '14px' }} />
                                                                     </button>
                                                                 </span>
@@ -747,7 +749,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                                 style={{ marginLeft: 'auto', background: 'none', border: '1px dashed #004ac6', borderRadius: '5px', padding: '3px 10px', fontSize: '12px', color: '#004ac6', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
                                                             >
                                                                 <i className="bi bi-list-ul" style={{ fontSize: '12px' }} />
-                                                                {selectedStores.length === 0 ? 'Add Stores' : 'Manage Stores'}
+                                                                {selectedStores.length === 0 ? t('Add Stores') : t('Manage Stores')}
                                                             </button>
                                                         </div>
                                                         {errors.store_ids && <ErrMsg>{errors.store_ids}</ErrMsg>}
@@ -758,7 +760,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                                     <i className="bi bi-search" style={{ color: '#737686', fontSize: '13px', flexShrink: 0 }} />
                                                                     <input
                                                                         type="text"
-                                                                        placeholder="Search stores..."
+                                                                        placeholder={t('Search stores...')}
                                                                         value={storePickerSearch}
                                                                         onChange={e => setStorePickerSearch(e.target.value)}
                                                                         style={{ border: 'none', outline: 'none', flex: 1, fontSize: '13px', background: 'transparent', color: '#2d3040', fontFamily: 'Inter, sans-serif' }}
@@ -780,7 +782,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                                         const term = storePickerSearch.toLowerCase();
                                                                         const filtered = term ? allStores.filter(s => s.name.toLowerCase().includes(term)) : allStores;
                                                                         if (filtered.length === 0) return (
-                                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#737686', fontSize: '13px' }}>No stores found</div>
+                                                                            <div style={{ padding: '20px', textAlign: 'center', color: '#737686', fontSize: '13px' }}>{t('No stores found')}</div>
                                                                         );
                                                                         return filtered.map(store => (
                                                                             <label key={store.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', cursor: 'pointer', borderBottom: '1px solid #f0f2f5', margin: 0 }}
@@ -801,13 +803,13 @@ const UserCreate = forwardRef((props, ref) => {
                                                                 </div>
                                                                 <div style={{ padding: '8px 12px', borderTop: '1px solid #e8eaf0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f9fc' }}>
                                                                     <span style={{ fontSize: '12px', color: '#737686', fontFamily: 'Inter, sans-serif' }}>
-                                                                        {pickerSelected.size} store{pickerSelected.size !== 1 ? 's' : ''} selected
+                                                                        {pickerSelected.size} {pickerSelected.size !== 1 ? t('stores selected') : t('store selected')}
                                                                     </span>
                                                                     <div style={{ display: 'flex', gap: '6px' }}>
-                                                                        <button type="button" onClick={() => setShowStorePicker(false)} style={{ background: '#f0f2f4', color: '#54647a', border: 'none', borderRadius: '5px', padding: '5px 12px', fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif', cursor: 'pointer' }}>Cancel</button>
+                                                                        <button type="button" onClick={() => setShowStorePicker(false)} style={{ background: '#f0f2f4', color: '#54647a', border: 'none', borderRadius: '5px', padding: '5px 12px', fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif', cursor: 'pointer' }}>{t('Cancel')}</button>
                                                                         <button type="button" onClick={applyStorePicker} style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '5px', padding: '5px 14px', fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                                                                             <i className="bi bi-check-lg" style={{ fontSize: '13px' }} />
-                                                                            Apply
+                                                                            {t('Apply')}
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -817,7 +819,7 @@ const UserCreate = forwardRef((props, ref) => {
 
                                                     {rbacEnabled && (
                                                         <div className="col-md-12">
-                                                            <Label>RBAC Roles</Label>
+                                                            <Label>{t('RBAC Roles')}</Label>
                                                             <Typeahead
                                                                 id="role_ids"
                                                                 labelKey="name"
@@ -829,7 +831,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                                     setSelectedRoles(selectedItems);
                                                                 }}
                                                                 options={roleOptions}
-                                                                placeholder="Search and assign roles..."
+                                                                placeholder={t('Search and assign roles...')}
                                                                 selected={selectedRoles}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm) => {
@@ -838,7 +840,7 @@ const UserCreate = forwardRef((props, ref) => {
                                                                 multiple
                                                             />
                                                             <div style={{ fontSize: '11px', color: '#737686', marginTop: '3px' }}>
-                                                                Roles define what this user can read, create, update, or delete in the app.
+                                                                {t('Roles define what this user can read, create, update, or delete in the app.')}
                                                             </div>
                                                         </div>
                                                     )}
@@ -854,11 +856,11 @@ const UserCreate = forwardRef((props, ref) => {
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)} style={{ background: prevTab ? "#d0e1fb" : "#f0f2f4", color: prevTab ? "#54647a" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: prevTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
                                         <i className="bi bi-arrow-left"></i>
-                                        {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : "Previous"}
+                                        {prevTab ? NAV_TABS.find(tab => tab.id === prevTab)?.label : t("Previous")}
                                     </button>
                                     <span style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#737686" }}>{currentTabIndex + 1} / {tabIds.length}</span>
                                     <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)} style={{ background: nextTab ? "#004ac6" : "#f0f2f4", color: nextTab ? "#ffffff" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: nextTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : "Next"}
+                                        {nextTab ? NAV_TABS.find(tab => tab.id === nextTab)?.label : t("Next")}
                                         <i className="bi bi-arrow-right"></i>
                                     </button>
                                 </div>

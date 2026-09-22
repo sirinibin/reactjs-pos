@@ -1,8 +1,9 @@
-import { fetchStore } from "../storeUtils";
+import { fetchStore, invalidateStoreCache, _clearAllStoreCaches } from "../storeUtils";
 
 beforeEach(() => {
     localStorage.clear();
     global.fetch = jest.fn();
+    _clearAllStoreCaches();
 });
 
 afterEach(() => {
@@ -112,4 +113,51 @@ test("default select string includes settings", async () => {
     await fetchStore("s1");
     const url = fetch.mock.calls[0][0];
     expect(url).toContain("settings");
+});
+
+// ── cache behaviour ───────────────────────────────────────────────────────────
+
+test("second fetchStore call returns cached result without hitting the API", async () => {
+    invalidateStoreCache("cache-test");
+    const storeData = { id: "cache-test", name: "Cached Store" };
+    fetch.mockResolvedValue(makeJsonResponse({ result: storeData }));
+
+    const first = await fetchStore("cache-test");
+    const second = await fetchStore("cache-test");
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(first).toEqual(storeData);
+    expect(second).toEqual(storeData);
+});
+
+test("invalidateStoreCache causes next fetchStore to re-fetch from API", async () => {
+    invalidateStoreCache("inv-test");
+    const v1 = { id: "inv-test", name: "v1" };
+    const v2 = { id: "inv-test", name: "v2" };
+    fetch
+        .mockResolvedValueOnce(makeJsonResponse({ result: v1 }))
+        .mockResolvedValueOnce(makeJsonResponse({ result: v2 }));
+
+    await fetchStore("inv-test");
+    invalidateStoreCache("inv-test");
+    const result = await fetchStore("inv-test");
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(v2);
+});
+
+test("custom select bypasses cache — always hits API", async () => {
+    invalidateStoreCache("custom-test");
+    fetch.mockResolvedValue(makeJsonResponse({ result: { id: "custom-test" } }));
+
+    await fetchStore("custom-test", "id,name");
+    await fetchStore("custom-test", "id,name");
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("fetchStore returns null for falsy id without calling API", async () => {
+    const result = await fetchStore(null);
+    expect(result).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
 });

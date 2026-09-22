@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import ExpenseCreate from "./create.js";
 import ExpenseView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -22,6 +23,7 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function ExpenseIndex(props) {
+    const { t } = useTranslation('common');
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
     let [selectedDate, setSelectedDate] = useState(new Date());
@@ -861,7 +863,7 @@ function ExpenseIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Expense Settings"
+                title={t('Expense Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -902,12 +904,12 @@ function ExpenseIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Expenses Summary"
+                                title={t('Expenses Summary')}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedExpenseCategories.length > 0 ? { 'Category': selectedExpenseCategories.map(c => c.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedExpenseCategories.length > 0 ? { [t('Category')]: selectedExpenseCategories.map(c => c.name).join(', ') } : {}),
                                     ...Object.fromEntries(
                                         Object.entries(fieldFilters)
                                             .filter(([, v]) => v)
@@ -918,11 +920,11 @@ function ExpenseIndex(props) {
                                     ),
                                 }}
                                 stats={{
-                                    "Total": totalExpenses,
-                                    "Cash": totalCashExpenses,
-                                    "Bank": totalBankExpenses,
-                                    "Purchase Fund": totalPurchaseFundExpenses,
-                                    "VAT Paid": totalVat,
+                                    [t('Total')]: totalExpenses,
+                                    [t('Cash')]: totalCashExpenses,
+                                    [t('Bank')]: totalBankExpenses,
+                                    [t('Purchase Fund')]: totalPurchaseFundExpenses,
+                                    [t('VAT Paid')]: totalVat,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -932,18 +934,18 @@ function ExpenseIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Expenses</h1>
+                        <h1 className="h3">{t('Expenses')}</h1>
                     </div>
 
 
 
                     <div className="col text-end">
 
-                        <ExcelFile filename={expenseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >Download Expense Report</Button> : ""}>
+                        <ExcelFile filename={expenseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download Expense Report')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={expenseReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllExpenses} >{fettingAllRecordsInProgress ? "Preparing.." : "Expense Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllExpenses} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Expense Report')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
@@ -952,7 +954,7 @@ function ExpenseIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -972,7 +974,7 @@ function ExpenseIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Expense to display</p>
+                                            <p className="text-start">{t('No Expense to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -996,7 +998,7 @@ function ExpenseIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -1018,7 +1020,7 @@ function ExpenseIndex(props) {
                                         <i
                                             className="bi bi-gear-fill"
                                             style={{ fontSize: "1.2rem" }}
-                                            title="Table Settings"
+                                            title={t('Table Settings')}
                                         />
                                     </button>
                                 </div>
@@ -1047,8 +1049,8 @@ function ExpenseIndex(props) {
 
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key !== "actions" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
@@ -1059,7 +1061,7 @@ function ExpenseIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortExpense === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1249,7 +1251,7 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={categoryOptions}
-                                                                placeholder="Select Categories"
+                                                                placeholder={t('Select Categories')}
                                                                 selected={selectedExpenseCategories}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1264,7 +1266,7 @@ function ExpenseIndex(props) {
                                                                 }}
                                                                 multiple
                                                             />
-                                                            Excl.
+                                                            {t('Excl.')}
                                                             <Typeahead
                                                                 id="exclude_category_id"
 
@@ -1276,7 +1278,7 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={categoryOptions}
-                                                                placeholder="Select Excl. Categories"
+                                                                placeholder={t('Select Excl. Categories')}
                                                                 selected={selectedExcludeExpenseCategories}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1306,7 +1308,7 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t('Vendor Name / Mob / VAT # / ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1336,12 +1338,12 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment method"
+                                                                placeholder={t('Select payment method')}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
-                                                            Excl.
+                                                            {t('Excl.')}
                                                             <Typeahead
                                                                 id="exclude_payment_method"
                                                                 labelKey="name"
@@ -1352,7 +1354,7 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select Excl. payment method"
+                                                                placeholder={t('Select Excl. payment method')}
                                                                 selected={selectedExcludePaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -1370,7 +1372,7 @@ function ExpenseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1409,12 +1411,12 @@ function ExpenseIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                             </small>
                                                             <br />
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From')}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
@@ -1433,7 +1435,7 @@ function ExpenseIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To')}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
@@ -1484,13 +1486,13 @@ function ExpenseIndex(props) {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From')}:{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             value={fromDateValue}
@@ -1509,7 +1511,7 @@ function ExpenseIndex(props) {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To')}:{" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             value={toDateValue}
@@ -1790,7 +1792,7 @@ function ExpenseIndex(props) {
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(expense);
                                                                     }}>
-                                                                        Select
+                                                                        {t('Select')}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

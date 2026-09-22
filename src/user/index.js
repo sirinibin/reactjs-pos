@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import UserCreate from "./create.js";
 import UserView from "./view.js";
 
@@ -15,6 +16,7 @@ import { shortLocale } from '../utils/dateUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 function UserIndex(props) {
+    const { t } = useTranslation('common');
     const { lastMessage } = useContext(WebSocketContext);
     const selectedDate = new Date();
 
@@ -306,7 +308,7 @@ function UserIndex(props) {
 
         return (
             <li className={`list-unstyled ${statusClass}`}>
-                {user.online ? 'Online' : 'Offline'}
+                {user.online ? t('Online') : t('Offline')}
                 {user.online && user.last_offline_at ? <TimeSince date={user.last_offline_at} /> : ""}
                 {!user.online && user.last_online_at ? <TimeSince date={user.last_online_at} /> : ""}
             </li>
@@ -322,7 +324,7 @@ function UserIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Users</h1>
+                        <h1 className="h3">{t('Users')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -332,7 +334,7 @@ function UserIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -349,7 +351,7 @@ function UserIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Users to display</p>
+                                            <p className="text-start">{t('No Users to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -374,7 +376,7 @@ function UserIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -385,7 +387,7 @@ function UserIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -439,7 +441,7 @@ function UserIndex(props) {
                                                             sort("online");
                                                         }}
                                                     >
-                                                        Online
+                                                        {t('Online')}
                                                         {sortField === "online" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -458,7 +460,7 @@ function UserIndex(props) {
                                                             sort("mob");
                                                         }}
                                                     >
-                                                        Mob
+                                                        {t('Mob')}
                                                         {sortField === "mob" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -477,7 +479,7 @@ function UserIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('Name')}
                                                         {sortField === "name" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -496,7 +498,7 @@ function UserIndex(props) {
                                                             sort("email");
                                                         }}
                                                     >
-                                                        Email
+                                                        {t('Email')}
                                                         {sortField === "email" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -516,7 +518,7 @@ function UserIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('Created By')}
                                                         {sortField === "created_by_name" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -535,7 +537,7 @@ function UserIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('Created At')}
                                                         {sortField === "created_at" && sortUser === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -544,7 +546,7 @@ function UserIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -556,9 +558,9 @@ function UserIndex(props) {
                                                             searchByFieldValue("online", e.target.value);
                                                         }}
                                                     >
-                                                        <option value="">Select</option>
-                                                        <option value="0">NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="">{t('Select')}</option>
+                                                        <option value="0">{t('NO')}</option>
+                                                        <option value="1">{t('YES')}</option>
                                                     </select>
                                                 </th>
 
@@ -604,7 +606,7 @@ function UserIndex(props) {
                                                             );
                                                         }}
                                                         options={userOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('Select Users')}
                                                         selected={selectedCreatedByUsers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -639,13 +641,13 @@ function UserIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From:')}{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -661,7 +663,7 @@ function UserIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To:')}{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

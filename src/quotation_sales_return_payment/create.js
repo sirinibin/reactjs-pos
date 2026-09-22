@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-
+import { useTranslation } from "react-i18next";
 import { Spinner } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -9,6 +9,7 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 
 const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id, quotationsalesreturn) {
@@ -110,16 +111,6 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                 formData.date_str = data.result.date;
                 console.log("formData:", formData);
 
-                /*
-                formData.quotationsales_return_id = quotationsalesreturn.id;
-                formData.quotationsales_return_code = quotationsalesreturn.code;
-
-                formData.order_id = quotationsalesreturn.order_id;
-                formData.order_code = quotationsalesreturn.order_code;
-
-                formData.store_id = quotationsalesreturn.store_id;
-                 */
-
                 setFormData({ ...formData });
                 console.log("formData:", formData);
 
@@ -144,19 +135,10 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
         }
 
         if (formData.amount <= 0) {
-            errors["amount"] = "Amount should be > 0:";
+            errors["amount"] = t("Amount should be > 0:");
             setErrors({ ...errors });
             return;
         }
-
-
-        /*
-        if (formData.amount > quotationsalesreturn.net_total) {
-            errors["amount"] = "Amount should be less than or equal to net total amount:" + quotationsalesreturn.net_total;
-            setErrors({ ...errors });
-            return;
-        }
-        */
 
         formData.quotation_id = quotationsalesreturn.quotation_id;
         formData.quotation_code = quotationsalesreturn.quotation_code;
@@ -201,9 +183,9 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Payment updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Payment updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Payment created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Payment created successfully!"), "success");
                 }
                 if (props.refreshList) {
                     props.refreshList();
@@ -221,7 +203,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process payment!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process payment!"), "danger");
             });
     }
 
@@ -232,7 +214,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Payment of quotation sales return #" + formData.quotation_sales_return_code : "Add Payment of quotation sales return  #" + formData.quotation_sales_return_code}
+                        {formData.id ? t("Update Payment of quotation sales return #") + formData.quotation_sales_return_code : t("Add Payment of quotation sales return #") + formData.quotation_sales_return_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -241,7 +223,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t("View Detail")}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -256,7 +238,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t("Update") : !isProcessing ? t("Create") : ""}
 
                         </Button>
                         <button
@@ -271,7 +253,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-3">
-                            <label className="form-label">Amount*</label>
+                            <label className="form-label">{t("Amount*")}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -281,14 +263,14 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                                         console.log("Inside onchange vat ");
                                         if (!e.target.value) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Invalid amount";
+                                            errors["amount"] = t("Invalid amount");
                                             setErrors({ ...errors });
                                             return;
                                         }
 
                                         if (parseFloat(e.target.value) <= 0) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Amount should be > 0";
+                                            errors["amount"] = t("Amount should be > 0");
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -310,7 +292,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Amount"
+                                    placeholder={t("Amount")}
                                 />
                             </div>
                             {errors.amount && (
@@ -321,13 +303,13 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                             {formData.amount && !errors.amount && (
                                 <div style={{ color: "green" }}>
                                     <i className="bi bi-check-lg"> </i>
-                                    Looks good!
+                                    {t("Looks good!")}
                                 </div>
                             )}
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Date*</label>
+                            <label className="form-label">{t("Date*")}</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
@@ -362,7 +344,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
 
                         <div className="row">
                             <div className="col-md-3">
-                                <label className="form-label">Payment method*</label>
+                                <label className="form-label">{t("Payment method*")}</label>
 
                                 <div className="input-group mb-3" >
                                     <select
@@ -370,7 +352,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                                         onChange={(e) => {
                                             console.log("Inside onchange payment method");
                                             if (!e.target.value) {
-                                                errors["method"] = "Invalid Payment Method";
+                                                errors["method"] = t("Invalid Payment Method");
                                                 formData.method = "";
                                                 setFormData({ ...formData });
                                                 setErrors({ ...errors });
@@ -386,14 +368,14 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                                         }}
                                         className="form-control"
                                     >
-                                        <option value="">Select</option>
-                                        <option value="cash">Cash</option>
-                                        <option value="debit_card">Debit Card</option>
-                                        <option value="credit_card">Credit Card</option>
-                                        <option value="bank_card">Bank Card</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="bank_cheque">Cheque</option>
-                                        <option value="customer_account">Customer Account</option>
+                                        <option value="">{t("Select")}</option>
+                                        <option value="cash">{t("Cash")}</option>
+                                        <option value="debit_card">{t("Debit Card")}</option>
+                                        <option value="credit_card">{t("Credit Card")}</option>
+                                        <option value="bank_card">{t("Bank Card")}</option>
+                                        <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                        <option value="bank_cheque">{t("Cheque")}</option>
+                                        <option value="customer_account">{t("Customer Account")}</option>
                                     </select>
                                     {errors.method && (
                                         <div style={{ color: "red" }}>
@@ -403,7 +385,7 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
                                     {formData.method && !errors.method && (
                                         <div style={{ color: "green" }}>
                                             <i className="bi bi-check-lg"> </i>
-                                            Looks good!
+                                            {t("Looks good!")}
                                         </div>
                                     )}
                                 </div>
@@ -417,20 +399,18 @@ const QuotationSalesReturnPaymentCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t("Close")}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
-                                {isProcessing ?
-                                    <Spinner
+                                {isProcessing ? (
+                                    <><Spinner
                                         as="span"
                                         animation="border"
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
-
-                                    : formData.id ? "Update" : "Create"
-                                }
+                                    /> {t("Processing...")}</>
+                                ) : formData.id ? t("Update") : t("Create")}
                             </Button>
                         </Modal.Footer>
                     </form>

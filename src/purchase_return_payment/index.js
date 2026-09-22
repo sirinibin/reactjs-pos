@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import PurchaseReturnPaymentCreate from "./create.js";
 import PurchaseReturnPaymentView from "./view.js";
 
@@ -14,7 +15,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function PurchaseReturnPaymentIndex(props) {
-
+    const { t } = useTranslation('common');
 
 
     const selectedDate = new Date();
@@ -367,7 +368,7 @@ function PurchaseReturnPaymentIndex(props) {
                 }
 
 
-                if (props.showToastMessage) props.showToastMessage("Purchase return payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("purchase_return_payment_deleted_successfully"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -395,19 +396,19 @@ function PurchaseReturnPaymentIndex(props) {
 
                         {paymentStatus === "paid" ?
                             <span className="badge bg-success">
-                                Paid
+                                {t('paid')}
                             </span> : ""}
                         {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
-                                Paid Partially
+                                {t('paid_partially')}
                             </span> : ""}
                         {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
-                                Not Paid
+                                {t('not_paid')}
                             </span> : ""}
 
                         <h1 className="text-end">
-                            Total paid amount: <Badge bg="secondary">
+                            {t('total_paid_amount')} <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -418,7 +419,7 @@ function PurchaseReturnPaymentIndex(props) {
                             </Badge>
                         </h1>
                         {props.purchaseReturn ? <h4 className="text-end">
-                            Balance amount: <Badge bg="secondary">
+                            {t('balance_amount')} <Badge bg="secondary">
                                 <NumberFormat
                                     value={balanceAmount.toFixed(2)}
                                     displayType={"text"}
@@ -434,7 +435,7 @@ function PurchaseReturnPaymentIndex(props) {
 
 
                     <div className="col">
-                        <h1 className="h3">Purchase Return Payments</h1>
+                        <h1 className="h3">{t('purchase_return_payments')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -444,7 +445,7 @@ function PurchaseReturnPaymentIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('create')}
                         </Button> : ""}
                     </div>
 
@@ -462,7 +463,7 @@ function PurchaseReturnPaymentIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No purchase return payments to display</p>
+                                            <p className="text-start">{t('no_purchase_return_payments_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -487,7 +488,7 @@ function PurchaseReturnPaymentIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('loading')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -498,7 +499,7 @@ function PurchaseReturnPaymentIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -553,7 +554,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                         }}
                                                     >
 
-                                                        Purchase Return ID
+                                                        {t('purchase_return_id')}
                                                         {sortField === "purchase_return_code" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -572,7 +573,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('date')}
                                                         {sortField === "date" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -591,7 +592,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('amount')}
                                                         {sortField === "amount" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -611,7 +612,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             sort("method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t('payment_method')}
                                                         {sortField === "method" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -631,7 +632,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('created_by')}
                                                         {sortField === "created_by_name" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -650,7 +651,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -659,8 +660,8 @@ function PurchaseReturnPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
-                                                <th>Deleted</th>
+                                                <th>{t('actions')}</th>
+                                                <th>{t('deleted')}</th>
                                             </tr>
                                         </thead>
 
@@ -700,13 +701,13 @@ function PurchaseReturnPaymentIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -722,7 +723,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -773,7 +774,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                             );
                                                         }}
                                                         options={purchasereturnpaymentOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('select_users')}
                                                         selected={selectedCreatedByPurchaseReturnPayments}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -808,13 +809,13 @@ function PurchaseReturnPaymentIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -830,7 +831,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
@@ -863,8 +864,8 @@ function PurchaseReturnPaymentIndex(props) {
                                                             }
                                                         }}
                                                     >
-                                                        <option value="0">NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="0">{t('no')}</option>
+                                                        <option value="1">{t('yes')}</option>
                                                     </select>
                                                 </th>
                                             </tr>
@@ -922,7 +923,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
-                                                        <td>{purchasereturnpayment.deleted ? "YES" : "NO"}</td>
+                                                        <td>{purchasereturnpayment.deleted ? t('yes') : t('no')}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

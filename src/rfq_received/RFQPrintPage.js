@@ -25,6 +25,9 @@ function RFQPrintPage() {
 
     useEffect(() => {
         if (!model) return;
+        // Set page title so the generated PDF filename / metadata matches the RFQ code.
+        const code = model?.code || model?.rfq_code || '';
+        if (code) document.title = code;
         const markReady = () => setTimeout(() => {
             document.body.setAttribute('data-print-ready', 'true');
         }, 800);

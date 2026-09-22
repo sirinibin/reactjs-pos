@@ -19,8 +19,10 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import ZatcaConnect from '../store/zatca_connect.js';
+import { useTranslation } from "react-i18next";
 
 function CustomerWithdrawalIndex(props) {
+    const { t } = useTranslation('common');
 
 
 
@@ -618,7 +620,7 @@ function CustomerWithdrawalIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Customer Withdrawal Settings"
+                title={t("Customer Withdrawal Settings")}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -653,17 +655,17 @@ function CustomerWithdrawalIndex(props) {
                 <div className="col">
                     <span className="text-end">
                         <StatsSummary
-                            title="Payables Summary"
+                            title={t("Payables Summary")}
                             filters={{
-                                ...(dateValue ? { 'Date': dateValue } : {}),
-                                ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
-                                ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
-                                ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
-                                ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
-                                ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
-                                ...(selectedCreatedByCustomerWithdrawals.length > 0 ? { 'Created By': selectedCreatedByCustomerWithdrawals.map(u => u.name).join(', ') } : {}),
+                                ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                ...(createdAtValue ? { [t('Created At')]: createdAtValue } : {}),
+                                ...(createdAtFromValue ? { [t('Created From')]: createdAtFromValue } : {}),
+                                ...(createdAtToValue ? { [t('Created To')]: createdAtToValue } : {}),
+                                ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                ...(selectedVendors.length > 0 ? { [t('Vendor')]: selectedVendors.map(v => v.name).join(', ') } : {}),
+                                ...(selectedCreatedByCustomerWithdrawals.length > 0 ? { [t('Created By')]: selectedCreatedByCustomerWithdrawals.map(u => u.name).join(', ') } : {}),
                                 ...Object.fromEntries(
                                     Object.entries(fieldFilters)
                                         .filter(([, v]) => v)
@@ -674,12 +676,12 @@ function CustomerWithdrawalIndex(props) {
                                 ),
                             }}
                             stats={{
-                                "Total": totalPayables,
-                                "Cash": totalCashPayables,
-                                "Bank": totalBankPayables,
-                                "Payable to Vendors (Unpaid Purchases)": totalUnPaidPurchasePay,
-                                "Payable to Customers (Sales Return)": totalUnPaidSalesReturnPay,
-                                "Net Payables": (totalUnPaidPurchasePay || 0) + (totalUnPaidSalesReturnPay || 0),
+                                [t("Total")]: totalPayables,
+                                [t("Cash")]: totalCashPayables,
+                                [t("Bank")]: totalBankPayables,
+                                [t("Payable to Vendors (Unpaid Purchases)")]: totalUnPaidPurchasePay,
+                                [t("Payable to Customers (Sales Return)")]: totalUnPaidSalesReturnPay,
+                                [t("Net Payables")]: (totalUnPaidPurchasePay || 0) + (totalUnPaidSalesReturnPay || 0),
                             }}
                             onToggle={handleSummaryToggle}
                         />
@@ -690,7 +692,7 @@ function CustomerWithdrawalIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3"> Payables</h1>
+                        <h1 className="h3"> {t("Payables")}</h1>
                     </div>
 
 
@@ -702,7 +704,7 @@ function CustomerWithdrawalIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button>
                     </div>
                 </div>
@@ -722,7 +724,7 @@ function CustomerWithdrawalIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No CustomerWithdrawal to display</p>
+                                            <p className="text-start">{t("No CustomerWithdrawal to display")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -746,7 +748,7 @@ function CustomerWithdrawalIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t("Loading...")}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -763,7 +765,7 @@ function CustomerWithdrawalIndex(props) {
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => setShowSettings(!showSettings)}
                                     >
-                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t("Table Settings")} />
                                     </button>
                                 </div>
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}
@@ -790,12 +792,12 @@ function CustomerWithdrawalIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => (
                                                     <th key={col.key}>
-                                                        {(col.key === "actions" || col.key === "actions_end") ? col.label : (
+                                                        {(col.key === "actions" || col.key === "actions_end") ? t(col.label) : (
                                                             <b
                                                                 style={{ textDecoration: "underline", cursor: "pointer" }}
                                                                 onClick={() => sort(col.fieldName)}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortCustomerWithdrawal === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -845,15 +847,15 @@ function CustomerWithdrawalIndex(props) {
                                                                     onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setDateValue(""); searchByDateField("date_str", ""); }, 100); } }}
                                                                 />
                                                                 <small style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }} onClick={() => setShowDateRange(!showDateRange)}>
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t("Less..") : t("More..")}
                                                                 </small>
                                                                 {showDateRange && (
                                                                     <span className="text-left">
-                                                                        From: <DatePicker id="payable_from_date" value={fromDateValue} selected={selectedFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("From:")}{" "}<DatePicker id="payable_from_date" value={fromDateValue} selected={selectedFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setFromDateValue(""); searchByDateField("from_date", ""); return; } searchByDateField("from_date", date); selectedFromDate = date; setSelectedFromDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setFromDateValue(""); searchByDateField("from_date", ""); }, 100); } }}
                                                                         />
-                                                                        To: <DatePicker id="payable_to_date" value={toDateValue} selected={selectedToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("To:")}{" "}<DatePicker id="payable_to_date" value={toDateValue} selected={selectedToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setToDateValue(""); searchByDateField("to_date", ""); return; } searchByDateField("to_date", date); selectedToDate = date; setSelectedToDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setToDateValue(""); searchByDateField("to_date", ""); }, 100); } }}
                                                                         />
@@ -863,9 +865,9 @@ function CustomerWithdrawalIndex(props) {
                                                         )}
                                                         {col.key === "type" && (
                                                             <select onChange={(e) => searchByFieldValue("type", e.target.value)}>
-                                                                <option value="">All</option>
-                                                                <option value="customer">Customer</option>
-                                                                <option value="vendor">Vendor</option>
+                                                                <option value="">{t("All")}</option>
+                                                                <option value="customer">{t("Customer")}</option>
+                                                                <option value="vendor">{t("Vendor")}</option>
                                                             </select>
                                                         )}
                                                         {col.key === "customer" && (
@@ -877,7 +879,7 @@ function CustomerWithdrawalIndex(props) {
                                                                 onChange={(selectedItems) => { searchByMultipleValuesField("customer_id", selectedItems); setOpenCustomerSearchResult(false); }}
                                                                 open={openCustomerSearchResult}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t("Customer Name / Mob / VAT # / ID")}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -895,7 +897,7 @@ function CustomerWithdrawalIndex(props) {
                                                                 onChange={(selectedItems) => { searchByMultipleValuesField("vendor_id", selectedItems); setOpenVendorSearchResult(false); }}
                                                                 options={vendorOptions}
                                                                 open={openVendorSearchResult}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t("Vendor Name / Mob / VAT # / ID")}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -921,7 +923,7 @@ function CustomerWithdrawalIndex(props) {
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => searchByMultipleValuesField("payment_methods", selectedItems)}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -945,7 +947,7 @@ function CustomerWithdrawalIndex(props) {
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => searchByMultipleValuesField("created_by", selectedItems)}
                                                                 options={customerwithdrawalOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByCustomerWithdrawals}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm) => suggestUsers(searchTerm)}
@@ -970,15 +972,15 @@ function CustomerWithdrawalIndex(props) {
                                                                     onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtValue(""); searchByDateField("created_at", ""); }, 100); } }}
                                                                 />
                                                                 <small style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }} onClick={() => setShowCreatedAtDateRange(!showCreatedAtDateRange)}>
-                                                                    {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                    {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                                 </small>
                                                                 {showCreatedAtDateRange && (
                                                                     <span className="text-left">
-                                                                        From: <DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedCreatedAtFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("From:")}{" "}<DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedCreatedAtFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setCreatedAtFromValue(""); searchByDateField("created_at_from", ""); return; } searchByDateField("created_at_from", date); selectedCreatedAtFromDate = date; setSelectedCreatedAtFromDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtFromValue(""); searchByDateField("created_at_from", ""); }, 100); } }}
                                                                         />
-                                                                        To: <DatePicker id="created_at_to" value={createdAtToValue} selected={selectedCreatedAtToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("To:")}{" "}<DatePicker id="created_at_to" value={createdAtToValue} selected={selectedCreatedAtToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setCreatedAtToValue(""); searchByDateField("created_at_to", ""); return; } searchByDateField("created_at_to", date); selectedCreatedAtToDate = date; setSelectedCreatedAtToDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtToValue(""); searchByDateField("created_at_to", ""); }, 100); } }}
                                                                         />
@@ -1022,7 +1024,7 @@ function CustomerWithdrawalIndex(props) {
                                                                         {!customerwithdrawal.zatca?.reporting_passed && (
                                                                             <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
                                                                                 {(customerwithdrawal.zatca?.reporting_failed_count > 0) && (
-                                                                                    <span className="badge bg-danger">Failed</span>
+                                                                                    <span className="badge bg-danger">{t("Failed")}</span>
                                                                                 )}
                                                                                 <Button
                                                                                     className={`btn btn-sm ${customerwithdrawal.zatca?.reporting_failed_count > 0 ? "btn-outline-warning" : "btn-warning"}`}
@@ -1032,8 +1034,8 @@ function CustomerWithdrawalIndex(props) {
                                                                                     {reportingIds.has(customerwithdrawal.id)
                                                                                         ? <Spinner animation="border" size="sm" />
                                                                                         : customerwithdrawal.zatca?.reporting_failed_count > 0
-                                                                                            ? <><i className="bi bi-arrow-clockwise"></i> Retry</>
-                                                                                            : <><i className="bi bi-cloud-upload"></i> Report</>
+                                                                                            ? <><i className="bi bi-arrow-clockwise"></i> {t("Retry")}</>
+                                                                                            : <><i className="bi bi-cloud-upload"></i> {t("Report")}</>
                                                                                     }
                                                                                 </Button>
                                                                                 {customerwithdrawal._zatcaError && (
@@ -1052,7 +1054,7 @@ function CustomerWithdrawalIndex(props) {
                                                                         )}
                                                                         {customerwithdrawal.zatca?.reporting_passed && (
                                                                             <>
-                                                                                <span className="badge bg-success">Reported</span>&nbsp;
+                                                                                <span className="badge bg-success">{t("Reported")}</span>&nbsp;
                                                                                 <a href={`/zatca/${customerwithdrawal.store_id}/payables/xml/${customerwithdrawal.code}.xml`} target="_blank" rel="noreferrer" className="btn btn-outline-secondary btn-sm"><i className="bi bi-file-earmark-code"></i> XML</a>
                                                                             </>
                                                                         )}

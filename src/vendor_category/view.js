@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
+import { useTranslation } from "react-i18next";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone } from '../utils/dateUtils.js';
 
@@ -14,6 +15,8 @@ const VendorCategoryView = forwardRef((props, ref) => {
             }
         },
     }));
+
+    const { t } = useTranslation('common');
 
     let [model, setModel] = useState({});
     const [show, SetShow] = useState(false);
@@ -63,23 +66,23 @@ const VendorCategoryView = forwardRef((props, ref) => {
                 <div style={{ padding: '24px 32px 20px', gap: '16px', borderBottom: '1px solid #c3c6d7' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <button onClick={handleClose} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', width: 'fit-content' }}>
-                            <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i> Back
+                            <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i> {t('Back')}
                         </button>
                         <h1 style={{ margin: '8px 0 0', fontSize: '30px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                            {model.name ? model.name : 'Details of Vendor Category'}
+                            {model.name ? model.name : t('Details of Vendor Category')}
                         </h1>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingRight: '32px' }}>
                         {props.openCreateForm && (
                             <button onClick={() => { handleClose(); props.openCreateForm(); }}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                                <i className="bi bi-plus" style={{ fontSize: '18px' }}></i> Create
+                                <i className="bi bi-plus" style={{ fontSize: '18px' }}></i> {t('Create')}
                             </button>
                         )}
                         {props.openUpdateForm && (
                             <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                                <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i> Edit
+                                <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i> {t('Edit')}
                             </button>
                         )}
                     </div>
@@ -89,14 +92,14 @@ const VendorCategoryView = forwardRef((props, ref) => {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
 
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Name')}</span>
                             <span style={{ fontSize: '20px', fontWeight: 700, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 {model.name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '16px' }}>—</span>}
                             </span>
                         </div>
 
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Created By</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Created By')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
                                 {model.created_by_name && (
                                     <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
@@ -112,17 +115,17 @@ const VendorCategoryView = forwardRef((props, ref) => {
 
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Details</h3>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Details')}</h3>
                         </div>
                         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #c3c6d7' }}>
-                                <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created At')}</span>
                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                     {formatInStoreTimezone(model.created_at) || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
-                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated At</span>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated At')}</span>
                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                     {formatInStoreTimezone(model.updated_at) || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
                                 </span>
@@ -134,7 +137,7 @@ const VendorCategoryView = forwardRef((props, ref) => {
             <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button onClick={handleClose}
                     style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                    Close
+                    {t('Close')}
                 </button>
             </Modal.Footer>
         </Modal>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "../customer/create.js";
@@ -46,7 +47,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const QuotationSalesReturnCreate = forwardRef((props, ref) => {
-
+    const { t } = useTranslation('common');
 
     function ResetForm() {
         cashDiscount = "";
@@ -2264,12 +2265,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`quotation-sales-return-create-wrap${props.fromHistory ? ' from-history-form' : ''}${props.modalClass ? ' ' + props.modalClass : ''}`}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Qtn. Sales Return #" + formData.code + " for sale #" + formData.quotation_code : "Create Qtn. Sales Return for Qtn Sale #" + formData.quotation_code}
+                        {formData.id ? t('Update Qtn. Sales Return #') + formData.code + t(' for sale #') + formData.quotation_code : t('Create Qtn. Sales Return for Qtn Sale #') + formData.quotation_code}
                     </Modal.Title>
                     <div className="col align-self-end text-end">
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={openPreview}>
-                            <i className="bi bi-printer"></i> Print Full Invoice
+                            <i className="bi bi-printer"></i> {t('Print Full Invoice')}
                         </Button>
                         &nbsp;&nbsp;
 
@@ -2286,14 +2287,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                                     : ""
                                 }
-                                {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                                {formData.id && !isProcessing ? t('Update') : !isProcessing ? t('Create') : ""}
 
                             </Button>}
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t('Close')}
                         ></button>
                     </div>
                 </Modal.Header>
@@ -2318,7 +2319,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             className="form-control form-control-lg"
                                             disabled
                                             value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
-                                            placeholder="Customer"
+                                            placeholder={t('Customer')}
                                             style={{ backgroundColor: '#f8f9fa' }}
                                         />
                                     </div>
@@ -2350,7 +2351,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             type="text"
                                             onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
                                             className={`form-control form-control-lg${errors["phone"] ? ' is-invalid' : ''}`}
-                                            placeholder="Phone"
+                                            placeholder={t('Phone')}
                                             style={{ width: '154px' }}
                                         />
                                         <button type="button" onClick={sendWhatsAppMessage} style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
@@ -2365,7 +2366,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         type="text"
                                         onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
                                         className={`form-control form-control-lg${errors["vat_no"] ? ' is-invalid' : ''}`}
-                                        placeholder="VAT NO."
+                                        placeholder={t('VAT NO.')}
                                         style={{ width: '180px', flexShrink: 0 }}
                                     />
                                 </div>
@@ -2377,7 +2378,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
                                         className="form-control"
                                         id="remarks"
-                                        placeholder="Remarks"
+                                        placeholder={t('Remarks')}
                                         style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
                                     />
                                     <textarea
@@ -2386,7 +2387,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
                                         className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
                                         id="address"
-                                        placeholder="Address"
+                                        placeholder={t('Address')}
                                         style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
                                     />
                                 </div>
@@ -2432,10 +2433,10 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                     </section>}
 
-                    {selectedProducts?.length === 0 && "Already returned all products"}
+                    {selectedProducts?.length === 0 && t('Already returned all products')}
                     {selectedProducts?.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
                         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
-                            <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowQSRSPSettings(true)}>
+                            <Button variant="light" size="sm" title={t('Table Settings')} onClick={() => setShowQSRSPSettings(true)}>
                                 <i className="bi bi-gear"></i>
                             </Button>
                         </div>
@@ -2454,7 +2455,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                         className="form-control form-control-lg"
                                                         disabled
                                                         value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
-                                                        placeholder="Customer"
+                                                        placeholder={t('Customer')}
                                                         style={{ backgroundColor: '#f8f9fa' }}
                                                     />
                                                 </div>
@@ -2493,7 +2494,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                 onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
                                                 className="form-control"
-                                                placeholder="Remarks"
+                                                placeholder={t('Remarks')}
                                                 style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
                                             />
                                         </div>
@@ -2529,7 +2530,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         return (
                                             <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
                                                 {qsrSPColumns.filter(c => c.visible).map(col => {
-                                                    if (col.key === 'select') return <th key={col.key} style={{ ...thStyle, textAlign: 'center' }}>Select All<br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} />{resizeHandle('select')}</th>;
+                                                    if (col.key === 'select') return <th key={col.key} style={{ ...thStyle, textAlign: 'center' }}>{t('Select All')}<br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} />{resizeHandle('select')}</th>;
                                                     if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
                                                     if (col.key === 'part_number') return <th key={col.key} style={thStyle}>Part No.{resizeHandle('part_number')}</th>;
                                                     if (col.key === 'name') return <th key={col.key} style={thStyle}>Name{resizeHandle('name')}</th>;
@@ -2591,7 +2592,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 onKeyDown={(e) => {
                                                                     RunKeyActions(e, product);
                                                                 }}
-                                                                placeholder="Name" onChange={(e) => {
+                                                                placeholder={t('Name')} onChange={(e) => {
                                                                     delete errors["name_" + index];
                                                                     setErrors({ ...errors });
 
@@ -2751,7 +2752,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                                 onWheel={(e) => e.target.blur()}
                                                                 value={product.purchase_unit_price}
-                                                                placeholder="Purchase Unit Price"
+                                                                placeholder={t('Purchase Unit Price')}
                                                                 ref={(el) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`] = el;
@@ -2890,7 +2891,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={product.quantity}
-                                                                    placeholder="Quantity"
+                                                                    placeholder={t('Quantity')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_quantity_" + index}`] = el;
@@ -3040,7 +3041,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Unit Price(without VAT)"
+                                                                    placeholder={t('Unit Price(without VAT)')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`] = el;
@@ -3175,7 +3176,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_with_vat_" + index}`] = el;
                                                                     }}
-                                                                    placeholder="Unit Price(with VAT)"
+                                                                    placeholder={t('Unit Price(with VAT)')}
 
                                                                     onFocus={() => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
@@ -3731,7 +3732,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].line_total}
                                                                     className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Line total"
+                                                                    placeholder={t('Line total')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_line_total_" + index}`] = el;
@@ -3850,7 +3851,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].line_total_with_vat}
                                                                     className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Line total with VAT"
+                                                                    placeholder={t('Line total with VAT')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_line_total_with_vat" + index}`] = el;
@@ -3975,7 +3976,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                 <tbody>
                                     <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
                                         {qsrSPColumns.filter(c => c.visible).map(col => {
-                                            if (col.key === 'select') return <th key="select">Select All <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
+                                            if (col.key === 'select') return <th key="select">{t('Select All')} <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
                                             if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
                                             if (col.key === 'part_number') return <th key="part_number">Part No.</th>;
                                             if (col.key === 'name') return <th key="name" style={{ minWidth: window.innerWidth > 1920 ? "375px" : "250px" }}>Name</th>;
@@ -4031,7 +4032,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 onKeyDown={(e) => {
                                                                     RunKeyActions(e, product);
                                                                 }}
-                                                                placeholder="Name" onChange={(e) => {
+                                                                placeholder={t('Name')} onChange={(e) => {
                                                                     delete errors["name_" + index];
                                                                     setErrors({ ...errors });
 
@@ -4191,7 +4192,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                                 onWheel={(e) => e.target.blur()}
                                                                 value={product.purchase_unit_price}
-                                                                placeholder="Purchase Unit Price"
+                                                                placeholder={t('Purchase Unit Price')}
                                                                 ref={(el) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`] = el;
@@ -4330,7 +4331,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={product.quantity}
-                                                                    placeholder="Quantity"
+                                                                    placeholder={t('Quantity')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_quantity_" + index}`] = el;
@@ -4480,7 +4481,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Unit Price(without VAT)"
+                                                                    placeholder={t('Unit Price(without VAT)')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`] = el;
@@ -4615,7 +4616,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_with_vat_" + index}`] = el;
                                                                     }}
-                                                                    placeholder="Unit Price(with VAT)"
+                                                                    placeholder={t('Unit Price(with VAT)')}
 
                                                                     onFocus={() => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
@@ -5080,7 +5081,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].line_total}
                                                                     className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Line total"
+                                                                    placeholder={t('Line total')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_line_total_" + index}`] = el;
@@ -5196,7 +5197,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].line_total_with_vat}
                                                                     className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Line total with VAT"
+                                                                    placeholder={t('Line total with VAT')}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"quotationsales_return_product_line_total_with_vat" + index}`] = el;
@@ -6083,15 +6084,15 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 console.log(formData);
                                                             }}
                                                         >
-                                                            <option value="">Select</option>
-                                                            <option value="cash">Cash</option>
-                                                            <option value="debit_card">Debit Card</option>
-                                                            <option value="credit_card">Credit Card</option>
-                                                            <option value="bank_card">Bank Card</option>
-                                                            <option value="bank_transfer">Bank Transfer</option>
-                                                            <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="quotation_sales">Qtn. Sales</option>
-                                                            <option value="customer_account">Customer Account</option>
+                                                            <option value="">{t('Select')}</option>
+                                                            <option value="cash">{t('Cash')}</option>
+                                                            <option value="debit_card">{t('Debit Card')}</option>
+                                                            <option value="credit_card">{t('Credit Card')}</option>
+                                                            <option value="bank_card">{t('Bank Card')}</option>
+                                                            <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                                            <option value="bank_cheque">{t('Bank Cheque')}</option>
+                                                            <option value="quotation_sales">{t('Qtn. Sales')}</option>
+                                                            <option value="customer_account">{t('Customer Account')}</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red", position: 'absolute', left: 0, top: '100%', whiteSpace: 'nowrap', zIndex: 100, backgroundColor: '#fff', fontSize: '12px', padding: '2px 4px' }}>
@@ -6103,7 +6104,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             disabled={quotation.payment_status === "not_paid"}
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
-                                                            placeholder="Description"
+                                                            placeholder={t('Description')}
                                                         />
                                                     </td>
                                                     <td style={{ minWidth: "240px" }}>
@@ -6125,7 +6126,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             ))}
                                         <tr>
                                             <td className="text-end">
-                                                <b>Total</b>
+                                                <b>{t('Total')}</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                                                 {errors["total_payment"] && (
@@ -6135,7 +6136,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                 )}
                                             </td>
                                             <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>{t('Balance: ')}{trimTo2Decimals(balanceAmount)}</b>
                                                 {errors["customer_credit_limit"] && (
                                                     <div style={{ color: "red" }}>
                                                         {errors["customer_credit_limit"]}
@@ -6143,18 +6144,18 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                 )}
                                             </td>
                                             <td colSpan={3}>
-                                                <b>Payment status: </b>
+                                                <b>{t('Payment status: ')}</b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
-                                                        Paid
+                                                        {t('Paid')}
                                                     </span> : ""}
                                                 {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
-                                                        Paid Partially
+                                                        {t('Paid Partially')}
                                                     </span> : ""}
                                                 {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
-                                                        Not Paid
+                                                        {t('Not Paid')}
                                                     </span> : ""}
                                             </td>
                                         </tr>
@@ -6166,7 +6167,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                         <div className="row" style={{ marginTop: "12px" }}>
                             <div className="col-md-2">
-                                <label className="form-label">Commission</label>
+                                <label className="form-label">{t('Commission')}</label>
                                 <input
                                     type='number'
                                     ref={commissionRef}
@@ -6214,7 +6215,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-2">
-                                <label className="form-label">C. Payment Method</label>
+                                <label className="form-label">{t('C. Payment Method')}</label>
                                 <select
                                     value={formData.commission_payment_method || ""}
                                     className="form-control"
@@ -6232,20 +6233,20 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                     }}
                                 >
-                                    <option value="">Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="bank_card">Bank Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="bank_cheque">Bank Cheque</option>
+                                    <option value="">{t('Select')}</option>
+                                    <option value="cash">{t('Cash')}</option>
+                                    <option value="debit_card">{t('Debit Card')}</option>
+                                    <option value="credit_card">{t('Credit Card')}</option>
+                                    <option value="bank_card">{t('Bank Card')}</option>
+                                    <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                    <option value="bank_cheque">{t('Bank Cheque')}</option>
                                 </select>
                                 {errors["commission_payment_method"] && (
                                     <div style={{ color: "red" }}>{errors["commission_payment_method"]}</div>
                                 )}
                             </div>
                             <div className="col-md-2">
-                                <label className="form-label">Cash discount</label>
+                                <label className="form-label">{t('Cash discount')}</label>
                                 <input
                                     type='number'
                                     ref={cashDiscountRef}
@@ -6296,7 +6297,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('Close')}
                             </Button>
                             {selectedProducts && selectedProducts.length > 0 &&
                                 <Button variant="primary" onClick={handleCreate} >
@@ -6309,7 +6310,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             aria-hidden={true}
                                         />
 
-                                        : formData.id ? "Update" : "Create"
+                                        : formData.id ? t('Update') : t('Create')
                                     }
                                 </Button>}
                         </Modal.Footer>
@@ -6322,7 +6323,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             {/* QSR SP Table Settings Modal */}
             <Modal show={showQSRSPSettings} onHide={() => setShowQSRSPSettings(false)} size="md">
                 <Modal.Header closeButton>
-                    <Modal.Title>Table Settings</Modal.Title>
+                    <Modal.Title>{t('Table Settings')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <DragDropContext onDragEnd={onDragEndQSRSP}>
@@ -6338,7 +6339,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleToggleQSRSPColumn(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>

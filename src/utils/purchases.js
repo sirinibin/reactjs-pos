@@ -48,10 +48,11 @@ const Purchases = forwardRef((props, ref) => {
     return (
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
-                backdrop={false}                // ✅ Allow editing background
+                backdrop={false}
                 keyboard={false}
-                centered={false}                // ❌ disable auto-centering
-                enforceFocus={false}            // ✅ allow focus outside
+                centered={false}
+                enforceFocus={false}
+                style={{ zIndex: 1090 }}
                 dialogAs={({ children, ...props }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
@@ -64,7 +65,7 @@ const Purchases = forwardRef((props, ref) => {
                                 left: "20%",
                                 transform: "translate(-50%, -50%)",
                                 margin: "0",
-                                zIndex: 1055,
+                                zIndex: 1090,
                                 width: "65%",           // Full width inside container
                             }}
                         >

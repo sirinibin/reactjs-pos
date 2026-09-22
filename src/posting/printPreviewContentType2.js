@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words';
 import Amount from "../utils/amount.js";
@@ -298,7 +298,7 @@ const BalanceSheetPrintPreviewContentType2 = forwardRef((props, ref) => {
                                     }}>
                                         {store?.logo ? (
                                             <img
-                                                src={resolveImageUrl(store.logo, store.id, "store") + "?" + Date.now()}
+                                                src={storeLogoUrl(store)}
                                                 alt="Logo"
                                                 style={{
                                                     width: "72px", height: "72px",

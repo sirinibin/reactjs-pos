@@ -9,8 +9,8 @@ const LISTS_KEY = 'repair_job_kanban_lists';
 const CARD_MAP_KEY = 'repair_job_kanban_card_map';
 
 const DEFAULT_LISTS = [
-    { id: 'todo', name: 'ToDo', color: '#0052cc' },
-    { id: 'in_progress', name: 'In Progress', color: '#ff8b00' },
+    { id: 'todo', name: 'TO DO', color: '#0052cc' },
+    { id: 'in_progress', name: 'IN PROGRESS', color: '#ff8b00' },
     { id: 'done', name: 'DONE', color: '#00875a' },
 ];
 

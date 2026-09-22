@@ -191,7 +191,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
             {/* ── Official WABA mode ── */}
             {useWABA && phase !== 'connected' && (
                 <div className="mb-2">
-                    <div className="mb-2" style={{ maxWidth: '400px' }}>
+                    <div className="mb-2" style={{ maxWidth: '420px' }}>
                         <input
                             type="text"
                             className="form-control form-control-sm mb-2"
@@ -202,15 +202,27 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                         />
                         <input
                             type="password"
-                            className="form-control form-control-sm"
+                            className="form-control form-control-sm mb-1"
                             placeholder={t('System User Access Token')}
                             value={accessToken}
                             onChange={e => setAccessToken(e.target.value)}
                             disabled={isConnecting}
                         />
+                        <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.5' }}>
+                            <strong>{t('How to get an access token:')}</strong>{' '}
+                            {t('Go to')}{' '}
+                            <a href="https://business.facebook.com/settings/system-users" target="_blank" rel="noreferrer">
+                                Meta Business Manager → System Users
+                            </a>
+                            {' → '}{t('create or select a System User → click "Generate New Token" → choose your App → grant')}
+                            {' '}<code>whatsapp_business_messaging</code>{' '}{t('and')}{' '}<code>whatsapp_business_management</code>{' '}
+                            {t('permissions → copy the token.')}{' '}
+                            <strong>{t('Use a never-expiring System User token, not a temporary Page token.')}</strong>
+                        </div>
                     </div>
                     {(phase === 'idle' || phase === 'error') && (
                         <button
+                            type="button"
                             className="btn btn-sm btn-success"
                             onClick={handleConnectWABA}
                             disabled={!phoneNumberId || !accessToken}
@@ -224,7 +236,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                                 <Spinner animation="border" size="sm" className="me-1" />
                                 {phase === 'creating' ? t('Connecting to WhatsApp Business API…') : t('Verifying with Meta…')}
                             </div>
-                            <button className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
+                            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
                                 {t('Cancel')}
                             </button>
                         </div>
@@ -246,6 +258,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                     />
                     {(phase === 'idle' || phase === 'error') && (
                         <button
+                            type="button"
                             className="btn btn-sm btn-success"
                             onClick={handleConnect}
                             disabled={!phone}
@@ -254,7 +267,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                         </button>
                     )}
                     {isConnecting && (
-                        <button className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
                             {t('Cancel')}
                         </button>
                     )}
@@ -287,7 +300,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                         <i className="bi bi-check-circle-fill me-1"></i>
                         {t('WhatsApp number {{phone}} is connected.', { phone: connectedPhone || phone })}
                     </span>
-                    <button className="btn btn-sm btn-outline-danger" onClick={handleDisconnect}>
+                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={handleDisconnect}>
                         <i className="bi bi-x-circle me-1"></i>{t('Disconnect')}
                     </button>
                 </div>
@@ -296,7 +309,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
             {phase === 'error' && (
                 <Alert variant="danger" className="py-2 px-3 small mb-0 mt-1">
                     <i className="bi bi-exclamation-triangle me-1"></i>{errorMsg}
-                    <button className="btn btn-sm btn-outline-danger ms-2" onClick={useWABA ? handleConnectWABA : handleConnect}>{t('Retry')}</button>
+                    <button type="button" className="btn btn-sm btn-outline-danger ms-2" onClick={useWABA ? handleConnectWABA : handleConnect}>{t('Retry')}</button>
                 </Alert>
             )}
         </div>

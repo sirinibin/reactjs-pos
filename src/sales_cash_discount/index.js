@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import SalesCashDiscountCreate from "./create.js";
 import SalesCashDiscountView from "./view.js";
 
@@ -13,7 +14,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function SalesCashDiscountIndex(props) {
-
+    const { t } = useTranslation('common');
 
 
     const selectedDate = new Date();
@@ -306,7 +307,7 @@ function SalesCashDiscountIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            {t('total')}: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalCashDiscounts}
                                     displayType={"text"}
@@ -321,7 +322,7 @@ function SalesCashDiscountIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="h3">Sales Cash Discounts</h1>
+                        <h1 className="h3">{t('sales_cash_discounts')}</h1>
                     </div>
                 </div>
 
@@ -337,7 +338,7 @@ function SalesCashDiscountIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No sales cash discounts to display</p>
+                                            <p className="text-start">{t('no_sales_cash_discounts_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -362,7 +363,7 @@ function SalesCashDiscountIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('loading')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -373,7 +374,7 @@ function SalesCashDiscountIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -428,7 +429,7 @@ function SalesCashDiscountIndex(props) {
                                                         }}
                                                     >
 
-                                                        Order ID
+                                                        {t('order_id')}
                                                         {sortField === "order_code" && sortSalesCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -447,7 +448,7 @@ function SalesCashDiscountIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('date')}
                                                         {sortField === "date" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -466,7 +467,7 @@ function SalesCashDiscountIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('amount')}
                                                         {sortField === "amount" && sortSalesCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -486,7 +487,7 @@ function SalesCashDiscountIndex(props) {
                                                             sort("method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t('payment_method')}
                                                         {sortField === "method" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -506,7 +507,7 @@ function SalesCashDiscountIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('created_by')}
                                                         {sortField === "created_by_name" && sortSalesCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -525,7 +526,7 @@ function SalesCashDiscountIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortSalesCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -534,7 +535,7 @@ function SalesCashDiscountIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -574,13 +575,13 @@ function SalesCashDiscountIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -596,7 +597,7 @@ function SalesCashDiscountIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -647,7 +648,7 @@ function SalesCashDiscountIndex(props) {
                                                             );
                                                         }}
                                                         options={salescashdiscountOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('select_users')}
                                                         selected={selectedCreatedBySalesCashDiscounts}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -682,13 +683,13 @@ function SalesCashDiscountIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -704,7 +705,7 @@ function SalesCashDiscountIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

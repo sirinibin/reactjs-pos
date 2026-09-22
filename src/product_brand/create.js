@@ -4,6 +4,7 @@ import { Modal } from "react-bootstrap";
 import { Spinner } from "react-bootstrap";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 
 
@@ -24,6 +25,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -152,7 +154,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Product Brand Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Product Brand Created Successfully!"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -166,7 +168,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating ProductBrand!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Error Creating ProductBrand!"), "danger");
             });
     }
 
@@ -199,24 +201,24 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Brand — ${formData.name}` : 'Create New Brand'}
+                        {formData.id ? `${t('Update Brand')} — ${formData.name}` : t('Create New Brand')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -265,7 +267,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                               <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
                                 <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
                                   <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
-                                  {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                  {totalErrors} {t('error')}{totalErrors > 1 ? t('s') : ""} — {t('please fix before saving:')}
                                 </div>
                                 <ul style={{ margin: 0, paddingLeft: "18px" }}>
                                   {allErrors.map(([k, v]) => (
@@ -277,10 +279,10 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
                             {/* Brand Details Card */}
                             <div style={CARD} className="pw-card">
-                                <SectionTitle icon="bi-award">Brand Details</SectionTitle>
+                                <SectionTitle icon="bi-award">{t('Brand Details')}</SectionTitle>
 
                                 <div style={{ marginBottom: '16px' }}>
-                                    <Label required>Name</Label>
+                                    <Label required>{t('Name')}</Label>
                                     <input
                                         id="product_brand_name"
                                         name="product_brand_name"
@@ -294,18 +296,18 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                                             console.log(formData);
                                         }}
                                         style={INPUT}
-                                        placeholder="Name"
+                                        placeholder={t('Name')}
                                     />
                                     {errors.name && <ErrMsg><i className="bi bi-x-lg" style={{ marginRight: '4px' }}></i>{errors.name}</ErrMsg>}
                                     {formData.name && !errors.name && (
                                         <div style={{ color: '#15803d', fontSize: '12px', fontFamily: '"Inter", sans-serif', marginTop: '3px' }}>
-                                            <i className="bi bi-check-lg" style={{ marginRight: '4px' }}></i>Looks good!
+                                            <i className="bi bi-check-lg" style={{ marginRight: '4px' }}></i>{t('Looks good!')}
                                         </div>
                                     )}
                                 </div>
 
                                 <div style={{ marginBottom: '4px' }}>
-                                    <Label required>Code</Label>
+                                    <Label required>{t('Code')}</Label>
                                     <input
                                         id="product_brand_code"
                                         name="product_brand_code"
@@ -319,7 +321,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                                             console.log(formData);
                                         }}
                                         style={INPUT}
-                                        placeholder="Code"
+                                        placeholder={t('Code')}
                                     />
                                     {errors.code && <ErrMsg><i className="bi bi-x-lg" style={{ marginRight: '4px' }}></i>{errors.code}</ErrMsg>}
                                 </div>

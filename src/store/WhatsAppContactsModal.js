@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, Form, Badge } from 'react-bootstrap';
 
 const LIMIT = 50;
 
 const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [store, setStore] = useState(null);
     const [contacts, setContacts] = useState([]);
@@ -101,7 +103,7 @@ const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i className="bi bi-whatsapp text-success me-2"></i>
-                    WhatsApp Contacts
+                    {t('WhatsApp Contacts')}
                     {store && <small className="text-muted fs-6 ms-2">— {store.name}</small>}
                 </Modal.Title>
             </Modal.Header>
@@ -110,13 +112,13 @@ const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
                 <div className="d-flex align-items-center gap-2 mb-3">
                     <Form.Control
                         type="text"
-                        placeholder="Search by name or number…"
+                        placeholder={t('Search by name or number…')}
                         value={search}
                         onChange={e => handleSearch(e.target.value)}
                         autoFocus
                     />
                     <Badge bg="secondary" style={{ whiteSpace: 'nowrap' }}>
-                        {contacts.length}{totalCount > contacts.length ? ` / ${totalCount}` : ''} contacts
+                        {contacts.length}{totalCount > contacts.length ? ` / ${totalCount}` : ''} {t('contacts')}
                     </Badge>
                     {loading && contacts.length === 0 && <Spinner size="sm" animation="border" variant="success" />}
                 </div>
@@ -130,7 +132,7 @@ const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
                         <div className="text-center text-muted py-5">
                             <i className="bi bi-people" style={{ fontSize: '2rem' }}></i>
                             <p className="mt-2 mb-0">
-                                {search ? 'No contacts match your search' : 'No contacts found. Sync to fetch them.'}
+                                {search ? t('No contacts match your search') : t('No contacts found. Sync to fetch them.')}
                             </p>
                         </div>
                     )}
@@ -153,10 +155,10 @@ const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
                                 <div className="flex-grow-1">
                                     <div className="fw-semibold" style={{ fontSize: '0.95em' }}>
                                         {name}
-                                        {isGroup && <span className="badge bg-primary ms-2" style={{ fontSize: '0.7em' }}>Group</span>}
+                                        {isGroup && <span className="badge bg-primary ms-2" style={{ fontSize: '0.7em' }}>{t('Group')}</span>}
                                     </div>
                                     <div className="text-muted" style={{ fontSize: '0.8em' }}>
-                                        {isGroup ? 'Group' : isLid ? 'Privacy ID' : `+${c.phone}`}
+                                        {isGroup ? t('Group') : isLid ? t('Privacy ID') : `+${c.phone}`}
                                     </div>
                                 </div>
                             </div>
@@ -174,7 +176,7 @@ const WhatsAppContactsModal = forwardRef(({ showToastMessage }, ref) => {
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="outline-secondary" onClick={() => setShow(false)}>Close</Button>
+                <Button variant="outline-secondary" onClick={() => setShow(false)}>{t('Close')}</Button>
             </Modal.Footer>
         </Modal>
     );

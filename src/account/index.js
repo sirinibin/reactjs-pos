@@ -10,8 +10,10 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 function AccountIndex(props) {
+    const { t } = useTranslation('common');
     //list
     const [accountList, setaccountList] = useState([]);
 
@@ -271,7 +273,7 @@ function AccountIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to delete this account?');
+        const result = await confirm(t('confirm_delete_account'));
         console.log(result);
         if (result) {
             deleteAccount(id);
@@ -280,7 +282,7 @@ function AccountIndex(props) {
 
     const confirmRestore = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to restore this account?');
+        const result = await confirm(t('confirm_restore_account'));
         console.log(result);
         if (result) {
             restoreAccount(id);
@@ -318,7 +320,7 @@ function AccountIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t('restored_successfully'), "success");
                 list();
             })
             .catch((error) => {
@@ -359,7 +361,7 @@ function AccountIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t('deleted_successfully'), "success");
                 list();
             })
             .catch((error) => {
@@ -395,7 +397,7 @@ function AccountIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Accounts & Trial balances</h1>
+                        <h1 className="h3">{t('accounts_trial_balances')}</h1>
                     </div>
                 </div>
 
@@ -411,7 +413,7 @@ function AccountIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Accounts to display</p>
+                                            <p className="text-start">{t('no_accounts_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -435,7 +437,7 @@ function AccountIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('loading')}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -471,8 +473,8 @@ function AccountIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Actions</th>
-                                                <th>Deleted</th>
+                                                <th>{t('actions')}</th>
+                                                <th>{t('deleted')}</th>
 
                                                 <th>
                                                     <b
@@ -484,7 +486,7 @@ function AccountIndex(props) {
                                                             sort("number");
                                                         }}
                                                     >
-                                                        Account No.
+                                                        {t('account_no')}
                                                         {sortField === "number" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -504,7 +506,7 @@ function AccountIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Account Name
+                                                        {t('account_name')}
                                                         {sortField === "name" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -524,7 +526,7 @@ function AccountIndex(props) {
                                                             sort("balance");
                                                         }}
                                                     >
-                                                        Debit Balance
+                                                        {t('debit_balance')}
                                                         {sortField === "balance" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -543,7 +545,7 @@ function AccountIndex(props) {
                                                             sort("balance");
                                                         }}
                                                     >
-                                                        Credit Balance
+                                                        {t('credit_balance')}
                                                         {sortField === "balance" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -563,7 +565,7 @@ function AccountIndex(props) {
                                                             sort("phone");
                                                         }}
                                                     >
-                                                        Phone
+                                                        {t('phone')}
                                                         {sortField === "phone" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -582,7 +584,7 @@ function AccountIndex(props) {
                                                             sort("vat_no");
                                                         }}
                                                     >
-                                                        VAT #
+                                                        {t('vat_hash')}
                                                         {sortField === "vat_no" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -602,7 +604,7 @@ function AccountIndex(props) {
                                                             sort("type");
                                                         }}
                                                     >
-                                                        Type
+                                                        {t('type')}
                                                         {sortField === "type" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -625,7 +627,7 @@ function AccountIndex(props) {
                                                             sort("balance");
                                                         }}
                                                     >
-                                                        Balance
+                                                        {t('balance')}
                                                         {sortField === "balance" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -645,7 +647,7 @@ function AccountIndex(props) {
                                                             sort("open");
                                                         }}
                                                     >
-                                                        Status
+                                                        {t('status')}
                                                         {sortField === "open" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -664,7 +666,7 @@ function AccountIndex(props) {
                                                             sort("reference_model");
                                                         }}
                                                     >
-                                                        Reference model
+                                                        {t('reference_model')}
                                                         {sortField === "reference_model" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -685,7 +687,7 @@ function AccountIndex(props) {
                                                             sort("updated_at");
                                                         }}
                                                     >
-                                                        Updated At
+                                                        {t('updated_at')}
                                                         {sortField === "updated_at" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -705,7 +707,7 @@ function AccountIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortaccount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -734,8 +736,8 @@ function AccountIndex(props) {
                                                             }
                                                         }}
                                                     >
-                                                        <option value="0" >NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="0" >{t('no')}</option>
+                                                        <option value="1">{t('yes')}</option>
                                                     </select>
                                                 </th>
 
@@ -871,13 +873,13 @@ function AccountIndex(props) {
                                                         searchByFieldValue("type", e.target.value)
                                                     }
                                                         className="form-control">
-                                                        <option value="">All</option>
-                                                        <option value="drawing">Drawing</option>
-                                                        <option value="expense">Expense</option>
-                                                        <option value="asset">Asset</option>
-                                                        <option value="liability">Liability</option>
-                                                        <option value="capital">Capital</option>
-                                                        <option value="revenue">Revenue</option>
+                                                        <option value="">{t('all')}</option>
+                                                        <option value="drawing">{t('drawing')}</option>
+                                                        <option value="expense">{t('expense')}</option>
+                                                        <option value="asset">{t('asset')}</option>
+                                                        <option value="liability">{t('liability')}</option>
+                                                        <option value="capital">{t('capital')}</option>
+                                                        <option value="revenue">{t('revenue')}</option>
                                                     </select>
                                                 </th>
                                                 <th style={{ width: "110px" }}>
@@ -906,9 +908,9 @@ function AccountIndex(props) {
                                                         searchByFieldValue("open", e.target.value)
                                                     }
                                                         className="form-control">
-                                                        <option value="">All</option>
-                                                        <option value="1">Open</option>
-                                                        <option value="0">Closed</option>
+                                                        <option value="">{t('all')}</option>
+                                                        <option value="1">{t('open')}</option>
+                                                        <option value="0">{t('closed')}</option>
                                                     </select>
                                                 </th>
                                                 <th style={{ width: "110px" }}>
@@ -916,12 +918,12 @@ function AccountIndex(props) {
                                                         searchByFieldValue("reference_model", e.target.value)
                                                     }
                                                         className="form-control">
-                                                        <option value="">All</option>
-                                                        <option value="customer">Customer</option>
-                                                        <option value="vendor">Vendor</option>
-                                                        <option value="investor">Investor</option>
-                                                        <option value="withdrawer">Withdrawer</option>
-                                                        <option value="expense_category">Expense Category</option>
+                                                        <option value="">{t('all')}</option>
+                                                        <option value="customer">{t('customer')}</option>
+                                                        <option value="vendor">{t('vendor')}</option>
+                                                        <option value="investor">{t('investor')}</option>
+                                                        <option value="withdrawer">{t('withdrawer')}</option>
+                                                        <option value="expense_category">{t('expense_category')}</option>
                                                     </select>
                                                 </th>
 
@@ -965,13 +967,13 @@ function AccountIndex(props) {
                                                             setShowUpdatedAtDateRange(!showUpdatedAtDateRange)
                                                         }
                                                     >
-                                                        {showUpdatedAtDateRange ? "Less.." : "More.."}
+                                                        {showUpdatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showUpdatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from_label')}{" "}
                                                             <DatePicker
                                                                 id="updated_at_from"
                                                                 value={updatedAtFromValue}
@@ -1000,7 +1002,7 @@ function AccountIndex(props) {
                                                                     }
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to_label')}{" "}
                                                             <DatePicker
                                                                 id="updated_at_to"
                                                                 value={updatedAtToValue}
@@ -1073,13 +1075,13 @@ function AccountIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from_label')}{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -1107,7 +1109,7 @@ function AccountIndex(props) {
                                                                     }
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to_label')}{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
@@ -1157,7 +1159,7 @@ function AccountIndex(props) {
                                                                 <i className="bi bi-arrow-counterclockwise"></i>
                                                             </Button>}
                                                         </td>
-                                                        <td>{account.deleted ? "YES" : "NO"}</td>
+                                                        <td>{account.deleted ? t('yes') : t('no')}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{account.number}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <Button variant="link" onClick={() => {
@@ -1180,7 +1182,7 @@ function AccountIndex(props) {
                                                                 <Amount amount={account.balance} />
                                                             </Button>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.open ? "Open" : "Closed"}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.open ? t('open') : t('closed')}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.reference_model}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(

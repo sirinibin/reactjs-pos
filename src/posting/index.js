@@ -30,11 +30,13 @@ import eventEmitter from "./../utils/eventEmitter";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 
 
 
 const PostingIndex = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
 
 
@@ -996,7 +998,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                 </div>
                             </div>
                         ) : (
-                            <>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""}</>
+                            <>{t('Balance sheet of')} {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""}</>
                         )}
                     </Modal.Title>
 
@@ -1008,7 +1010,7 @@ const PostingIndex = forwardRef((props, ref) => {
                             {isRefreshInProcess
                                 ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
                                 : <i className="bi bi-arrow-clockwise"></i>}
-                            {" "}Refresh
+                            {" "}{t('Refresh')}
                         </Button>
 
                         &nbsp;&nbsp;
@@ -1016,7 +1018,7 @@ const PostingIndex = forwardRef((props, ref) => {
                             openPreview(selectedAccount);
                         }} >
                             <i className="bi bi-display"></i>
-                            {fettingAllRecordsInProgress ? "Preparing.." : " Print Preview"}
+                            {fettingAllRecordsInProgress ? t("Preparing..") : t(" Print Preview")}
                         </Button>
 
                         &nbsp;&nbsp;
@@ -1051,18 +1053,18 @@ const PostingIndex = forwardRef((props, ref) => {
                             borderBottom: '1px solid #e2e8f0',
                         }}>
                             <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
-                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Debit Total</div>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>{t('Debit Total')}</div>
                                 <div style={{color: '#dc2626', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}><Amount amount={debitTotal} /></div>
                             </div>
                             <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
-                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Credit Total</div>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>{t('Credit Total')}</div>
                                 <div style={{color: '#16a34a', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}><Amount amount={creditTotal} /></div>
                             </div>
                             <div style={{backgroundColor: 'white', borderRadius: '8px', padding: '12px 16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>
-                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Net Balance</div>
+                                <div style={{color: '#64748b', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'}}>{t('Net Balance')}</div>
                                 <div style={{color: debitBalance > 0 ? '#dc2626' : '#16a34a', fontSize: '20px', fontWeight: 700, marginTop: '4px'}}>
                                     <Amount amount={debitBalance > 0 ? debitBalance : creditBalance} />
-                                    <span style={{fontSize: '11px', color: '#64748b', marginLeft: '6px'}}>{debitBalance > 0 ? 'DR' : creditBalance > 0 ? 'CR' : ''}</span>
+                                    <span style={{fontSize: '11px', color: '#64748b', marginLeft: '6px'}}>{debitBalance > 0 ? t('DR') : creditBalance > 0 ? t('CR') : ''}</span>
                                 </div>
                             </div>
                         </div>
@@ -1105,12 +1107,12 @@ const PostingIndex = forwardRef((props, ref) => {
                                         {!isType2 && <div className="row">
                                             {totalItems === 0 && (
                                                 <div className="col">
-                                                    <p className="text-start">No postings to display</p>
+                                                    <p className="text-start">{t('No postings to display')}</p>
                                                 </div>
                                             )}
                                         </div>}
                                         {isType2 && totalItems === 0 && (
-                                            <div style={{textAlign: 'center', color: '#64748b', padding: '24px'}}>No postings to display</div>
+                                            <div style={{textAlign: 'center', color: '#64748b', padding: '24px'}}>{t('No postings to display')}</div>
                                         )}
                                         {isType2 ? (
                                             /* Type 2: no body refresh (header has it), just styled size picker */
@@ -1120,7 +1122,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 </div>
                                                 {totalItems > 0 && (
                                                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                                        <span style={{fontSize: '12px', color: '#64748b', fontWeight: 500}}>Rows per page</span>
+                                                        <span style={{fontSize: '12px', color: '#64748b', fontWeight: 500}}>{t('Rows per page')}</span>
                                                         <select
                                                             value={pageSize}
                                                             onChange={(e) => changePageSize(e.target.value)}
@@ -1153,7 +1155,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         ) : (
                                                             <i className="fa fa-refresh"></i>
                                                         )}
-                                                        <span className="visually-hidden">Loading...</span>
+                                                        <span className="visually-hidden">{t('Loading...')}</span>
                                                     </Button>
                                                 </div>
                                                 <div className="col text-center">
@@ -1162,7 +1164,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 <div className="col text-end">
                                                     {totalItems > 0 && (
                                                         <>
-                                                            <label className="form-label">Size:&nbsp;</label>
+                                                            <label className="form-label">{t('Size:')}&nbsp;</label>
                                                             <select
                                                                 value={pageSize}
                                                                 onChange={(e) => changePageSize(e.target.value)}
@@ -1214,7 +1216,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             }}
                                                             id="ignoreOpeningBalance"
                                                             style={isType2 ? {marginRight: '2px'} : {}}
-                                                        /> Ignore Opening Balance
+                                                        /> {t('Ignore Opening Balance')}
                                                     </label>
                                                     {selectedAccount?.reference_model === "customer" && (
                                                         <label style={isType2 ? {
@@ -1235,7 +1237,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 }}
                                                                 id="ignoreDiscountAllowed"
                                                                 style={isType2 ? {marginRight: '2px'} : {}}
-                                                            /> Ignore Discount Allowed A/c
+                                                            /> {t('Ignore Discount Allowed A/c')}
                                                         </label>
                                                     )}
                                                 </p>
@@ -1270,7 +1272,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         {localStorage.getItem("user_role") === "Admin" && <th style={{ width: "20px" }}>
                                                             <b
                                                             >
-                                                                No.
+                                                                {t('No.')}
                                                             </b>
                                                         </th>}
                                                         <th>
@@ -1283,7 +1285,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("posts.date");
                                                                 }}
                                                             >
-                                                                Date
+                                                                {t('Date')}
                                                                 {sortField === "posts.date" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-down"></i>
                                                                 ) : null}
@@ -1302,7 +1304,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("reference_code");
                                                                 }}
                                                             >
-                                                                ID
+                                                                {t('ID')}
                                                                 {sortField === "reference_code" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1322,7 +1324,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("posts.debit");
                                                                 }}
                                                             >
-                                                                Debit
+                                                                {t('Debit')}
                                                                 {sortField === "posts.debit" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1342,7 +1344,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("posts.credit");
                                                                 }}
                                                             >
-                                                                Credit
+                                                                {t('Credit')}
                                                                 {sortField === "posts.credit" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1361,7 +1363,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("posts.balance");
                                                                 }}
                                                             >
-                                                                Balance
+                                                                {t('Balance')}
                                                                 {sortField === "posts.balance" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1380,7 +1382,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     sort("reference_model");
                                                                 }}
                                                             >
-                                                                Type
+                                                                {t('Type')}
                                                                 {sortField === "reference_model" && sortPosting === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1471,13 +1473,13 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 }}
                                                                 onClick={(e) => setShowDateRange(!showDateRange)}
                                                             >
-                                                                {showDateRange ? "Less.." : "More.."}
+                                                                {showDateRange ? t("Less..") : t("More..")}
                                                             </small>
                                                             <br />
 
                                                             {showDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From:')}{" "}
                                                                     <DatePicker
                                                                         id="balance_sheet_from_date"
                                                                         value={fromDateValue}
@@ -1496,7 +1498,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                             setSelectedFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To:')}{" "}
                                                                     <DatePicker
                                                                         id="balance_sheet_to_date"
                                                                         value={toDateValue}
@@ -1608,22 +1610,22 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             <select className="form-control" onChange={(e) =>
                                                                 searchByFieldValue("reference_model", e.target.value)
                                                             }>
-                                                                <option value="">All</option>
-                                                                <option value="sales">Sales</option>
-                                                                <option value="sales_return">Sales Return</option>
-                                                                <option value="quotation_sales">Qtn. Sales</option>
-                                                                <option value="quotation_sales_return">Qt. Sales Return</option>
-                                                                <option value="purchase">Purchase</option>
-                                                                <option value="purchase_return">Purchase Return</option>
-                                                                <option value="capital">Capital</option>
-                                                                <option value="drawing">Drawing</option>
-                                                                <option value="expense">Expense</option>
-                                                                <option value="customer_deposit">Customer Receivable</option>
-                                                                <option value="vendor_deposit">Vendor Receivable</option>
-                                                                <option value="customer_withdrawal">Customer Payable</option>
-                                                                <option value="vendor_withdrawal">Vendor Payable</option>
-                                                                <option value="employee_deposit">Employee Receivable</option>
-                                                                <option value="employee_withdrawal">Employee Payable</option>
+                                                                <option value="">{t('All')}</option>
+                                                                <option value="sales">{t('Sales')}</option>
+                                                                <option value="sales_return">{t('Sales Return')}</option>
+                                                                <option value="quotation_sales">{t('Qtn. Sales')}</option>
+                                                                <option value="quotation_sales_return">{t('Qt. Sales Return')}</option>
+                                                                <option value="purchase">{t('Purchase')}</option>
+                                                                <option value="purchase_return">{t('Purchase Return')}</option>
+                                                                <option value="capital">{t('Capital')}</option>
+                                                                <option value="drawing">{t('Drawing')}</option>
+                                                                <option value="expense">{t('Expense')}</option>
+                                                                <option value="customer_deposit">{t('Customer Receivable')}</option>
+                                                                <option value="vendor_deposit">{t('Vendor Receivable')}</option>
+                                                                <option value="customer_withdrawal">{t('Customer Payable')}</option>
+                                                                <option value="vendor_withdrawal">{t('Vendor Payable')}</option>
+                                                                <option value="employee_deposit">{t('Employee Receivable')}</option>
+                                                                <option value="employee_withdrawal">{t('Employee Payable')}</option>
                                                             </select>
                                                         </th>}
 
@@ -1704,8 +1706,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td></td>
                                                         <td></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By Opening Balance  " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? t("To Opening Balance") + "  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? t("By Opening Balance") + "  " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                     {postingList &&
@@ -1888,7 +1890,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount ? <tr className={isType2 ? "bs-total-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
-                                                        <td className="text-end">Amount</td>
+                                                        <td className="text-end">{t('Amount')}</td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={creditTotal} />}</b></td>
                                                         <td colSpan={2}></td>
@@ -1896,15 +1898,15 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount && <tr className={isType2 ? "bs-balance-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
-                                                        <td className="text-end">Due Amount</td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To Closing Balance  " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By Closing Balance  " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
+                                                        <td className="text-end">{t('Due Amount')}</td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? t("To Closing Balance") + "  " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? t("By Closing Balance") + "  " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr>}
                                                     {selectedAccount && !store?.settings?.hide_total_amount_row_in_balance_sheet && <tr className={isType2 ? "bs-grand-row" : ""}>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
-                                                        <td className="text-end">Total Amount</td>
+                                                        <td className="text-end">{t('Total Amount')}</td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td colSpan={2}></td>

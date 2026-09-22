@@ -76,6 +76,7 @@ jest.mock('../zatca_connect.js', () =>
 );
 
 jest.mock('../ProcurementWhatsAppWidget', () => () => null);
+jest.mock('../ProcurementEmailWidget', () => () => null);
 
 jest.useFakeTimers();
 

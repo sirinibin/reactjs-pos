@@ -283,3 +283,46 @@ describe('ManageUsersModal.js — admin-exclusion and store-scope filtering', ()
         expect(SRC).toMatch(/search\[role\]/);
     });
 });
+
+// ── 11. Pagination ────────────────────────────────────────────────────────────
+
+describe('ManageUsersModal.js — pagination', () => {
+    test('11.1  page state variable declared', () => {
+        expect(SRC).toMatch(/useState.*\bpage\b|\bpage\b.*useState/);
+    });
+
+    test('11.2  pageSize state variable declared', () => {
+        expect(SRC).toMatch(/pageSize/);
+    });
+
+    test('11.3  totalCount state variable declared', () => {
+        expect(SRC).toMatch(/totalCount/);
+    });
+
+    test('11.4  limit param sent in buildQuery', () => {
+        expect(SRC).toMatch(/limit/);
+    });
+
+    test('11.5  page param sent in buildQuery', () => {
+        // buildQuery must forward page to the API (not rely on a fixed offset)
+        const buildQueryBlock = SRC.match(/buildQuery[\s\S]{0,800}/);
+        expect(buildQueryBlock).not.toBeNull();
+        expect(buildQueryBlock[0]).toMatch(/\bpage\b/);
+    });
+
+    test('11.6  total_count stored from API response', () => {
+        // fetchUsers must read total_count from the response and store it
+        expect(SRC).toMatch(/total_count/);
+    });
+
+    test('11.7  PaginationControls rendered', () => {
+        expect(SRC).toMatch(/PaginationControls/);
+    });
+
+    test('11.8  pageSize defaults to 10 (not the old 50)', () => {
+        // The old implementation used a hard-coded page_size=50 param.
+        // The new one should default pageSize to 10.
+        expect(SRC).toMatch(/pageSize.*10|10.*pageSize/);
+        expect(SRC).not.toMatch(/page_size=50/);
+    });
+});

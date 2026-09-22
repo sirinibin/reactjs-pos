@@ -492,8 +492,6 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
     const [smtpFields, setSmtpFields] = useState({
         smtp_host: account.smtp_host || (account.provider === 'zoho' ? 'smtppro.zoho.in' : ''),
         smtp_port: account.smtp_port || 465,
-        smtp_username: account.smtp_username || account.imap_username || account.email || '',
-        smtp_password: '',
     });
     const [savingSMTP, setSavingSMTP] = useState(false);
     const [smtpSaveResult, setSmtpSaveResult] = useState(null);
@@ -502,6 +500,7 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
     const isWebhook = meta && WEBHOOK_TYPES.has(meta.type);
     const webhookUrl = isWebhook ? webhookURLForAccount(storeId, account.id) : null;
     const isZoho = account.provider === 'zoho';
+    const hasIMAPSettings = isZoho || account.provider === 'imap';
 
     const handleSaveIMAP = async () => {
         setSavingIMAP(true);
@@ -547,14 +546,8 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
         setSavingSMTP(true);
         setSmtpSaveResult(null);
         const payload = {
-            imap_host: imapFields.imap_host,
-            imap_port: parseInt(imapFields.imap_port, 10) || 993,
-            imap_username: imapFields.imap_username,
-            imap_use_ssl: imapFields.imap_use_ssl,
             smtp_host: smtpFields.smtp_host,
             smtp_port: parseInt(smtpFields.smtp_port, 10) || 465,
-            smtp_username: smtpFields.smtp_username,
-            ...(smtpFields.smtp_password ? { smtp_password: smtpFields.smtp_password } : {}),
         };
         try {
             const res = await fetch(`/v1/rfq-email/account/${account.id}/settings?store_id=${storeId}`, {
@@ -602,14 +595,14 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                         <i className="bi bi-link-45deg me-1"></i>{t('Webhook URL')}
                     </button>
                 )}
-                {isZoho && (
+                {hasIMAPSettings && (
                     <button type="button" className="btn btn-link btn-sm p-0 ms-1" style={{ fontSize: '12px' }} onClick={() => setShowIMAP(v => !v)}>
-                        <i className="bi bi-server me-1"></i>{t('IMAP Settings')}
+                        <i className="bi bi-inbox me-1"></i>{t('Incoming Email')}
                     </button>
                 )}
-                {isZoho && (
+                {hasIMAPSettings && (
                     <button type="button" className="btn btn-link btn-sm p-0 ms-1" style={{ fontSize: '12px', color: '#0d6efd' }} onClick={() => setShowSMTP(v => !v)}>
-                        <i className="bi bi-send me-1"></i>{t('Outgoing (SMTP)')}
+                        <i className="bi bi-send me-1"></i>{t('Outgoing Email')}
                     </button>
                 )}
                 <button type="button" className="btn btn-sm btn-outline-danger ms-auto" onClick={handleDisconnect} disabled={removing}>
@@ -627,30 +620,25 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                     </div>
                 </div>
             )}
-            {isZoho && showSMTP && (
+            {hasIMAPSettings && showSMTP && (
                 <div className="mt-2 p-2" style={{ background: '#e8f4fd', borderRadius: '4px', border: '1px solid #90caf9' }}>
                     <div style={{ fontSize: '11px', fontWeight: 600, color: '#1565c0', marginBottom: '4px' }}>
-                        <i className="bi bi-send me-1"></i>{t('Outgoing Email (SMTP)')}
+                        <i className="bi bi-send me-1"></i>{t('Outgoing Email')}
                     </div>
                     <div className="text-muted mb-2" style={{ fontSize: '11px' }}>
-                        {t('Configure outgoing SMTP to send emails from the app. For Zoho, use smtppro.zoho.in:465 with your email and password (or App Password). If left blank, the IMAP credentials above are used automatically.')}
+                        {t('IMAP server for sending replies. Username and password are the same as incoming. For Zoho: smtppro.zoho.in · Port 465 · SSL.')}
                     </div>
                     <div className="row g-2">
-                        <div className="col-md-5">
-                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('SMTP Host')}</label>
+                        <div className="col-md-7">
+                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Host')}</label>
                             <input className="form-control form-control-sm" value={smtpFields.smtp_host} placeholder="smtppro.zoho.in" onChange={e => setSmtpFields(f => ({ ...f, smtp_host: e.target.value }))} />
                         </div>
                         <div className="col-md-2">
                             <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Port')}</label>
                             <input className="form-control form-control-sm" type="number" value={smtpFields.smtp_port} onChange={e => setSmtpFields(f => ({ ...f, smtp_port: e.target.value }))} />
                         </div>
-                        <div className="col-md-5">
-                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Username (Email)')}</label>
-                            <input className="form-control form-control-sm" value={smtpFields.smtp_username} placeholder="info@yourdomain.com" onChange={e => setSmtpFields(f => ({ ...f, smtp_username: e.target.value }))} />
-                        </div>
-                        <div className="col-md-7">
-                            <label className="form-label mb-0" style={{ fontSize: '11px', fontWeight: 500 }}>{t('Password')}</label>
-                            <input className="form-control form-control-sm" type="password" autoComplete="new-password" value={smtpFields.smtp_password} placeholder={t('(leave blank to keep current)')} onChange={e => setSmtpFields(f => ({ ...f, smtp_password: e.target.value }))} />
+                        <div className="col-md-3 d-flex align-items-end">
+                            <span className="badge bg-info text-dark" style={{ fontSize: '11px', padding: '4px 8px' }}>SSL</span>
                         </div>
                         <div className="col-12 d-flex align-items-center gap-2 flex-wrap">
                             <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveSMTP} disabled={savingSMTP}>
@@ -666,10 +654,10 @@ function AccountCard({ account, storeId, onRemoved, onSaved }) {
                     </div>
                 </div>
             )}
-            {isZoho && showIMAP && (
+            {hasIMAPSettings && showIMAP && (
                 <div className="mt-2 p-2" style={{ background: '#f0f4ff', borderRadius: '4px', border: '1px solid #c5d3f5' }}>
                     <div style={{ fontSize: '11px', fontWeight: 600, color: '#3b4cc0', marginBottom: '4px' }}>
-                        <i className="bi bi-server me-1"></i>{t('IMAP Configuration')}
+                        <i className="bi bi-inbox me-1"></i>{t('Incoming Email (IMAP)')}
                     </div>
                     <div className="text-muted mb-2" style={{ fontSize: '11px' }}>
                         {t('Used for automatic attachment fetching. Steps to enable:')}

@@ -1,36 +1,41 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
+import { useTranslation } from 'react-i18next';
 import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const ACCOUNT_TYPE_LABELS = {
-    asset: "Asset",
-    liability: "Liability",
-    capital: "Capital",
-    expense: "Expense",
-    drawing: "Drawing",
-    "": "General",
-};
+function getAccountTypeLabels(t) {
+    return {
+        asset: t("Asset"),
+        liability: t("Liability"),
+        capital: t("Capital"),
+        expense: t("Expense"),
+        drawing: t("Drawing"),
+        "": t("General"),
+    };
+}
 
 // accountSummaries: array of { account_type, balance } from /v1/dashboard/accounts
 export function AccountBalancesChart({ accountSummaries }) {
+    const { t } = useTranslation('common');
+    const ACCOUNT_TYPE_LABELS = getAccountTypeLabels(t);
     const data = useMemo(() => {
         const rows = (accountSummaries || [])
             .filter(a => a.balance > 0)
             .map(a => [ACCOUNT_TYPE_LABELS[a.account_type || ""] || a.account_type || "General", parseFloat(a.balance.toFixed(2))]);
         if (rows.length === 0) return null;
-        return [["Account Type", "Balance (SAR)"], ...rows];
-    }, [accountSummaries]);
+        return [[t("Account Type"), t("Balance (SAR)")], ...rows];
+    }, [accountSummaries, t, ACCOUNT_TYPE_LABELS]);
 
-    if (!data) return <p className="text-muted small">No account data</p>;
+    if (!data) return <p className="text-muted small">{t("No account data")}</p>;
     return (
         <Chart
             chartType="ColumnChart"
             data={data}
             options={{
-                title: "Account Balances by Type",
+                title: t("Account Balances by Type"),
                 colors: ["#36b9cc"],
                 legend: { position: "none" },
                 vAxis: { title: "SAR" },
@@ -51,36 +56,37 @@ function fmtT(n) {
 
 // vendorSummaries: array of { vendor_name, purchase_amount } from /v1/dashboard/vendors
 export function VendorSpendPieChart({ vendorSummaries, store, filters }) {
+    const { t } = useTranslation('common');
     const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const entries = (vendorSummaries || []).filter(v => v.purchase_amount > 0);
         if (entries.length === 0) return null;
 
         const grandTotal = entries.reduce((s, v) => s + v.purchase_amount, 0);
-        const header = ["Vendor", "Amount (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
+        const header = ["Vendor", t("Amount (SAR)"), { role: "tooltip", type: "string", p: { html: true } }];
         const rows = entries.map(v => {
             const pct              = grandTotal > 0 ? ((v.purchase_amount / grandTotal) * 100).toFixed(1) : "0.0";
             const spendVat         = v.purchase_amount * vatPercent / (100 + vatPercent);
             const spendWithoutVAT  = v.purchase_amount - spendVat;
             const lines = [
-                { label: "Share",   value: `${pct}% of total purchase spend` },
-                { label: "Formula", value: "Σ net_total across all purchase orders" },
-                { divider: true, label: "Spend (with VAT)",    value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
+                { label: t("Share"),   value: `${pct}% of total purchase spend` },
+                { label: t("Formula"), value: "Σ net_total across all purchase orders" },
+                { divider: true, label: t("Spend (with VAT)"),    value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
                 { label: `VAT ${vatPercent}%`,                  value: `− ${fmtT(spendVat)}` },
-                { divider: true, label: "Spend (without VAT)", value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
+                { divider: true, label: t("Spend (without VAT)"), value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
             ];
             return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [vendorSummaries, vatPercent, store, filters]);
+    }, [vendorSummaries, vatPercent, store, filters, t]);
 
-    if (!data) return <p className="text-muted small">No purchase data</p>;
+    if (!data) return <p className="text-muted small">{t("No purchase data")}</p>;
     return (
         <Chart
             chartType="PieChart"
             data={data}
             options={{
-                title: "Purchase Spend by Vendor",
+                title: t("Purchase Spend by Vendor"),
                 legend: { position: "right" },
                 chartArea: { width: "65%", height: "75%" },
                 pieSliceText: "percentage",
@@ -104,6 +110,7 @@ export function PurchaseVsSalesChart({
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
+    const { t } = useTranslation('common');
     const qtnInvoiceAccounting       = store?.settings?.enable_sales_in_quotation === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
     const enableEmployeeModule       = store?.settings?.enable_employee_module === true;
@@ -155,8 +162,8 @@ export function PurchaseVsSalesChart({
 
         const header = [
             "Month",
-            "Net Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } },
-            "Total Expense (SAR)", { role: "tooltip", type: "string", p: { html: true } },
+            t("Net Revenue (SAR)"), { role: "tooltip", type: "string", p: { html: true } },
+            t("Total Expense (SAR)"), { role: "tooltip", type: "string", p: { html: true } },
         ];
 
         const rows = allKeys.map(k => {
@@ -186,55 +193,55 @@ export function PurchaseVsSalesChart({
             const expenseWithoutVAT = expense - expenseVat;
 
             const revLines = [
-                { label: "Gross Sales",  value: `${fmtT(sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns", value: `− ${fmtT(ret)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
-                { divider: true, label: "Net Revenue (with VAT)",    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
+                { label: t("Gross Sales"),  value: `${fmtT(sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: t("Qtn. Invoice Sales"), value: `+ ${fmtT(qtnInv)}` }] : []),
+                { label: t("Sales Returns"), value: `− ${fmtT(ret)}` },
+                ...(qtnInvoiceAccounting ? [{ label: t("Qtn. Returns"),       value: `− ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: t("Net Revenue (with VAT)"),    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
                 { label: `VAT ${vatPercent}%`,                        value: `− ${fmtT(revenueVat)}` },
-                { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true },
+                { divider: true, label: t("Net Revenue (without VAT)"), value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true },
             ];
 
             const expLines = disablePurchasesOnAccounts ? [
-                { label: "Expenses",             value: `${fmtT(exp)}` },
-                { label: "Purchase Return Fund", value: `− ${fmtT(depFund)}` },
-                { label: "Accounted Purchases",  value: `+ ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
-                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
-                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: t("Expenses"),             value: `${fmtT(exp)}` },
+                { label: t("Purchase Return Fund"), value: `− ${fmtT(depFund)}` },
+                { label: t("Accounted Purchases"),  value: `+ ${fmtT(acctPur)}` },
+                { label: t("Accounted Pur. Returns"), value: `− ${fmtT(acctPurRet)}` },
+                ...(enableEmployeeModule ? [{ label: t("Salary Paid"), value: `+ ${fmtT(sal)}` }] : []),
+                { divider: true, label: t("Total Expense (with VAT)"),    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
-                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
+                { divider: true, label: t("Total Expense (without VAT)"), value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
             ] : [
-                { label: "Expenses",         value: `${fmtT(exp)}` },
-                { label: "Purchases",        value: `+ ${fmtT(pur)}` },
-                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
-                ...(enableEmployeeModule ? [{ label: "Salary Paid", value: `+ ${fmtT(sal)}` }] : []),
-                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: t("Expenses"),         value: `${fmtT(exp)}` },
+                { label: t("Purchases"),        value: `+ ${fmtT(pur)}` },
+                { label: t("Purchase Returns"), value: `− ${fmtT(purRet)}` },
+                ...(enableEmployeeModule ? [{ label: t("Salary Paid"), value: `+ ${fmtT(sal)}` }] : []),
+                { divider: true, label: t("Total Expense (with VAT)"),    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
-                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
+                { divider: true, label: t("Total Expense (without VAT)"), value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
             ];
 
             return [
                 label,
                 parseFloat(revenue.toFixed(2)),
-                tooltipHtml(`Net Revenue — ${label}`, "#69db7c", revLines, store, filters),
+                tooltipHtml(`${t("Net Revenue")} — ${label}`, "#69db7c", revLines, store, filters),
                 parseFloat(expense.toFixed(2)),
-                tooltipHtml(`Total Expense — ${label}`, "#ffa8a8", expLines, store, filters),
+                tooltipHtml(`${t("Total Expense")} — ${label}`, "#ffa8a8", expLines, store, filters),
             ];
         });
 
         return [header, ...rows];
     }, [orders, returns, purchases, purchaseReturns, expenses, salaryPaid, quotations, quotationSalesReturns,
         accountedPurchases, accountedPurchaseReturns, customerDeposits,
-        qtnInvoiceAccounting, disablePurchasesOnAccounts, enableEmployeeModule, vatPercent, store, filters]);
+        qtnInvoiceAccounting, disablePurchasesOnAccounts, enableEmployeeModule, vatPercent, store, filters, t]);
 
-    if (!data) return <p className="text-muted small">No data</p>;
+    if (!data) return <p className="text-muted small">{t("No data")}</p>;
     return (
         <Chart
             chartType="LineChart"
             data={data}
             options={{
-                title: "Monthly Net Revenue vs Total Expense",
+                title: t("Monthly Net Revenue vs Total Expense"),
                 colors: ["#1cc88a", "#e74a3b"],
                 legend: { position: "top" },
                 vAxis: { title: "SAR" },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import ExpenseCategoryCreate from "./create.js";
 import ExpenseCategoryView from "./view.js";
 
@@ -13,8 +14,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function ExpenseCategoryIndex(props) {
-
-
+    const { t } = useTranslation('common');
 
     const selectedDate = new Date();
 
@@ -276,7 +276,7 @@ function ExpenseCategoryIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Expense Categories</h1>
+                        <h1 className="h3">{t('Expense Categories')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -286,7 +286,7 @@ function ExpenseCategoryIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -303,7 +303,7 @@ function ExpenseCategoryIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Expense Categories to display</p>
+                                            <p className="text-start">{t('No Expense Categories to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -318,7 +318,7 @@ function ExpenseCategoryIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
 
                                     <PaginationControls
@@ -363,7 +363,7 @@ function ExpenseCategoryIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('Name')}
                                                         {sortField === "name" && sortExpenseCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -382,7 +382,7 @@ function ExpenseCategoryIndex(props) {
                                                             sort("parent_name");
                                                         }}
                                                     >
-                                                        Parent
+                                                        {t('Parent')}
                                                         {sortField === "parent_name" && sortExpenseCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -402,7 +402,7 @@ function ExpenseCategoryIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('Created By')}
                                                         {sortField === "created_by_name" && sortExpenseCategory === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -421,7 +421,7 @@ function ExpenseCategoryIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('Created At')}
                                                         {sortField === "created_at" && sortExpenseCategory === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -430,7 +430,7 @@ function ExpenseCategoryIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -468,7 +468,7 @@ function ExpenseCategoryIndex(props) {
                                                             );
                                                         }}
                                                         options={expensecategoryOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('Select Users')}
                                                         selected={selectedCreatedByExpenseCategorys}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -503,13 +503,14 @@ function ExpenseCategoryIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From:')}
+                                                            {" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -525,7 +526,8 @@ function ExpenseCategoryIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To:')}
+                                                            {" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

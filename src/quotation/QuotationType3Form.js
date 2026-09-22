@@ -23,6 +23,9 @@ import DeliveryNoteHistory from "../utils/product_delivery_note_history.js";
 import ProductNonVATSalesHistory from "../utils/product_non_vat_sales_history.js";
 import ProductNonVATSalesReturnHistory from "../utils/product_non_vat_sales_return_history.js";
 import CustomerPending from "../utils/customer_pending.js";
+import PurchaseOrderPicker from "../purchase_order/PurchaseOrderPicker.js";
+import Sales from "../utils/sales.js";
+import Purchases from "../utils/purchases.js";
 
 const pageBg = "#f8fafc";
 const borderColor = "#c3c6d7";
@@ -47,7 +50,7 @@ function vehicleLabel(v) {
 
 function makePayment() { return { date_str: new Date().toISOString(), amount: 0, method: "", deleted: false }; }
 function makeFormData() {
-    return { type: "quotation", status: "created", price_type: "retail", vat_percent: 15, discount: 0, discount_percent: 0, discount_with_vat: 0, discount_percent_with_vat: 0, shipping_handling_fees: 0, cash_discount: 0, rounding_amount: 0, auto_rounding_amount: true, total: 0, total_with_vat: 0, vat_price: 0, net_total: 0, balance_amount: 0, delivery_days: 7, validity_days: 2, date_str: new Date().toISOString(), payments_input: [makePayment()], products: [], exclude_service_tax: true, exclude_product_tax: false };
+    return { type: "quotation", status: "created", price_type: "retail", vat_percent: 15, discount: 0, discount_percent: 0, discount_with_vat: 0, discount_percent_with_vat: 0, shipping_handling_fees: 0, cash_discount: 0, rounding_amount: 0, auto_rounding_amount: true, total: 0, total_with_vat: 0, vat_price: 0, net_total: 0, balance_amount: 0, delivery_days: 7, delivery_from: "Payment", validity_days: 2, date_str: new Date().toISOString(), payments_input: [makePayment()], products: [], exclude_service_tax: true, exclude_product_tax: false };
 }
 
 function PortalDropdown({ renderMenu }) {
@@ -122,6 +125,10 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const productSearchRef = useRef();
     const vehicleCreateRef = useRef();
     const productsRef = useRef();
+    const PurchaseOrderPickerRef = useRef();
+    const SalesRef = useRef();
+    const PurchasesRef = useRef();
+    const salesPickerModeRef = useRef('link');
     const paymentRowsRef = useRef();
     const timerRef = useRef();
     const reCalculateRef = useRef(null);
@@ -174,6 +181,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
         setTimeout(() => { CustomerPendingRef.current?.open(false, customer); }, 50);
     }
     const [store, setStore] = useState({});
+    const [importPickerData, setImportPickerData] = useState(null);
+    const [importPickerSelected, setImportPickerSelected] = useState({});
     const [repairJobInfos, setRepairJobInfos] = useState([]);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
     // eslint-disable-next-line no-unused-vars
@@ -515,6 +524,112 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     function openProductsModal() { productsRef.current?.open(true); }
     function openServicesModal() { productsRef.current?.open(true, null, null, true); }
+
+    function handleImportFromPO(po) {
+        if (!po || !po.products || po.products.length === 0) return;
+        const newProds = [];
+        po.products.forEach(p => {
+            const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+            if (already >= 0) {
+                selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+            } else {
+                newProds.push({ product_id: p.product_id, part_number: p.part_number || "", name: p.name || "", name_in_arabic: p.name_in_arabic || "", quantity: parseFloat(p.quantity) || 1, unit: p.unit || "", unit_price: parseFloat(p.unit_price) || 0, unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, purchase_unit_price: parseFloat(p.unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, stock: 0 });
+            }
+        });
+        const updated = [...newProds, ...selectedProducts];
+        setSelectedProducts(updated);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(updated), 150);
+    }
+
+    async function handleImportFromSales(sale) {
+        if (!sale || !sale.id) {
+            console.error('[import] sale missing id', sale);
+            return;
+        }
+        try {
+            const url = '/v1/order/' + sale.id + '?store_id=' + localStorage.getItem('store_id');
+            console.log('[import] fetching sale', url);
+            const res = await fetch(url, {
+                headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+            });
+            console.log('[import] sale fetch status', res.status, res.ok);
+            const data = res.ok ? await res.json() : null;
+            console.log('[import] sale data products', data?.result?.products?.length);
+            const products = data?.result?.products;
+            if (!products || products.length === 0) {
+                console.error('[import] no products in sale response', data);
+                return;
+            }
+            const initSel = {};
+            products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
+            setImportPickerSelected(initSel);
+            setImportPickerData({ source: 'sale', code: data.result.code || sale.code, products });
+        } catch (e) { console.error('[import] from sales failed', e); }
+    }
+
+    async function handleImportFromPurchases(purchase) {
+        if (!purchase || !purchase.id) {
+            console.error('[import] purchase missing id', purchase);
+            return;
+        }
+        try {
+            const url = '/v1/purchase/' + purchase.id + '?store_id=' + localStorage.getItem('store_id');
+            console.log('[import] fetching purchase', url);
+            const res = await fetch(url, {
+                headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+            });
+            console.log('[import] purchase fetch status', res.status, res.ok);
+            const data = res.ok ? await res.json() : null;
+            console.log('[import] purchase data products', data?.result?.products?.length);
+            const products = data?.result?.products;
+            if (!products || products.length === 0) {
+                console.error('[import] no products in purchase response', data);
+                return;
+            }
+            const initSel = {};
+            products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
+            setImportPickerSelected(initSel);
+            setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products });
+        } catch (e) { console.error('[import] from purchases failed', e); }
+    }
+
+    function confirmImportPicker() {
+        const src = importPickerData;
+        if (!src) return;
+        const newProds = [];
+        src.products.forEach(p => {
+            if (!importPickerSelected[p.product_id]) return;
+            const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+            if (already >= 0) {
+                selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+            } else {
+                newProds.push({
+                    product_id: p.product_id, part_number: p.part_number || "", name: p.name || "", name_in_arabic: p.name_in_arabic || "",
+                    quantity: parseFloat(p.quantity) || 1, unit: p.unit || "",
+                    unit_price: src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : 0,
+                    unit_price_with_vat: src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : 0,
+                    purchase_unit_price: src.source === 'purchase' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.purchase_unit_price) || 0),
+                    purchase_unit_price_with_vat: src.source === 'purchase' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.purchase_unit_price_with_vat) || 0),
+                    unit_discount: src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0,
+                    unit_discount_with_vat: src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0,
+                    unit_discount_percent: src.source === 'sale' ? (parseFloat(p.unit_discount_percent) || 0) : 0,
+                    unit_discount_percent_with_vat: 0, stock: 0,
+                });
+            }
+        });
+        const updated = [...newProds, ...selectedProducts];
+        setSelectedProducts(updated);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(updated), 150);
+        setImportPickerData(null);
+        setImportPickerSelected({});
+    }
+
+    function openSalesForImport() {
+        salesPickerModeRef.current = 'import';
+        SalesRef?.current?.open(true, selectedCustomers);
+    }
     function handleSelectedProductsFromModal(selected) {
         const isNoTaxInvoice = store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice';
         const newProds = selected.map(option => {
@@ -979,6 +1094,18 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         <Button variant="light" size="sm" className="border" type="button" onClick={openServicesModal}>
                                             <i className="bi bi-list me-1"></i>{t("Services")}
                                         </Button>
+                                        <Dropdown>
+                                            <Dropdown.Toggle bsPrefix="btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                <i className="bi bi-file-earmark-arrow-down" />{t('Import')}
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu style={{ zIndex: 9999 }}>
+                                                <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
+                                                <Dropdown.Item onClick={() => PurchasesRef?.current?.open(true)}><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
+                                                {store?.settings?.enable_purchase_order_module && (
+                                                    <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From P.O.')}</Dropdown.Item>
+                                                )}
+                                            </Dropdown.Menu>
+                                        </Dropdown>
                                         {apiBase !== '/v1/quotation' && (
                                             <div className="qt3-tax-flags" style={{ display: "flex", gap: "20px", marginLeft: "auto" }}>
                                                 <div className="form-check mb-0">
@@ -1551,6 +1678,38 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         )}
                                     </div>
 
+                                    {formData.type === "quotation" && (
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "10px", borderTop: "1px solid #e5e7eb", paddingTop: "10px" }}>
+                                            <div>
+                                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Delivery (# of Days)")}</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    className="form-control form-control-sm"
+                                                    value={formData.delivery_days || 7}
+                                                    onChange={e => {
+                                                        formData.delivery_days = parseInt(e.target.value) || 7;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Delivery From the Date of")}</label>
+                                                <select
+                                                    className="form-control form-control-sm"
+                                                    value={formData.delivery_from || "Payment"}
+                                                    onChange={e => {
+                                                        formData.delivery_from = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                >
+                                                    <option value="Payment">{t("Payment")}</option>
+                                                    <option value="Approval">{t("Approval")}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div style={{ display: "grid", gap: "6px", marginTop: "12px" }}>
                                         <button type="submit" disabled={isSubmitting} style={{ background: "#004ac6", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 14px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                                             {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : (isUpdateForm ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation")))}
@@ -1617,6 +1776,54 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
             <OrderPreview ref={previewRef} />
+            <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+            <Sales ref={SalesRef} onSelectSale={(sale) => {
+                if (salesPickerModeRef.current === 'import') {
+                    salesPickerModeRef.current = 'link';
+                    handleImportFromSales(sale);
+                }
+            }} />
+            <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
+
+            {/* Product picker modal for Import from Sales / Import from Purchases */}
+            {importPickerData && (
+                <Modal show={true} size="lg" onHide={() => setImportPickerData(null)} animation={false} centered style={{ zIndex: 2000 }}>
+                    <Modal.Header closeButton>
+                        <Modal.Title style={{ fontSize: '15px' }}>
+                            {t('Select Products')} — {importPickerData.source === 'sale' ? t('From Sale') : t('From Purchase')} {importPickerData.code}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                        <table className="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" checked={importPickerData.products.every(p => importPickerSelected[p.product_id])} onChange={e => { const s = {}; importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; }); setImportPickerSelected(s); }} /></th>
+                                    <th>{t('Name')}</th>
+                                    <th>{t('Qty')}</th>
+                                    <th>{t('Unit Price')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {importPickerData.products.map((p, i) => (
+                                    <tr key={p.product_id || i} onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))} style={{ cursor: 'pointer' }}>
+                                        <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
+                                        <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
+                                        <td>{p.quantity}</td>
+                                        <td>{p.unit_price}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <button type="button" className="btn btn-secondary" onClick={() => setImportPickerData(null)}>{t('Cancel')}</button>
+                        <button type="button" className="btn btn-primary" onClick={confirmImportPicker}>
+                            {t('Import Selected')} ({Object.values(importPickerSelected).filter(Boolean).length})
+                        </button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />

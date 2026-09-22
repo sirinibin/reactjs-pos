@@ -9,7 +9,7 @@ jest.mock('react-bootstrap', () => {
   return { Modal, Button: P, Spinner: () => null };
 });
 
-jest.mock('../../utils/imageUtils', () => ({ resolveImageUrl: jest.fn((u) => u || '') }));
+jest.mock('../../utils/imageUtils', () => ({ resolveImageUrl: jest.fn((u) => u || ''), storeLogoUrl: jest.fn((s) => s?.logo || '') }));
 jest.mock('../../utils/dateUtils.js', () => ({ formatInStoreTimezone: jest.fn((d) => String(d)) }));
 jest.mock('../../utils/storeUtils.js', () => ({ fetchStore: jest.fn(() => Promise.resolve({})) }));
 

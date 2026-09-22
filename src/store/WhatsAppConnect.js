@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 
 const POLL_INTERVAL_MS = 3000;
 
 const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMessage }, ref) => {
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [store, setStore] = useState(null);
     const [phase, setPhase] = useState('idle'); // idle | creating | waitingQR | connected | error
@@ -49,7 +51,7 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                 if (statusData.connected) {
                     stopPolling();
                     setPhase('connected');
-                    if (showToastMessage) showToastMessage('WhatsApp connected successfully!', 'success');
+                    if (showToastMessage) showToastMessage(t('WhatsApp connected successfully!'), 'success');
                     if (onConnected) onConnected(storeId);
                     setTimeout(() => setShow(false), 2000);
                     return;
@@ -68,7 +70,7 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                 console.error('WhatsApp poll error:', e);
             }
         }, POLL_INTERVAL_MS);
-    }, [stopPolling, qrCount, onConnected, showToastMessage]);
+    }, [stopPolling, qrCount, onConnected, showToastMessage, t]);
 
     // Cleanup on unmount
     useEffect(() => () => stopPolling(), [stopPolling]);
@@ -123,9 +125,9 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
     }, [store, onDisconnected, showToastMessage, handleClose]);
 
     const title = () => {
-        if (phase === 'connected') return 'WhatsApp Connected!';
-        if (phase === 'waitingQR') return 'Scan QR Code';
-        return 'Connect WhatsApp';
+        if (phase === 'connected') return t('WhatsApp Connected!');
+        if (phase === 'waitingQR') return t('Scan QR Code');
+        return t('Connect WhatsApp');
     };
 
     return (
@@ -142,8 +144,8 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                     <>
                         <i className="bi bi-whatsapp text-success" style={{ fontSize: '3rem' }}></i>
                         <p className="mt-3 mb-0">
-                            Connect <strong>{store?.phone || 'your WhatsApp number'}</strong> to this store.<br />
-                            <small className="text-muted">A QR code will appear — scan it with WhatsApp on your phone.</small>
+                            {t('Connect')} <strong>{store?.phone || t('your WhatsApp number')}</strong> {t('to this store.')}<br />
+                            <small className="text-muted">{t('A QR code will appear — scan it with WhatsApp on your phone.')}</small>
                         </p>
                     </>
                 )}
@@ -151,7 +153,7 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                 {phase === 'creating' && (
                     <>
                         <Spinner animation="border" variant="success" />
-                        <p className="mt-3 mb-0 text-muted">Creating WhatsApp instance…</p>
+                        <p className="mt-3 mb-0 text-muted">{t('Creating WhatsApp instance…')}</p>
                     </>
                 )}
 
@@ -166,17 +168,17 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                                 />
                                 <p className="mt-2 mb-0 text-muted" style={{ fontSize: '0.8em' }}>
                                     <i className="bi bi-phone me-1"></i>
-                                    WhatsApp → Linked Devices → Link a Device → scan above
+                                    {t('WhatsApp → Linked Devices → Link a Device → scan above')}
                                 </p>
                                 <p className="mt-1 mb-0 text-muted" style={{ fontSize: '0.75em' }}>
-                                    QR refreshes automatically · checking connection…
+                                    {t('QR refreshes automatically · checking connection…')}
                                     <Spinner animation="border" size="sm" variant="success" className="ms-1" />
                                 </p>
                             </>
                         ) : (
                             <>
                                 <Spinner animation="border" variant="success" />
-                                <p className="mt-3 mb-0 text-muted">Generating QR code…</p>
+                                <p className="mt-3 mb-0 text-muted">{t('Generating QR code…')}</p>
                             </>
                         )}
                     </>
@@ -185,9 +187,9 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
                 {phase === 'connected' && (
                     <>
                         <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
-                        <p className="mt-3 mb-0 text-success fw-bold">WhatsApp connected successfully!</p>
+                        <p className="mt-3 mb-0 text-success fw-bold">{t('WhatsApp connected successfully!')}</p>
                         <p className="text-muted" style={{ fontSize: '0.85em' }}>
-                            PDF invoices will now be sent as file attachments via WhatsApp.
+                            {t('PDF invoices will now be sent as file attachments via WhatsApp.')}
                         </p>
                     </>
                 )}
@@ -203,25 +205,25 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
             <Modal.Footer>
                 {phase === 'idle' && (
                     <Button variant="success" onClick={handleConnect}>
-                        <i className="bi bi-whatsapp me-1"></i>Connect WhatsApp
+                        <i className="bi bi-whatsapp me-1"></i>{t('Connect WhatsApp')}
                     </Button>
                 )}
                 {phase === 'waitingQR' && (
                     <Button variant="outline-danger" size="sm" onClick={handleClose}>
-                        Cancel
+                        {t('Cancel')}
                     </Button>
                 )}
                 {phase === 'connected' && (
                     <Button variant="outline-danger" size="sm" onClick={handleDisconnect}>
-                        <i className="bi bi-x-circle me-1"></i>Disconnect
+                        <i className="bi bi-x-circle me-1"></i>{t('Disconnect')}
                     </Button>
                 )}
                 {phase === 'error' && (
                     <>
                         <Button variant="success" onClick={handleConnect}>
-                            <i className="bi bi-arrow-clockwise me-1"></i>Try again
+                            <i className="bi bi-arrow-clockwise me-1"></i>{t('Try again')}
                         </Button>
-                        <Button variant="outline-secondary" onClick={handleClose}>Close</Button>
+                        <Button variant="outline-secondary" onClick={handleClose}>{t('Close')}</Button>
                     </>
                 )}
             </Modal.Footer>

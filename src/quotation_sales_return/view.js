@@ -1,5 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
+import { useTranslation } from "react-i18next";
 
 import NumberFormat from "react-number-format";
 import OrderPreview from './../order/preview.js';
@@ -10,6 +11,7 @@ import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.j
 import { fetchStore } from '../utils/storeUtils.js';
 
 const QuotationSalesReturnView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -231,7 +233,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
             setShowPrintTypeSelection(showPrintTypeSelection);
         }} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Select Print Type</Modal.Title>
+                <Modal.Title>{t('Select Print Type')}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="d-flex justify-content-around">
 
@@ -246,7 +248,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         }, 100);
                     }
                 }}>
-                    <i className="bi bi-printer"></i> Print
+                    <i className="bi bi-printer"></i> {t('Print')}
                 </Button>
 
                 <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -262,7 +264,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         }
                     }}
                 >
-                    <i className="bi bi-printer"></i> Print A4 Invoice
+                    <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                 </Button>
             </Modal.Body>
         </Modal >
@@ -278,7 +280,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                     type="button"
                     className="btn-close"
                     onClick={handleClose}
-                    aria-label="Close"
+                    aria-label={t('Close')}
                     style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
                 ></button>
 
@@ -288,10 +290,10 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                 <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                Back
+                                {t('Back')}
                             </button>
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                                Details of Quotation Sales Return #{model.code}
+                                {t('Details of Quotation Sales Return #')}{model.code}
                             </h1>
                             {model.status && (
                                 <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
@@ -306,22 +308,22 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Return processed on {formatInStoreTimezone(model.date, store?.country_code)}
+                                {t('Return processed on')} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
                     <div className="flex flex-wrap items-center" style={{ gap: '8px', paddingRight: '32px' }}>
                         <button onClick={sendWhatsAppMessage} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
                             <i className="bi bi-share" style={{ fontSize: '18px' }}></i>
-                            Share
+                            {t('Share')}
                         </button>
                         <button onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
                             <i className="bi bi-file-earmark-pdf" style={{ fontSize: '18px' }}></i>
-                            Download PDF
+                            {t('Download PDF')}
                         </button>
                         <button onClick={openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                             <i className="bi bi-printer" style={{ fontSize: '18px' }}></i>
-                            Print Invoice
+                            {t('Print Invoice')}
                         </button>
                     </div>
                 </div>
@@ -334,7 +336,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
                         {/* Net Total */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Net Total</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Net Total')}</span>
                             <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                             </span>
@@ -342,7 +344,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
                         {/* Total VAT */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Total VAT ({trimTo2Decimals(model.vat_percent)}%)</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Total VAT')} ({trimTo2Decimals(model.vat_percent)}%)</span>
                             <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 <NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                             </span>
@@ -350,21 +352,21 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
                         {/* Net Profit */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Net Profit</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Net Profit')}</span>
                             <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#004ac6', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 <NumberFormat value={trimTo2Decimals(model.net_profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                             </span>
                             {model.net_profit > 0 && model.net_total > 0 && (
                                 <div style={{ marginTop: '4px', fontSize: '12px', color: '#004ac6', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <i className="bi bi-graph-up" style={{ fontSize: '14px' }}></i>
-                                    {trimTo2Decimals((model.net_profit / model.net_total) * 100)}% Margin
+                                    {trimTo2Decimals((model.net_profit / model.net_total) * 100)}% {t('Margin')}
                                 </div>
                             )}
                         </div>
 
                         {/* Payment Methods */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Payment Methods</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Payment Methods')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -379,21 +381,21 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                     {/* Full-width Returned Items Section — OUTSIDE the grid, ABOVE it */}
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '0' }}>
                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Returned Items</h3>
-                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.filter(p => p.selected).length || 0} Item(s)</span>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Returned Items')}</h3>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.filter(p => p.selected).length || 0} {t('Item(s)')}</span>
                         </div>
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
                                         <thead style={{ backgroundColor: '#f1f5f9' }}>
                                             <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>SI No.</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>Part No.</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>Product Name</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>Qty</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Price</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Disc %</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>VAT</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Total Price</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('SI No.')}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('Part No.')}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('Product Name')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t('Qty')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Unit Price')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Disc %')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('VAT')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Total Price')}</th>
                                             </tr>
                                         </thead>
                                         <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -429,38 +431,38 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
                             <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                    <span style={{ color: '#434655' }}>Subtotal</span>
+                                    <span style={{ color: '#434655' }}>{t('Subtotal')}</span>
                                     <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                 </div>
                                 {model.shipping_handling_fees > 0 && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                        <span style={{ color: '#434655' }}>Shipping / Handling Fees</span>
+                                        <span style={{ color: '#434655' }}>{t('Shipping / Handling Fees')}</span>
                                         <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                     </div>
                                 )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                    <span style={{ color: '#434655' }}>Discount ({trimTo2Decimals(model.discount_percent)}%)</span>
+                                    <span style={{ color: '#434655' }}>{t('Discount')} ({trimTo2Decimals(model.discount_percent)}%)</span>
                                     <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                    <span style={{ color: '#434655' }}>VAT ({trimTo2Decimals(model.vat_percent)}%)</span>
+                                    <span style={{ color: '#434655' }}>{t('VAT')} ({trimTo2Decimals(model.vat_percent)}%)</span>
                                     <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                 </div>
                                 {model.cash_discount > 0 && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                        <span style={{ color: '#434655' }}>Cash Discount</span>
+                                        <span style={{ color: '#434655' }}>{t('Cash Discount')}</span>
                                         <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                     </div>
                                 )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                    <span>Net Total</span>
+                                    <span>{t('Net Total')}</span>
                                     <span style={{ color: '#004ac6' }}>
                                         <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                     </span>
                                 </div>
                                 {(model.net_profit > 0 || model.net_loss > 0) && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px', paddingTop: '4px' }}>
-                                        <span style={{ color: '#434655' }}>Net Profit / Loss</span>
+                                        <span style={{ color: '#434655' }}>{t('Net Profit / Loss')}</span>
                                         <span style={{ color: model.net_profit > 0 ? '#15803d' : '#ba1a1a', fontWeight: 600 }}>
                                             {model.net_profit > 0
                                                 ? <NumberFormat value={trimTo2Decimals(model.net_profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
@@ -484,24 +486,24 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                 <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', maxHeight: '500px', overflowY: 'auto' }}>
                                     <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <i className="bi bi-clock-history" style={{ color: '#505f76' }}></i>
-                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Payment History</h3>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Payment History')}</h3>
                                     </div>
                                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         {quotationsalesReturnPaymentList.map((payment) => (
                                             <div key={payment.id} className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '16px', padding: '16px', backgroundColor: '#f2f4f6', borderRadius: '4px', border: '1px solid #c3c6d7' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Amount')}</span>
                                                     <span style={{ fontSize: '14px', fontWeight: 700, color: '#191c1e' }}>{trimTo2Decimals(payment.amount)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Method</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Method')}</span>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                         <i className="bi bi-credit-card" style={{ fontSize: '12px', color: '#505f76' }}></i>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatPaymentMethod(payment.method)}</span>
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('Date')}</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
                                                         {formatInStoreTimezone(payment.date || payment.created_at, store?.country_code)}
                                                     </span>
@@ -519,13 +521,13 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                             {/* Metadata */}
                             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Details</h3>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Details')}</h3>
                                 </div>
                                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                                     {/* Created By */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created By')}</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
                                                 {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
@@ -537,7 +539,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Customer */}
                                     {model.customer_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Customer</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Customer')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.customer_name}</span>
                                         </div>
                                     )}
@@ -545,7 +547,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Quotation ID */}
                                     {model.quotation_code && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Quotation</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Quotation')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#004ac6' }}>{model.quotation_code}</span>
                                         </div>
                                     )}
@@ -555,7 +557,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Received By */}
                                     {model.received_by_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Received By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Received By')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.received_by_name}</span>
                                         </div>
                                     )}
@@ -563,7 +565,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Date */}
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Return Date</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Return Date')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date, store?.country_code)}</span>
                                         </div>
                                     )}
@@ -571,7 +573,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Invoice Count Value */}
                                     {model.invoice_count_value && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Invoice Count Value (ICU)</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Invoice Count Value')} (ICU)</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.invoice_count_value}</span>
                                         </div>
                                     )}
@@ -579,7 +581,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* UUID */}
                                     {model.uuid && (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>UUID</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('UUID')}</span>
                                             <span style={{ fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.uuid}</span>
                                         </div>
                                     )}
@@ -587,7 +589,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Updated By */}
                                     {model.updated_by_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
                                         </div>
                                     )}
@@ -595,7 +597,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {/* Updated At */}
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Last Updated')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
@@ -607,10 +609,10 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
             </Modal.Body>
             <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                    Cancel
+                    {t('Cancel')}
                 </button>
                 <button onClick={openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                    Print Invoice
+                    {t('Print Invoice')}
                 </button>
             </Modal.Footer>
         </Modal>

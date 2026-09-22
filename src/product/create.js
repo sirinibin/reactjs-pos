@@ -136,6 +136,10 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedBrands, setSelectedBrands] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
   let [brandOptions, setBrandOptions] = useState([]);
+  const [brandSearch, setBrandSearch] = useState('');
+  const [brandOpen, setBrandOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [categoryOpen, setCategoryOpen] = useState(false);
   let [arabicNameOptions, setArabicNameOptions] = useState([]);
   let [selectedArabicNames, setSelectedArabicNames] = useState([]);
 
@@ -2002,18 +2006,32 @@ const ProductCreate = forwardRef((props, ref) => {
                       <div className="col-md-4">
                         <Label>{t('Brand')}</Label>
                         <div className="d-flex gap-1">
-                          <select style={{ ...INPUT, height: '34px', padding: '4px 8px' }}
-                            value={formData.brand_id || ''}
-                            onChange={(e) => {
-                              const selected = brandOptions.find(b => b.id === e.target.value);
-                              if (!selected) { formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = ''; }
-                              else { formData.brand_id = selected.id; formData.brand_code = selected.code || ''; formData.brand_name = selected.name; }
-                              makePartNumberPrefix(); setFormData({ ...formData });
-                              setSelectedBrands(selected ? [selected] : []);
-                            }}>
-                            <option value="">{t('-- Select Brand --')}</option>
-                            {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                          </select>
+                          <div style={{ position: 'relative', flex: 1 }}>
+                            <input
+                              type="text"
+                              style={{ ...INPUT, height: '34px', padding: '4px 8px' }}
+                              value={brandOpen ? brandSearch : (formData.brand_name || '')}
+                              placeholder={t('-- Select Brand --')}
+                              onFocus={() => { setBrandOpen(true); setBrandSearch(''); }}
+                              onBlur={() => setTimeout(() => setBrandOpen(false), 150)}
+                              onChange={e => setBrandSearch(e.target.value)}
+                            />
+                            {brandOpen && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
+                                <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
+                                  onMouseDown={() => { formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = ''; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]); setBrandOpen(false); }}>
+                                  {t('-- Select Brand --')}
+                                </div>
+                                {brandOptions.filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase())).map(b => (
+                                  <div key={b.id}
+                                    style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: formData.brand_id === b.id ? '#e8f0fe' : undefined }}
+                                    onMouseDown={() => { formData.brand_id = b.id; formData.brand_code = b.code || ''; formData.brand_name = b.name; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([b]); setBrandOpen(false); setBrandSearch(''); }}>
+                                    {b.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title={t('New Brand')}>
                             <i className="bi bi-plus-lg"></i>
                           </button>
@@ -2054,18 +2072,32 @@ const ProductCreate = forwardRef((props, ref) => {
                       <div className="col-md-4">
                         <Label>{t('Category')}</Label>
                         <div className="d-flex gap-1">
-                          <select
-                            style={{ ...INPUT, height: '34px', padding: '4px 8px', borderColor: errors.category_id ? '#dc3545' : undefined }}
-                            value={selectedCategories[0]?.id || ''}
-                            onChange={(e) => {
-                              errors.category_id = ''; setErrors({ ...errors });
-                              const selected = categoryOptions.find(c => c.id === e.target.value);
-                              setSelectedCategories(selected ? [selected] : []);
-                              setFormData({ ...formData });
-                            }}>
-                            <option value="">{t('-- Select Category --')}</option>
-                            {categoryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
+                          <div style={{ position: 'relative', flex: 1 }}>
+                            <input
+                              type="text"
+                              style={{ ...INPUT, height: '34px', padding: '4px 8px', borderColor: errors.category_id ? '#dc3545' : undefined }}
+                              value={categoryOpen ? categorySearch : (selectedCategories[0]?.name || '')}
+                              placeholder={t('-- Select Category --')}
+                              onFocus={() => { setCategoryOpen(true); setCategorySearch(''); }}
+                              onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
+                              onChange={e => setCategorySearch(e.target.value)}
+                            />
+                            {categoryOpen && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
+                                <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
+                                  onMouseDown={() => { errors.category_id = ''; setErrors({ ...errors }); setSelectedCategories([]); setFormData({ ...formData }); setCategoryOpen(false); }}>
+                                  {t('-- Select Category --')}
+                                </div>
+                                {categoryOptions.filter(c => !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => (
+                                  <div key={c.id}
+                                    style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: selectedCategories[0]?.id === c.id ? '#e8f0fe' : undefined }}
+                                    onMouseDown={() => { errors.category_id = ''; setErrors({ ...errors }); setSelectedCategories([c]); setFormData({ ...formData }); setCategoryOpen(false); setCategorySearch(''); }}>
+                                    {c.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title={t('New Category')}>
                             <i className="bi bi-plus-lg"></i>
                           </button>

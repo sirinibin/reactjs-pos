@@ -136,7 +136,7 @@ describe("CustomerPackageCreate smoke test", () => {
       </MemoryRouter>
     );
     act(() => { ref.current.open(); });
-    getByText("Create New Package");
+    getByText("create_new_package");
   });
 
   it("accepts showToastMessage and refreshList props without crashing", () => {

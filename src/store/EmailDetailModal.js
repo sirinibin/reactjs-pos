@@ -3,6 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { ViewButton } from './FileViewerModal.js';
 import { ForwardDetail } from '../rfq_received/index.js';
 
+const fixEmailHtml = html => {
+    if (!html) return html;
+    // Zoho Mail embeds inline images as relative paths like src="/mail/ImageDisplay?..."
+    // Make them absolute so the browser can attempt to load them.
+    return html
+        .replace(/src="\/mail\//g, 'src="https://mail.zoho.com/mail/')
+        .replace(/src='\/mail\//g,  "src='https://mail.zoho.com/mail/");
+};
+
 const directionBadge = dir =>
     dir === 'in'
         ? <span className="badge" style={{ background: '#dff0d8', color: '#3c763d', fontSize: '11px' }}>&#8595; In</span>
@@ -25,16 +34,39 @@ const providerIcon = p => {
  *   onExtract — optional (msg) => void — called when Extract button clicked
  *   onLinkQuotation — optional (msg) => void
  */
+// Decode HTML entities stored from Zoho API (e.g. &lt; → <)
+const decodeHtml = s => (s || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+// Extract bare email from "Name <email>" or "&lt;email&gt;" formats
+const extractEmail = raw => {
+    const decoded = decodeHtml(raw);
+    const m = decoded.match(/<([^>@\s]+@[^>]+)>/);
+    if (m) return m[1].trim();
+    if (decoded.includes('@')) return decoded.trim();
+    return '';
+};
+// Display name or full decoded string for UI
+const displayAddr = raw => {
+    const decoded = decodeHtml(raw);
+    // If it's just <email@domain>, strip angle brackets
+    const m = decoded.match(/^<([^>]+)>$/);
+    return m ? m[1] : decoded;
+};
+
 export default function EmailDetailModal({ msg, show, onClose, storeId, token, onExtract, onLinkQuotation, linkingFor, onDeleted }) {
     const { t } = useTranslation('common');
     const [replyOpen, setReplyOpen] = useState(false);
+    const [replyFrom, setReplyFrom] = useState('');
+    const [replyTo, setReplyTo] = useState('');
     const [replyBody, setReplyBody] = useState('');
     const [replySubject, setReplySubject] = useState('');
     const [replySending, setReplySending] = useState(false);
     const [replyStatus, setReplyStatus] = useState(null); // {ok, msg}
+    const [replyAttachments, setReplyAttachments] = useState([]); // File[]
     const replyFormRef = useRef(null);
     const replyBodyRef = useRef(null);
+    const attachInputRef = useRef(null);
     const [deleting, setDeleting] = useState(false);
+    const [translating, setTranslating] = useState(false);
     const [rfqDetail, setRfqDetail]   = useState(null);
     const [rfqDetailShow, setRfqDetailShow] = useState(false);
 
@@ -70,6 +102,15 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         setReplySubject(orig.toLowerCase().startsWith('re:') ? orig : 'Re: ' + orig);
         setReplyBody('');
         setReplyStatus(null);
+
+        // For inbound messages reply to the sender (msg.from).
+        // For outbound messages (store sent it) reply to the original recipient (msg.to[0]).
+        const externalAddr = msg.direction === 'out'
+            ? extractEmail((msg.to && msg.to[0]) || '')
+            : extractEmail(msg.from || '');
+        setReplyTo(externalAddr);
+        setReplyFrom(extractEmail(msg.direction === 'out' ? (msg.from || '') : ((msg.to && msg.to[0]) || '')));
+        setReplyAttachments([]);
         setReplyOpen(true);
         setTimeout(() => {
             replyFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -77,21 +118,53 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         }, 80);
     };
 
+    const handleAddAttachments = (files) => {
+        setReplyAttachments(prev => [...prev, ...Array.from(files)]);
+    };
+
+    const handleRemoveAttachment = (idx) => {
+        setReplyAttachments(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const translateReply = async () => {
+        if (!replyBody.trim()) return;
+        setTranslating(true);
+        try {
+            const res = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ text: replyBody, target: 'ar' }),
+            });
+            const data = await res.json();
+            if (data?.translatedText) setReplyBody(data.translatedText);
+        } catch (_) {}
+        setTranslating(false);
+    };
+
     const handleSendReply = async () => {
         if (!replyBody.trim()) return;
         setReplySending(true);
         setReplyStatus(null);
         try {
+            const fd = new FormData();
+            fd.append('store_id', storeId);
+            fd.append('subject', replySubject);
+            fd.append('body', replyBody);
+            fd.append('to', replyTo.trim());
+            fd.append('from', replyFrom.trim());
+            replyAttachments.forEach(f => fd.append('files', f, f.name));
+
             const res = await fetch(`/v1/procurement-messages/${msg.id}/email-reply?store_id=${storeId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ store_id: storeId, subject: replySubject, body: replyBody }),
+                headers: { Authorization: token }, // no Content-Type — browser sets multipart boundary
+                body: fd,
             });
             const data = await res.json();
             if (res.ok) {
                 setReplyStatus({ ok: true, msg: `Reply sent to ${data.to || msg.from}` });
                 setReplyOpen(false);
                 setReplyBody('');
+                setReplyAttachments([]);
             } else {
                 setReplyStatus({ ok: false, msg: data.error || 'Failed to send' });
             }
@@ -159,9 +232,9 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                     <div className="modal-body">
                         <table className="table table-sm" style={{ fontSize: '13px', marginBottom: '16px' }}>
                             <tbody>
-                                <tr><th style={{ width: 80, fontWeight: 600 }}>{t('From')}</th><td>{msg.from}</td></tr>
+                                <tr><th style={{ width: 80, fontWeight: 600 }}>{t('From')}</th><td>{displayAddr(msg.from)}</td></tr>
                                 {(msg.to || []).length > 0 && (
-                                    <tr><th style={{ fontWeight: 600 }}>{t('To')}</th><td>{(msg.to || []).join(', ')}</td></tr>
+                                    <tr><th style={{ fontWeight: 600 }}>{t('To')}</th><td>{(msg.to || []).map(displayAddr).join(', ')}</td></tr>
                                 )}
                                 <tr>
                                     <th style={{ fontWeight: 600 }}>{t('Date')}</th>
@@ -174,7 +247,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                         <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
                             <div style={{ maxHeight: '400px', overflow: 'auto', padding: '20px 24px', fontSize: '14px', lineHeight: '1.6', color: '#202124' }}>
                                 {msg.body_html ? (
-                                    <div dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                                    <div dangerouslySetInnerHTML={{ __html: fixEmailHtml(msg.body_html) }} />
                                 ) : (
                                     <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>
                                         {msg.body_text || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}
@@ -242,37 +315,140 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                             </div>
                         )}
 
-                        {/* Inline reply compose */}
+                        {/* Gmail-style inline reply compose */}
                         {replyOpen && (
-                            <div ref={replyFormRef} style={{ marginTop: '16px', border: '1px solid #dee2e6', borderRadius: '8px', padding: '14px', background: '#f8f9fa' }}>
-                                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px', color: '#212529' }}>
-                                    <i className="bi bi-reply me-1"></i> Reply to <strong>{msg.from}</strong>
+                            <div
+                                ref={replyFormRef}
+                                style={{ marginTop: '16px', border: '1px solid #c6d0d7', borderRadius: '8px', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+                            >
+                                {/* Header bar */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px', borderBottom: '1px solid #e8eaed' }}>
+                                    <span style={{ fontSize: '13px', color: '#444' }}>
+                                        <i className="bi bi-reply me-1" style={{ color: '#1a73e8' }}></i>
+                                        <strong>Reply</strong>
+                                    </span>
+                                    <button className="btn btn-sm" style={{ padding: '2px 6px', color: '#5f6368' }} onClick={() => setReplyOpen(false)} title="Discard">
+                                        <i className="bi bi-x-lg"></i>
+                                    </button>
                                 </div>
-                                <div className="mb-2">
+
+                                {/* To row — always visible and editable */}
+                                <div style={{ padding: '6px 14px', borderBottom: '1px solid #e8eaed', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '12px', color: '#5f6368', minWidth: 52 }}>To</span>
                                     <input
-                                        className="form-control form-control-sm"
-                                        value={replySubject}
-                                        onChange={e => setReplySubject(e.target.value)}
-                                        placeholder="Subject"
+                                        className="form-control form-control-sm border-0 shadow-none"
+                                        value={replyTo}
+                                        onChange={e => setReplyTo(e.target.value)}
+                                        placeholder="recipient@example.com"
+                                        type="email"
+                                        style={{ fontSize: '13px', padding: '2px 0', background: 'transparent' }}
                                     />
                                 </div>
-                                <textarea
-                                    ref={replyBodyRef}
-                                    className="form-control"
-                                    rows={5}
-                                    value={replyBody}
-                                    onChange={e => setReplyBody(e.target.value)}
-                                    placeholder="Type your reply here..."
-                                    style={{ fontSize: '13px', resize: 'vertical' }}
-                                />
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'flex-end' }}>
-                                    <button className="btn btn-sm btn-secondary" onClick={() => setReplyOpen(false)} disabled={replySending}>
-                                        Cancel
-                                    </button>
-                                    <button className="btn btn-sm btn-primary" onClick={handleSendReply} disabled={replySending || !replyBody.trim()}>
+
+                                {/* Subject row */}
+                                <div style={{ padding: '6px 14px', borderBottom: '1px solid #e8eaed', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '12px', color: '#5f6368', minWidth: 52 }}>Subject</span>
+                                    <input
+                                        className="form-control form-control-sm border-0 shadow-none"
+                                        value={replySubject}
+                                        onChange={e => setReplySubject(e.target.value)}
+                                        style={{ fontSize: '13px', padding: '2px 0', background: 'transparent' }}
+                                    />
+                                </div>
+
+                                {/* Body */}
+                                <div style={{ padding: '10px 14px 4px' }}>
+                                    <textarea
+                                        ref={replyBodyRef}
+                                        className="form-control border-0 shadow-none"
+                                        rows={6}
+                                        value={replyBody}
+                                        onChange={e => setReplyBody(e.target.value)}
+                                        placeholder="Write your reply…"
+                                        style={{ fontSize: '13px', resize: 'vertical', background: 'transparent', padding: 0 }}
+                                    />
+                                </div>
+
+                                {/* Quoted original */}
+                                {(msg.body_text || msg.body_html) && (
+                                    <div style={{ margin: '4px 14px 8px', borderLeft: '3px solid #dadce0', paddingLeft: '10px', color: '#5f6368', fontSize: '12px', maxHeight: '120px', overflowY: 'auto' }}>
+                                        <div style={{ marginBottom: '3px', color: '#80868b' }}>
+                                            On {msg.message_date ? new Date(msg.message_date).toLocaleString() : ''}, {displayAddr(msg.from)} wrote:
+                                        </div>
+                                        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                            {msg.body_text || msg.body_html?.replace(/<[^>]+>/g, ' ')}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Attachment chips */}
+                                {replyAttachments.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '6px 14px' }}>
+                                        {replyAttachments.map((f, i) => (
+                                            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#e8f0fe', borderRadius: '16px', padding: '3px 10px 3px 8px', fontSize: '12px', color: '#1a73e8' }}>
+                                                <i className="bi bi-paperclip"></i>
+                                                {f.name}
+                                                <span style={{ fontSize: '10px', color: '#80868b' }}>({(f.size / 1024).toFixed(0)} KB)</span>
+                                                <button onClick={() => handleRemoveAttachment(i)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#5f6368', lineHeight: 1 }}>
+                                                    <i className="bi bi-x"></i>
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Footer toolbar */}
+                                <div style={{ display: 'flex', alignItems: 'center', padding: '8px 14px 12px', borderTop: '1px solid #e8eaed', gap: '8px' }}>
+                                    {/* Send button */}
+                                    <button
+                                        className="btn btn-sm btn-primary"
+                                        onClick={handleSendReply}
+                                        disabled={replySending || !replyBody.trim() || !replyTo.includes('@')}
+                                        style={{ borderRadius: '20px', padding: '5px 18px', fontWeight: 500 }}
+                                    >
                                         {replySending
                                             ? <><span className="spinner-border spinner-border-sm me-1" />Sending…</>
-                                            : <><i className="bi bi-send me-1"></i>Send Reply</>}
+                                            : <><i className="bi bi-send me-1"></i>Send</>}
+                                    </button>
+
+                                    {/* Attach file button */}
+                                    <button
+                                        type="button"
+                                        title="Attach files"
+                                        onClick={() => attachInputRef.current?.click()}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5f6368', fontSize: '18px', padding: '4px 6px', lineHeight: 1 }}
+                                    >
+                                        <i className="bi bi-paperclip"></i>
+                                    </button>
+                                    <input
+                                        ref={attachInputRef}
+                                        type="file"
+                                        multiple
+                                        hidden
+                                        onChange={e => { handleAddAttachments(e.target.files); e.target.value = ''; }}
+                                    />
+
+                                    {/* Translate to Arabic */}
+                                    <button
+                                        type="button"
+                                        title="Translate to Arabic"
+                                        onClick={translateReply}
+                                        disabled={translating || !replyBody.trim()}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1967d2', fontSize: '16px', padding: '4px 6px', lineHeight: 1, display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    >
+                                        {translating
+                                            ? <span className="spinner-border spinner-border-sm" />
+                                            : <><i className="bi bi-translate"></i><span style={{ fontSize: '11px' }}>AR</span></>}
+                                    </button>
+
+                                    {/* Discard */}
+                                    <button
+                                        type="button"
+                                        title="Discard"
+                                        onClick={() => { setReplyOpen(false); setReplyAttachments([]); }}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5f6368', fontSize: '18px', padding: '4px 6px', lineHeight: 1, marginLeft: 'auto' }}
+                                    >
+                                        <i className="bi bi-trash3"></i>
                                     </button>
                                 </div>
                             </div>

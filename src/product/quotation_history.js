@@ -18,8 +18,10 @@ import SuccessModal from '../utils/SuccessModal.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
+import { useTranslation } from "react-i18next";
 
 const QuotationHistory = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [statsOpen, setStatsOpen] = useState(false);
 
     /* useImperativeHandle(ref, () => ({
@@ -466,7 +468,7 @@ const QuotationHistory = forwardRef((props, ref) => {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -488,7 +490,7 @@ const QuotationHistory = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Quotation History Settings"
+                title={t('Quotation History Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -542,36 +544,36 @@ const QuotationHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             {selectedType === "quotation" && <StatsSummary
-                                title={`Quotation History Summary`}
+                                title={t('Quotation History Summary')}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Quotation": totalQuotation,
-                                    "Net Profit": totalProfit,
-                                    "Total Loss": totalLoss,
-                                    "VAT Collected": totalVat,
-                                    "Total Quantity": totalQuantity,
+                                    [t('Quotation')]: totalQuotation,
+                                    [t('Net Profit')]: totalProfit,
+                                    [t('Total Loss')]: totalLoss,
+                                    [t('VAT Collected')]: totalVat,
+                                    [t('Total Quantity')]: totalQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />}
                             {selectedType === "invoice" && <StatsSummary
-                                title={`Quotation Sales History Summary`}
+                                title={t('Quotation Sales History Summary')}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Sales": totalQuotation,
-                                    "Net Profit": totalProfit,
-                                    "Total Loss": totalLoss,
-                                    "VAT Collected": totalVat,
-                                    "Total Quantity": totalQuantity,
+                                    [t('Sales')]: totalQuotation,
+                                    [t('Net Profit')]: totalProfit,
+                                    [t('Total Loss')]: totalLoss,
+                                    [t('VAT Collected')]: totalVat,
+                                    [t('Total Quantity')]: totalQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />}
@@ -590,7 +592,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Quotation History to display</p>
+                                            <p className="text-start">{t('No Quotation History to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -615,7 +617,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -626,7 +628,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -695,14 +697,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t('showing {{from}}-{{to}} of {{total}}', { from: offset + 1, to: offset + currentPageItemsCount, total: totalItems })}
                                                 </p>
                                             </div>
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t('page {{page}} of {{totalPages}}', { page, totalPages })}
                                                 </p>
                                             </div>
                                         </>
@@ -724,7 +725,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1065,7 +1066,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -1094,9 +1095,9 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 }}
                                                                 value={selectedType}
                                                             >
-                                                                <option value="" >All</option>
-                                                                <option value="quotation" >Quotation</option>
-                                                                <option value="invoice">Invoice</option>
+                                                                <option value="" >{t('All')}</option>
+                                                                <option value="quotation" >{t('Quotation')}</option>
+                                                                <option value="invoice">{t('Invoice')}</option>
                                                             </select>
                                                         </th>}
                                                         {(col.key === "quotation_code" ||
@@ -1159,13 +1160,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1184,7 +1185,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1242,13 +1243,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1267,7 +1268,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1313,7 +1314,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name | Mob | VAT # | ID"
+                                                                placeholder={t('Customer Name | Mob | VAT # | ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -1342,9 +1343,9 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 }}
                                                                 value={selectedType}
                                                             >
-                                                                <option value="" >All</option>
-                                                                <option value="quotation" >Quotation</option>
-                                                                <option value="invoice">Invoice</option>
+                                                                <option value="" >{t('All')}</option>
+                                                                <option value="quotation" >{t('Quotation')}</option>
+                                                                <option value="invoice">{t('Invoice')}</option>
                                                             </select>
                                                         </th>
                                                         <th>
@@ -1354,9 +1355,9 @@ const QuotationHistory = forwardRef((props, ref) => {
 
                                                                 }}
                                                             >
-                                                                <option value="" >All</option>
-                                                                <option value="credit" >Credit</option>
-                                                                <option value="paid">Paid</option>
+                                                                <option value="" >{t('All')}</option>
+                                                                <option value="credit" >{t('Credit')}</option>
+                                                                <option value="paid">{t('Paid')}</option>
                                                             </select>
                                                         </th>
 
@@ -1500,7 +1501,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 ) &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {col.key === "warehouse_code" ? (
-                                                                            history[col.key] || "Main Store"
+                                                                            history[col.key] || t('Main Store')
                                                                         ) : (
                                                                             history[col.key] && typeof history[col.key] === "number" ?
                                                                                 <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]

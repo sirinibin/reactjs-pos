@@ -8499,7 +8499,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                         <input type="checkbox" className="form-check-input mt-0"
                                                             checked={col.visible} onChange={() => handleToggleSPType3Column(col.key)} />
-                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                     </li>
                                                 )}
                                             </Draggable>
@@ -8535,7 +8535,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                     <input type="checkbox" className="form-check-input mt-0"
                                                         checked={col.visible} onChange={() => handleToggleSPColumn(i)} />
-                                                    <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                    <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                 </li>
                                             )}
                                         </Draggable>

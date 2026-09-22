@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useRef, useCallback } from "react";
+import React, { useState, useImperativeHandle, forwardRef, useRef, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { Modal, Button, Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -36,6 +36,16 @@ const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id:
 
 const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated }, ref) {
     const [show, setShow] = useState(false);
+    useEffect(() => {
+        if (!show) return;
+        const apply = () => {
+            const el = document.querySelector('.modal.rfq-create-form-modal');
+            if (el) el.style.setProperty('z-index', '1600', 'important');
+        };
+        apply();
+        const t = setTimeout(apply, 80);
+        return () => clearTimeout(t);
+    }, [show]);
     const [editId, setEditId] = useState(null);
     const [editRfqCode, setEditRfqCode] = useState(null);
     const [editLinkedMsgId, setEditLinkedMsgId] = useState(null);
@@ -196,6 +206,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setEditId(null);
             setSourceMsgId(msgId || null);
             setSourceMsgCode(msgCode || null);
+            setEditLinkedMsgObj(null);
+            setShowLinkedEmail(false);
             setForm({
                 customer_id:          "",
                 customer_name:        data.customer_name || "",
@@ -874,7 +886,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
 
     return (
         <>
-        <Modal show={show} onHide={() => setShow(false)} size="xl" fullscreen centered scrollable backdrop="static" animation={false}>
+        <Modal show={show} onHide={() => setShow(false)} size="xl" fullscreen centered scrollable backdrop="static" animation={false} className="rfq-create-form-modal">
             <Modal.Header closeButton style={{ padding: "10px 16px" }}>
                 <Modal.Title style={{ fontSize: "15px", fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span>
@@ -884,29 +896,35 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                             <span style={{ marginLeft: '8px', fontSize: '13px', fontWeight: 700, color: '#0d6efd', background: '#e8f0fe', borderRadius: '6px', padding: '2px 8px' }}>{editRfqCode}</span>
                         )}
                     </span>
-                    {editId && editLinkedMsgCode && (
-                        <span
-                            role="button"
-                            tabIndex={0}
-                            style={{ fontSize: '12px', fontWeight: 500, color: '#6c757d', background: '#f1f3f5', border: '1px solid #dee2e6', borderRadius: '6px', padding: '2px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                            title="Open linked email"
-                            onClick={async () => {
-                                if (editLinkedMsgObj) { setShowLinkedEmail(true); return; }
-                                if (!editLinkedMsgId) return;
-                                const _storeId = localStorage.getItem('store_id');
-                                const _token = localStorage.getItem('access_token');
-                                try {
-                                    const res = await fetch(`/v1/procurement-messages/${editLinkedMsgId}?store_id=${_storeId}`, { headers: { Authorization: _token } });
-                                    const data = await res.json();
-                                    if (data && data.id) { setEditLinkedMsgObj(data); setShowLinkedEmail(true); }
-                                } catch (_) {}
-                            }}
-                            onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.click(); }}
-                        >
-                            <i className="bi bi-envelope" style={{ fontSize: '11px' }}></i>
-                            {editLinkedMsgCode}
-                        </span>
-                    )}
+                    {(() => {
+                        const code = sourceMsgCode || editLinkedMsgCode;
+                        const msgId = sourceMsgId || editLinkedMsgId;
+                        if (!code) return null;
+                        const isWA = (code || '').startsWith('WA-');
+                        return (
+                            <span
+                                role="button"
+                                tabIndex={0}
+                                style={{ fontSize: '12px', fontWeight: 500, color: isWA ? '#128C7E' : '#6c757d', background: isWA ? '#e8f5e9' : '#f1f3f5', border: `1px solid ${isWA ? '#a5d6a7' : '#dee2e6'}`, borderRadius: '6px', padding: '2px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                title={isWA ? 'Open linked WhatsApp message' : 'Open linked email'}
+                                onClick={async () => {
+                                    if (editLinkedMsgObj) { setShowLinkedEmail(true); return; }
+                                    if (!msgId) return;
+                                    const _storeId = localStorage.getItem('store_id');
+                                    const _token = localStorage.getItem('access_token');
+                                    try {
+                                        const res = await fetch(`/v1/procurement-messages/${msgId}?store_id=${_storeId}`, { headers: { Authorization: _token } });
+                                        const data = await res.json();
+                                        if (data && data.id) { setEditLinkedMsgObj(data); setShowLinkedEmail(true); }
+                                    } catch (_) {}
+                                }}
+                                onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.click(); }}
+                            >
+                                <i className={`bi ${isWA ? 'bi-whatsapp' : 'bi-envelope'}`} style={{ fontSize: '11px' }}></i>
+                                {code}
+                            </span>
+                        );
+                    })()}
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body style={{ padding: "12px 16px" }}>
@@ -1552,7 +1570,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         <CustomerCreate ref={CustomerCreateRef} showToastMessage={showToastMessage}
             onUpdated={c => { if (c?.id) selectCustomer(c); }} />
         <ProductCreate ref={ProductCreateRef} showToastMessage={showToastMessage} refreshList={refreshEditedProduct} />
-        {editLinkedMsgObj && (
+        {editLinkedMsgObj && editLinkedMsgObj.type !== 'whatsapp' && (
             <EmailDetailModal
                 msg={editLinkedMsgObj}
                 show={showLinkedEmail}
@@ -1560,6 +1578,48 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 storeId={localStorage.getItem('store_id')}
                 token={localStorage.getItem('access_token')}
             />
+        )}
+        {editLinkedMsgObj && editLinkedMsgObj.type === 'whatsapp' && (
+            <Modal show={showLinkedEmail} onHide={() => setShowLinkedEmail(false)} centered size="md">
+                <Modal.Header closeButton style={{ padding: '8px 16px' }}>
+                    <Modal.Title style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <i className="bi bi-whatsapp" style={{ color: '#128C7E' }}></i>
+                        {editLinkedMsgObj.code || 'WhatsApp Message'}
+                        <span className={`badge ${editLinkedMsgObj.direction === 'in' ? 'bg-success' : 'bg-primary'}`} style={{ fontSize: '10px' }}>
+                            {editLinkedMsgObj.direction === 'in' ? '↓ Received' : '↑ Sent'}
+                        </span>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ fontSize: '13px', padding: '12px 16px' }}>
+                    <div className="mb-2">
+                        <strong>{editLinkedMsgObj.direction === 'in' ? 'From:' : 'To:'}</strong>{' '}
+                        {editLinkedMsgObj.sender_name ? `${editLinkedMsgObj.sender_name} (${editLinkedMsgObj.from || (editLinkedMsgObj.to || []).join(', ')})` : (editLinkedMsgObj.from || (editLinkedMsgObj.to || []).join(', '))}
+                    </div>
+                    {editLinkedMsgObj.message_date && (
+                        <div className="mb-2 text-muted" style={{ fontSize: '11px' }}>
+                            {new Date(editLinkedMsgObj.message_date).toLocaleString()}
+                        </div>
+                    )}
+                    {editLinkedMsgObj.body_text && (
+                        <div style={{ background: '#f8f9fa', borderRadius: '6px', padding: '10px', whiteSpace: 'pre-wrap', fontSize: '13px', maxHeight: '300px', overflowY: 'auto' }}>
+                            {editLinkedMsgObj.body_text}
+                        </div>
+                    )}
+                    {(editLinkedMsgObj.attachments || []).length > 0 && (
+                        <div className="mt-3">
+                            <strong style={{ fontSize: '12px' }}>Attachments ({editLinkedMsgObj.attachments.length}):</strong>
+                            <ul className="mb-0 mt-1" style={{ fontSize: '12px', paddingLeft: '18px' }}>
+                                {editLinkedMsgObj.attachments.map((a, i) => (
+                                    <li key={i}>{a.file_name || a.url || `Attachment ${i + 1}`}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer style={{ padding: '8px 16px' }}>
+                    <Button variant="secondary" size="sm" onClick={() => setShowLinkedEmail(false)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
         )}
         </>
     );
