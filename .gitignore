@@ -23,3 +23,6 @@ yarn-error.log*
 node_modules
 
 /build
+# parallel build output (deploy.sh both)
+/build_test
+/build_prod
