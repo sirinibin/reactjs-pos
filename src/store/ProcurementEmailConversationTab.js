@@ -33,6 +33,7 @@ function stripHtml(html) {
 export default function ProcurementEmailConversationTab({ storeId, initialEmail: initialEmailProp }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
+    // eslint-disable-next-line no-unused-vars
     const history = useHistory();
 
     // ── Thread list ─────────────────────────────────────────────────────────

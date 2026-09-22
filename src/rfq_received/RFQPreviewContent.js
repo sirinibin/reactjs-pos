@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { storeLogoUrl } from '../utils/imageUtils';
 import * as XLSX from 'xlsx';
-// Renders each page of a PDF data-URI as images so html2canvas can capture them.
+// Renders each page of a PDF (data-URI or /cdn/ URL) as images so html2canvas can capture them.
 // pdfjs-dist is loaded lazily (dynamic import) so it is NOT bundled into the main chunk.
 // Sets data-pdf-loading on the wrapper while rendering; RFQPreview polls for this attribute.
 function PdfPagesRenderer({ dataUri }) {
@@ -14,15 +14,19 @@ function PdfPagesRenderer({ dataUri }) {
         setPages([]);
         (async () => {
             try {
-                const base64 = dataUri.split(',')[1];
-                if (!base64) return;
-                // Dynamic import — only loads pdfjs when a PDF needs to be rendered
                 const pdfjsLib = await import('pdfjs-dist/build/pdf');
                 pdfjsLib.GlobalWorkerOptions.workerSrc = (process.env.PUBLIC_URL || '') + '/pdf.worker.js';
-                const raw = atob(base64);
-                const uint8 = new Uint8Array(raw.length);
-                for (let i = 0; i < raw.length; i++) uint8[i] = raw.charCodeAt(i);
-                const loadingTask = pdfjsLib.getDocument({ data: uint8 });
+                let loadingTask;
+                if (dataUri.startsWith('data:')) {
+                    const base64 = dataUri.split(',')[1];
+                    if (!base64) return;
+                    const raw = atob(base64);
+                    const uint8 = new Uint8Array(raw.length);
+                    for (let i = 0; i < raw.length; i++) uint8[i] = raw.charCodeAt(i);
+                    loadingTask = pdfjsLib.getDocument({ data: uint8 });
+                } else {
+                    loadingTask = pdfjsLib.getDocument({ url: dataUri });
+                }
                 const pdf = await loadingTask.promise;
                 const imgs = [];
                 for (let p = 1; p <= pdf.numPages; p++) {
@@ -53,20 +57,30 @@ function PdfPagesRenderer({ dataUri }) {
     );
 }
 
-// Parses an Excel data-URI and renders each sheet as a styled table.
+// Parses an Excel data-URI or /cdn/ URL and renders each sheet as a styled table.
 function ExcelSheetTable({ dataUri, filename }) {
-    const sheets = useMemo(() => {
-        try {
-            const base64 = dataUri.split(',')[1];
-            if (!base64) return null;
-            const wb = XLSX.read(base64, { type: 'base64' });
-            return wb.SheetNames.map(name => {
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' });
-                // Filter completely empty rows
-                const filtered = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
-                return { name, rows: filtered };
-            }).filter(s => s.rows.length > 0);
-        } catch (_) { return null; }
+    const [sheets, setSheets] = useState(null);
+    useEffect(() => {
+        (async () => {
+            try {
+                let wb;
+                if (dataUri.startsWith('data:')) {
+                    const base64 = dataUri.split(',')[1];
+                    if (!base64) { setSheets(null); return; }
+                    wb = XLSX.read(base64, { type: 'base64' });
+                } else {
+                    const resp = await fetch(dataUri);
+                    const arrayBuf = await resp.arrayBuffer();
+                    wb = XLSX.read(new Uint8Array(arrayBuf), { type: 'array' });
+                }
+                const result = wb.SheetNames.map(name => {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' });
+                    const filtered = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+                    return { name, rows: filtered };
+                }).filter(s => s.rows.length > 0);
+                setSheets(result.length > 0 ? result : null);
+            } catch (_) { setSheets(null); }
+        })();
     }, [dataUri]);
 
     if (!sheets || sheets.length === 0) return null;
@@ -185,8 +199,8 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
     const marginTop = fontSizes[MODEL + '_marginTop']?.size || '0px';
 
     const products                      = rfq.products || [];
-    const attachmentDataURIs            = rfq.attachment_data_uris || [];
-    const additionalAttachmentDataURIs  = rfq.additional_attachment_data_uris || [];
+    const attachmentDataURIs            = rfq.attachment_urls || [];
+    const additionalAttachmentDataURIs  = rfq.additional_attachment_urls || [];
     const additionalAttachmentFilenames = rfq.additional_attachment_filenames || [];
     const hasAttachments                = attachmentDataURIs.length > 0;
     const hasAdditionalAttachments      = additionalAttachmentDataURIs.length > 0;
@@ -387,8 +401,8 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                 {hasAttachments && (
                     <div style={{ margin: '0 0 12px 0' }}>
                         {attachmentDataURIs.map((uri, i) => {
-                            const isPDF = uri.startsWith('data:application/pdf');
-                            const isImg = /^data:image\//i.test(uri);
+                            const isPDF = uri.startsWith('data:application/pdf') || /\.pdf$/i.test(uri);
+                            const isImg = /^data:image\//i.test(uri) || /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(uri);
                             if (isPDF) {
                                 return (
                                     <div key={i} style={{ marginBottom: '8px', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
@@ -522,12 +536,13 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
 
                 {/* ── Additional detail files (below products table) ────────── */}
                 {hasAdditionalAttachments && (() => {
+                    const isImageURI = uri => /^data:image\//i.test(uri) || /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(uri);
                     const imgItems = additionalAttachmentDataURIs
                         .map((uri, i) => ({ uri, i, filename: additionalAttachmentFilenames[i] || '' }))
-                        .filter(({ uri }) => /^data:image\//i.test(uri));
+                        .filter(({ uri }) => isImageURI(uri));
                     const nonImgItems = additionalAttachmentDataURIs
                         .map((uri, i) => ({ uri, i, filename: additionalAttachmentFilenames[i] || '' }))
-                        .filter(({ uri }) => !/^data:image\//i.test(uri));
+                        .filter(({ uri }) => !isImageURI(uri));
                     return (
                         <div className="additional-attachment" style={{ margin: '12px 0' }}>
                             {/* Section header */}
@@ -573,8 +588,8 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
 
                             {/* PDFs and Excel files at full width */}
                             {nonImgItems.map(({ uri, i, filename }) => {
-                                const isPDF = uri.startsWith('data:application/pdf');
-                                const isExcel = /\.(xlsx|xls|csv)$/i.test(filename) ||
+                                const isPDF = uri.startsWith('data:application/pdf') || /\.pdf$/i.test(uri);
+                                const isExcel = /\.(xlsx|xls|csv)$/i.test(filename) || /\.(xlsx|xls|csv)$/i.test(uri) ||
                                     /application\/vnd\.(openxmlformats|ms-excel)/.test(uri) ||
                                     uri.startsWith('data:text/csv');
                                 if (isExcel) {

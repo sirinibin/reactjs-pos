@@ -96,7 +96,9 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     let [selectedCategories, setSelectedCategories] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
+    // eslint-disable-next-line no-unused-vars
     const [categorySearch, setCategorySearch] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [categoryOpen, setCategoryOpen] = useState(false);
     // eslint-disable-next-line no-unused-vars
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);

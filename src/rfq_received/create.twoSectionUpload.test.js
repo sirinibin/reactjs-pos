@@ -233,8 +233,8 @@ describe('create.js — modal open/edit resets both file arrays', () => {
 // ── 11. RFQPreviewContent — additional files section ─────────────────────────
 
 describe('RFQPreviewContent.js — additional attachments below products table', () => {
-    test('11.1  additional_attachment_data_uris is read from rfq', () => {
-        expect(PREVIEW_SRC).toMatch(/additional_attachment_data_uris/);
+    test('11.1  additional_attachment_urls is read from rfq', () => {
+        expect(PREVIEW_SRC).toMatch(/additional_attachment_urls/);
     });
 
     test('11.2  hasAdditionalAttachments variable is derived', () => {

@@ -197,7 +197,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             setOpenProductSearch(false);
             setProductFiles([]);
             setAdditionalFiles([]);
-            setExistingAdditionalDataURIs(rfq.additional_attachment_data_uris || []);
+            setExistingAdditionalDataURIs(rfq.additional_attachment_urls || []);
             setExistingAdditionalFilenames(rfq.additional_attachment_filenames || []);
             setExtractionModel("");
             setShow(true);

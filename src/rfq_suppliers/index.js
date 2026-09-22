@@ -165,6 +165,7 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const { t } = useTranslation('common');
     const storeId = localStorage.getItem("store_id");
     const token = localStorage.getItem("access_token");
+    // eslint-disable-next-line no-unused-vars
     const history = useHistory();
 
     const [list, setList] = useState([]);

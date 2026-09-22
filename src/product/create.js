@@ -136,9 +136,13 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedBrands, setSelectedBrands] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
   let [brandOptions, setBrandOptions] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [brandSearch, setBrandSearch] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [brandOpen, setBrandOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [categorySearch, setCategorySearch] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [categoryOpen, setCategoryOpen] = useState(false);
   let [arabicNameOptions, setArabicNameOptions] = useState([]);
   let [selectedArabicNames, setSelectedArabicNames] = useState([]);

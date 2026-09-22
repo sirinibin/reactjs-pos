@@ -1323,6 +1323,7 @@ const STAGE_LABELS = {
 
 export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
     const token = localStorage.getItem('access_token');
+    // eslint-disable-next-line no-unused-vars
     const history = useHistory();
     const rfqPreviewRef = useRef(null);
     useEffect(() => {
