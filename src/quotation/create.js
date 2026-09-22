@@ -331,6 +331,35 @@ const QuotationCreate = forwardRef((props, ref) => {
             reCalculate();
           }
         } catch (_) {}
+
+        // Apply Sales→Quotation switch prefill if present
+        try {
+          const rawSwitch = sessionStorage.getItem('sales_to_quotation_switch');
+          if (rawSwitch) {
+            sessionStorage.removeItem('sales_to_quotation_switch');
+            const switchData = JSON.parse(rawSwitch);
+            if (switchData.products?.length) {
+              selectedProducts = [...switchData.products];
+              setSelectedProducts([...switchData.products]);
+              formData.products = [...switchData.products];
+            }
+            if (switchData.customer_id) {
+              formData.customer_id = switchData.customer_id;
+              formData.customer_name = switchData.customer_name || '';
+              formData.customer_phone_number = switchData.customer_phone || '';
+              fetchAndSetCustomer(switchData.customer_id, {
+                id: switchData.customer_id,
+                name: switchData.customer_name || '',
+                phone: switchData.customer_phone || '',
+              });
+            } else if (switchData.customers?.length) {
+              setSelectedCustomers([...switchData.customers]);
+            }
+            if (switchData.remarks) formData.remarks = switchData.remarks;
+            setFormData({ ...formData });
+            setTimeout(() => reCalculate(), 300);
+          }
+        } catch (_) {}
       }
 
       getStore(localStorage.getItem("store_id"));
@@ -504,6 +533,22 @@ const QuotationCreate = forwardRef((props, ref) => {
     draftFlashShownRef.current = false;
     SetShow(false);
     props.onClose?.();
+  }
+
+  function handleSwitchToSales() {
+    if (formData.id) return;
+    try {
+      sessionStorage.setItem('quotation_to_sales_switch', JSON.stringify({
+        products: selectedProducts,
+        customers: selectedCustomers,
+        customer_id: formData.customer_id || '',
+        customer_name: formData.customer_name || '',
+        customer_phone: formData.phone || formData.customer_phone_number || '',
+        remarks: formData.remarks || '',
+      }));
+    } catch (_) {}
+    SetShow(false);
+    props.onSwitchToSales?.();
   }
 
   useEffect(() => {
@@ -3916,6 +3961,11 @@ async function checkWarning(i) {
           </Modal.Title>
 
           <div className="col align-self-end text-end">
+            {!formData.id && props.onSwitchToSales && (
+              <><button type="button" onClick={handleSwitchToSales} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #6c757d', backgroundColor: '#f8f9fa', color: '#495057', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Sales')}
+              </button>&nbsp;&nbsp;</>
+            )}
             <Button variant="primary" onClick={openPreview}>
               <i className="bi bi-printer"></i> {t('Print Full Quotation')}
             </Button>

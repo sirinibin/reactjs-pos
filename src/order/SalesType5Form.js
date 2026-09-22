@@ -86,6 +86,7 @@ export function SalesType5Header({
     dismissDnNotification,
     openJobCard,
     repairJobInfos,
+    onSwitchToQuotation,
 }) {
     const { t } = useTranslation("common");
 
@@ -141,6 +142,11 @@ export function SalesType5Header({
                 <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#ffffff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer", minWidth: "70px", justifyContent: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
                     {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: "14px" }}></i> {(isUpdateForm && !isResumingDraft) ? t("Update") : t("Create")}</>}
                 </button>
+                {!isUpdateForm && onSwitchToQuotation && (
+                    <button type="button" onClick={onSwitchToQuotation} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                        <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                    </button>
+                )}
                 <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" style={{ marginLeft: "4px" }}></button>
             </div>
         </Modal.Header>

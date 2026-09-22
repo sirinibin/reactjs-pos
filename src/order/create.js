@@ -468,6 +468,51 @@ const OrderCreate = forwardRef((props, ref) => {
 
         setFormData({ ...formData });
         reCalculate();
+
+        // Apply Quotation→Sales switch prefill if present (new forms only)
+        if (!id) {
+            try {
+                const rawSwitch = sessionStorage.getItem('quotation_to_sales_switch');
+                if (rawSwitch) {
+                    sessionStorage.removeItem('quotation_to_sales_switch');
+                    const switchData = JSON.parse(rawSwitch);
+                    setTimeout(() => {
+                        if (switchData.products?.length) {
+                            selectedProducts = [...switchData.products];
+                            setSelectedProducts([...switchData.products]);
+                            formData.products = [...switchData.products];
+                            reCalculate();
+                        }
+                        if (switchData.customer_id) {
+                            formData.customer_id = switchData.customer_id;
+                            formData.customer_name = switchData.customer_name || '';
+                            formData.phone = switchData.customer_phone || '';
+                            setFormData({ ...formData });
+                            const custSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                            const authHeaders = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+                            const storeId = localStorage.getItem('store_id') || '';
+                            fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${custSelect}`, { headers: authHeaders })
+                                .then(cr => cr.json())
+                                .then(data => {
+                                    if (data?.result) {
+                                        selectedCustomers = [data.result];
+                                        setSelectedCustomers([data.result]);
+                                    }
+                                })
+                                .catch(() => {});
+                        } else if (switchData.customers?.length) {
+                            selectedCustomers = [...switchData.customers];
+                            setSelectedCustomers([...switchData.customers]);
+                        }
+                        if (switchData.remarks) {
+                            formData.remarks = switchData.remarks;
+                            setFormData({ ...formData });
+                        }
+                    }, 100);
+                }
+            } catch (_) {}
+        }
+
         setShow(true);
 
     }
@@ -1441,6 +1486,22 @@ const OrderCreate = forwardRef((props, ref) => {
         setSelectedIds([]);
         setShow(false);
         props.onClose?.();
+    }
+
+    function handleSwitchToQuotation() {
+        if (isUpdateForm) return;
+        try {
+            sessionStorage.setItem('sales_to_quotation_switch', JSON.stringify({
+                products: selectedProducts,
+                customers: selectedCustomers,
+                customer_id: formData.customer_id || '',
+                customer_name: formData.customer_name || '',
+                customer_phone: formData.phone || formData.customer_phone_number || '',
+                remarks: formData.remarks || '',
+            }));
+        } catch (_) {}
+        setShow(false);
+        props.onSwitchToQuotation?.();
     }
 
     const handleProductSelectionSelectAll = (e) => {
@@ -5952,6 +6013,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     dismissDnNotification={dismissDnNotification}
                     openJobCard={props.openJobCard}
                     repairJobInfos={repairJobInfos}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {formType === "type5" && <SalesType5Header
                     formData={formData} setFormData={setFormData}
@@ -5974,6 +6036,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     dismissDnNotification={dismissDnNotification}
                     openJobCard={props.openJobCard}
                     repairJobInfos={repairJobInfos}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -5991,6 +6054,11 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                         {/* Right: action buttons */}
                         <div className="sc-header-actions">
+                            {!isUpdateForm && props.onSwitchToQuotation && (
+                                <button type="button" onClick={handleSwitchToQuotation} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                                </button>
+                            )}
                             <button type="button" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: disablePreviousButton ? 0.5 : 1 }}>
                                 <i className="bi-chevron-double-left" style={{ fontSize: '13px' }}></i> {t('Previous')}
                             </button>
@@ -6106,6 +6174,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     handleClose={handleClose}
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {/* ==================== 💻 STITCH COMPACT HEADER (56px) ==================== */}
                 {formType === "type2" && <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-md py-xs h-[56px] sticky top-0 z-50">
@@ -6135,6 +6204,11 @@ const OrderCreate = forwardRef((props, ref) => {
                         )}
                     </div>
                     <div className="flex items-center gap-xs">
+                        {!isUpdateForm && props.onSwitchToQuotation && (
+                            <button type="button" onClick={handleSwitchToQuotation} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                            </button>
+                        )}
                         <Button
                             variant="secondary"
                             className="flex items-center gap-xs px-sm py-1 bg-secondary-container text-on-secondary-container rounded hover:bg-surface-variant transition-colors font-label-md border-0"

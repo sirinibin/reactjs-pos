@@ -69,6 +69,7 @@ export function SalesType1Header({
     dismissDnNotification,
     openJobCard,
     repairJobInfos,
+    onSwitchToQuotation,
 }) {
     const { t } = useTranslation('common');
     return (
@@ -175,6 +176,11 @@ export function SalesType1Header({
                                     <i className="bi bi-tools" style={{ fontSize: '13px' }}></i> {t("View Job Card")}
                                 </button>&nbsp;&nbsp;</>
                             ) : null)}
+                            {!isUpdateForm && onSwitchToQuotation && (
+                                <><button type="button" onClick={onSwitchToQuotation} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #6c757d', backgroundColor: '#f8f9fa', color: '#495057', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                                </button>&nbsp;&nbsp;</>
+                            )}
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
                     </Modal.Header>

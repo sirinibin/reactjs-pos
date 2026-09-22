@@ -263,6 +263,32 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 if (prefill?.vehicle_id) {
                     setVehicleReloadKey(k => k + 1);
                 }
+                // Apply Sales→Quotation switch prefill if present
+                try {
+                    const rawSwitch = sessionStorage.getItem('sales_to_quotation_switch');
+                    if (rawSwitch) {
+                        sessionStorage.removeItem('sales_to_quotation_switch');
+                        const switchData = JSON.parse(rawSwitch);
+                        if (switchData.products?.length) {
+                            setSelectedProducts([...switchData.products]);
+                            setTimeout(() => reCalculateRef.current?.(switchData.products), 300);
+                        }
+                        const fd = { ...makeFormData(), store_id: storeId };
+                        if (switchData.customer_id) {
+                            fd.customer_id = switchData.customer_id;
+                            fd.customer_name = switchData.customer_name || '';
+                            setFormData(fd);
+                            const customerSelect2 = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                            fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${customerSelect2}`, { headers })
+                                .then(cr => cr.json())
+                                .then(data => setSelectedCustomers(data?.result ? [data.result] : []))
+                                .catch(() => {});
+                        } else if (switchData.customers?.length) {
+                            setSelectedCustomers([...switchData.customers]);
+                        }
+                        if (switchData.remarks) setFormData(prev => ({ ...prev, remarks: switchData.remarks }));
+                    }
+                } catch (_) {}
             }
             setShow(true);
             fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
@@ -918,6 +944,24 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                 <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
                             </button>
                         ) : null)}
+                        {!isUpdateForm && props.onSwitchToSales && apiBase === '/v1/quotation' && (
+                            <button type="button" onClick={() => {
+                                try {
+                                    sessionStorage.setItem('quotation_to_sales_switch', JSON.stringify({
+                                        products: selectedProducts,
+                                        customers: selectedCustomers,
+                                        customer_id: formData.customer_id || '',
+                                        customer_name: formData.customer_name || '',
+                                        customer_phone: formData.phone || '',
+                                        remarks: formData.remarks || '',
+                                    }));
+                                } catch (_) {}
+                                setShow(false);
+                                props.onSwitchToSales();
+                            }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer" }}>
+                                <i className="bi bi-arrow-left-right" style={{ fontSize: "13px" }}></i> {t("Switch to Sales")}
+                            </button>
+                        )}
                         <button type="button" onClick={(e) => handleCreate(e)} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                             {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {isUpdateForm ? t("Update") : (apiBase === '/v1/non-vat-sales-return' ? t("Create Non VAT Sales Return") : apiBase !== '/v1/quotation' ? t("Create Non VAT Sale") : (isInvoice ? t("Create Invoice") : t("Create Quotation")))}</>}
                         </button>
