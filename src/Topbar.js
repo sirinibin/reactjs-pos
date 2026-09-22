@@ -7,6 +7,7 @@ import eventEmitter from './utils/eventEmitter';
 import StoreSettingsModal from './store/StoreSettingsModal';
 import ChangePasswordModal from './user/ChangePasswordModal';
 import ManageUsersModal from './user/ManageUsersModal';
+import AdminSettingsModal from './AdminSettingsModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -67,6 +68,7 @@ function Topbar(props) {
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
+    const [adminSettingsOpen, setAdminSettingsOpen] = useState(false);
     const [, setDirTick] = useState(0);
     const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
     const changePwRef = useRef(null);
@@ -567,6 +569,14 @@ function Topbar(props) {
                                             </Dropdown.Item>
                                         </>
                                     )}
+                                    {(isAdminFlag || userRole === 'Admin') && (
+                                        <>
+                                            <Dropdown.Divider />
+                                            <Dropdown.Item onClick={() => setAdminSettingsOpen(true)}>
+                                                <i className="bi bi-gear-wide-connected me-2"></i>Admin Settings
+                                            </Dropdown.Item>
+                                        </>
+                                    )}
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={(e) => { logOut(e); }}>
                                         <i className="bi bi-box-arrow-right me-2"></i>{t('buttons.logout')}
@@ -722,6 +732,7 @@ function Topbar(props) {
             )}
 
             <StoreSettingsModal show={storeSettingsOpen} onHide={() => setStoreSettingsOpen(false)} />
+            <AdminSettingsModal show={adminSettingsOpen} onHide={() => setAdminSettingsOpen(false)} />
             <ChangePasswordModal ref={changePwRef} showToastMessage={props.showToastMessage} />
             <ManageUsersModal ref={manageUsersRef} showToastMessage={props.showToastMessage} />
         </>

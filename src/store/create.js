@@ -8,7 +8,6 @@ import ProcurementEmailWidget from './ProcurementEmailWidget';
 import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
 import WABATemplatePurposeWidget from './WABATemplatePurposeWidget';
 import WABATemplateTesterWidget from './WABATemplateTesterWidget';
-import StoreS3Widget from './StoreS3Widget';
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -1180,7 +1179,6 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'logo', label: 'Logo', icon: 'bi-image-fill' },
         { id: 'invoice_background', label: 'Invoice BG Image', icon: 'bi-image' },
         { id: 'opening_balances', label: 'Opening Balances', icon: 'bi-wallet2' },
-        { id: 's3', label: 'AWS S3', icon: 'bi-cloud-arrow-up' },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
     const createZatcaReportingScope = () => {
@@ -8365,16 +8363,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div>
                                 </div>)}
 
-                                {activeTab === 's3' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <h6 className="fw-semibold mb-3"><i className="bi bi-cloud-arrow-up me-2"></i>{t('AWS S3 File Storage')}</h6>
-                                    <StoreS3Widget
-                                        storeId={formData.id || formData._id}
-                                        settings={formData.settings || {}}
-                                        onChange={(newSettings) => {
-                                            setFormData(prev => ({ ...prev, settings: { ...(prev.settings || {}), ...newSettings } }));
-                                        }}
-                                    />
-                                </div></div>)}
 
                                 {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
                                     <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>{t('ZATCA Credentials')}</h6>
