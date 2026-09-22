@@ -1621,22 +1621,32 @@ const QuotationCreate = forwardRef((props, ref) => {
       const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
       if (already >= 0) {
         selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+        const sp = selectedProducts[already];
+        sp.line_total = parseFloat(trimTo2Decimals((sp.unit_price - (sp.unit_discount || 0)) * sp.quantity));
+        sp.line_total_with_vat = parseFloat(trimTo2Decimals((sp.unit_price_with_vat - (sp.unit_discount_with_vat || 0)) * sp.quantity));
       } else {
+        const unitPrice = src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.retail_unit_price) || 0);
+        const unitPriceWithVat = src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.retail_unit_price_with_vat) || 0);
+        const unitDiscount = src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0;
+        const unitDiscountWithVat = src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0;
+        const qty = parseFloat(p.quantity) || 1;
         selectedProducts.push({
           product_id: p.product_id,
           code: p.item_code || p.code || "",
           part_number: p.part_number || "",
           name: p.name || "",
           name_in_arabic: p.name_in_arabic || "",
-          quantity: parseFloat(p.quantity) || 1,
+          quantity: qty,
           unit: p.unit || "",
-          unit_price: src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.retail_unit_price) || 0),
-          unit_price_with_vat: src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.retail_unit_price_with_vat) || 0),
+          unit_price: unitPrice,
+          unit_price_with_vat: unitPriceWithVat,
           purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
           purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
-          unit_discount: src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0,
-          unit_discount_with_vat: src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0,
+          unit_discount: unitDiscount,
+          unit_discount_with_vat: unitDiscountWithVat,
           unit_discount_percent: src.source === 'sale' ? (parseFloat(p.unit_discount_percent) || 0) : 0,
+          line_total: parseFloat(trimTo2Decimals((unitPrice - unitDiscount) * qty)),
+          line_total_with_vat: parseFloat(trimTo2Decimals((unitPriceWithVat - unitDiscountWithVat) * qty)),
           stock: 0,
           product_stores: {},
         });
