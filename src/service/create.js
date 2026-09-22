@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Spinner } from "react-bootstrap";
-// eslint-disable-next-line no-unused-vars
 import { Typeahead } from "react-bootstrap-typeahead";
 import ServiceCategoryCreate from "../service_category/create.js";
 import ImageGallery from '../utils/ImageGallery.js';
@@ -196,7 +195,6 @@ const ServiceCreate = forwardRef((props, ref) => {
             .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
     }
 
-    // eslint-disable-next-line no-unused-vars
     async function suggestCategories(searchTerm) {
         if (!searchTerm) return;
         setIsCategoriesLoading(true);
@@ -444,39 +442,80 @@ const ServiceCreate = forwardRef((props, ref) => {
                             <div className="row g-3">
                                 <div className="col-md-5">
                                     <Label>{t('Service Category')}</Label>
-                                    <div className="d-flex gap-1">
-                                        <div style={{ position: 'relative', flex: 1 }}>
-                                            <input
-                                                type="text"
-                                                style={{ width: '100%', border: `1px solid ${errors.service_category_id ? '#dc3545' : '#c3c6d7'}`, borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: '"Inter",sans-serif', background: '#fff', color: '#191c1e', height: '34px', outline: 'none' }}
-                                                value={categoryOpen ? categorySearch : (formData.service_category_name || '')}
-                                                placeholder={t('-- Select category --')}
-                                                onFocus={() => { setCategoryOpen(true); setCategorySearch(''); }}
-                                                onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-                                                onChange={e => setCategorySearch(e.target.value)}
-                                            />
-                                            {categoryOpen && (
-                                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
-                                                    <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
-                                                        onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = ''; formData.service_category_name = ''; setFormData({ ...formData }); setSelectedCategories([]); setCategoryOpen(false); }}>
-                                                        {t('-- Select category --')}
-                                                    </div>
-                                                    {categoryOptions.filter(c => !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => (
-                                                        <div key={c.id}
-                                                            style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: formData.service_category_id === c.id ? '#e8f0fe' : undefined }}
-                                                            onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = c.id; formData.service_category_name = c.name; setFormData({ ...formData }); setSelectedCategories([c]); setCategoryOpen(false); setCategorySearch(''); }}>
-                                                            {c.name}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                    {store?.settings?.enable_arabic_names_list ? (
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <Typeahead
+                                                    id="service_category"
+                                                    labelKey="name"
+                                                    filterBy={() => true}
+                                                    positionFixed={true}
+                                                    options={categoryOptions}
+                                                    selected={selectedCategories}
+                                                    placeholder={t('-- Select category --')}
+                                                    inputProps={{ style: { borderColor: errors.service_category_id ? '#dc3545' : undefined } }}
+                                                    onInputChange={(searchTerm) => {
+                                                        clearError('service_category_id');
+                                                        if (searchTerm) suggestCategories(searchTerm);
+                                                        else setCategoryOptions([]);
+                                                    }}
+                                                    onChange={(selectedItems) => {
+                                                        clearError('service_category_id');
+                                                        if (selectedItems.length === 0) {
+                                                            formData.service_category_id = ''; formData.service_category_name = '';
+                                                            setFormData({ ...formData }); setSelectedCategories([]);
+                                                            return;
+                                                        }
+                                                        const c = selectedItems[0];
+                                                        formData.service_category_id = c.id; formData.service_category_name = c.name;
+                                                        setFormData({ ...formData }); setSelectedCategories(selectedItems);
+                                                    }}
+                                                    renderMenuItemChildren={(option) => (
+                                                        <span style={{ fontSize: '13px' }}>{option.name}</span>
+                                                    )}
+                                                />
+                                            </div>
+                                            <button type="button"
+                                                style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
+                                                onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>
+                                                <i className="bi bi-plus-lg"></i>
+                                            </button>
                                         </div>
-                                        <button type="button"
-                                            style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
-                                            onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>
-                                            <i className="bi bi-plus-lg"></i>
-                                        </button>
-                                    </div>
+                                    ) : (
+                                        <div className="d-flex gap-1">
+                                            <div style={{ position: 'relative', flex: 1 }}>
+                                                <input
+                                                    type="text"
+                                                    style={{ width: '100%', border: `1px solid ${errors.service_category_id ? '#dc3545' : '#c3c6d7'}`, borderRadius: '6px', padding: '4px 8px', fontSize: '13px', fontFamily: '"Inter",sans-serif', background: '#fff', color: '#191c1e', height: '34px', outline: 'none' }}
+                                                    value={categoryOpen ? categorySearch : (formData.service_category_name || '')}
+                                                    placeholder={t('-- Select category --')}
+                                                    onFocus={() => { setCategoryOpen(true); setCategorySearch(''); }}
+                                                    onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
+                                                    onChange={e => setCategorySearch(e.target.value)}
+                                                />
+                                                {categoryOpen && (
+                                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999, background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', maxHeight: '220px', overflowY: 'auto' }}>
+                                                        <div style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', color: '#888', borderBottom: '1px solid #f0f0f0' }}
+                                                            onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = ''; formData.service_category_name = ''; setFormData({ ...formData }); setSelectedCategories([]); setCategoryOpen(false); }}>
+                                                            {t('-- Select category --')}
+                                                        </div>
+                                                        {categoryOptions.filter(c => !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())).map(c => (
+                                                            <div key={c.id}
+                                                                style={{ padding: '5px 10px', cursor: 'pointer', fontSize: '13px', background: formData.service_category_id === c.id ? '#e8f0fe' : undefined }}
+                                                                onMouseDown={() => { clearError('service_category_id'); formData.service_category_id = c.id; formData.service_category_name = c.name; setFormData({ ...formData }); setSelectedCategories([c]); setCategoryOpen(false); setCategorySearch(''); }}>
+                                                                {c.name}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button type="button"
+                                                style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
+                                                onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>
+                                                <i className="bi bi-plus-lg"></i>
+                                            </button>
+                                        </div>
+                                    )}
                                     <InlineError msg={errors.service_category_id} />
                                 </div>
                                 <div className="col-md-3">
