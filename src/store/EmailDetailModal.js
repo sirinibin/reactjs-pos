@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ViewButton } from './FileViewerModal.js';
 import { ForwardDetail } from '../rfq_received/index.js';
@@ -52,6 +52,52 @@ const displayAddr = raw => {
     return m ? m[1] : decoded;
 };
 
+function ThreadMessage({ m, t }) {
+    const [expanded, setExpanded] = useState(false);
+    const isIn = m.direction === 'in';
+    const rawBody = m.body_text || m.body_html?.replace(/<[^>]+>/g, ' ') || '';
+    const preview = rawBody.trim().slice(0, 180);
+    const hasMore = rawBody.trim().length > 180;
+    return (
+        <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: isIn ? '#f8f9fa' : '#f0f4ff', overflow: 'hidden' }}>
+            <div
+                style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderBottom: expanded ? '1px solid #e0e0e0' : 'none' }}
+                onClick={() => setExpanded(e => !e)}
+            >
+                {directionBadge(m.direction)}
+                <span style={{ fontSize: '11px', color: '#5f6368', flexShrink: 0 }}>
+                    {m.message_date ? new Date(m.message_date).toLocaleString() : '—'}
+                </span>
+                <span style={{ fontSize: '12px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {isIn ? displayAddr(m.from || '') : displayAddr((m.to && m.to[0]) || '')}
+                </span>
+                {m.subject && (
+                    <span style={{ fontSize: '11px', color: '#80868b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px', flexShrink: 0 }}>
+                        {m.subject}
+                    </span>
+                )}
+                <i className={`bi bi-chevron-${expanded ? 'up' : 'down'}`} style={{ fontSize: '11px', color: '#80868b', flexShrink: 0 }} />
+            </div>
+            {!expanded && preview && (
+                <div style={{ padding: '5px 14px 8px', fontSize: '12px', color: '#5f6368', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {preview}{hasMore ? '…' : ''}
+                </div>
+            )}
+            {expanded && (
+                <div style={{ padding: '14px', fontSize: '13px', lineHeight: '1.6', color: '#202124', maxHeight: '300px', overflowY: 'auto' }}>
+                    {m.body_html ? (
+                        <div dangerouslySetInnerHTML={{ __html: fixEmailHtml(m.body_html) }} />
+                    ) : (
+                        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '13px' }}>
+                            {m.body_text || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}
+                        </pre>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function EmailDetailModal({ msg, show, onClose, storeId, token, onExtract, onLinkQuotation, linkingFor, onDeleted }) {
     const { t } = useTranslation('common');
     const [replyOpen, setReplyOpen] = useState(false);
@@ -69,6 +115,32 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [translating, setTranslating] = useState(false);
     const [rfqDetail, setRfqDetail]   = useState(null);
     const [rfqDetailShow, setRfqDetailShow] = useState(false);
+    const [threadMessages, setThreadMessages] = useState([]);
+    const [threadLoading, setThreadLoading] = useState(false);
+
+    useEffect(() => {
+        if (!show || !msg || !storeId || !token) { setThreadMessages([]); return; }
+        const contactEmail = msg.direction === 'in'
+            ? extractEmail(msg.from || '')
+            : extractEmail((msg.to && msg.to[0]) || '');
+        if (!contactEmail) { setThreadMessages([]); return; }
+        setThreadLoading(true);
+        setThreadMessages([]);
+        const params = new URLSearchParams({ store_id: storeId, type: 'email', limit: 100 });
+        fetch(`/v1/procurement-message-threads/${encodeURIComponent(contactEmail)}?${params}`, {
+            headers: { Authorization: token },
+        })
+            .then(r => r.json())
+            .then(data => {
+                const all = data.messages || [];
+                const others = all
+                    .filter(m => m.id !== msg.id)
+                    .sort((a, b) => new Date(a.message_date) - new Date(b.message_date));
+                setThreadMessages(others);
+            })
+            .catch(() => {})
+            .finally(() => setThreadLoading(false));
+    }, [show, msg?.id, storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openLinkedRfq = async () => {
         if (!msg.rfq_received_id && !msg.linked_rfq_received_id) return;
@@ -305,6 +377,33 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                         );
                                     })}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Thread replies */}
+                        {(threadLoading || threadMessages.length > 0) && (
+                            <div style={{ marginTop: '24px' }}>
+                                <div style={{ fontSize: '12px', color: '#5f6368', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <i className="bi bi-chat-text"></i>
+                                    {t('Conversation Thread')}
+                                    {!threadLoading && threadMessages.length > 0 && (
+                                        <span style={{ background: '#e8f0fe', color: '#1967d2', borderRadius: '10px', padding: '1px 8px', fontSize: '11px', fontWeight: 600 }}>
+                                            {threadMessages.length}
+                                        </span>
+                                    )}
+                                </div>
+                                {threadLoading ? (
+                                    <div style={{ textAlign: 'center', padding: '14px', color: '#80868b', fontSize: '13px' }}>
+                                        <span className="spinner-border spinner-border-sm me-2" />
+                                        {t('Loading thread…')}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {threadMessages.map((m, i) => (
+                                            <ThreadMessage key={m.id || i} m={m} t={t} />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
