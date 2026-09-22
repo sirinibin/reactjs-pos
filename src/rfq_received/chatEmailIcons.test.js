@@ -53,8 +53,9 @@ describe('WhatsApp & Email chat icons — modal pattern', () => {
 });
 
 describe('RFQ Suppliers index table — chat icons', () => {
-    it('7. Imports useHistory from react-router-dom', () => {
-        expect(supSrc).toMatch(/import.*useHistory.*react-router-dom/);
+    it('7. Does not import unused useHistory', () => {
+        // useHistory was removed from rfq_suppliers/index.js since it was never used
+        expect(supSrc).not.toMatch(/history\.push|history\.replace/);
     });
 
     it('8. WhatsApp icon uses setChatModal with sup.phone', () => {

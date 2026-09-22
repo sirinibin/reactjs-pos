@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Badge, Spinner, Button, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { WhatsAppChatModal, EmailChatModal } from '../store/ConversationModal.js';
 
 const EMPTY_SUPPLIER = {
@@ -165,8 +164,6 @@ export default function RFQSuppliersIndex({ showToastMessage }) {
     const { t } = useTranslation('common');
     const storeId = localStorage.getItem("store_id");
     const token = localStorage.getItem("access_token");
-    // eslint-disable-next-line no-unused-vars
-    const history = useHistory();
 
     const [list, setList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);

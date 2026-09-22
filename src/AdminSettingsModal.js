@@ -24,6 +24,9 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [migrateResult, setMigrateResult] = useState(null);
     const [migrateStoreId, setMigrateStoreId] = useState('');
     const [migrateProgress, setMigrateProgress] = useState(null);
+    const [migratingRFQ, setMigratingRFQ] = useState(false);
+    const [migrateRFQResult, setMigrateRFQResult] = useState(null);
+    const [migrateRFQProgress, setMigrateRFQProgress] = useState(null);
 
     useEffect(() => {
         if (!show) return;
@@ -146,6 +149,69 @@ export default function AdminSettingsModal({ show, onHide }) {
             setMigrateResult({ ok: false, msg: e.message });
         } finally {
             setMigrating(false);
+        }
+    };
+
+    const handleMigrateRFQ = async () => {
+        if (!window.confirm(
+            'This will decode all base64 attachment data stored inline in RFQ records,\n' +
+            'upload them to S3, and replace the inline data with /cdn/ URLs.\n\n' +
+            'Original inline data is removed from MongoDB after upload.\n\nProceed?'
+        )) return;
+
+        setMigratingRFQ(true);
+        setMigrateRFQResult(null);
+        setMigrateRFQProgress(null);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/v1/migrate-rfq-attachments-to-s3', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}));
+                setMigrateRFQResult({ ok: false, msg: data.error || `HTTP ${resp.status}` });
+                return;
+            }
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+
+                const lines = buf.split('\n');
+                buf = lines.pop();
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const ev = JSON.parse(line.slice(6));
+                        if (ev.type === 'start') {
+                            setMigrateRFQProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current_file: '' });
+                        } else if (ev.type === 'progress') {
+                            setMigrateRFQProgress(prev => ({ ...prev, ...ev }));
+                        } else if (ev.type === 'done') {
+                            setMigrateRFQProgress(prev => ({ ...prev, percent: 100, done: true }));
+                            setMigrateRFQResult({
+                                ok: true,
+                                msg: `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}, RFQs updated: ${ev.updated_rfqs}`,
+                            });
+                        } else if (ev.type === 'error') {
+                            setMigrateRFQResult({ ok: false, msg: ev.error });
+                        }
+                    } catch (_) {}
+                }
+            }
+        } catch (e) {
+            setMigrateRFQResult({ ok: false, msg: e.message });
+        } finally {
+            setMigratingRFQ(false);
         }
     };
 
@@ -306,6 +372,59 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateResult && (
                                 <div style={{ marginTop: '10px', fontSize: '13px', color: migrateResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                                     {migrateResult.ok ? '✓ ' : '✗ '}{migrateResult.msg}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Migrate RFQ attachment inline data to S3 */}
+                        <div style={{ marginTop: '16px', padding: '16px', background: '#fefce8', border: '1px solid #fde047', borderRadius: '8px' }}>
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#713f12', marginBottom: '6px' }}>
+                                Migrate RFQ attachment data to S3
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#78350f', margin: '0 0 12px', lineHeight: 1.6 }}>
+                                Older RFQ records store attachment files as base64 data inline in MongoDB.
+                                This migration uploads each attachment to S3 and replaces the inline data with a <code>/cdn/</code> URL.
+                                Run once after enabling S3. The inline base64 data is removed from MongoDB after upload.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleMigrateRFQ}
+                                disabled={migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                style={{
+                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
+                                    background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                    cursor: 'pointer', opacity: (migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {migratingRFQ ? 'Migrating…' : 'Migrate RFQ Attachments to S3'}
+                            </button>
+
+                            {migrateRFQProgress && (
+                                <div style={{ marginTop: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#78350f', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
+                                        <span>{migrateRFQProgress.done ? 'Complete' : `Processing: ${migrateRFQProgress.current_file || '…'}`}</span>
+                                        <span>{migrateRFQProgress.processed} / {migrateRFQProgress.total} ({migrateRFQProgress.percent}%)</span>
+                                    </div>
+                                    <div style={{ background: '#fde68a', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
+                                        <div style={{
+                                            background: migrateRFQProgress.done ? '#16a34a' : '#d97706',
+                                            width: `${migrateRFQProgress.percent}%`,
+                                            height: '100%',
+                                            transition: 'width 0.2s ease',
+                                            borderRadius: '4px',
+                                        }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateRFQProgress.uploaded}</strong></span>
+                                        <span>Skipped: <strong>{migrateRFQProgress.skipped}</strong></span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {migrateRFQResult && (
+                                <div style={{ marginTop: '10px', fontSize: '13px', color: migrateRFQResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
+                                    {migrateRFQResult.ok ? '✓ ' : '✗ '}{migrateRFQResult.msg}
                                 </div>
                             )}
                         </div>
