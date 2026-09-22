@@ -1630,10 +1630,10 @@ const QuotationCreate = forwardRef((props, ref) => {
           name_in_arabic: p.name_in_arabic || "",
           quantity: parseFloat(p.quantity) || 1,
           unit: p.unit || "",
-          unit_price: src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : 0,
-          unit_price_with_vat: src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : 0,
-          purchase_unit_price: src.source === 'purchase' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.purchase_unit_price) || 0),
-          purchase_unit_price_with_vat: src.source === 'purchase' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.purchase_unit_price_with_vat) || 0),
+          unit_price: src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.retail_unit_price) || 0),
+          unit_price_with_vat: src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.retail_unit_price_with_vat) || 0),
+          purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+          purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
           unit_discount: src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0,
           unit_discount_with_vat: src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0,
           unit_discount_percent: src.source === 'sale' ? (parseFloat(p.unit_discount_percent) || 0) : 0,
@@ -3693,7 +3693,7 @@ async function checkWarning(i) {
                   <th><input type="checkbox" checked={importPickerData.products.every(p => importPickerSelected[p.product_id])} onChange={e => { const s = {}; importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; }); setImportPickerSelected(s); }} /></th>
                   <th>{t('Name')}</th>
                   <th>{t('Qty')}</th>
-                  <th>{t('Unit Price')}</th>
+                  <th>{t('Unit Price')} ({t('excl. VAT')})</th>
                 </tr>
               </thead>
               <tbody>
@@ -3702,7 +3702,7 @@ async function checkWarning(i) {
                     <td><input type="checkbox" checked={!!importPickerSelected[p.product_id]} onChange={() => {}} /></td>
                     <td>{p.name}{p.name_in_arabic ? <span className="text-muted ms-2" style={{ fontSize: '12px' }}>{p.name_in_arabic}</span> : ''}</td>
                     <td>{p.quantity}</td>
-                    <td>{p.unit_price}</td>
+                    <td>{importPickerData.source === 'purchase' ? p.retail_unit_price : p.unit_price}</td>
                   </tr>
                 ))}
               </tbody>
