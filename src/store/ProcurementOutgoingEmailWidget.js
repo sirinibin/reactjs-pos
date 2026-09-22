@@ -217,7 +217,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSaveOk(false);
         setSaveErr('');
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('access_token');
             const resp = await fetch(`${apiBase}/v1/store/${storeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -242,7 +242,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setTesting(true);
         setTestResult(null);
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('access_token');
             const resp = await fetch(`${apiBase}/v1/outgoing-email/test?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -262,7 +262,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         setSigSaving(true);
         setSigSaveErr('');
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('access_token');
             const resp = await fetch(`${apiBase}/v1/store/${storeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -571,12 +571,14 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             </button>
                         </div>
                         {sig.is_html ? (
-                            <iframe
-                                srcDoc={sig.content}
-                                title={`Preview: ${sig.name}`}
-                                style={{ width: '100%', height: '80px', border: '1px solid #e9ecef', borderRadius: '4px', background: '#fff', display: 'block' }}
-                                sandbox="allow-same-origin"
-                            />
+                            <div style={{ overflowX: 'auto', border: '1px solid #e9ecef', borderRadius: '4px', background: '#fff' }}>
+                                <iframe
+                                    srcDoc={sig.content}
+                                    title={`Preview: ${sig.name}`}
+                                    style={{ minWidth: '600px', width: '100%', height: '80px', border: 'none', display: 'block' }}
+                                    sandbox="allow-same-origin"
+                                />
+                            </div>
                         ) : (
                             <div style={{ fontSize: '12px', color: '#495057', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden' }}>
                                 {sig.content}
@@ -630,12 +632,14 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                             {sigEditing.is_html ? (
                                 <div style={{ marginTop: '6px' }}>
                                     <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '3px' }}>Live preview:</div>
-                                    <iframe
-                                        srcDoc={sigEditing.content || '<p style="color:#adb5bd;font-family:sans-serif;font-size:13px;padding:8px;">Preview will appear here…</p>'}
-                                        title="Signature preview"
-                                        style={{ width: '100%', height: '200px', border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', display: 'block' }}
-                                        sandbox="allow-same-origin"
-                                    />
+                                    <div style={{ overflowX: 'auto', border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff' }}>
+                                        <iframe
+                                            srcDoc={sigEditing.content || '<p style="color:#adb5bd;font-family:sans-serif;font-size:13px;padding:8px;">Preview will appear here…</p>'}
+                                            title="Signature preview"
+                                            style={{ minWidth: '600px', width: '100%', height: '200px', border: 'none', display: 'block' }}
+                                            sandbox="allow-same-origin"
+                                        />
+                                    </div>
                                     <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Full HTML rendered — what recipients will see.</div>
                                 </div>
                             ) : (
