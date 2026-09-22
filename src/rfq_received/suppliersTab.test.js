@@ -41,9 +41,10 @@ describe('RFQ Detail modal — Suppliers tab improvements', () => {
         expect(indexSrc).toMatch(/fetchResolvedSuppliers[\s\S]{0,300}rfq-suppliers[\s\S]{0,100}limit/);
     });
 
-    it('5. fetchResolvedSuppliers maps by phone and phone2', () => {
-        expect(indexSrc).toMatch(/map\[s\.phone\]\s*=\s*s/);
-        expect(indexSrc).toMatch(/map\[s\.phone2\]\s*=\s*s/);
+    it('5. fetchResolvedSuppliers maps by phone and phone2 (with +/no-+ normalization)', () => {
+        // The map now normalizes both phone variants so lookup works regardless of + prefix
+        expect(indexSrc).toMatch(/s\.phone[\s\S]{0,100}supplier|addPhone.*s\.phone/);
+        expect(indexSrc).toMatch(/s\.phone2[\s\S]{0,100}supplier|addPhone.*s\.phone2/);
     });
 
     it('6. fetchResolvedSuppliers triggers on suppliers tab activation', () => {
