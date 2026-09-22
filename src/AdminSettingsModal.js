@@ -23,6 +23,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [migrating, setMigrating] = useState(false);
     const [migrateResult, setMigrateResult] = useState(null);
     const [migrateStoreId, setMigrateStoreId] = useState('');
+    const [migrateProgress, setMigrateProgress] = useState(null);
 
     useEffect(() => {
         if (!show) return;
@@ -65,7 +66,8 @@ export default function AdminSettingsModal({ show, onHide }) {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/admin-settings/test-s3', {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
             });
             const data = await resp.json().catch(() => ({}));
             if (resp.ok && data.success) {
@@ -89,22 +91,56 @@ export default function AdminSettingsModal({ show, onHide }) {
             'This will upload all existing attachment files for Store ID ' + migrateStoreId.trim() +
             ' to S3 and update their URLs in the database.\n\nOriginal files stay on the server.\n\nProceed?'
         )) return;
+
         setMigrating(true);
         setMigrateResult(null);
+        setMigrateProgress(null);
+
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch(`/v1/store/${migrateStoreId.trim()}/migrate-to-s3`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
             });
-            const data = await resp.json().catch(() => ({}));
-            if (resp.ok) {
-                setMigrateResult({
-                    ok: true,
-                    msg: `Done. Uploaded: ${data.uploaded}, Skipped: ${data.skipped}, Messages updated: ${data.updated_messages}`,
-                });
-            } else {
+
+            if (!resp.ok) {
+                const data = await resp.json().catch(() => ({}));
                 setMigrateResult({ ok: false, msg: data.error || `HTTP ${resp.status}` });
+                return;
+            }
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+
+                // Parse complete SSE lines from buffer
+                const lines = buf.split('\n');
+                buf = lines.pop(); // keep incomplete last line
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const ev = JSON.parse(line.slice(6));
+                        if (ev.type === 'start') {
+                            setMigrateProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current_file: '' });
+                        } else if (ev.type === 'progress') {
+                            setMigrateProgress(prev => ({ ...prev, ...ev }));
+                        } else if (ev.type === 'done') {
+                            setMigrateProgress(prev => ({ ...prev, percent: 100, done: true }));
+                            setMigrateResult({
+                                ok: true,
+                                msg: `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}, Messages updated: ${ev.updated_messages}`,
+                            });
+                        } else if (ev.type === 'error') {
+                            setMigrateResult({ ok: false, msg: ev.error });
+                        }
+                    } catch (_) {}
+                }
             }
         } catch (e) {
             setMigrateResult({ ok: false, msg: e.message });
@@ -147,10 +183,11 @@ export default function AdminSettingsModal({ show, onHide }) {
                 {enabled && (
                     <>
                         <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '20px', lineHeight: 1.6 }}>
-                            When enabled, all new email and WhatsApp attachment files across all stores are saved to your S3 bucket.
-                            Existing files remain on the server unless you run the migration below.
-                            <br />
-                            <strong>Bucket policy:</strong> set public-read access so attachment URLs are directly accessible.
+                            When enabled, all new email and WhatsApp attachment files across all stores are saved to S3.
+                            Files are served through <code>/cdn/</code> on whichever domain the user is on —
+                            so <strong>startpos.startuptech.uk/cdn/…</strong> and <strong>startpos-test.startuptech.uk/cdn/…</strong> and
+                            <strong> workshop.gulfunionozone.com/cdn/…</strong> all work automatically.
+                            No extra configuration needed.
                         </p>
 
                         <div style={fieldStyle}>
@@ -182,26 +219,23 @@ export default function AdminSettingsModal({ show, onHide }) {
                             <span style={hintStyle}>For S3-compatible services: DigitalOcean Spaces, MinIO, Wasabi, Backblaze B2, etc. Leave blank for AWS S3.</span>
                         </div>
 
-                        <div style={fieldStyle}>
-                            <label style={labelStyle}>Public Base URL <span style={{ fontWeight: 400, color: '#9ca3af' }}>(optional)</span></label>
-                            <input style={inputStyle} value={settings.s3_public_base_url || ''} onChange={e => set('s3_public_base_url', e.target.value)} placeholder="https://cdn.example.com" />
-                            <span style={hintStyle}>Override the file URL prefix (e.g. CloudFront CDN URL). If blank, files are served directly from S3.</span>
-                        </div>
-
                         {/* Test connection */}
                         <div style={{ margin: '8px 0 24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                            <button
-                                type="button"
-                                onClick={handleTest}
-                                disabled={testing || !settings.s3_bucket_name || !settings.s3_access_key_id || !settings.s3_secret_key}
-                                style={{
-                                    padding: '8px 18px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                                    background: '#2563eb', color: '#fff', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600,
-                                    opacity: (testing || !settings.s3_bucket_name || !settings.s3_access_key_id || !settings.s3_secret_key) ? 0.5 : 1,
-                                }}
-                            >
-                                {testing ? 'Testing…' : 'Test S3 Connection'}
-                            </button>
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={handleTest}
+                                    disabled={testing}
+                                    style={{
+                                        padding: '8px 18px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                                        background: '#2563eb', color: '#fff', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600,
+                                        opacity: testing ? 0.5 : 1,
+                                    }}
+                                >
+                                    {testing ? 'Testing…' : 'Test S3 Connection'}
+                                </button>
+                                <div style={{ ...hintStyle, marginTop: '4px' }}>Tests with the values currently in the form (no need to save first). If the secret key field is blank, uses the saved secret from the database.</div>
+                            </div>
                             {testResult && (
                                 <span style={{ fontSize: '13px', color: testResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                                     {testResult.ok ? '✓ ' : '✗ '}{testResult.msg}
@@ -224,6 +258,7 @@ export default function AdminSettingsModal({ show, onHide }) {
                                     value={migrateStoreId}
                                     onChange={e => setMigrateStoreId(e.target.value)}
                                     placeholder="Store ID (hex, from Store form URL)"
+                                    disabled={migrating}
                                 />
                                 <button
                                     type="button"
@@ -239,6 +274,35 @@ export default function AdminSettingsModal({ show, onHide }) {
                                     {migrating ? 'Migrating…' : 'Migrate Existing Files to S3'}
                                 </button>
                             </div>
+
+                            {/* Real-time progress */}
+                            {migrateProgress && (
+                                <div style={{ marginTop: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#78350f', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
+                                        <span>
+                                            {migrateProgress.done ? 'Complete' : `Processing: ${migrateProgress.current_file || '…'}`}
+                                        </span>
+                                        <span>
+                                            {migrateProgress.processed} / {migrateProgress.total} ({migrateProgress.percent}%)
+                                        </span>
+                                    </div>
+                                    {/* Progress bar */}
+                                    <div style={{ background: '#fde68a', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
+                                        <div style={{
+                                            background: migrateProgress.done ? '#16a34a' : '#d97706',
+                                            width: `${migrateProgress.percent}%`,
+                                            height: '100%',
+                                            transition: 'width 0.2s ease',
+                                            borderRadius: '4px',
+                                        }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateProgress.uploaded}</strong></span>
+                                        <span>Skipped: <strong>{migrateProgress.skipped}</strong></span>
+                                    </div>
+                                </div>
+                            )}
+
                             {migrateResult && (
                                 <div style={{ marginTop: '10px', fontSize: '13px', color: migrateResult.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                                     {migrateResult.ok ? '✓ ' : '✗ '}{migrateResult.msg}
