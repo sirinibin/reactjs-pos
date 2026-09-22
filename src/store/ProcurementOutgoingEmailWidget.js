@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const PROVIDERS = [
     {
@@ -185,6 +185,16 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
     const [testing, setTesting] = useState(false);
     const [testResult, setTestResult] = useState(null); // { ok, msg }
 
+    // Email signatures state
+    const [signatures, setSignatures] = useState(() => (settings || {}).email_signatures || []);
+    const [sigEditing, setSigEditing] = useState(null); // null | { idx: -1 | number, name, content, is_default }
+    const [sigSaving, setSigSaving] = useState(false);
+    const [sigSaveErr, setSigSaveErr] = useState('');
+
+    useEffect(() => {
+        setSignatures((settings || {}).email_signatures || []);
+    }, [settings]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const apiBase = process.env.REACT_APP_API_URL || '';
 
     const selectedProvider = PROVIDERS.find(p => p.value === creds.outgoing_email_provider) || null;
@@ -246,6 +256,51 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
         } finally {
             setTesting(false);
         }
+    }
+
+    async function saveSignatures(newSigs) {
+        setSigSaving(true);
+        setSigSaveErr('');
+        try {
+            const token = localStorage.getItem('token');
+            const resp = await fetch(`${apiBase}/v1/store/${storeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ settings: { email_signatures: newSigs } }),
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                throw new Error(d.error || `HTTP ${resp.status}`);
+            }
+            setSignatures(newSigs);
+            if (onSettingsChange) onSettingsChange({ ...creds, email_signatures: newSigs });
+        } catch (e) {
+            setSigSaveErr(e.message);
+        } finally {
+            setSigSaving(false);
+        }
+    }
+
+    function handleSigSave() {
+        if (!sigEditing) return;
+        const { idx, name, content, is_default } = sigEditing;
+        if (!name.trim() || !content.trim()) { setSigSaveErr('Name and content are required.'); return; }
+        const id = idx === -1 ? Date.now().toString(36) : (signatures[idx]?.id || Date.now().toString(36));
+        let newSigs = idx === -1
+            ? [...signatures, { id, name, content, is_default }]
+            : signatures.map((s, i) => i === idx ? { ...s, name, content, is_default } : s);
+        if (is_default) newSigs = newSigs.map(s => s.id === id ? s : { ...s, is_default: false });
+        saveSignatures(newSigs).then(() => setSigEditing(null));
+    }
+
+    function handleSigDelete(idx) {
+        if (!window.confirm('Delete this signature?')) return;
+        saveSignatures(signatures.filter((_, i) => i !== idx));
+    }
+
+    function handleSigSetDefault(idx) {
+        const newSigs = signatures.map((s, i) => ({ ...s, is_default: i === idx }));
+        saveSignatures(newSigs);
     }
 
     function renderField(f) {
@@ -413,7 +468,7 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
 
             {/* Test email section */}
             {creds.outgoing_email_provider && (
-                <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '14px' }}>
+                <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
                     <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '10px' }}>
                         <i className="bi bi-send-check me-2 text-primary" />
                         Send a Test Email
@@ -449,6 +504,137 @@ export default function ProcurementOutgoingEmailWidget({ storeId, settings, onSe
                     )}
                 </div>
             )}
+
+            {/* Email Signatures */}
+            <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ fontWeight: 600, fontSize: '13px' }}>
+                        <i className="bi bi-pen me-2 text-secondary" />
+                        Email Signatures
+                    </div>
+                    {!sigEditing && (
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => { setSigEditing({ idx: -1, name: '', content: '', is_default: signatures.length === 0 }); setSigSaveErr(''); }}
+                            style={{ fontSize: '12px' }}
+                        >
+                            <i className="bi bi-plus me-1" />Add Signature
+                        </button>
+                    )}
+                </div>
+
+                {/* Existing signatures list */}
+                {signatures.length === 0 && !sigEditing && (
+                    <div style={{ fontSize: '12px', color: '#6c757d', textAlign: 'center', padding: '12px 0' }}>
+                        No signatures yet. Add one to automatically include it in outgoing emails.
+                    </div>
+                )}
+                {signatures.map((sig, idx) => (
+                    <div key={sig.id || idx} style={{ border: '1px solid #e9ecef', borderRadius: '6px', padding: '10px 12px', marginBottom: '8px', background: sig.is_default ? '#f0fdf4' : '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{ fontWeight: 600, fontSize: '13px', flex: 1 }}>{sig.name}</span>
+                            {sig.is_default && (
+                                <span className="badge" style={{ background: '#198754', color: '#fff', fontSize: '10px' }}>Default</span>
+                            )}
+                            {!sig.is_default && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-success"
+                                    style={{ fontSize: '11px', padding: '2px 8px' }}
+                                    onClick={() => handleSigSetDefault(idx)}
+                                    disabled={sigSaving}
+                                >
+                                    Set Default
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                style={{ fontSize: '11px', padding: '2px 8px' }}
+                                onClick={() => { setSigEditing({ idx, name: sig.name, content: sig.content, is_default: sig.is_default }); setSigSaveErr(''); }}
+                                disabled={!!sigEditing}
+                            >
+                                <i className="bi bi-pencil" />
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                style={{ fontSize: '11px', padding: '2px 8px' }}
+                                onClick={() => handleSigDelete(idx)}
+                                disabled={sigSaving || !!sigEditing}
+                            >
+                                <i className="bi bi-trash3" />
+                            </button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#495057', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {sig.content}
+                        </div>
+                    </div>
+                ))}
+
+                {/* Add / Edit form */}
+                {sigEditing && (
+                    <div style={{ border: '1px solid #c3d4f5', borderRadius: '6px', padding: '12px', background: '#f8faff', marginTop: '8px' }}>
+                        <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '10px' }}>
+                            {sigEditing.idx === -1 ? 'New Signature' : 'Edit Signature'}
+                        </div>
+                        <div className="mb-2">
+                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>Signature Name</label>
+                            <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="e.g. Procurement Team"
+                                value={sigEditing.name}
+                                onChange={e => setSigEditing(s => ({ ...s, name: e.target.value }))}
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>Signature Content</label>
+                            <textarea
+                                className="form-control form-control-sm"
+                                rows={5}
+                                placeholder="Best regards,&#10;[Your Name]&#10;[Company Name]&#10;[Phone]"
+                                value={sigEditing.content}
+                                onChange={e => setSigEditing(s => ({ ...s, content: e.target.value }))}
+                                style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                            />
+                            <div style={{ fontSize: '10px', color: '#6c757d', marginTop: '2px' }}>Plain text — line breaks are preserved in the email.</div>
+                        </div>
+                        <div className="form-check mb-3">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="sig-default"
+                                checked={!!sigEditing.is_default}
+                                onChange={e => setSigEditing(s => ({ ...s, is_default: e.target.checked }))}
+                            />
+                            <label className="form-check-label" htmlFor="sig-default" style={{ fontSize: '12px' }}>
+                                Use as default signature (automatically appended to all outgoing emails)
+                            </label>
+                        </div>
+                        {sigSaveErr && <div className="text-danger mb-2" style={{ fontSize: '12px' }}>{sigSaveErr}</div>}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                onClick={handleSigSave}
+                                disabled={sigSaving}
+                            >
+                                {sigSaving ? <><span className="spinner-border spinner-border-sm me-1" />Saving…</> : 'Save Signature'}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => { setSigEditing(null); setSigSaveErr(''); }}
+                                disabled={sigSaving}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

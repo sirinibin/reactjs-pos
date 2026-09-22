@@ -169,6 +169,8 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
 
     if (!msg || !show) return null;
 
+    const THANK_YOU_BODY = `Thank you for reaching out to us. We have received your email and will review it promptly. A member of our team will be in touch with you shortly.\n\nWe appreciate your time and look forward to assisting you.\n\nBest regards`;
+
     const handleOpenReply = () => {
         const orig = msg.subject || '';
         setReplySubject(orig.toLowerCase().startsWith('re:') ? orig : 'Re: ' + orig);
@@ -188,6 +190,11 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
             replyFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             replyBodyRef.current?.focus();
         }, 80);
+    };
+
+    const handleThankYouReply = () => {
+        handleOpenReply();
+        setReplyBody(THANK_YOU_BODY);
     };
 
     const handleAddAttachments = (files) => {
@@ -557,12 +564,21 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                     <div className="modal-footer" style={{ flexWrap: 'wrap', gap: '6px' }}>
                         {/* Reply button */}
                         <button
-                            className="btn btn-sm btn-outline-primary me-auto"
+                            className="btn btn-sm btn-outline-primary"
                             onClick={handleOpenReply}
                             disabled={replyOpen}
                             title={t('Reply to this email')}
                         >
                             <i className="bi bi-reply me-1"></i>{t('Reply')}
+                        </button>
+                        {/* Thank you quick-reply */}
+                        <button
+                            className="btn btn-sm btn-outline-success me-auto"
+                            onClick={handleThankYouReply}
+                            disabled={replyOpen}
+                            title={t('Send a professional acknowledgement reply')}
+                        >
+                            <i className="bi bi-check2-circle me-1"></i>{t('Thank You Reply')}
                         </button>
                         {onLinkQuotation && (
                             <button
