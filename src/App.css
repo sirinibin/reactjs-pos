@@ -12066,6 +12066,8 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 /* ProductCreate/ServiceCreate opened from within a pending-mode Sales form (order-create-wrap.above-pending-modal = 1095).
    Two-class specificity (0,2,0) ensures 1098 > 1095 regardless of single-class injected styles. */
 .pw-modal-wrap.above-pending-modal { z-index: 1098 !important; }
+/* ProductCreate opened from inside the import-picker modal (z-index 2000). Two-class specificity wins over .pw-modal-wrap alone. */
+.pw-modal-wrap.above-import-picker { z-index: 2100 !important; }
 /* Raise history modals above their standalone parent form.
    These rules intentionally win over body.form-over-history (1072) via CSS source-order.
    fromHistory={true} on sub-forms prevents them from adding these body classes, so there is

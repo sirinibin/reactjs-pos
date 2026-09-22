@@ -3703,6 +3703,7 @@ async function checkWarning(i) {
       <ProductCreate
         ref={ProductCreateFormRef}
         showToastMessage={props.showToastMessage}
+        modalClass="above-import-picker"
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
       <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
