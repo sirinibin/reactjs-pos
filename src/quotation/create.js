@@ -1564,7 +1564,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   async function handleImportFromSales(sale) {
     if (!sale || !sale.id) return;
     try {
-      const url = '/v1/order/' + sale.id + '?store_id=' + localStorage.getItem('store_id');
+      const url = '/v1/order/' + sale.id + '?search[store_id]=' + localStorage.getItem('store_id');
       const res = await fetch(url, {
         headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
       });
@@ -1590,7 +1590,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   async function handleImportFromPurchases(purchase) {
     if (!purchase || !purchase.id) return;
     try {
-      const url = '/v1/purchase/' + purchase.id + '?store_id=' + localStorage.getItem('store_id');
+      const url = '/v1/purchase/' + purchase.id + '?search[store_id]=' + localStorage.getItem('store_id');
       const res = await fetch(url, {
         headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
       });
