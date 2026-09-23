@@ -726,6 +726,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const [search, setSearch] = useState('');
     const [direction, setDirection] = useState('');
     const [rfqFilter, setRfqFilter] = useState('');
+    const [attachmentFilter, setAttachmentFilter] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -1227,7 +1228,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
         }
     };
 
-    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter) => {
+    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter, hasAtt = attachmentFilter) => {
         if (!storeId) return;
         setLoading(true);
         try {
@@ -1235,13 +1236,14 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             if (q) params.set('search', q);
             if (dir) params.set('direction', dir);
             if (rfq) params.set('rfq_filter', rfq);
+            if (hasAtt) params.set('has_attachments', 'true');
             const res = await fetch(`/v1/procurement-messages?${params}`, { headers: { Authorization: token } });
             const data = await res.json();
             setMessages(data.messages || []);
             setTotal(data.total || 0);
             setPage(pg);
         } finally { setLoading(false); }
-    }, [storeId, token, search, direction, rfqFilter]);
+    }, [storeId, token, search, direction, rfqFilter, attachmentFilter]);
 
     useEffect(() => {
         load(1);
@@ -1289,19 +1291,25 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
         const q = e.target.value;
         setSearch(q);
         clearTimeout(searchTimeout.current);
-        searchTimeout.current = setTimeout(() => load(1, q, direction, rfqFilter), 350);
+        searchTimeout.current = setTimeout(() => load(1, q, direction, rfqFilter, attachmentFilter), 350);
     };
 
     const handleDirection = e => {
         const d = e.target.value;
         setDirection(d);
-        load(1, search, d, rfqFilter);
+        load(1, search, d, rfqFilter, attachmentFilter);
     };
 
     const handleRfqFilter = e => {
         const f = e.target.value;
         setRfqFilter(f);
-        load(1, search, direction, f);
+        load(1, search, direction, f, attachmentFilter);
+    };
+
+    const handleAttachmentFilter = () => {
+        const next = !attachmentFilter;
+        setAttachmentFilter(next);
+        load(1, search, direction, rfqFilter, next);
     };
 
     const openRfqModal = (rfqId, e) => {
@@ -1435,6 +1443,13 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                     <option value="yes">{t('RFQ Created')}</option>
                     <option value="no">{t('No RFQ')}</option>
                 </select>
+                <button
+                    className={`btn btn-sm ${attachmentFilter ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                    onClick={handleAttachmentFilter}
+                    title={t('Show only messages with attachments')}
+                >
+                    <i className="bi bi-paperclip me-1"></i>{t('Has Attachments')}
+                </button>
                 <button
                     className="btn btn-sm btn-outline-success ms-auto"
                     disabled={syncing}
@@ -2171,7 +2186,29 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                 {t('No WhatsApp messages logged yet')}
                             </td></tr>
                         )}
-                        {messages.map(msg => (
+                        {(() => {
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                            let lastDateKey = null;
+                            const rows = [];
+                            messages.forEach(msg => {
+                                const d = msg.message_date ? new Date(msg.message_date) : null;
+                                if (d) {
+                                    const dDay = new Date(d); dDay.setHours(0,0,0,0);
+                                    const dateKey = dDay.getTime();
+                                    if (dateKey !== lastDateKey) {
+                                        lastDateKey = dateKey;
+                                        const label = dateKey === today.getTime() ? t('Today') : dateKey === yesterday.getTime() ? t('Yesterday') : d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+                                        rows.push(
+                                            <tr key={`date-${dateKey}`}>
+                                                <td colSpan={10} style={{ background: 'var(--date-sep-bg, #f0f4f8)', textAlign: 'center', fontSize: '11px', color: '#6c757d', padding: '4px 8px', fontWeight: 600, borderTop: '2px solid #dee2e6' }}>
+                                                    {label}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                }
+                                rows.push(
                             <tr
                                 key={msg.id}
                                 style={{ cursor: 'pointer', fontWeight: msg.read ? 400 : 700, background: msg.processed_as_rfq ? '#f0fff4' : undefined }}
@@ -2283,7 +2320,10 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                                );
+                            });
+                            return rows;
+                        })()}
                     </tbody>
                 </table>
             </div>

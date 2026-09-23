@@ -717,7 +717,29 @@ export default function ProcurementEmailsTab({ storeId }) {
                                 {t('No emails logged yet')}
                             </td></tr>
                         )}
-                        {messages.map(msg => (
+                        {(() => {
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                            let lastDateKey = null;
+                            const rows = [];
+                            messages.forEach(msg => {
+                                const d = msg.message_date ? new Date(msg.message_date) : null;
+                                if (d) {
+                                    const dDay = new Date(d); dDay.setHours(0,0,0,0);
+                                    const dateKey = dDay.getTime();
+                                    if (dateKey !== lastDateKey) {
+                                        lastDateKey = dateKey;
+                                        const label = dateKey === today.getTime() ? t('Today') : dateKey === yesterday.getTime() ? t('Yesterday') : d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+                                        rows.push(
+                                            <tr key={`date-${dateKey}`}>
+                                                <td colSpan={10} style={{ background: 'var(--date-sep-bg, #f0f4f8)', textAlign: 'center', fontSize: '11px', color: '#6c757d', padding: '4px 8px', fontWeight: 600, borderTop: '2px solid #dee2e6' }}>
+                                                    {label}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                }
+                                rows.push(
                             <tr
                                 key={msg.id}
                                 style={{ cursor: 'pointer', fontWeight: msg.read ? 400 : 700, background: msg.processed_as_rfq ? '#f0fff4' : undefined }}
@@ -829,7 +851,10 @@ export default function ProcurementEmailsTab({ storeId }) {
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                                );
+                            });
+                            return rows;
+                        })()}
                     </tbody>
                 </table>
             </div>
