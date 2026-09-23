@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-bootstrap/Modal';
 
 const fieldStyle = {
@@ -44,6 +44,13 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [fixS3URLsProgress, setFixS3URLsProgress] = useState(null);
     const [fixS3URLsResult, setFixS3URLsResult] = useState(null);
     const [fixS3CurrentStore, setFixS3CurrentStore] = useState(null);
+    // Abort controllers (one per cancellable operation)
+    const migrateAbortRef = useRef(null);
+    const rfqAbortRef = useRef(null);
+    const entityAbortRef = useRef(null);
+    const inlineAbortRef = useRef(null);
+    const verifyAbortRef = useRef(null);
+    const fixS3AbortRef = useRef(null);
 
     useEffect(() => {
         if (!show) return;
@@ -110,12 +117,15 @@ export default function AdminSettingsModal({ show, onHide }) {
         setMigrating(true);
         setMigrateResult(null);
         setMigrateProgress(null);
+        const migrateController = new AbortController();
+        migrateAbortRef.current = migrateController;
 
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/migrate-all-stores-to-s3', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
+                signal: migrateController.signal,
             });
 
             if (!resp.ok) {
@@ -184,8 +194,10 @@ export default function AdminSettingsModal({ show, onHide }) {
                 }
             }
         } catch (e) {
-            setMigrateResult({ ok: false, msg: e.message });
+            if (e.name !== 'AbortError') setMigrateResult({ ok: false, msg: e.message });
+            else setMigrateResult({ ok: false, msg: 'Cancelled.' });
         } finally {
+            migrateAbortRef.current = null;
             setMigrating(false);
         }
     };
@@ -200,12 +212,15 @@ export default function AdminSettingsModal({ show, onHide }) {
         setMigratingRFQ(true);
         setMigrateRFQResult(null);
         setMigrateRFQProgress(null);
+        const rfqController = new AbortController();
+        rfqAbortRef.current = rfqController;
 
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/migrate-rfq-attachments-to-s3', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
+                signal: rfqController.signal,
             });
 
             if (!resp.ok) {
@@ -275,19 +290,23 @@ export default function AdminSettingsModal({ show, onHide }) {
                 }
             }
         } catch (e) {
-            setMigrateRFQResult({ ok: false, msg: e.message });
+            if (e.name !== 'AbortError') setMigrateRFQResult({ ok: false, msg: e.message });
+            else setMigrateRFQResult({ ok: false, msg: 'Cancelled.' });
         } finally {
+            rfqAbortRef.current = null;
             setMigratingRFQ(false);
         }
     };
 
-    const runSSEMigration = async (url, setMigrating, setResult, setProgress, doneMsg) => {
+    const runSSEMigration = async (url, setMigrating, setResult, setProgress, doneMsg, abortRef) => {
         setMigrating(true);
         setResult(null);
         setProgress(null);
+        const controller = new AbortController();
+        if (abortRef) abortRef.current = controller;
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+            const resp = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
             if (!resp.ok) {
                 const data = await resp.json().catch(() => ({}));
                 setResult({ ok: false, msg: data.error || `HTTP ${resp.status}` });
@@ -348,8 +367,10 @@ export default function AdminSettingsModal({ show, onHide }) {
                 }
             }
         } catch (e) {
-            setResult({ ok: false, msg: e.message });
+            if (e.name !== 'AbortError') setResult({ ok: false, msg: e.message });
+            else setResult({ ok: false, msg: 'Cancelled.' });
         } finally {
+            if (abortRef) abortRef.current = null;
             setMigrating(false);
         }
     };
@@ -362,7 +383,8 @@ export default function AdminSettingsModal({ show, onHide }) {
         runSSEMigration(
             '/v1/migrate-entity-images-to-s3',
             setMigratingEntity, setMigrateEntityResult, setMigrateEntityProgress,
-            ev => `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}`
+            ev => `Done. Uploaded: ${ev.uploaded}, Skipped: ${ev.skipped}`,
+            entityAbortRef
         );
     };
 
@@ -374,7 +396,8 @@ export default function AdminSettingsModal({ show, onHide }) {
         runSSEMigration(
             '/v1/migrate-inline-images-to-s3',
             setMigratingInline, setMigrateInlineResult, setMigrateInlineProgress,
-            ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated_docs}`
+            ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated_docs}`,
+            inlineAbortRef
         );
     };
 
@@ -391,10 +414,13 @@ export default function AdminSettingsModal({ show, onHide }) {
         setCleanupCurrentEntity(null);
         setCleanupCurrentStore(null);
         setCleanupError(null);
+        const verifyController = new AbortController();
+        verifyAbortRef.current = verifyController;
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/verify-cleanup-disk', {
                 method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                signal: verifyController.signal,
             });
             if (!resp.ok) {
                 const d = await resp.json().catch(() => ({}));
@@ -433,8 +459,10 @@ export default function AdminSettingsModal({ show, onHide }) {
                 }
             }
         } catch (e) {
-            setCleanupError(e.message);
+            if (e.name !== 'AbortError') setCleanupError(e.message);
+            else setCleanupError('Cancelled.');
         } finally {
+            verifyAbortRef.current = null;
             setCleanupRunning(false);
             setCleanupCurrentEntity(null);
         }
@@ -450,10 +478,13 @@ export default function AdminSettingsModal({ show, onHide }) {
         setFixS3URLsProgress(null);
         setFixS3URLsResult(null);
         setFixS3CurrentStore(null);
+        const fixS3Controller = new AbortController();
+        fixS3AbortRef.current = fixS3Controller;
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/fix-direct-s3-urls', {
                 method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                signal: fixS3Controller.signal,
             });
             if (!resp.ok) {
                 const d = await resp.json().catch(() => ({}));
@@ -485,8 +516,10 @@ export default function AdminSettingsModal({ show, onHide }) {
                 }
             }
         } catch (e) {
-            setFixS3URLsResult({ ok: false, msg: e.message });
+            if (e.name !== 'AbortError') setFixS3URLsResult({ ok: false, msg: e.message });
+            else setFixS3URLsResult({ ok: false, msg: 'Cancelled.' });
         } finally {
+            fixS3AbortRef.current = null;
             setFixingS3URLs(false);
         }
     };
@@ -594,19 +627,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 Uploads all locally-stored attachment files for <strong>all stores</strong> to S3 and updates the links in the database.
                                 Run once after configuring S3. Original server files are kept.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleMigrate}
-                                disabled={migrating || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
-                                    background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (migrating || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {migrating ? 'Migrating…' : 'Migrate Existing Files to S3'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleMigrate}
+                                    disabled={migrating || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
+                                        background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (migrating || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {migrating ? 'Migrating…' : 'Migrate Existing Files to S3'}
+                                </button>
+                                {migrating && (
+                                    <button type="button" onClick={() => migrateAbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
 
                             {migrateProgress && (
                                 <div style={{ marginTop: '14px' }}>
@@ -667,19 +707,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 This migration uploads each attachment to S3 and replaces the inline data with a <code>/cdn/</code> URL.
                                 Run once after enabling S3. The inline base64 data is removed from MongoDB after upload.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleMigrateRFQ}
-                                disabled={migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
-                                    background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {migratingRFQ ? 'Migrating…' : 'Migrate RFQ Attachments to S3'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleMigrateRFQ}
+                                    disabled={migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #d97706',
+                                        background: '#fff', color: '#92400e', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (migratingRFQ || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {migratingRFQ ? 'Migrating…' : 'Migrate RFQ Attachments to S3'}
+                                </button>
+                                {migratingRFQ && (
+                                    <button type="button" onClick={() => rfqAbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
 
                             {migrateRFQProgress && (
                                 <div style={{ marginTop: '14px' }}>
@@ -728,19 +775,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 and updates MongoDB records (products, customers, vendors, expenses, etc.) to use <code>/cdn/</code> URLs.
                                 Run once after enabling S3.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleMigrateEntity}
-                                disabled={migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #16a34a',
-                                    background: '#fff', color: '#14532d', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {migratingEntity ? 'Migrating…' : 'Migrate Entity Images to S3'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleMigrateEntity}
+                                    disabled={migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #16a34a',
+                                        background: '#fff', color: '#14532d', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (migratingEntity || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {migratingEntity ? 'Migrating…' : 'Migrate Entity Images to S3'}
+                                </button>
+                                {migratingEntity && (
+                                    <button type="button" onClick={() => entityAbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                             {migrateEntityProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#166534', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
@@ -787,19 +841,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 instead of the <code>/cdn/</code> path. This scan rewrites them so images always load via the
                                 app's CDN route. Run once after seeing images load directly from S3.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleFixS3URLs}
-                                disabled={fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #9333ea',
-                                    background: '#fff', color: '#581c87', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {fixingS3URLs ? 'Fixing…' : 'Fix Direct S3 URLs'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleFixS3URLs}
+                                    disabled={fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #9333ea',
+                                        background: '#fff', color: '#581c87', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (fixingS3URLs || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {fixingS3URLs ? 'Fixing…' : 'Fix Direct S3 URLs'}
+                                </button>
+                                {fixingS3URLs && (
+                                    <button type="button" onClick={() => fixS3AbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                             {(fixS3CurrentStore || fixS3URLsProgress) && fixingS3URLs && (
                                 <div style={{ marginTop: '10px', fontSize: '11px', color: '#6b21a8', fontFamily: '"Inter", sans-serif', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
                                     {fixS3CurrentStore && (
@@ -835,19 +896,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 as inline base64 data inside MongoDB. This migration uploads each image to S3 and replaces
                                 the inline data with a <code>/cdn/</code> URL.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleMigrateInline}
-                                disabled={migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #3b82f6',
-                                    background: '#fff', color: '#1e3a8a', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {migratingInline ? 'Migrating…' : 'Migrate Inline Images to S3'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleMigrateInline}
+                                    disabled={migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #3b82f6',
+                                        background: '#fff', color: '#1e3a8a', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (migratingInline || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {migratingInline ? 'Migrating…' : 'Migrate Inline Images to S3'}
+                                </button>
+                                {migratingInline && (
+                                    <button type="button" onClick={() => inlineAbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                             {migrateInlineProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
@@ -894,19 +962,26 @@ export default function AdminSettingsModal({ show, onHide }) {
                                 RFQ inline MongoDB data is removed once the corresponding S3 file is confirmed.
                                 <br /><strong>Run after all migrations above are complete.</strong>
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleVerifyCleanup}
-                                disabled={cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id}
-                                style={{
-                                    padding: '7px 16px', borderRadius: '6px', border: '1px solid #ea580c',
-                                    background: '#fff', color: '#7c2d12', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
-                                    cursor: 'pointer', opacity: (cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
-                                    whiteSpace: 'nowrap',
-                                }}
-                            >
-                                {cleanupRunning ? 'Verifying & Cleaning…' : 'Verify S3 & Delete Disk Copies'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleVerifyCleanup}
+                                    disabled={cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: '6px', border: '1px solid #ea580c',
+                                        background: '#fff', color: '#7c2d12', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600,
+                                        cursor: 'pointer', opacity: (cleanupRunning || !settings.s3_bucket_name || !settings.s3_access_key_id) ? 0.5 : 1,
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {cleanupRunning ? 'Verifying & Cleaning…' : 'Verify S3 & Delete Disk Copies'}
+                                </button>
+                                {cleanupRunning && (
+                                    <button type="button" onClick={() => verifyAbortRef.current?.abort()} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid #dc2626', background: '#fff', color: '#dc2626', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
 
                             {cleanupError && (
                                 <div style={{ marginTop: '10px', fontSize: '13px', color: '#dc2626', fontFamily: '"Inter", sans-serif' }}>
