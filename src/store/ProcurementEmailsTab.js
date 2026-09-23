@@ -910,6 +910,7 @@ export default function ProcurementEmailsTab({ storeId }) {
                 storeId={storeId}
                 onHide={() => setRfqDetail(null)}
                 onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
+                zIndex={10001}
             />
 
             {/* Send RFQ modal — stays on this page, no navigation */}

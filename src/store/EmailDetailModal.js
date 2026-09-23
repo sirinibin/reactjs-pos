@@ -302,7 +302,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
 
     return (
     <>
-        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: rfqDetailShow ? 'none' : undefined }}>
+        {!rfqDetailShow && <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
             <div className="modal-dialog modal-lg modal-dialog-scrollable" style={{ maxWidth: '760px' }}>
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f8f9fa' }}>
@@ -712,13 +712,13 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                     </div>
                 </div>
             </div>
-        </div>
+        </div>}
         <ForwardDetail
             rfq={rfqDetail}
             show={rfqDetailShow && !!rfqDetail}
             onHide={() => { setRfqDetailShow(false); }}
             storeId={storeId}
-            zIndex={10001}
+            zIndex={19999}
         />
     </>
     );
