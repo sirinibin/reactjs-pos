@@ -343,7 +343,7 @@ export default function ProcurementEmailsTab({ storeId }) {
     const [page, setPage] = useState(1);
     // Pre-fill search from ?email= URL param so linking from supplier/customer opens filtered view
     const [search, setSearch] = useState(() => new URLSearchParams(location.search).get('email') || '');
-    const [direction, setDirection] = useState('');
+    const [direction, setDirection] = useState('in');
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -549,6 +549,43 @@ export default function ProcurementEmailsTab({ storeId }) {
 
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+    const PageNav = () => {
+        if (totalPages <= 1) return null;
+        const pages = [];
+        const addPage = n => pages.push(n);
+        const addEllipsis = () => pages.push('…');
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) addPage(i);
+        } else {
+            addPage(1);
+            if (page > 4) addEllipsis();
+            const start = Math.max(2, page - 2);
+            const end   = Math.min(totalPages - 1, page + 2);
+            for (let i = start; i <= end; i++) addPage(i);
+            if (page < totalPages - 3) addEllipsis();
+            addPage(totalPages);
+        }
+        return (
+            <nav aria-label="page navigation" style={{ display: 'flex', justifyContent: 'center', margin: '6px 0' }}>
+                <ul className="pagination pagination-sm mb-0">
+                    <li className={`page-item${page <= 1 ? ' disabled' : ''}`}>
+                        <button className="page-link" onClick={() => load(page - 1)} disabled={page <= 1}>&laquo;</button>
+                    </li>
+                    {pages.map((p, i) =>
+                        p === '…'
+                            ? <li key={`e${i}`} className="page-item disabled"><span className="page-link">…</span></li>
+                            : <li key={p} className={`page-item${p === page ? ' active' : ''}`}>
+                                <button className="page-link" onClick={() => { if (p !== page) load(p); }}>{p}</button>
+                              </li>
+                    )}
+                    <li className={`page-item${page >= totalPages ? ' disabled' : ''}`}>
+                        <button className="page-link" onClick={() => load(page + 1)} disabled={page >= totalPages}>&raquo;</button>
+                    </li>
+                </ul>
+            </nav>
+        );
+    };
+
     return (
         <div style={{ padding: '16px' }}>
             {/* Toast */}
@@ -642,12 +679,13 @@ export default function ProcurementEmailsTab({ storeId }) {
                 )}
             </div>
 
-            {/* Table */}
+            {/* Top pagination + count */}
             {!loading && total > 0 && (
-                <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="d-flex justify-content-between align-items-center mb-1" style={{ flexWrap: 'wrap', gap: '4px' }}>
                     <small style={{ color: '#6c757d', fontSize: '12px' }}>
-                        Showing {((page - 1) * PAGE_SIZE + 1).toLocaleString()}–{Math.min(page * PAGE_SIZE, total).toLocaleString()} of {total.toLocaleString()} | Page {page} of {totalPages.toLocaleString()}
+                        {((page - 1) * PAGE_SIZE + 1).toLocaleString()}–{Math.min(page * PAGE_SIZE, total).toLocaleString()} of {total.toLocaleString()}
                     </small>
+                    <PageNav />
                 </div>
             )}
             <div style={{ overflowX: 'auto' }}>
@@ -796,13 +834,8 @@ export default function ProcurementEmailsTab({ storeId }) {
                 </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', gap: '4px' }}>
-                    <button className="btn btn-sm btn-outline-secondary" disabled={page <= 1} onClick={() => load(page - 1)}>&laquo;</button>
-                    <button className="btn btn-sm btn-outline-secondary" disabled={page >= totalPages} onClick={() => load(page + 1)}>&raquo;</button>
-                </div>
-            )}
+            {/* Bottom pagination */}
+            <PageNav />
 
             {/* Detail Modal */}
             <EmailDetailModal
