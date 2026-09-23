@@ -47,6 +47,8 @@ export default function AdminSettingsModal({ show, onHide }) {
     // Server Status
     const [serverStatus, setServerStatus] = useState(null);
     const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
+    const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
+    const [autoRestartSaving, setAutoRestartSaving] = useState(false);
     // Abort controllers (one per cancellable operation)
     const migrateAbortRef = useRef(null);
     const rfqAbortRef = useRef(null);
@@ -79,9 +81,34 @@ export default function AdminSettingsModal({ show, onHide }) {
         } catch (_) {}
     };
 
+    const fetchAutoRestartConfig = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/health-monitor/config', { headers: { Authorization: `Bearer ${token}` } });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            setAutoRestart({ enabled: data.enabled ?? false, minutes: data.minutes ?? 8 });
+        } catch (_) {}
+    };
+
+    const saveAutoRestartConfig = async (cfg) => {
+        setAutoRestartSaving(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            await fetch('/health-monitor/config', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(cfg),
+            });
+        } catch (_) {} finally {
+            setAutoRestartSaving(false);
+        }
+    };
+
     useEffect(() => {
         if (!show) return;
         fetchServerStatus();
+        fetchAutoRestartConfig();
         const id = setInterval(fetchServerStatus, 5000);
         return () => clearInterval(id);
     }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1108,6 +1135,45 @@ export default function AdminSettingsModal({ show, onHide }) {
                         (auto-refreshes every 5 s)
                     </span>
                 </h6>
+
+                {/* ── Auto-restart config ───────────────────────────────── */}
+                <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <input
+                            type="checkbox"
+                            id="autoRestartEnabled"
+                            checked={autoRestart.enabled}
+                            onChange={e => {
+                                const next = { ...autoRestart, enabled: e.target.checked };
+                                setAutoRestart(next);
+                                saveAutoRestartConfig(next);
+                            }}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                        />
+                        <label htmlFor="autoRestartEnabled" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#374151', cursor: 'pointer', margin: 0 }}>
+                            Enable auto-restart if down for more than
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="1440"
+                            value={autoRestart.minutes}
+                            onChange={e => setAutoRestart(prev => ({ ...prev, minutes: Math.max(1, parseInt(e.target.value, 10) || 1) }))}
+                            onBlur={() => saveAutoRestartConfig(autoRestart)}
+                            disabled={!autoRestart.enabled}
+                            style={{
+                                width: '64px', padding: '4px 8px', borderRadius: '6px',
+                                border: '1px solid #d1d5db', fontFamily: '"Inter", sans-serif',
+                                fontSize: '13px', textAlign: 'center',
+                                opacity: autoRestart.enabled ? 1 : 0.45,
+                            }}
+                        />
+                        <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#6b7280' }}>minutes</span>
+                        {autoRestartSaving && (
+                            <span style={{ fontSize: '11px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>Saving…</span>
+                        )}
+                    </div>
+                </div>
 
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                     {['production', 'test'].map(env => {
