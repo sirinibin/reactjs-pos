@@ -2353,6 +2353,7 @@
   "status_forwarded": "تم التوجيه",
   "status_inactive": "غير نشط",
   "status_processing": "قيد المعالجة",
+  "status_ready_to_send": "جاهز للإرسال",
   "status_received": "مستلم",
   "supplier": "مورد",
   "supplier_deleted": "تم حذف المورد",
