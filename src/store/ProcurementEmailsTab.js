@@ -860,7 +860,7 @@ export default function ProcurementEmailsTab({ storeId }) {
                 storeId={storeId}
                 show={showSendModal}
                 onHide={() => setShowSendModal(false)}
-                onSent={() => {}}
+                onSent={() => load(page)}
             />
 
         </div>

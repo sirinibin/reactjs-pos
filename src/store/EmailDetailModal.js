@@ -117,6 +117,53 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [rfqDetailShow, setRfqDetailShow] = useState(false);
     const [threadMessages, setThreadMessages] = useState([]);
     const [threadLoading, setThreadLoading] = useState(false);
+    // Customer RFQ history
+    const [emailRfqOpen, setEmailRfqOpen] = useState(false);
+    const [emailRfqList, setEmailRfqList] = useState([]);
+    const [emailRfqLoading, setEmailRfqLoading] = useState(false);
+    const emailRfqRef = useRef(null);
+    const bodyRef = useRef(null);
+
+    const loadEmailRfqs = async (email) => {
+        if (!email || !storeId || !token) return;
+        setEmailRfqLoading(true);
+        try {
+            const res = await fetch(
+                `/v1/rfq-received?store_id=${storeId}&customer_email=${encodeURIComponent(email)}&limit=50`,
+                { headers: { Authorization: token } }
+            );
+            const data = await res.json();
+            setEmailRfqList(data.result || []);
+        } catch (_) {}
+        setEmailRfqLoading(false);
+    };
+
+    // Load customer RFQ history when modal opens
+    useEffect(() => {
+        if (!show || !msg) { setEmailRfqList([]); setEmailRfqOpen(false); return; }
+        const email = msg.direction === 'in'
+            ? extractEmail(msg.from || '')
+            : extractEmail((msg.to && msg.to[0]) || '');
+        if (email) loadEmailRfqs(email);
+    }, [show, msg?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Close RFQ dropdown on outside click
+    useEffect(() => {
+        const handler = e => {
+            if (emailRfqRef.current && !emailRfqRef.current.contains(e.target)) setEmailRfqOpen(false);
+        };
+        if (emailRfqOpen) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [emailRfqOpen]);
+
+    // Hide broken images in body HTML
+    useEffect(() => {
+        if (!bodyRef.current) return;
+        bodyRef.current.querySelectorAll('img').forEach(img => {
+            img.onerror = () => { img.style.display = 'none'; };
+            if (img.complete && img.naturalWidth === 0) img.style.display = 'none';
+        });
+    }, [msg?.body_html]);
 
     useEffect(() => {
         if (!show || !msg || !storeId || !token) { setThreadMessages([]); return; }
@@ -288,6 +335,60 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     </span>
                                 )}
                             </div>
+                            {/* Customer RFQs button */}
+                            <div ref={emailRfqRef} style={{ position: 'relative', display: 'inline-block', marginTop: '4px' }}>
+                                <button
+                                    onClick={() => setEmailRfqOpen(o => !o)}
+                                    style={{ background: emailRfqList.length > 0 ? '#e8f0fe' : '#f1f3f4', border: '1px solid #dadce0', borderRadius: '4px', padding: '2px 9px', fontSize: '11px', fontWeight: 600, color: '#1a73e8', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                    title="View customer RFQ history"
+                                >
+                                    <i className="bi bi-folder2-open"></i>
+                                    Customer RFQs
+                                    {emailRfqList.length > 0 && (
+                                        <span style={{ background: '#1a73e8', color: '#fff', borderRadius: '10px', padding: '0 5px', fontSize: '10px', minWidth: '16px', textAlign: 'center' }}>{emailRfqList.length}</span>
+                                    )}
+                                    {emailRfqLoading && <span className="spinner-border spinner-border-sm" style={{ width: '10px', height: '10px', borderWidth: '1.5px' }} />}
+                                </button>
+                                {emailRfqOpen && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10200, background: '#fff', border: '1px solid #dadce0', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: '360px', maxHeight: '420px', overflowY: 'auto', marginTop: '4px' }}>
+                                        {emailRfqLoading && <div style={{ padding: '14px', textAlign: 'center', color: '#80868b', fontSize: '13px' }}><span className="spinner-border spinner-border-sm me-2" />Loading…</div>}
+                                        {!emailRfqLoading && emailRfqList.length === 0 && <div style={{ padding: '14px', textAlign: 'center', color: '#80868b', fontSize: '13px' }}>No RFQs found for this customer</div>}
+                                        {emailRfqList.map(rfq => (
+                                            <div key={rfq.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0f0' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                    <span
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={() => { setRfqDetail(rfq); setRfqDetailShow(true); setEmailRfqOpen(false); }}
+                                                        onKeyDown={e => e.key === 'Enter' && (setRfqDetail(rfq), setRfqDetailShow(true), setEmailRfqOpen(false))}
+                                                        style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: '#0a7c42', background: '#e6f4ed', borderRadius: '4px', padding: '1px 6px', cursor: 'pointer' }}
+                                                        title="Open RFQ details"
+                                                    >
+                                                        {rfq.code}
+                                                    </span>
+                                                    <span style={{ fontSize: '11px', color: '#5f6368' }}>{rfq.received_at ? new Date(rfq.received_at).toLocaleDateString() : ''}</span>
+                                                    {rfq.status && <span style={{ fontSize: '10px', background: '#f0f0f0', borderRadius: '10px', padding: '1px 6px', color: '#444' }}>{rfq.status}</span>}
+                                                </div>
+                                                {(rfq.forwarded_to || []).length > 0 && (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                        {rfq.forwarded_to.map((sup, i) => (
+                                                            <button
+                                                                key={i}
+                                                                onClick={() => window.open(`/dashboard/procurement-whatsapp?phone=${encodeURIComponent(sup.phone)}`, '_blank')}
+                                                                style={{ background: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '12px', padding: '2px 8px', fontSize: '11px', color: '#2e7d32', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                                                                title={`Open WhatsApp chat with ${sup.name || sup.phone}`}
+                                                            >
+                                                                <i className="bi bi-whatsapp"></i>
+                                                                {sup.name || sup.phone}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                             <h6 className="modal-title mt-1" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 {msg.code && (
                                     <span style={{
@@ -326,7 +427,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                         <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
                             <div style={{ maxHeight: '400px', overflow: 'auto', padding: '20px 24px', fontSize: '14px', lineHeight: '1.6', color: '#202124' }}>
                                 {msg.body_html ? (
-                                    <div dangerouslySetInnerHTML={{ __html: fixEmailHtml(msg.body_html) }} />
+                                    <div ref={bodyRef} dangerouslySetInnerHTML={{ __html: fixEmailHtml(msg.body_html) }} />
                                 ) : (
                                     <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>
                                         {msg.body_text || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}
