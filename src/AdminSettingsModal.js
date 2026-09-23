@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-bootstrap/Modal';
+import { Typeahead } from 'react-bootstrap-typeahead';
 
 const fieldStyle = {
     display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px',
@@ -53,8 +54,8 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
     const [autoRestartSaving, setAutoRestartSaving] = useState(false);
     const [restartLog, setRestartLog] = useState([]);
-    const [allUsers, setAllUsers] = useState([]);
-    const [allowedUsers, setAllowedUsers] = useState([]);
+    const [userSearchOptions, setUserSearchOptions] = useState([]);
+    const [allowedUsers, setAllowedUsers] = useState([]); // array of {id, name, email}
     const [allowedUsersSaving, setAllowedUsersSaving] = useState(false);
     // Abort controllers (one per cancellable operation)
     const migrateAbortRef = useRef(null);
@@ -104,26 +105,38 @@ export default function AdminSettingsModal({ show, onHide }) {
             if (!resp.ok) return;
             const data = await resp.json();
             setAutoRestart({ enabled: data.enabled ?? false, minutes: data.minutes ?? 8 });
-            setAllowedUsers(Array.isArray(data.allowed_users) ? data.allowed_users : []);
+            const ids = Array.isArray(data.allowed_users) ? data.allowed_users : [];
+            if (ids.length > 0) {
+                // Resolve stored IDs to user objects so Typeahead can display them
+                try {
+                    const uResp = await fetch('/v1/user?select=id,name,email&limit=1000', { headers: { Authorization: `Bearer ${token}` } });
+                    if (uResp.ok) {
+                        const uData = await uResp.json();
+                        const all = Array.isArray(uData.result) ? uData.result : [];
+                        setAllowedUsers(all.filter(u => ids.includes(u.id)));
+                    }
+                } catch (_) {}
+            } else {
+                setAllowedUsers([]);
+            }
         } catch (_) {}
     };
 
-    const fetchAllUsers = async () => {
-        if (allUsers.length > 0) return; // already loaded
+    const suggestUsers = async (searchTerm) => {
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch('/v1/user?select=id,name,email&limit=1000', { headers: { Authorization: `Bearer ${token}` } });
+            const resp = await fetch(`/v1/user?name=${encodeURIComponent(searchTerm)}&select=id,name,email&limit=20`, { headers: { Authorization: `Bearer ${token}` } });
             if (!resp.ok) return;
             const data = await resp.json();
-            setAllUsers(Array.isArray(data.result) ? data.result : []);
+            setUserSearchOptions(Array.isArray(data.result) ? data.result : []);
         } catch (_) {}
     };
 
-    const saveAllowedUsers = async (ids) => {
+    const saveAllowedUsers = async (userObjs) => {
         setAllowedUsersSaving(true);
         try {
             const token = localStorage.getItem('access_token');
-            // Merge with current autoRestart state so we don't clobber it
+            const ids = userObjs.map(u => u.id);
             await fetch('/health-monitor/config', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -151,7 +164,7 @@ export default function AdminSettingsModal({ show, onHide }) {
             await fetch('/health-monitor/config', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...cfg, allowed_users: allowedUsers }),
+                body: JSON.stringify({ ...cfg, allowed_users: allowedUsers.map(u => u.id) }),
             });
         } catch (_) {} finally {
             setAutoRestartSaving(false);
@@ -164,7 +177,6 @@ export default function AdminSettingsModal({ show, onHide }) {
         fetchServerStatus();
         fetchAutoRestartConfig();
         fetchRestartLog();
-        fetchAllUsers();
         const id = setInterval(fetchServerStatus, 5000);
         return () => clearInterval(id);
     }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1230,35 +1242,29 @@ export default function AdminSettingsModal({ show, onHide }) {
                         <span style={{ fontWeight: 400, fontSize: '12px', color: '#6b7280', marginLeft: '6px' }}>(non-admin users)</span>
                         {allowedUsersSaving && <span style={{ fontSize: '11px', color: '#9ca3af', marginLeft: '8px' }}>Saving…</span>}
                     </div>
-                    {allUsers.length === 0 ? (
-                        <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>Loading users…</div>
-                    ) : (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {allUsers.filter(u => !u.admin && u.role !== 'Admin').map(u => {
-                                const checked = allowedUsers.includes(u.id);
-                                return (
-                                    <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '20px', border: `1px solid ${checked ? '#93c5fd' : '#e5e7eb'}`, background: checked ? '#eff6ff' : '#fff', cursor: 'pointer', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: checked ? 600 : 400, color: checked ? '#1e40af' : '#374151' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={checked}
-                                            onChange={e => {
-                                                const next = e.target.checked
-                                                    ? [...allowedUsers, u.id]
-                                                    : allowedUsers.filter(id => id !== u.id);
-                                                setAllowedUsers(next);
-                                                saveAllowedUsers(next);
-                                            }}
-                                            style={{ margin: 0 }}
-                                        />
-                                        {u.name || u.email || u.id}
-                                    </label>
-                                );
-                            })}
-                            {allUsers.filter(u => !u.admin && u.role !== 'Admin').length === 0 && (
-                                <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>No non-admin users found.</div>
-                            )}
-                        </div>
-                    )}
+                    <Typeahead
+                        id="allowed-users-typeahead"
+                        labelKey={u => u.name || u.email || u.id}
+                        filterBy={() => true}
+                        positionFixed={true}
+                        multiple
+                        options={userSearchOptions}
+                        selected={allowedUsers}
+                        placeholder="Search users by name…"
+                        onInputChange={term => { if (term) suggestUsers(term); else setUserSearchOptions([]); }}
+                        onChange={selected => {
+                            setAllowedUsers(selected);
+                            saveAllowedUsers(selected);
+                        }}
+                        renderMenuItemChildren={option => (
+                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>
+                                <span style={{ fontWeight: 600 }}>{option.name || option.email}</span>
+                                {option.name && option.email && (
+                                    <span style={{ color: '#6b7280', marginLeft: '6px', fontSize: '11px' }}>{option.email}</span>
+                                )}
+                            </div>
+                        )}
+                    />
                 </div>
 
                 {/* ── Auto-restart config ───────────────────────────────── */}
