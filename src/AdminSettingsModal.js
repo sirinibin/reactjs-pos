@@ -44,11 +44,17 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [fixS3URLsProgress, setFixS3URLsProgress] = useState(null);
     const [fixS3URLsResult, setFixS3URLsResult] = useState(null);
     const [fixS3CurrentStore, setFixS3CurrentStore] = useState(null);
+    // Modal tab
+    const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'server-status'
     // Server Status
     const [serverStatus, setServerStatus] = useState(null);
     const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
     const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
     const [autoRestartSaving, setAutoRestartSaving] = useState(false);
+    const [restartLog, setRestartLog] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
+    const [allowedUsers, setAllowedUsers] = useState([]);
+    const [allowedUsersSaving, setAllowedUsersSaving] = useState(false);
     // Abort controllers (one per cancellable operation)
     const migrateAbortRef = useRef(null);
     const rfqAbortRef = useRef(null);
@@ -88,6 +94,43 @@ export default function AdminSettingsModal({ show, onHide }) {
             if (!resp.ok) return;
             const data = await resp.json();
             setAutoRestart({ enabled: data.enabled ?? false, minutes: data.minutes ?? 8 });
+            setAllowedUsers(Array.isArray(data.allowed_users) ? data.allowed_users : []);
+        } catch (_) {}
+    };
+
+    const fetchAllUsers = async () => {
+        if (allUsers.length > 0) return; // already loaded
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/v1/user?select=id,name,email&limit=1000', { headers: { Authorization: `Bearer ${token}` } });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            setAllUsers(Array.isArray(data.result) ? data.result : []);
+        } catch (_) {}
+    };
+
+    const saveAllowedUsers = async (ids) => {
+        setAllowedUsersSaving(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            // Merge with current autoRestart state so we don't clobber it
+            await fetch('/health-monitor/config', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: autoRestart.enabled, minutes: autoRestart.minutes, allowed_users: ids }),
+            });
+        } catch (_) {} finally {
+            setAllowedUsersSaving(false);
+        }
+    };
+
+    const fetchRestartLog = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/health-monitor/restart-log', { headers: { Authorization: `Bearer ${token}` } });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            setRestartLog(Array.isArray(data) ? data : []);
         } catch (_) {}
     };
 
@@ -98,7 +141,7 @@ export default function AdminSettingsModal({ show, onHide }) {
             await fetch('/health-monitor/config', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(cfg),
+                body: JSON.stringify({ ...cfg, allowed_users: allowedUsers }),
             });
         } catch (_) {} finally {
             setAutoRestartSaving(false);
@@ -107,8 +150,11 @@ export default function AdminSettingsModal({ show, onHide }) {
 
     useEffect(() => {
         if (!show) return;
+        setActiveTab('settings');
         fetchServerStatus();
         fetchAutoRestartConfig();
+        fetchRestartLog();
+        fetchAllUsers();
         const id = setInterval(fetchServerStatus, 5000);
         return () => clearInterval(id);
     }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -605,7 +651,36 @@ export default function AdminSettingsModal({ show, onHide }) {
                     <i className="bi bi-gear-wide-connected me-2"></i>Admin Settings
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body style={{ padding: '24px' }}>
+            <Modal.Body style={{ padding: '0' }}>
+                {/* ── Tab navigation ─────────────────────────────────────── */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '0 24px' }}>
+                    {[
+                        { key: 'settings', icon: 'bi-sliders', label: 'Settings' },
+                        { key: 'server-status', icon: 'bi-activity', label: 'Server Status' },
+                    ].map(tab => (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            onClick={() => {
+                                setActiveTab(tab.key);
+                                if (tab.key === 'server-status') { fetchRestartLog(); }
+                            }}
+                            style={{
+                                padding: '14px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                                fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600,
+                                color: activeTab === tab.key ? '#2563eb' : '#6b7280',
+                                borderBottom: activeTab === tab.key ? '2px solid #2563eb' : '2px solid transparent',
+                                marginBottom: '-1px',
+                                transition: 'color 0.15s',
+                            }}
+                        >
+                            <i className={`bi ${tab.icon} me-2`}></i>{tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div style={{ padding: '24px' }}>
+                {activeTab === 'settings' && (<>
                 <h6 style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '16px' }}>
                     <i className="bi bi-cloud-arrow-up me-2" style={{ color: '#2563eb' }}></i>AWS S3 File Storage
                     <span style={{ fontWeight: 400, fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
@@ -1127,14 +1202,54 @@ export default function AdminSettingsModal({ show, onHide }) {
                         </div>
                     </>
                 )}
-                {/* ── Server Status ─────────────────────────────────────────── */}
-                <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '28px 0 20px' }} />
+                </>)}
+                {/* ── Server Status tab ──────────────────────────────────────── */}
+                {activeTab === 'server-status' && (<>
                 <h6 style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '16px' }}>
                     <i className="bi bi-activity me-2" style={{ color: '#2563eb' }}></i>Server Status
                     <span style={{ fontWeight: 400, fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
                         (auto-refreshes every 5 s)
                     </span>
                 </h6>
+
+                {/* ── Manage Access ─────────────────────────────────────── */}
+                <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
+                    <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 700, color: '#374151', marginBottom: '10px' }}>
+                        <i className="bi bi-people me-2" style={{ color: '#2563eb' }}></i>
+                        Who can view Server Status
+                        <span style={{ fontWeight: 400, fontSize: '12px', color: '#6b7280', marginLeft: '6px' }}>(non-admin users)</span>
+                        {allowedUsersSaving && <span style={{ fontSize: '11px', color: '#9ca3af', marginLeft: '8px' }}>Saving…</span>}
+                    </div>
+                    {allUsers.length === 0 ? (
+                        <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>Loading users…</div>
+                    ) : (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {allUsers.filter(u => !u.admin && u.role !== 'Admin').map(u => {
+                                const checked = allowedUsers.includes(u.id);
+                                return (
+                                    <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '20px', border: `1px solid ${checked ? '#93c5fd' : '#e5e7eb'}`, background: checked ? '#eff6ff' : '#fff', cursor: 'pointer', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: checked ? 600 : 400, color: checked ? '#1e40af' : '#374151' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={e => {
+                                                const next = e.target.checked
+                                                    ? [...allowedUsers, u.id]
+                                                    : allowedUsers.filter(id => id !== u.id);
+                                                setAllowedUsers(next);
+                                                saveAllowedUsers(next);
+                                            }}
+                                            style={{ margin: 0 }}
+                                        />
+                                        {u.name || u.email || u.id}
+                                    </label>
+                                );
+                            })}
+                            {allUsers.filter(u => !u.admin && u.role !== 'Admin').length === 0 && (
+                                <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>No non-admin users found.</div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 {/* ── Auto-restart config ───────────────────────────────── */}
                 <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
@@ -1270,10 +1385,81 @@ export default function AdminSettingsModal({ show, onHide }) {
                     })}
                 </div>
 
+                {/* ── Restart log ───────────────────────────────────────────── */}
+                <div style={{ marginTop: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 700, color: '#374151' }}>
+                            <i className="bi bi-clock-history me-2" style={{ color: '#6b7280' }}></i>Restart History
+                        </span>
+                        <button
+                            type="button"
+                            onClick={fetchRestartLog}
+                            style={{ padding: '3px 10px', borderRadius: '5px', border: '1px solid #d1d5db', background: '#fff', color: '#6b7280', fontSize: '11px', fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
+                        >
+                            ↻ Refresh
+                        </button>
+                    </div>
+                    {restartLog.length === 0 ? (
+                        <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: '"Inter", sans-serif', padding: '12px 0', textAlign: 'center' }}>
+                            No restarts recorded yet.
+                        </div>
+                    ) : (
+                        <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: '"Inter", sans-serif' }}>
+                                <thead>
+                                    <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                        <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Time</th>
+                                        <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Env</th>
+                                        <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Trigger</th>
+                                        <th style={{ padding: '7px 10px', textAlign: 'left', fontWeight: 600, color: '#6b7280' }}>Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {restartLog.map((entry, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                            <td style={{ padding: '6px 10px', color: '#374151', whiteSpace: 'nowrap' }}>
+                                                {new Date(entry.timestamp).toLocaleString()}
+                                            </td>
+                                            <td style={{ padding: '6px 10px' }}>
+                                                <span style={{
+                                                    padding: '2px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
+                                                    background: entry.env === 'production' ? '#dbeafe' : '#f3f4f6',
+                                                    color: entry.env === 'production' ? '#1e40af' : '#374151',
+                                                }}>
+                                                    {entry.env === 'production' ? 'Prod' : 'Test'}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '6px 10px' }}>
+                                                <span style={{
+                                                    padding: '2px 7px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
+                                                    background: entry.trigger === 'auto' ? '#fef9c3' : '#f0fdf4',
+                                                    color: entry.trigger === 'auto' ? '#92400e' : '#15803d',
+                                                }}>
+                                                    {entry.trigger === 'auto' ? '⚡ Auto' : '👤 Manual'}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '6px 10px' }}>
+                                                {entry.success ? (
+                                                    <span style={{ color: '#16a34a', fontWeight: 600 }}>✓ OK</span>
+                                                ) : (
+                                                    <span style={{ color: '#dc2626', fontWeight: 600 }} title={entry.error}>✗ Failed</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                </>)}
+                </div>{/* end padding wrapper */}
+
             </Modal.Body>
             <Modal.Footer>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    {saveMsg && (
+                    {activeTab === 'settings' && saveMsg && (
                         <span style={{ fontSize: '13px', color: saveMsg.ok ? '#15803d' : '#dc2626', fontFamily: '"Inter", sans-serif' }}>
                             {saveMsg.ok ? '✓ ' : '✗ '}{saveMsg.msg}
                         </span>
@@ -1285,14 +1471,14 @@ export default function AdminSettingsModal({ show, onHide }) {
                     >
                         Close
                     </button>
-                    <button
+                    {activeTab === 'settings' && <button
                         type="button"
                         onClick={handleSave}
                         disabled={saving}
                         style={{ padding: '8px 18px', borderRadius: '6px', border: 'none', background: '#16a34a', color: '#fff', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}
                     >
                         {saving ? 'Saving…' : 'Save Settings'}
-                    </button>
+                    </button>}
                 </div>
             </Modal.Footer>
         </Modal>
