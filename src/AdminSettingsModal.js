@@ -48,6 +48,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'server-status'
     // Server Status
     const [serverStatus, setServerStatus] = useState(null);
+    const [serverStatusError, setServerStatusError] = useState(null);
     const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
     const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
     const [autoRestartSaving, setAutoRestartSaving] = useState(false);
@@ -76,15 +77,24 @@ export default function AdminSettingsModal({ show, onHide }) {
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/health-monitor/status', { headers: { Authorization: `Bearer ${token}` } });
-            if (!resp.ok) return;
+            if (resp.status === 401 || resp.status === 403) {
+                setServerStatusError('Session expired or access denied — please log out and back in.');
+                return;
+            }
+            if (!resp.ok) {
+                setServerStatusError(`Health monitor returned HTTP ${resp.status}. Is it running?`);
+                return;
+            }
+            setServerStatusError(null);
             const data = await resp.json();
             setServerStatus(data);
-            // Auto-clear restarting indicator once the env is running again
             setRestartingEnv(prev => {
                 if (prev && data[prev]?.overall === 'running') return null;
                 return prev;
             });
-        } catch (_) {}
+        } catch (_) {
+            setServerStatusError('Cannot reach the health monitor. Check nginx and the service.');
+        }
     };
 
     const fetchAutoRestartConfig = async () => {
@@ -1289,6 +1299,12 @@ export default function AdminSettingsModal({ show, onHide }) {
                         )}
                     </div>
                 </div>
+
+                {serverStatusError && (
+                    <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#991b1b' }}>
+                        ⚠ {serverStatusError}
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                     {['production', 'test'].map(env => {
