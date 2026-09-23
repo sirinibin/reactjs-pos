@@ -35,6 +35,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     // Verify & Cleanup Disk
     const [cleanupRunning, setCleanupRunning] = useState(false);
     const [cleanupCurrentEntity, setCleanupCurrentEntity] = useState(null);
+    const [cleanupCurrentStore, setCleanupCurrentStore] = useState(null);
     const [cleanupEntityStats, setCleanupEntityStats] = useState({});
     const [cleanupFinalStats, setCleanupFinalStats] = useState(null);
     const [cleanupError, setCleanupError] = useState(null);
@@ -42,6 +43,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [fixingS3URLs, setFixingS3URLs] = useState(false);
     const [fixS3URLsProgress, setFixS3URLsProgress] = useState(null);
     const [fixS3URLsResult, setFixS3URLsResult] = useState(null);
+    const [fixS3CurrentStore, setFixS3CurrentStore] = useState(null);
 
     useEffect(() => {
         if (!show) return;
@@ -230,6 +232,34 @@ export default function AdminSettingsModal({ show, onHide }) {
                         const ev = JSON.parse(line.slice(6));
                         if (ev.type === 'start') {
                             setMigrateRFQProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current_file: '' });
+                        } else if (ev.type === 'store_start') {
+                            setMigrateRFQProgress(prev => ({
+                                ...(prev || {}),
+                                current_store: ev.store_name || ev.store_id,
+                                index: ev.index, total_stores: ev.total_stores,
+                                percent: Math.round((ev.index - 1) * 100 / ev.total_stores),
+                                store_processed: 0, store_total: 0, store_percent: 0, current_file: '',
+                            }));
+                        } else if (ev.type === 'store_total') {
+                            setMigrateRFQProgress(prev => ({ ...(prev || {}), store_total: ev.total, store_processed: 0, store_percent: 0 }));
+                        } else if (ev.type === 'store_progress') {
+                            setMigrateRFQProgress(prev => ({
+                                ...(prev || {}),
+                                store_processed: ev.processed, store_total: ev.total,
+                                store_percent: ev.percent, current_file: ev.current_file,
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
+                            }));
+                        } else if (ev.type === 'store_done') {
+                            setMigrateRFQProgress(prev => ({
+                                ...(prev || {}),
+                                percent: Math.round(ev.index * 100 / (prev?.total_stores || 1)),
+                                store_percent: 100, current_file: '',
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
+                            }));
                         } else if (ev.type === 'progress') {
                             setMigrateRFQProgress(prev => ({ ...prev, ...ev }));
                         } else if (ev.type === 'done') {
@@ -277,11 +307,39 @@ export default function AdminSettingsModal({ show, onHide }) {
                     try {
                         const ev = JSON.parse(line.slice(6));
                         if (ev.type === 'start') {
-                            setProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current: '' });
+                            setProgress({ total: ev.total, processed: 0, percent: 0, uploaded: 0, skipped: 0, current_file: '' });
+                        } else if (ev.type === 'store_start') {
+                            setProgress(prev => ({
+                                ...(prev || {}),
+                                current_store: ev.store_name || ev.store_id,
+                                index: ev.index, total_stores: ev.total_stores,
+                                percent: Math.round((ev.index - 1) * 100 / ev.total_stores),
+                                store_processed: 0, store_total: 0, store_percent: 0, current_file: '',
+                            }));
+                        } else if (ev.type === 'store_total') {
+                            setProgress(prev => ({ ...(prev || {}), store_total: ev.total, store_processed: 0, store_percent: 0 }));
+                        } else if (ev.type === 'store_progress') {
+                            setProgress(prev => ({
+                                ...(prev || {}),
+                                store_processed: ev.processed, store_total: ev.total,
+                                store_percent: ev.percent, current_file: ev.current_file,
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
+                            }));
+                        } else if (ev.type === 'store_done') {
+                            setProgress(prev => ({
+                                ...(prev || {}),
+                                percent: Math.round(ev.index * 100 / (prev?.total_stores || 1)),
+                                store_percent: 100, current_file: '',
+                                uploaded: (prev?.uploaded || 0) - (prev?.store_uploaded || 0) + ev.uploaded,
+                                skipped: (prev?.skipped || 0) - (prev?.store_skipped || 0) + ev.skipped,
+                                store_uploaded: ev.uploaded, store_skipped: ev.skipped,
+                            }));
                         } else if (ev.type === 'progress') {
                             setProgress(prev => ({ ...prev, ...ev }));
                         } else if (ev.type === 'done') {
-                            setProgress(prev => ({ ...prev, percent: 100, done: true }));
+                            setProgress(prev => ({ ...(prev || {}), percent: 100, done: true }));
                             setResult({ ok: true, msg: doneMsg(ev) });
                         } else if (ev.type === 'error') {
                             setResult({ ok: false, msg: ev.error });
@@ -316,7 +374,7 @@ export default function AdminSettingsModal({ show, onHide }) {
         runSSEMigration(
             '/v1/migrate-inline-images-to-s3',
             setMigratingInline, setMigrateInlineResult, setMigrateInlineProgress,
-            ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated}`
+            ev => `Done. Uploaded: ${ev.uploaded}, Updated records: ${ev.updated_docs}`
         );
     };
 
@@ -331,6 +389,7 @@ export default function AdminSettingsModal({ show, onHide }) {
         setCleanupEntityStats({});
         setCleanupFinalStats(null);
         setCleanupCurrentEntity(null);
+        setCleanupCurrentStore(null);
         setCleanupError(null);
         try {
             const token = localStorage.getItem('access_token');
@@ -357,11 +416,16 @@ export default function AdminSettingsModal({ show, onHide }) {
                         const ev = JSON.parse(line.slice(6));
                         if (ev.type === 'entity_start') {
                             setCleanupCurrentEntity(ev.name);
+                            setCleanupCurrentStore(null);
                         } else if (ev.type === 'entity_done') {
                             setCleanupCurrentEntity(null);
+                            setCleanupCurrentStore(null);
                             setCleanupEntityStats(prev => ({ ...prev, [ev.name]: ev }));
+                        } else if (ev.type === 'store_progress') {
+                            setCleanupCurrentStore(ev.store_name || ev.store_id);
                         } else if (ev.type === 'done') {
                             setCleanupFinalStats(ev);
+                            setCleanupCurrentStore(null);
                         } else if (ev.type === 'error') {
                             setCleanupError(ev.error);
                         }
@@ -385,6 +449,7 @@ export default function AdminSettingsModal({ show, onHide }) {
         setFixingS3URLs(true);
         setFixS3URLsProgress(null);
         setFixS3URLsResult(null);
+        setFixS3CurrentStore(null);
         try {
             const token = localStorage.getItem('access_token');
             const resp = await fetch('/v1/fix-direct-s3-urls', {
@@ -408,10 +473,13 @@ export default function AdminSettingsModal({ show, onHide }) {
                     if (!line.startsWith('data: ')) continue;
                     try {
                         const ev = JSON.parse(line.slice(6));
-                        if (ev.type === 'progress') {
+                        if (ev.type === 'store_progress') {
+                            setFixS3CurrentStore(ev.store_name || ev.store_id);
+                        } else if (ev.type === 'progress') {
                             setFixS3URLsProgress(ev);
                         } else if (ev.type === 'done') {
                             setFixS3URLsResult({ ok: true, msg: `Done. Scanned: ${ev.scanned}, Fixed: ${ev.fixed}` });
+                            setFixS3CurrentStore(null);
                         }
                     } catch (_) {}
                 }
@@ -616,21 +684,29 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateRFQProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#78350f', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
-                                        <span>{migrateRFQProgress.done ? 'Complete' : `Processing: ${migrateRFQProgress.current_file || '…'}`}</span>
-                                        <span>{migrateRFQProgress.processed} / {migrateRFQProgress.total} ({migrateRFQProgress.percent}%)</span>
+                                        <span><strong>Overall</strong> — Store {migrateRFQProgress.index || '…'}/{migrateRFQProgress.total_stores || '…'}</span>
+                                        <span>{migrateRFQProgress.done ? 'Complete' : `${migrateRFQProgress.percent || 0}%`}</span>
                                     </div>
                                     <div style={{ background: '#fde68a', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
-                                        <div style={{
-                                            background: migrateRFQProgress.done ? '#16a34a' : '#d97706',
-                                            width: `${migrateRFQProgress.percent}%`,
-                                            height: '100%',
-                                            transition: 'width 0.2s ease',
-                                            borderRadius: '4px',
-                                        }} />
+                                        <div style={{ background: migrateRFQProgress.done ? '#16a34a' : '#d97706', width: `${migrateRFQProgress.percent || 0}%`, height: '100%', transition: 'width 0.3s ease', borderRadius: '4px' }} />
                                     </div>
-                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
-                                        <span>Uploaded: <strong>{migrateRFQProgress.uploaded}</strong></span>
-                                        <span>Skipped: <strong>{migrateRFQProgress.skipped}</strong></span>
+                                    {!migrateRFQProgress.done && migrateRFQProgress.current_store && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#92400e', fontFamily: '"Inter", sans-serif', marginBottom: '3px' }}>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
+                                                    {migrateRFQProgress.current_store}
+                                                    {migrateRFQProgress.current_file && <span style={{ color: '#b45309', marginLeft: 4 }}>— {migrateRFQProgress.current_file}</span>}
+                                                </span>
+                                                <span>{migrateRFQProgress.store_processed || 0}/{migrateRFQProgress.store_total || 0}</span>
+                                            </div>
+                                            <div style={{ background: '#fcd34d', borderRadius: '3px', height: '6px', overflow: 'hidden' }}>
+                                                <div style={{ background: '#f59e0b', width: `${migrateRFQProgress.store_percent || 0}%`, height: '100%', transition: 'width 0.15s ease', borderRadius: '3px' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '11px', color: '#78350f', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateRFQProgress.uploaded || 0}</strong></span>
+                                        <span>Skipped: <strong>{migrateRFQProgress.skipped || 0}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -668,15 +744,29 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateEntityProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#166534', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
-                                        <span>{migrateEntityProgress.done ? 'Complete' : `Processing: ${migrateEntityProgress.current || '…'}`}</span>
-                                        <span>{migrateEntityProgress.processed} / {migrateEntityProgress.total} ({migrateEntityProgress.percent}%)</span>
+                                        <span><strong>Overall</strong> — Store {migrateEntityProgress.index || '…'}/{migrateEntityProgress.total_stores || '…'}</span>
+                                        <span>{migrateEntityProgress.done ? 'Complete' : `${migrateEntityProgress.percent || 0}%`}</span>
                                     </div>
                                     <div style={{ background: '#bbf7d0', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
-                                        <div style={{ background: migrateEntityProgress.done ? '#16a34a' : '#22c55e', width: `${migrateEntityProgress.percent}%`, height: '100%', transition: 'width 0.2s ease', borderRadius: '4px' }} />
+                                        <div style={{ background: migrateEntityProgress.done ? '#16a34a' : '#22c55e', width: `${migrateEntityProgress.percent || 0}%`, height: '100%', transition: 'width 0.3s ease', borderRadius: '4px' }} />
                                     </div>
-                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#166534', fontFamily: '"Inter", sans-serif' }}>
-                                        <span>Uploaded: <strong>{migrateEntityProgress.uploaded}</strong></span>
-                                        <span>Skipped: <strong>{migrateEntityProgress.skipped}</strong></span>
+                                    {!migrateEntityProgress.done && migrateEntityProgress.current_store && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#166534', fontFamily: '"Inter", sans-serif', marginBottom: '3px' }}>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
+                                                    {migrateEntityProgress.current_store}
+                                                    {migrateEntityProgress.current_file && <span style={{ color: '#15803d', marginLeft: 4 }}>— {migrateEntityProgress.current_file}</span>}
+                                                </span>
+                                                <span>{migrateEntityProgress.store_processed || 0}/{migrateEntityProgress.store_total || 0}</span>
+                                            </div>
+                                            <div style={{ background: '#86efac', borderRadius: '3px', height: '6px', overflow: 'hidden' }}>
+                                                <div style={{ background: '#16a34a', width: `${migrateEntityProgress.store_percent || 0}%`, height: '100%', transition: 'width 0.15s ease', borderRadius: '3px' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '11px', color: '#166534', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateEntityProgress.uploaded || 0}</strong></span>
+                                        <span>Skipped: <strong>{migrateEntityProgress.skipped || 0}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -710,7 +800,20 @@ export default function AdminSettingsModal({ show, onHide }) {
                             >
                                 {fixingS3URLs ? 'Fixing…' : 'Fix Direct S3 URLs'}
                             </button>
-                            {fixS3URLsProgress && (
+                            {(fixS3CurrentStore || fixS3URLsProgress) && fixingS3URLs && (
+                                <div style={{ marginTop: '10px', fontSize: '11px', color: '#6b21a8', fontFamily: '"Inter", sans-serif', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                                    {fixS3CurrentStore && (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#9333ea', animation: 'pulse 1s infinite', flexShrink: 0 }} />
+                                            Store: <strong>{fixS3CurrentStore}</strong>
+                                        </span>
+                                    )}
+                                    {fixS3URLsProgress && (
+                                        <span>Collection: <strong>{fixS3URLsProgress.collection}</strong> — Scanned: <strong>{fixS3URLsProgress.scanned}</strong>, Fixed: <strong>{fixS3URLsProgress.fixed}</strong></span>
+                                    )}
+                                </div>
+                            )}
+                            {fixS3URLsProgress && !fixingS3URLs && (
                                 <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b21a8', fontFamily: '"Inter", sans-serif' }}>
                                     Collection: <strong>{fixS3URLsProgress.collection}</strong> — Scanned: <strong>{fixS3URLsProgress.scanned}</strong>, Fixed: <strong>{fixS3URLsProgress.fixed}</strong>
                                 </div>
@@ -748,15 +851,29 @@ export default function AdminSettingsModal({ show, onHide }) {
                             {migrateInlineProgress && (
                                 <div style={{ marginTop: '14px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif', marginBottom: '4px' }}>
-                                        <span>{migrateInlineProgress.done ? 'Complete' : `Processing…`}</span>
-                                        <span>{migrateInlineProgress.processed} / {migrateInlineProgress.total} ({migrateInlineProgress.percent}%)</span>
+                                        <span><strong>Overall</strong> — Store {migrateInlineProgress.index || '…'}/{migrateInlineProgress.total_stores || '…'}</span>
+                                        <span>{migrateInlineProgress.done ? 'Complete' : `${migrateInlineProgress.percent || 0}%`}</span>
                                     </div>
                                     <div style={{ background: '#bfdbfe', borderRadius: '4px', height: '10px', overflow: 'hidden' }}>
-                                        <div style={{ background: migrateInlineProgress.done ? '#16a34a' : '#3b82f6', width: `${migrateInlineProgress.percent}%`, height: '100%', transition: 'width 0.2s ease', borderRadius: '4px' }} />
+                                        <div style={{ background: migrateInlineProgress.done ? '#16a34a' : '#3b82f6', width: `${migrateInlineProgress.percent || 0}%`, height: '100%', transition: 'width 0.3s ease', borderRadius: '4px' }} />
                                     </div>
-                                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif' }}>
-                                        <span>Uploaded: <strong>{migrateInlineProgress.uploaded}</strong></span>
-                                        <span>Skipped: <strong>{migrateInlineProgress.skipped}</strong></span>
+                                    {!migrateInlineProgress.done && migrateInlineProgress.current_store && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#1e40af', fontFamily: '"Inter", sans-serif', marginBottom: '3px' }}>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
+                                                    {migrateInlineProgress.current_store}
+                                                    {migrateInlineProgress.current_file && <span style={{ color: '#1d4ed8', marginLeft: 4 }}>— {migrateInlineProgress.current_file}</span>}
+                                                </span>
+                                                <span>{migrateInlineProgress.store_processed || 0}/{migrateInlineProgress.store_total || 0}</span>
+                                            </div>
+                                            <div style={{ background: '#93c5fd', borderRadius: '3px', height: '6px', overflow: 'hidden' }}>
+                                                <div style={{ background: '#2563eb', width: `${migrateInlineProgress.store_percent || 0}%`, height: '100%', transition: 'width 0.15s ease', borderRadius: '3px' }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '11px', color: '#1d4ed8', fontFamily: '"Inter", sans-serif' }}>
+                                        <span>Uploaded: <strong>{migrateInlineProgress.uploaded || 0}</strong></span>
+                                        <span>Skipped: <strong>{migrateInlineProgress.skipped || 0}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -799,6 +916,12 @@ export default function AdminSettingsModal({ show, onHide }) {
 
                             {(cleanupRunning || Object.keys(cleanupEntityStats).length > 0) && (
                                 <div style={{ marginTop: '14px', overflowX: 'auto' }}>
+                                    {cleanupCurrentStore && cleanupRunning && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '11px', color: '#9a3412', fontFamily: '"Inter", sans-serif' }}>
+                                            <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#ea580c', animation: 'pulse 1s infinite', flexShrink: 0 }} />
+                                            Store: <strong>{cleanupCurrentStore}</strong>
+                                        </div>
+                                    )}
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Inter", sans-serif' }}>
                                         <thead>
                                             <tr style={{ background: '#ffedd5' }}>
