@@ -193,7 +193,19 @@ const RFQPreview = forwardRef((props, ref) => {
             setInvoiceBackground('');
             setDownloadFlash(null);
             setShow(true);
-            if (rfqModel?.store_id) await getStore(rfqModel.store_id);
+            const storeId = rfqModel?.store_id;
+            const token   = localStorage.getItem('access_token');
+            // Always re-fetch the full RFQ from the backend so the preview has
+            // current products/date even when opened right after creation.
+            if (rfqModel?.id && storeId && token) {
+                try {
+                    const res  = await fetch(`/v1/rfq-received/${rfqModel.id}?store_id=${storeId}`, { headers: { Authorization: token } });
+                    const data = await res.json();
+                    const full = data.result || data;
+                    if (full?.id || full?._id) setRfq(full);
+                } catch (_) {}
+            }
+            if (storeId) await getStore(storeId);
         },
     }));
 
