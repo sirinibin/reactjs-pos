@@ -44,6 +44,9 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [fixS3URLsProgress, setFixS3URLsProgress] = useState(null);
     const [fixS3URLsResult, setFixS3URLsResult] = useState(null);
     const [fixS3CurrentStore, setFixS3CurrentStore] = useState(null);
+    // Server Status
+    const [serverStatus, setServerStatus] = useState(null);
+    const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
     // Abort controllers (one per cancellable operation)
     const migrateAbortRef = useRef(null);
     const rfqAbortRef = useRef(null);
@@ -60,6 +63,48 @@ export default function AdminSettingsModal({ show, onHide }) {
             .then(data => { if (data && data.result) setSettings(data.result); })
             .catch(() => {});
     }, [show]);
+
+    const fetchServerStatus = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/v1/admin/server-status', { headers: { Authorization: `Bearer ${token}` } });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            setServerStatus(data);
+            // Auto-clear restarting indicator once the env is running again
+            setRestartingEnv(prev => {
+                if (prev && data[prev]?.overall === 'running') return null;
+                return prev;
+            });
+        } catch (_) {}
+    };
+
+    useEffect(() => {
+        if (!show) return;
+        fetchServerStatus();
+        const id = setInterval(fetchServerStatus, 5000);
+        return () => clearInterval(id);
+    }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleRestart = async (env) => {
+        if (!window.confirm(
+            `Restart the ${env === 'production' ? 'Production' : 'Test'} server?\n\n` +
+            `It will be briefly unavailable while restarting.`
+        )) return;
+        setRestartingEnv(env);
+        // Safety: clear restarting indicator after 60s if polling never sees it come back
+        setTimeout(() => setRestartingEnv(prev => prev === env ? null : prev), 60000);
+        try {
+            const token = localStorage.getItem('access_token');
+            await fetch('/v1/admin/server-restart', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ env }),
+            });
+        } catch (_) {
+            // Production restart kills itself — connection error is expected
+        }
+    };
 
     const set = (key, value) => setSettings(prev => ({ ...prev, [key]: value }));
 
@@ -1055,6 +1100,110 @@ export default function AdminSettingsModal({ show, onHide }) {
                         </div>
                     </>
                 )}
+                {/* ── Server Status ─────────────────────────────────────────── */}
+                <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '28px 0 20px' }} />
+                <h6 style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '16px' }}>
+                    <i className="bi bi-activity me-2" style={{ color: '#2563eb' }}></i>Server Status
+                    <span style={{ fontWeight: 400, fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
+                        (auto-refreshes every 5 s)
+                    </span>
+                </h6>
+
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    {['production', 'test'].map(env => {
+                        const srv = serverStatus?.[env];
+                        const isRestarting = restartingEnv === env;
+                        const rawOverall = srv?.overall || 'unknown';
+                        const overall = isRestarting && rawOverall !== 'running' ? 'restarting' : rawOverall;
+
+                        const palette = {
+                            running:    { bg: '#f0fdf4', border: '#86efac', dot: '#16a34a', badgeBg: '#dcfce7', badgeText: '#15803d', label: 'RUNNING' },
+                            degraded:   { bg: '#fffbeb', border: '#fcd34d', dot: '#d97706', badgeBg: '#fef9c3', badgeText: '#92400e', label: 'DEGRADED' },
+                            down:       { bg: '#fef2f2', border: '#fca5a5', dot: '#dc2626', badgeBg: '#fee2e2', badgeText: '#991b1b', label: 'DOWN' },
+                            starting:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', badgeBg: '#dbeafe', badgeText: '#1e40af', label: 'STARTING…' },
+                            stopping:   { bg: '#eff6ff', border: '#93c5fd', dot: '#6366f1', badgeBg: '#e0e7ff', badgeText: '#3730a3', label: 'STOPPING…' },
+                            restarting: { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', badgeBg: '#dbeafe', badgeText: '#1e40af', label: 'RESTARTING…' },
+                            unknown:    { bg: '#f9fafb', border: '#e5e7eb', dot: '#9ca3af', badgeBg: '#f3f4f6', badgeText: '#6b7280', label: 'UNKNOWN' },
+                        };
+                        const c = palette[overall] || palette.unknown;
+                        const isAnimated = ['starting', 'stopping', 'restarting'].includes(overall);
+
+                        const ComponentRow = ({ label, st }) => (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '5px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                                <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#374151', minWidth: '80px' }}>{label}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: '"Inter", sans-serif', fontSize: '12px' }}>
+                                    <span style={{ color: st?.ok ? '#16a34a' : '#dc2626', fontWeight: 700 }}>{st?.ok ? '✓' : '✗'}</span>
+                                    <span style={{ color: '#6b7280', textAlign: 'right' }}>{st?.message || '…'}</span>
+                                </span>
+                            </div>
+                        );
+
+                        return (
+                            <div key={env} style={{ flex: '1 1 260px', padding: '16px', background: c.bg, border: `1px solid ${c.border}`, borderRadius: '10px' }}>
+                                {/* Card header */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                                    <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 700, color: '#111827' }}>
+                                        {env === 'production' ? 'Production' : 'Test'}
+                                        <span style={{ marginLeft: '6px', fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>
+                                            port {srv?.port || (env === 'production' ? 2000 : 2002)}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '20px', background: c.badgeBg }}>
+                                        <span style={{
+                                            display: 'inline-block', width: '7px', height: '7px', borderRadius: '50%', background: c.dot, flexShrink: 0,
+                                            animation: isAnimated ? 'pulse 1s infinite' : 'none',
+                                        }} />
+                                        <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: c.badgeText, letterSpacing: '0.04em' }}>
+                                            {c.label}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Component rows */}
+                                {srv ? (
+                                    <div style={{ marginBottom: '10px' }}>
+                                        <ComponentRow label="API Service" st={srv.api} />
+                                        <ComponentRow label="Redis" st={srv.redis} />
+                                        <ComponentRow label="MongoDB" st={srv.mongodb} />
+                                    </div>
+                                ) : (
+                                    <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '10px', fontFamily: '"Inter", sans-serif', padding: '8px 0' }}>
+                                        Loading…
+                                    </div>
+                                )}
+
+                                {/* Reason banner */}
+                                {srv?.reason && (
+                                    <div style={{ fontSize: '11px', color: '#991b1b', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', padding: '6px 8px', marginBottom: '10px', fontFamily: '"Inter", sans-serif', lineHeight: 1.5 }}>
+                                        ⚠ {srv.reason}
+                                    </div>
+                                )}
+
+                                {/* Footer */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                                    <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>
+                                        {srv?.updated_at ? new Date(srv.updated_at).toLocaleTimeString() : '—'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        disabled={isRestarting}
+                                        onClick={() => handleRestart(env)}
+                                        style={{
+                                            padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db',
+                                            background: '#fff', color: '#374151',
+                                            fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600,
+                                            cursor: isRestarting ? 'not-allowed' : 'pointer',
+                                            opacity: isRestarting ? 0.5 : 1,
+                                        }}
+                                    >
+                                        {isRestarting ? 'Restarting…' : '↺ Restart'}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
             </Modal.Body>
             <Modal.Footer>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
