@@ -32,7 +32,7 @@ function fmtSize(b) {
     return (b / 1048576).toFixed(1) + " MB";
 }
 
-const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id: "", customer_email: "", customer_phone: "", text_content: "", general_instructions: "" });
+const EMPTY_FORM = () => ({ customer_id: "", customer_name: "", customer_rfq_id: "", customer_email: "", customer_phone: "", customer_city: "", text_content: "", general_instructions: "" });
 
 const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated }, ref) {
     const [show, setShow] = useState(false);
@@ -214,6 +214,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 customer_rfq_id:      "",
                 customer_email:       data.customer_email || "",
                 customer_phone:       data.customer_phone || "",
+                customer_city:        data.customer_city || "",
                 text_content:         "",
                 general_instructions: data.general_instructions || "",
             });
@@ -254,7 +255,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                     : (data.customer_contact_person || "");
                 autoCreateOrFindCustomer(
                     custName, data.customer_phone,
-                    data.customer_email, data.customer_company, custContact
+                    data.customer_email, data.customer_company, custContact, data.customer_city || ""
                 );
             }
             if (mappedProducts.some(p => p.name)) {
@@ -620,7 +621,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     };
 
     // ── Auto-create or find customer from extracted data ─────────────────────
-    const autoCreateOrFindCustomer = useCallback(async (name, phone, email, company, contactPerson) => {
+    const autoCreateOrFindCustomer = useCallback(async (name, phone, email, company, contactPerson, cityName) => {
         if (!name && !phone) return;
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
@@ -628,7 +629,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
             const res = await fetch(`/v1/customer/find-or-create?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ name: name?.trim(), phone: phone?.trim(), email: email?.trim(), company: company?.trim(), contact_person: contactPerson?.trim() }),
+                body: JSON.stringify({ name: name?.trim(), phone: phone?.trim(), email: email?.trim(), company: company?.trim(), contact_person: contactPerson?.trim(), city_name: cityName?.trim() || undefined }),
             });
             const d = await res.json();
             if (res.ok && d.result?.id) {
@@ -837,6 +838,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 customer_phone:        currentForm.customer_phone || selectedCustomers[0]?.phone || "",
                 customer_email:        currentForm.customer_email || selectedCustomers[0]?.email || "",
                 customer_company:      selectedCustomers[0]?.company || "",
+                customer_city:         currentForm.customer_city || undefined,
                 customer_rfq_id:       currentForm.customer_rfq_id || undefined,
                 text_content:          currentForm.text_content,
                 extraction_model:      extractionModel || undefined,

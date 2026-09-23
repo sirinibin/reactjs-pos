@@ -1726,6 +1726,12 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                 <Modal.Title style={{ fontSize: 17, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <i className="bi bi-whatsapp me-2" style={{ color: '#25d366' }}></i>
                     {`Send RFQ #${rfq?.code || ''} to Suppliers`}
+                    {rfq?.customer_city && (
+                        <span style={{ fontSize: '13px', color: '#555', fontWeight: 'normal', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="bi bi-geo-alt-fill" style={{ color: '#888' }}></i>
+                            {rfq.customer_city}
+                        </span>
+                    )}
                     {onViewDetails && (
                         <button
                             className="btn btn-sm btn-outline-secondary"
