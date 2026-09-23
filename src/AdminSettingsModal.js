@@ -67,7 +67,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     const fetchServerStatus = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const resp = await fetch('/v1/admin/server-status', { headers: { Authorization: `Bearer ${token}` } });
+            const resp = await fetch('/health-monitor/status', { headers: { Authorization: `Bearer ${token}` } });
             if (!resp.ok) return;
             const data = await resp.json();
             setServerStatus(data);
@@ -96,7 +96,7 @@ export default function AdminSettingsModal({ show, onHide }) {
         setTimeout(() => setRestartingEnv(prev => prev === env ? null : prev), 60000);
         try {
             const token = localStorage.getItem('access_token');
-            await fetch('/v1/admin/server-restart', {
+            await fetch('/health-monitor/restart', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ env }),
