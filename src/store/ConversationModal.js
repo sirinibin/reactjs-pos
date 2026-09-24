@@ -3,9 +3,9 @@ import { Modal } from 'react-bootstrap';
 import ProcurementWhatsAppTab from './ProcurementWhatsAppTab';
 import ProcurementEmailConversationTab from './ProcurementEmailConversationTab';
 
-export function WhatsAppChatModal({ show, phone, storeId, onHide }) {
+export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex }) {
     return (
-        <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: 1060 }}>
+        <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: zIndex || 1060 }}>
             <Modal.Header closeButton style={{ padding: '8px 16px', background: '#f6fdf6', borderBottom: '1px solid #d4edda' }}>
                 <Modal.Title style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <i className="bi bi-whatsapp text-success" style={{ fontSize: '18px' }}></i>

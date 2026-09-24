@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ViewButton } from './FileViewerModal.js';
 import { ForwardDetail } from '../rfq_received/index.js';
+import RFQWhatsAppConversationsPanel from '../rfq_received/RFQWhatsAppConversationsPanel.js';
 
 const fixEmailHtml = html => {
     if (!html) return html;
@@ -123,6 +124,21 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [emailRfqLoading, setEmailRfqLoading] = useState(false);
     const emailRfqRef = useRef(null);
     const bodyRef = useRef(null);
+    const [activeDetailTab, setActiveDetailTab] = useState('email'); // 'email' | 'supplier_conv' | 'customer_conv'
+    // Linked RFQ data (for conversation tabs) — loaded on demand
+    const [linkedRfq, setLinkedRfq] = useState(null);
+
+    // Load linked RFQ data (for Supplier/Customer Conversations tabs)
+    const loadLinkedRfq = async () => {
+        const rfqId = msg?.rfq_received_id || msg?.linked_rfq_received_id;
+        if (!rfqId || !storeId || !token || linkedRfq?.id) return;
+        try {
+            const res  = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            const rfq  = data.result || data;
+            if (rfq?.id || rfq?._id) setLinkedRfq(rfq);
+        } catch (_) {}
+    };
 
     const loadEmailRfqs = async (email) => {
         if (!email || !storeId || !token) return;
@@ -137,6 +153,11 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         } catch (_) {}
         setEmailRfqLoading(false);
     };
+
+    // Reset tab + linked rfq when a new message opens
+    useEffect(() => {
+        if (show && msg) { setActiveDetailTab('email'); setLinkedRfq(null); }
+    }, [show, msg?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Load customer RFQ history when modal opens
     useEffect(() => {
@@ -409,7 +430,50 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                         <button className="btn-close" onClick={onClose} />
                     </div>
 
-                    <div className="modal-body">
+                    {/* Tab nav */}
+                    <ul className="nav nav-tabs px-3 pt-1" style={{ borderBottom: '1px solid #dee2e6', background: '#f8f9fa', fontSize: 13 }}>
+                        <li className="nav-item">
+                            <button className={`nav-link py-1 ${activeDetailTab === 'email' ? 'active' : ''}`} onClick={() => setActiveDetailTab('email')}>
+                                <i className="bi bi-envelope me-1"></i>Email
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={`nav-link py-1 ${activeDetailTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('supplier_conv'); loadLinkedRfq(); }}>
+                                <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={`nav-link py-1 ${activeDetailTab === 'customer_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('customer_conv'); loadLinkedRfq(); }}>
+                                <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
+                            </button>
+                        </li>
+                    </ul>
+
+                    {/* Supplier / Customer WhatsApp conversation tabs */}
+                    {activeDetailTab !== 'email' && (
+                        <div className="modal-body">
+                            {activeDetailTab === 'supplier_conv' && (
+                                <RFQWhatsAppConversationsPanel
+                                    storeId={storeId}
+                                    phones={(linkedRfq?.forwarded_to || []).map(s => s.phone).filter(Boolean)}
+                                    phoneLabels={Object.fromEntries((linkedRfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                                    chatZIndex={19999}
+                                    emptyMessage={msg?.rfq_received_id ? 'Loading RFQ supplier data…' : 'No linked RFQ found for this email. Supplier conversations are available once an RFQ is created from this email.'}
+                                />
+                            )}
+                            {activeDetailTab === 'customer_conv' && (
+                                <RFQWhatsAppConversationsPanel
+                                    storeId={storeId}
+                                    phones={linkedRfq?.customer_phone ? [linkedRfq.customer_phone] : []}
+                                    phoneLabels={linkedRfq?.customer_phone ? { [linkedRfq.customer_phone]: linkedRfq.customer_name || linkedRfq.customer_phone } : {}}
+                                    chatZIndex={19999}
+                                    emptyMessage={msg?.rfq_received_id ? 'Loading customer data…' : 'No linked RFQ found. Customer conversation requires a customer with a WhatsApp phone number.'}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    <div className="modal-body" style={{ display: activeDetailTab === 'email' ? undefined : 'none' }}>
                         <table className="table table-sm" style={{ fontSize: '13px', marginBottom: '16px' }}>
                             <tbody>
                                 <tr><th style={{ width: 80, fontWeight: 600 }}>{t('From')}</th><td>{displayAddr(msg.from)}</td></tr>

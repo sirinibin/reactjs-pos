@@ -2000,7 +2000,12 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                                     opacity: isDeleting ? 0.4 : 1,
                                                     transition: 'opacity 0.2s',
                                                 }}>
-                                                    <div>{msg.body_text || <span style={{ color: '#999', fontStyle: 'italic' }}>{t('(media)')}</span>}</div>
+                                                    <div>{msg.body_text
+                                                        ? <span style={{ whiteSpace: 'pre-line' }}>{msg.body_text}</span>
+                                                        : msg.wa_message_type === 'contacts'
+                                                            ? <span><i className="bi bi-person-vcard me-1"></i>{t('Contact card')}</span>
+                                                            : <span style={{ color: '#999', fontStyle: 'italic' }}>{t('(media)')}</span>}
+                                                    </div>
                                                     {/* Inline translation result */}
                                                     {trans?.text && (
                                                         <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid rgba(0,0,0,0.1)', color: '#1e40af', fontSize: '12px', fontStyle: 'normal' }}>
@@ -2242,7 +2247,11 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                             {msg.linked_rfq_received_code && ` (${msg.linked_rfq_received_code})`}
                                         </span>
                                     )}
-                                    {msg.body_text || <span className="text-muted">{t('(media)')}</span>}
+                                    {msg.body_text
+                                        ? msg.body_text
+                                        : msg.wa_message_type === 'contacts'
+                                            ? <span className="text-muted"><i className="bi bi-person-vcard me-1"></i>{t('Contact card')}</span>
+                                            : <span className="text-muted">{t('(media)')}</span>}
                                 </td>
                                 <td style={{ verticalAlign: 'middle' }}>
                                     <span title={msg.wa_message_type}>{msgTypeIcon(msg.wa_message_type)} {msg.wa_message_type || 'text'}</span>

@@ -12,6 +12,7 @@ import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/a
 import EmailDetailModal from '../store/EmailDetailModal.js';
 import { SupplierForm } from '../rfq_suppliers/index.js';
 import { WhatsAppChatModal, EmailChatModal } from '../store/ConversationModal.js';
+import RFQWhatsAppConversationsPanel from './RFQWhatsAppConversationsPanel.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -758,6 +759,16 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             {liveProgress && <Badge bg="primary" className="ms-1" style={{ fontSize: '10px', animation: 'rfq-pulse 1.4s ease-in-out infinite' }}>●</Badge>}
                         </button>
                     </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => setActiveTab('supplier_conv')}>
+                            <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'customer_conv' ? 'active' : ''}`} onClick={() => setActiveTab('customer_conv')}>
+                            <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
+                        </button>
+                    </li>
                 </ul>
 
                 <div className="p-3">
@@ -1029,6 +1040,26 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
 
                     {activeTab === 'timeline' && (
                         <RFQTimeline logs={rfq.activity_logs || []} liveProgress={liveProgress} />
+                    )}
+
+                    {activeTab === 'supplier_conv' && (
+                        <RFQWhatsAppConversationsPanel
+                            storeId={storeId}
+                            phones={(rfq.forwarded_to || []).map(s => s.phone).filter(Boolean)}
+                            phoneLabels={Object.fromEntries((rfq.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                            chatZIndex={20000}
+                            emptyMessage="No suppliers have been added to this RFQ yet."
+                        />
+                    )}
+
+                    {activeTab === 'customer_conv' && (
+                        <RFQWhatsAppConversationsPanel
+                            storeId={storeId}
+                            phones={rfq.customer_phone ? [rfq.customer_phone] : []}
+                            phoneLabels={rfq.customer_phone ? { [rfq.customer_phone]: rfq.customer_name || rfq.customer_phone } : {}}
+                            chatZIndex={20000}
+                            emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
+                        />
                     )}
                 </div>
             </Modal.Body>
@@ -1773,13 +1804,13 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         </button>
                     </li>
                     <li className="nav-item">
-                        <button className={`nav-link ${sendModalTab === 'replies' ? 'active' : ''}`} onClick={() => setSendModalTab('replies')}>
-                            <i className="bi bi-chat-left-dots me-1"></i>Replies
-                            {(rfq?.supplier_replies || []).length > 0 && (
-                                <Badge bg={sendModalTab === 'replies' ? 'primary' : 'secondary'} className="ms-2" style={{ fontSize: 10 }}>
-                                    {rfq.supplier_replies.length}
-                                </Badge>
-                            )}
+                        <button className={`nav-link ${sendModalTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('supplier_conv')}>
+                            <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${sendModalTab === 'customer_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('customer_conv')}>
+                            <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
                         </button>
                     </li>
                 </ul>
@@ -1787,8 +1818,22 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                 <div style={{ padding: '20px 24px' }}>
                 {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
 
-                {sendModalTab === 'replies' ? (
-                    <RFQRepliesPanel rfq={rfq} storeId={storeId} onAdded={onSent} replies={rfq?.supplier_replies || []} />
+                {sendModalTab === 'supplier_conv' ? (
+                    <RFQWhatsAppConversationsPanel
+                        storeId={storeId}
+                        phones={(rfq?.forwarded_to || []).map(s => s.phone).filter(Boolean)}
+                        phoneLabels={Object.fromEntries((rfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                        chatZIndex={20000}
+                        emptyMessage="No suppliers have been sent this RFQ yet."
+                    />
+                ) : sendModalTab === 'customer_conv' ? (
+                    <RFQWhatsAppConversationsPanel
+                        storeId={storeId}
+                        phones={rfq?.customer_phone ? [rfq.customer_phone] : []}
+                        phoneLabels={rfq?.customer_phone ? { [rfq.customer_phone]: rfq.customer_name || rfq.customer_phone } : {}}
+                        chatZIndex={20000}
+                        emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
+                    />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">
                         <Spinner animation="border" />
