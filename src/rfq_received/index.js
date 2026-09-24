@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import eventEmitter from '../utils/eventEmitter';
 import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
 import CustomerCreate from "../customer/create";
@@ -1359,7 +1360,7 @@ const STAGE_LABELS = {
 
 // ── RFQSendModal ─────────────────────────────────────────────────────────────
 
-export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails }) {
+export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails, initialTab }) {
     const token = localStorage.getItem('access_token');
     const rfqPreviewRef = useRef(null);
     useEffect(() => {
@@ -1378,9 +1379,12 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [loadingPreview, setLoadingPreview]       = useState(false);
     const [storeData, setStoreData]               = useState(null);
     const [phase, setPhase]                       = useState('preview'); // preview | sending | done
-    const [sendModalTab, setSendModalTab]          = useState('send'); // send | supplier_conv | customer_conv
+    const [sendModalTab, setSendModalTab]          = useState(initialTab || 'send'); // send | supplier_conv | customer_conv
     const [sendSupplierConvUnread, setSendSupplierConvUnread] = useState(0);
     const [sendCustomerConvUnread, setSendCustomerConvUnread] = useState(0);
+
+    // Sync tab when initialTab changes (e.g. opened from header notification)
+    useEffect(() => { if (show && initialTab) setSendModalTab(initialTab); }, [show, initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
     const [supplierStatuses, setSupplierStatuses] = useState({});
     const [sentPhones, setSentPhones]             = useState(new Set()); // phones already successfully sent
     const [error, setError]                       = useState('');
@@ -2887,6 +2891,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [deletingRFQId, setDeletingRFQId] = useState(null);
     const [deleteConfirmRFQ, setDeleteConfirmRFQ] = useState(null);
     const [rfqUnreadMap, setRfqUnreadMap] = useState({}); // { rfqId → total unread count }
+    const [pendingSendTab, setPendingSendTab] = useState(null);
     const rfqCreateRef = useRef(null);
     const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
@@ -2956,6 +2961,33 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             })
             .catch(() => {});
     }, [list, storeId, token]);
+
+    // Handle openRfqConversations events (emitted by Topbar header WhatsApp badge)
+    // and pendingRfqConversations stored in sessionStorage when navigating from another page
+    useEffect(() => {
+        const handleOpen = async ({ rfqId, tab }) => {
+            if (!rfqId || !storeId || !token) return;
+            try {
+                const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
+                const data = await res.json();
+                if (data?.id) {
+                    setPendingSendTab(tab || 'supplier_conv');
+                    setRfqForSend(data);
+                    setShowSendModal(true);
+                }
+            } catch (_) {}
+        };
+        eventEmitter.on('openRfqConversations', handleOpen);
+
+        // Check sessionStorage for pending navigation from another page
+        const pending = sessionStorage.getItem('pendingRfqConversations');
+        if (pending) {
+            sessionStorage.removeItem('pendingRfqConversations');
+            try { handleOpen(JSON.parse(pending)); } catch (_) {}
+        }
+
+        return () => eventEmitter.off('openRfqConversations', handleOpen);
+    }, [storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Auto-open detail when ?id= is in URL (e.g. navigated from procurement emails "View RFQ")
     useEffect(() => {
@@ -3204,9 +3236,10 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 rfq={rfqForSend}
                 storeId={storeId}
                 show={showSendModal}
-                onHide={() => setShowSendModal(false)}
+                onHide={() => { setShowSendModal(false); setPendingSendTab(null); }}
                 onSent={() => { fetchList(); refreshSelected(rfqForSend?.id); }}
                 onViewDetails={rfqForSend?.id ? () => { setShowSendModal(false); openDetail(rfqForSend.id); } : undefined}
+                initialTab={pendingSendTab}
             />
 
             {/* Table */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './components/LanguageSwitcher';
@@ -57,6 +57,9 @@ function Topbar(props) {
         try { dismissedPrIds.current = new Set(JSON.parse(localStorage.getItem('dismissed_pr_ids') || '[]')); }
         catch (_) { dismissedPrIds.current = new Set(); }
     }
+    const [waUnreadItems, setWaUnreadItems] = useState([]);
+    const [waUnreadTotal, setWaUnreadTotal] = useState(0);
+
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
@@ -133,6 +136,28 @@ function Topbar(props) {
             })
             .catch(() => { });
     }, []);
+
+    // Poll WhatsApp unread summary every 60 s (only when RFQ module enabled)
+    const fetchWaUnread = useCallback(() => {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        const rfqEnabled = (() => { try { return !!JSON.parse(localStorage.getItem('_store_settings_cache') || 'null')?.enable_rfq_module; } catch (_) { return false; } })();
+        if (!rfqEnabled) return;
+        fetch(`/v1/rfq-whatsapp-unread?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                setWaUnreadItems(data.items || []);
+                setWaUnreadTotal(data.total_unread || 0);
+            })
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        fetchWaUnread();
+        const id = setInterval(fetchWaUnread, 60000);
+        return () => clearInterval(id);
+    }, [fetchWaUnread]);
 
     useEffect(() => {
         const observer = new MutationObserver(() => setDirTick(n => n + 1));
@@ -525,6 +550,79 @@ function Topbar(props) {
                                                 ))}
                                             </>
                                         )}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </li>
+                        )}
+
+                        {waUnreadTotal > 0 && (
+                            <li className="nav-item dropdown me-1">
+                                <Dropdown align="end">
+                                    <Dropdown.Toggle
+                                        as="span"
+                                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                        id="wa-unread-toggle"
+                                    >
+                                        <i className="bi bi-whatsapp" style={{ fontSize: 20, color: '#25D366' }}></i>
+                                        <span style={{
+                                            position: 'absolute', top: -4, right: 2,
+                                            background: '#dc3545', color: '#fff', borderRadius: '50%',
+                                            fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                                        }}>{waUnreadTotal > 99 ? '99+' : waUnreadTotal}</span>
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu style={{ minWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
+                                            <i className="bi bi-whatsapp text-success me-1"></i>
+                                            Unread WhatsApp Messages
+                                        </Dropdown.ItemText>
+                                        {waUnreadItems.map((item, idx) => (
+                                            <div
+                                                key={idx}
+                                                style={{ padding: '8px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                                                onClick={() => {
+                                                    const isOnRfqPage = window.location.pathname === '/dashboard/rfq-received';
+                                                    const openModal = () => eventEmitter.emit('openRfqConversations', {
+                                                        rfqId: item.rfq_id,
+                                                        tab: item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv',
+                                                    });
+                                                    if (isOnRfqPage) {
+                                                        openModal();
+                                                    } else {
+                                                        window.location.href = '/dashboard/rfq-received';
+                                                        // Event will be re-emitted after navigation via rfq_id in URL — not possible here;
+                                                        // store in sessionStorage for the RFQ page to pick up
+                                                        sessionStorage.setItem('pendingRfqConversations', JSON.stringify({
+                                                            rfqId: item.rfq_id,
+                                                            tab: item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv',
+                                                        }));
+                                                    }
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f8fdf8'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <i className={`bi ${item.phone_type === 'customer' ? 'bi-person-fill text-primary' : 'bi-building text-success'}`} style={{ fontSize: 14 }}></i>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontSize: 13, fontWeight: 600 }}>
+                                                            {item.rfq_code || item.rfq_id.slice(-6)}
+                                                            <span className="text-muted ms-2" style={{ fontSize: 11, fontWeight: 400 }}>
+                                                                {item.phone_type === 'customer' ? 'Customer' : 'Supplier'}
+                                                            </span>
+                                                        </div>
+                                                        <div style={{ fontSize: 11, color: '#6c757d' }}>{item.contact_name || item.phone}</div>
+                                                        {item.last_message_text && (
+                                                            <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>
+                                                                {item.last_message_text}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700, flexShrink: 0 }}>
+                                                        {item.unread_count}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </li>
