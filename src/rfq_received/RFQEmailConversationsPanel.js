@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { EmailChatModal } from '../store/ConversationModal';
 
 export default function RFQEmailConversationsPanel({ emails, emailLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, showEmptyEmails }) {
