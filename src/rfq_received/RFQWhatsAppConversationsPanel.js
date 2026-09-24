@@ -88,7 +88,12 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
             const thread = threadByPhone[norm] || threadByPhone[phone];
             return { phone, norm, thread, label: phoneLabels?.[phone] || phoneLabels?.[norm] || thread?.sender_name || phone };
         })
-        .filter(row => showEmptyPhones || row.thread); // hide threadless phones unless explicitly shown
+        .filter(row => showEmptyPhones || row.thread)
+        .sort((a, b) => {
+            const da = a.thread?.last_message_date ? new Date(a.thread.last_message_date).getTime() : 0;
+            const db = b.thread?.last_message_date ? new Date(b.thread.last_message_date).getTime() : 0;
+            return db - da;
+        });
 
     const hasLoaded = threads !== null;
 
@@ -152,7 +157,7 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
                                 )}
                                 {thread?.last_message_date && (
                                     <div style={{ fontSize: 10, color: '#6c757d' }}>
-                                        {new Date(thread.last_message_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                        {new Date(thread.last_message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 )}
                                 <div className="d-flex gap-1">

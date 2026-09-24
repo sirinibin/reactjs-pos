@@ -4,6 +4,7 @@ import { ViewButton } from './FileViewerModal.js';
 import { ForwardDetail } from '../rfq_received/index.js';
 import RFQWhatsAppConversationsPanel from '../rfq_received/RFQWhatsAppConversationsPanel.js';
 import RFQEmailConversationsPanel from '../rfq_received/RFQEmailConversationsPanel.js';
+import CustomerCreate from '../customer/create';
 
 const fixEmailHtml = html => {
     if (!html) return html;
@@ -131,6 +132,12 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [customerEmailConvUnread, setCustomerEmailConvUnread] = useState(0);
     // Linked RFQ data (for conversation tabs) — loaded on demand
     const [linkedRfq, setLinkedRfq] = useState(null);
+    // PDF view/download
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [pdfLoading, setPdfLoading] = useState(false);
+    const [showPdfModal, setShowPdfModal] = useState(false);
+    // Customer edit
+    const customerEditRef = useRef(null);
 
     // Load linked RFQ data (for Supplier/Customer Conversations tabs)
     const loadLinkedRfq = async () => {
@@ -158,9 +165,29 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         setEmailRfqLoading(false);
     };
 
+    const loadPdf = async () => {
+        const rfqId = msg?.rfq_received_id || msg?.linked_rfq_received_id;
+        if (!rfqId || !storeId || !token) return;
+        if (pdfUrl) { setShowPdfModal(true); return; }
+        setPdfLoading(true);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfqId}/download-pdf?store_id=${storeId}`, { headers: { Authorization: token } });
+            if (!res.ok) return;
+            const blob = await res.blob();
+            setPdfUrl(URL.createObjectURL(blob));
+            setShowPdfModal(true);
+        } catch (_) {}
+        finally { setPdfLoading(false); }
+    };
+
     // Reset tab + linked rfq when a new message opens
     useEffect(() => {
-        if (show && msg) { setActiveDetailTab('email'); setLinkedRfq(null); }
+        if (show && msg) { setActiveDetailTab('email'); setLinkedRfq(null); setPdfUrl(null); setShowPdfModal(false); }
+    }, [show, msg?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-load linked RFQ when modal opens (needed for Edit Customer button on email tab)
+    useEffect(() => {
+        if (show && msg && (msg.rfq_received_id || msg.linked_rfq_received_id)) loadLinkedRfq();
     }, [show, msg?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Load customer RFQ history when modal opens
@@ -788,6 +815,27 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                 <i className="bi bi-magic me-1"></i>{t('Extract')}
                             </button>
                         )}
+                        {(msg?.rfq_received_id || msg?.linked_rfq_received_id) && (
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={loadPdf}
+                                disabled={pdfLoading}
+                                title="View / Download RFQ PDF"
+                            >
+                                {pdfLoading
+                                    ? <><span className="spinner-border spinner-border-sm me-1" />Loading…</>
+                                    : <><i className="bi bi-file-earmark-pdf me-1 text-danger"></i>View RFQ PDF</>}
+                            </button>
+                        )}
+                        {linkedRfq?.customer_id && (
+                            <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => customerEditRef.current?.open(linkedRfq.customer_id)}
+                                title="Edit Customer"
+                            >
+                                <i className="bi bi-person-gear me-1"></i>{t('Edit Customer')}
+                            </button>
+                        )}
                         <button
                             className="btn btn-sm btn-outline-danger ms-auto"
                             onClick={handleDelete}
@@ -803,6 +851,31 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                 </div>
             </div>
         </div>}
+        {showPdfModal && pdfUrl && (
+            <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 10200 }}>
+                <div className="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h6 className="modal-title">
+                                <i className="bi bi-file-earmark-pdf me-2 text-danger"></i>
+                                {(msg?.rfq_received_code || msg?.linked_rfq_received_code || 'RFQ')}.pdf
+                            </h6>
+                            <button className="btn-close" onClick={() => setShowPdfModal(false)} />
+                        </div>
+                        <div className="modal-body p-0" style={{ height: '75vh' }}>
+                            <iframe src={pdfUrl} title="RFQ PDF" style={{ width: '100%', height: '100%', border: 'none' }} />
+                        </div>
+                        <div className="modal-footer">
+                            <a href={pdfUrl} download={`${msg?.rfq_received_code || msg?.linked_rfq_received_code || 'RFQ'}.pdf`} className="btn btn-primary btn-sm">
+                                <i className="bi bi-download me-1"></i>Download PDF
+                            </a>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setShowPdfModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+        <CustomerCreate ref={customerEditRef} />
         <ForwardDetail
             rfq={rfqDetail}
             show={rfqDetailShow && !!rfqDetail}

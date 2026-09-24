@@ -193,7 +193,7 @@ const RFQPreview = forwardRef((props, ref) => {
             setInvoiceBackground('');
             setDownloadFlash(null);
             setShow(true);
-            const storeId = rfqModel?.store_id;
+            const storeId = rfqModel?.store_id || localStorage.getItem('store_id');
             const token   = localStorage.getItem('access_token');
             // Always re-fetch the full RFQ from the backend so the preview has
             // current products/date even when opened right after creation.

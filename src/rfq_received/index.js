@@ -1436,6 +1436,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [testSending, setTestSending]           = useState(false);
     const [testResult, setTestResult]             = useState(null); // null | 'ok' | 'err: ...'
     const esRef                                   = useRef(null);
+    const customerEditRef                         = useRef(null);
     // PDF view/download
     const [pdfUrl, setPdfUrl]                     = useState(null);
     const [pdfLoading, setPdfLoading]             = useState(false);
@@ -1842,6 +1843,16 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                     >
                         <i className="bi bi-eye me-1"></i>Preview
                     </button>
+                    {rfq?.customer_id && (
+                        <button
+                            className="btn btn-sm btn-outline-info"
+                            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal', whiteSpace: 'nowrap' }}
+                            onClick={() => customerEditRef.current?.open(rfq.customer_id)}
+                            title="Edit Customer"
+                        >
+                            <i className="bi bi-person-gear me-1"></i>Edit Customer
+                        </button>
+                    )}
                 </Modal.Title>
             </Modal.Header>
 
@@ -2480,6 +2491,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             </Modal>
         )}
         <RFQPreview ref={rfqPreviewRef} />
+        <CustomerCreate ref={customerEditRef} />
         <EmailDetailModal
             msg={emailDetail}
             show={emailDetailShow && !!emailDetail}
