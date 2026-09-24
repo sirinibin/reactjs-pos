@@ -1360,7 +1360,7 @@ const STAGE_LABELS = {
 
 // ── RFQSendModal ─────────────────────────────────────────────────────────────
 
-export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails, initialTab }) {
+export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails, initialTab, initialPhone }) {
     const token = localStorage.getItem('access_token');
     const rfqPreviewRef = useRef(null);
     useEffect(() => {
@@ -1842,6 +1842,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         emptyMessage="No suppliers have been sent this RFQ yet."
                         onUnreadCount={setSendSupplierConvUnread}
                         onEditSupplier={() => setSendModalTab('send')}
+                        initialChatPhone={sendModalTab === 'supplier_conv' ? initialPhone : null}
                     />
                 ) : sendModalTab === 'customer_conv' ? (
                     <RFQWhatsAppConversationsPanel
@@ -1851,6 +1852,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         chatZIndex={20000}
                         emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
                         onUnreadCount={setSendCustomerConvUnread}
+                        initialChatPhone={sendModalTab === 'customer_conv' ? initialPhone : null}
                     />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">
@@ -2892,6 +2894,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [deleteConfirmRFQ, setDeleteConfirmRFQ] = useState(null);
     const [rfqUnreadMap, setRfqUnreadMap] = useState({}); // { rfqId → total unread count }
     const [pendingSendTab, setPendingSendTab] = useState(null);
+    const [pendingSendPhone, setPendingSendPhone] = useState(null);
     const rfqCreateRef = useRef(null);
     const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
@@ -2965,13 +2968,14 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     // Handle openRfqConversations events (emitted by Topbar header WhatsApp badge)
     // and pendingRfqConversations stored in sessionStorage when navigating from another page
     useEffect(() => {
-        const handleOpen = async ({ rfqId, tab }) => {
+        const handleOpen = async ({ rfqId, tab, phone }) => {
             if (!rfqId || !storeId || !token) return;
             try {
                 const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
                 const data = await res.json();
                 if (data?.id) {
                     setPendingSendTab(tab || 'supplier_conv');
+                    setPendingSendPhone(phone || null);
                     setRfqForSend(data);
                     setShowSendModal(true);
                 }
@@ -3236,10 +3240,11 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 rfq={rfqForSend}
                 storeId={storeId}
                 show={showSendModal}
-                onHide={() => { setShowSendModal(false); setPendingSendTab(null); }}
+                onHide={() => { setShowSendModal(false); setPendingSendTab(null); setPendingSendPhone(null); }}
                 onSent={() => { fetchList(); refreshSelected(rfqForSend?.id); }}
                 onViewDetails={rfqForSend?.id ? () => { setShowSendModal(false); openDetail(rfqForSend.id); } : undefined}
                 initialTab={pendingSendTab}
+                initialPhone={pendingSendPhone}
             />
 
             {/* Table */}

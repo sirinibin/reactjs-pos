@@ -13,13 +13,14 @@ import { WhatsAppChatModal } from '../store/ConversationModal';
  *   chatZIndex  – z-index to pass to WhatsAppChatModal (default 20000)
  *   emptyMessage – string shown when phones is empty / null
  */
-export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, onEditSupplier }) {
+export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, onEditSupplier, initialChatPhone }) {
     const token = localStorage.getItem('access_token');
     const [threads, setThreads]     = useState(null); // null = not loaded yet
     const [loading, setLoading]     = useState(false);
     const [chatPhone, setChatPhone] = useState(null);
     const [newPhone, setNewPhone]   = useState('');
     const newPhoneRef = useRef(null);
+    const initialChatOpened = useRef(false);
 
     const load = useCallback(async () => {
         if (!storeId || !phones || phones.length === 0) return;
@@ -43,6 +44,13 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
     }, [storeId, phones, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => { load(); }, [load]);
+
+    // Auto-open a specific chat when initialChatPhone is given (e.g. opened from header notification)
+    useEffect(() => {
+        if (!initialChatPhone || initialChatOpened.current || threads === null) return;
+        initialChatOpened.current = true;
+        setChatPhone(initialChatPhone.replace(/^\+/, ''));
+    }, [threads, initialChatPhone]);
 
     const openChat = (phone) => {
         if (phone) setChatPhone(phone.replace(/^\+/, ''));

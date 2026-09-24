@@ -576,53 +576,57 @@ function Topbar(props) {
                                             <i className="bi bi-whatsapp text-success me-1"></i>
                                             Unread WhatsApp Messages
                                         </Dropdown.ItemText>
-                                        {waUnreadItems.map((item, idx) => (
+                                        {waUnreadItems.map((item, idx) => {
+                                            const tab = item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv';
+                                            const payload = { rfqId: item.rfq_id, tab, phone: item.phone };
+                                            const handleClick = () => {
+                                                if (window.location.pathname === '/dashboard/rfq-received') {
+                                                    eventEmitter.emit('openRfqConversations', payload);
+                                                } else {
+                                                    sessionStorage.setItem('pendingRfqConversations', JSON.stringify(payload));
+                                                    window.location.href = '/dashboard/rfq-received';
+                                                }
+                                            };
+                                            return (
                                             <div
                                                 key={idx}
-                                                style={{ padding: '8px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
-                                                onClick={() => {
-                                                    const isOnRfqPage = window.location.pathname === '/dashboard/rfq-received';
-                                                    const openModal = () => eventEmitter.emit('openRfqConversations', {
-                                                        rfqId: item.rfq_id,
-                                                        tab: item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv',
-                                                    });
-                                                    if (isOnRfqPage) {
-                                                        openModal();
-                                                    } else {
-                                                        window.location.href = '/dashboard/rfq-received';
-                                                        // Event will be re-emitted after navigation via rfq_id in URL — not possible here;
-                                                        // store in sessionStorage for the RFQ page to pick up
-                                                        sessionStorage.setItem('pendingRfqConversations', JSON.stringify({
-                                                            rfqId: item.rfq_id,
-                                                            tab: item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv',
-                                                        }));
-                                                    }
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#f8fdf8'}
+                                                style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                                                onClick={handleClick}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                             >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <i className={`bi ${item.phone_type === 'customer' ? 'bi-person-fill text-primary' : 'bi-building text-success'}`} style={{ fontSize: 14 }}></i>
+                                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                    <div style={{
+                                                        width: 34, height: 34, borderRadius: '50%',
+                                                        background: item.phone_type === 'customer' ? '#0d6efd' : '#25D366',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: '#fff', flexShrink: 0, fontSize: 15,
+                                                    }}>
+                                                        <i className={`bi ${item.phone_type === 'customer' ? 'bi-person-fill' : 'bi-whatsapp'}`}></i>
+                                                    </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontSize: 13, fontWeight: 600 }}>
-                                                            {item.rfq_code || item.rfq_id.slice(-6)}
-                                                            <span className="text-muted ms-2" style={{ fontSize: 11, fontWeight: 400 }}>
+                                                        <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+                                                            {item.contact_name || item.phone}
+                                                            <span style={{ fontSize: 10, fontWeight: 400, color: '#6c757d', marginLeft: 6 }}>
                                                                 {item.phone_type === 'customer' ? 'Customer' : 'Supplier'}
                                                             </span>
                                                         </div>
-                                                        <div style={{ fontSize: 11, color: '#6c757d' }}>{item.contact_name || item.phone}</div>
+                                                        <div style={{ fontSize: 11, color: '#198754', fontWeight: 500 }}>
+                                                            {item.unread_count} new message{item.unread_count !== 1 ? 's' : ''} for {item.rfq_code || 'RFQ'}
+                                                        </div>
                                                         {item.last_message_text && (
-                                                            <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>
+                                                            <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240, marginTop: 1 }}>
                                                                 {item.last_message_text}
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700, flexShrink: 0 }}>
+                                                    <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700, flexShrink: 0, alignSelf: 'center' }}>
                                                         {item.unread_count}
                                                     </span>
                                                 </div>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </li>
