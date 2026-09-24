@@ -1482,7 +1482,11 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
         setAddQuery(''); setAddSuggestions([]); setShowAddSugg(false);
         setTestPhone(''); setTestResult(null);
         setPdfUrl(null); setShowPdfModal(false);
-        setPhase('preview'); setSendModalTab('send');
+        setPhase('preview');
+        // Do NOT reset sendModalTab here — useState(initialTab||'send') on mount
+        // already initialises correctly, and overriding it here would fight the
+        // tab set by the notification click handler.
+        if (!initialTab) setSendModalTab('send');
         setMapsResult(null); setMapsOpen(false); setMapsCustomInput(''); setRemovedFromList(new Set());
 
         // Restore extra recipients from localStorage (persist across modal open/close)
