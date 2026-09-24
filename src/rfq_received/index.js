@@ -15,6 +15,7 @@ import EmailDetailModal from '../store/EmailDetailModal.js';
 import { SupplierForm } from '../rfq_suppliers/index.js';
 import { WhatsAppChatModal, EmailChatModal } from '../store/ConversationModal.js';
 import RFQWhatsAppConversationsPanel from './RFQWhatsAppConversationsPanel.js';
+import RFQEmailConversationsPanel from './RFQEmailConversationsPanel.js';
 
 // Exported for unit testing — determines whether a WABA template sends a PDF document
 // (DOCUMENT header) vs an image (IMAGE header or no media header).
@@ -572,6 +573,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const [supplierConvUnread, setSupplierConvUnread] = useState(0);
     const [customerConvUnread, setCustomerConvUnread] = useState(0);
+    const [customerEmailConvUnread, setCustomerEmailConvUnread] = useState(0);
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
@@ -773,6 +775,12 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                         <button className={`nav-link ${activeTab === 'customer_conv' ? 'active' : ''}`} onClick={() => setActiveTab('customer_conv')}>
                             <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
                             {customerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerConvUnread}</span>}
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'customer_email_conv' ? 'active' : ''}`} onClick={() => setActiveTab('customer_email_conv')}>
+                            <i className="bi bi-envelope-fill me-1"></i>Customer Email
+                            {customerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerEmailConvUnread}</span>}
                         </button>
                     </li>
                 </ul>
@@ -1069,6 +1077,17 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
                             onUnreadCount={setCustomerConvUnread}
                             showEmptyPhones
+                        />
+                    )}
+                    {activeTab === 'customer_email_conv' && (
+                        <RFQEmailConversationsPanel
+                            storeId={storeId}
+                            emails={rfq.customer_email ? [rfq.customer_email] : []}
+                            emailLabels={rfq.customer_email ? { [rfq.customer_email]: rfq.customer_name || rfq.customer_email } : {}}
+                            chatZIndex={20000}
+                            emptyMessage="Customer email address is not available. Add an email to the customer record."
+                            onUnreadCount={setCustomerEmailConvUnread}
+                            showEmptyEmails
                         />
                     )}
                 </div>
@@ -1384,6 +1403,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [sendModalTab, setSendModalTab]          = useState(initialTab || 'send'); // send | supplier_conv | customer_conv
     const [sendSupplierConvUnread, setSendSupplierConvUnread] = useState(0);
     const [sendCustomerConvUnread, setSendCustomerConvUnread] = useState(0);
+    const [sendCustomerEmailConvUnread, setSendCustomerEmailConvUnread] = useState(0);
 
     // Sync tab when initialTab changes (e.g. opened from header notification)
     useEffect(() => { if (show && initialTab) setSendModalTab(initialTab); }, [show, initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1477,21 +1497,32 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
         setSentPhones(alreadySent);
 
         setLoadingPreview(true);
-        fetch(`/v1/rfq-received/${rfq.id}/send-preview?store_id=${storeId}`, { headers: { Authorization: token } })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) { setError(data.error); }
-                else {
-                    setPreview(data);
-                    // Show WABA config warning (non-blocking) if returned
-                    if (data.config_warning) { setError(data.config_warning); }
-                    // Select suppliers not already sent — also pre-select stored extras
-                    const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
-                    setSelectedPhones(new Set([...extraPhones, ...(data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)]));
-                }
-            })
-            .catch(e => setError('Failed to load preview: ' + e.message))
-            .finally(() => setLoadingPreview(false));
+        const controller = new AbortController();
+        const applyData = (data) => {
+            setError(data.error || data.config_warning || '');
+            if (!data.error) {
+                setPreview(data);
+                const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
+                setSelectedPhones(new Set([...extraPhones, ...(data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)]));
+            }
+            setLoadingPreview(false);
+        };
+        const doFetch = (attempt) => {
+            fetch(`/v1/rfq-received/${rfq.id}/send-preview?store_id=${storeId}`, { headers: { Authorization: token }, signal: controller.signal })
+                .then(r => r.json())
+                .then(applyData)
+                .catch(e => {
+                    if (e.name === 'AbortError') return;
+                    if (attempt < 2) {
+                        setTimeout(() => doFetch(attempt + 1), 2000);
+                    } else {
+                        setError('Failed to load preview. Please close and reopen the modal.');
+                        setLoadingPreview(false);
+                    }
+                });
+        };
+        doFetch(1);
+        return () => controller.abort();
     }, [show, rfq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -1830,6 +1861,12 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                             {sendCustomerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendCustomerConvUnread}</span>}
                         </button>
                     </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${sendModalTab === 'customer_email_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('customer_email_conv')}>
+                            <i className="bi bi-envelope-fill me-1"></i>Customer Email
+                            {sendCustomerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendCustomerEmailConvUnread}</span>}
+                        </button>
+                    </li>
                 </ul>
 
                 <div style={{ padding: '20px 24px' }}>
@@ -1856,6 +1893,16 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         onUnreadCount={setSendCustomerConvUnread}
                         initialChatPhone={sendModalTab === 'customer_conv' ? initialPhone : null}
                         showEmptyPhones
+                    />
+                ) : sendModalTab === 'customer_email_conv' ? (
+                    <RFQEmailConversationsPanel
+                        storeId={storeId}
+                        emails={rfq?.customer_email ? [rfq.customer_email] : []}
+                        emailLabels={rfq?.customer_email ? { [rfq.customer_email]: rfq.customer_name || rfq.customer_email } : {}}
+                        chatZIndex={20000}
+                        emptyMessage="Customer email address is not available. Add an email to the customer record."
+                        onUnreadCount={setSendCustomerEmailConvUnread}
+                        showEmptyEmails
                     />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">

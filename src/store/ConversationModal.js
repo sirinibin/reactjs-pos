@@ -21,9 +21,9 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex }) {
     );
 }
 
-export function EmailChatModal({ show, email, storeId, onHide }) {
+export function EmailChatModal({ show, email, storeId, onHide, zIndex }) {
     return (
-        <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: 1060 }}>
+        <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: zIndex || 1060 }}>
             <Modal.Header closeButton style={{ padding: '8px 16px', background: '#f0f4ff', borderBottom: '1px solid #c3d4f5' }}>
                 <Modal.Title style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <i className="bi bi-envelope-fill text-primary" style={{ fontSize: '18px' }}></i>

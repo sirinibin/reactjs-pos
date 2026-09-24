@@ -10,6 +10,9 @@ import ManageUsersModal from './user/ManageUsersModal';
 import AdminSettingsModal from './AdminSettingsModal';
 import ServerStatusModal from './ServerStatusModal';
 import EmailDetailModal from './store/EmailDetailModal';
+import { ExtractModal } from './store/ProcurementEmailsTab';
+import RFQCreate from './rfq_received/create.js';
+import { RFQSendModal } from './rfq_received/index.js';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -64,6 +67,10 @@ function Topbar(props) {
     const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
     const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
     const [topbarEmailShow, setTopbarEmailShow] = useState(false);
+    const [topbarExtractMsg, setTopbarExtractMsg] = useState(null);
+    const [topbarRfqForSend, setTopbarRfqForSend] = useState(null);
+    const [topbarShowSendModal, setTopbarShowSendModal] = useState(false);
+    const topbarRfqCreateRef = useRef(null);
 
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
@@ -982,6 +989,37 @@ function Topbar(props) {
                     onClose={() => { setTopbarEmailShow(false); setTopbarEmailMsg(null); }}
                     storeId={localStorage.getItem('store_id')}
                     token={localStorage.getItem('access_token')}
+                    onExtract={msg => { setTopbarEmailShow(false); setTopbarEmailMsg(null); setTopbarExtractMsg(msg); }}
+                />
+            )}
+            {topbarExtractMsg && (
+                <ExtractModal
+                    msg={topbarExtractMsg}
+                    storeId={localStorage.getItem('store_id')}
+                    token={localStorage.getItem('access_token')}
+                    onClose={() => setTopbarExtractMsg(null)}
+                    onCreateRFQ={data => {
+                        const msgId = topbarExtractMsg?.id;
+                        const msgCode = topbarExtractMsg?.code;
+                        setTopbarExtractMsg(null);
+                        topbarRfqCreateRef.current?.openFromExtraction(data, msgId, msgCode);
+                    }}
+                />
+            )}
+            <RFQCreate
+                ref={topbarRfqCreateRef}
+                showToastMessage={() => {}}
+                onCreated={newRfq => {
+                    if (newRfq?.id) { setTopbarRfqForSend(newRfq); setTopbarShowSendModal(true); }
+                }}
+            />
+            {topbarRfqForSend && (
+                <RFQSendModal
+                    key={topbarRfqForSend.id}
+                    rfq={topbarRfqForSend}
+                    storeId={localStorage.getItem('store_id')}
+                    show={topbarShowSendModal}
+                    onHide={() => { setTopbarShowSendModal(false); setTopbarRfqForSend(null); }}
                 />
             )}
         </>

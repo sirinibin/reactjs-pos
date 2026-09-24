@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ViewButton } from './FileViewerModal.js';
 import { ForwardDetail } from '../rfq_received/index.js';
 import RFQWhatsAppConversationsPanel from '../rfq_received/RFQWhatsAppConversationsPanel.js';
+import RFQEmailConversationsPanel from '../rfq_received/RFQEmailConversationsPanel.js';
 
 const fixEmailHtml = html => {
     if (!html) return html;
@@ -127,6 +128,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [activeDetailTab, setActiveDetailTab] = useState('email'); // 'email' | 'supplier_conv' | 'customer_conv'
     const [supplierConvUnread, setSupplierConvUnread] = useState(0);
     const [customerConvUnread, setCustomerConvUnread] = useState(0);
+    const [customerEmailConvUnread, setCustomerEmailConvUnread] = useState(0);
     // Linked RFQ data (for conversation tabs) — loaded on demand
     const [linkedRfq, setLinkedRfq] = useState(null);
 
@@ -451,6 +453,12 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                 {customerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerConvUnread}</span>}
                             </button>
                         </li>
+                        <li className="nav-item">
+                            <button className={`nav-link py-1 ${activeDetailTab === 'customer_email_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('customer_email_conv'); loadLinkedRfq(); }}>
+                                <i className="bi bi-envelope-fill me-1"></i>Customer Email
+                                {customerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerEmailConvUnread}</span>}
+                            </button>
+                        </li>
                     </ul>
 
                     {/* Supplier / Customer WhatsApp conversation tabs */}
@@ -475,6 +483,17 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     emptyMessage={msg?.rfq_received_id ? 'Loading customer data…' : 'No linked RFQ found. Customer conversation requires a customer with a WhatsApp phone number.'}
                                     onUnreadCount={setCustomerConvUnread}
                                     showEmptyPhones
+                                />
+                            )}
+                            {activeDetailTab === 'customer_email_conv' && (
+                                <RFQEmailConversationsPanel
+                                    storeId={storeId}
+                                    emails={linkedRfq?.customer_email ? [linkedRfq.customer_email] : []}
+                                    emailLabels={linkedRfq?.customer_email ? { [linkedRfq.customer_email]: linkedRfq.customer_name || linkedRfq.customer_email } : {}}
+                                    chatZIndex={19999}
+                                    emptyMessage={msg?.rfq_received_id ? 'Loading customer data…' : 'No linked RFQ found. Customer email conversation requires a customer with an email address.'}
+                                    onUnreadCount={setCustomerEmailConvUnread}
+                                    showEmptyEmails
                                 />
                             )}
                         </div>
