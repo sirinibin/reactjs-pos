@@ -126,6 +126,8 @@ function Topbar(props) {
                     if (data.result.settings) {
                         setStoreSettings(data.result.settings);
                         localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
+                        // Fetch unread WA count now that settings are confirmed loaded
+                        if (data.result.settings.enable_rfq_module) fetchWaUnread();
                     }
                     if (data.result.code) setStoreCode(data.result.code);
                     if (data.result.zatca) setStoreZatca(data.result.zatca);
@@ -137,13 +139,11 @@ function Topbar(props) {
             .catch(() => { });
     }, []);
 
-    // Poll WhatsApp unread summary every 60 s (only when RFQ module enabled)
+    // Fetch WhatsApp unread summary (event-driven via WebSocket + 5-min fallback poll)
     const fetchWaUnread = useCallback(() => {
         const storeId = localStorage.getItem('store_id');
         const token = localStorage.getItem('access_token');
         if (!storeId || !token) return;
-        const rfqEnabled = (() => { try { return !!JSON.parse(localStorage.getItem('_store_settings_cache') || 'null')?.enable_rfq_module; } catch (_) { return false; } })();
-        if (!rfqEnabled) return;
         fetch(`/v1/rfq-whatsapp-unread?store_id=${storeId}`, { headers: { Authorization: token } })
             .then(r => r.json())
             .then(data => {
@@ -154,9 +154,19 @@ function Topbar(props) {
     }, []);
 
     useEffect(() => {
+        // Initial fetch
         fetchWaUnread();
-        const id = setInterval(fetchWaUnread, 60000);
-        return () => clearInterval(id);
+        // Fallback poll every 5 min in case WebSocket event is missed
+        const id = setInterval(fetchWaUnread, 5 * 60 * 1000);
+        // Real-time: re-fetch when backend pushes wa_unread_changed
+        eventEmitter.on('wa_unread_changed', fetchWaUnread);
+        // Re-fetch on WebSocket reconnect
+        eventEmitter.on('socket_connection_open', fetchWaUnread);
+        return () => {
+            clearInterval(id);
+            eventEmitter.off('wa_unread_changed', fetchWaUnread);
+            eventEmitter.off('socket_connection_open', fetchWaUnread);
+        };
     }, [fetchWaUnread]);
 
     useEffect(() => {
@@ -555,7 +565,7 @@ function Topbar(props) {
                             </li>
                         )}
 
-                        {waUnreadTotal > 0 && (
+                        {storeSettings?.enable_rfq_module && (
                             <li className="nav-item dropdown me-1">
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
@@ -566,7 +576,8 @@ function Topbar(props) {
                                         <i className="bi bi-whatsapp" style={{ fontSize: 20, color: '#25D366' }}></i>
                                         <span style={{
                                             position: 'absolute', top: -4, right: 2,
-                                            background: '#dc3545', color: '#fff', borderRadius: '50%',
+                                            background: waUnreadTotal > 0 ? '#dc3545' : '#6c757d',
+                                            color: '#fff', borderRadius: '50%',
                                             fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
                                         }}>{waUnreadTotal > 99 ? '99+' : waUnreadTotal}</span>

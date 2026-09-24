@@ -2000,10 +2000,48 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                                     opacity: isDeleting ? 0.4 : 1,
                                                     transition: 'opacity 0.2s',
                                                 }}>
-                                                    <div>{msg.body_text
-                                                        ? <span style={{ whiteSpace: 'pre-line' }}>{msg.body_text}</span>
-                                                        : msg.wa_message_type === 'contacts'
-                                                            ? <span><i className="bi bi-person-vcard me-1"></i>{t('Contact card')}</span>
+                                                    <div>{msg.wa_message_type === 'contacts'
+                                                        ? (() => {
+                                                            const lines = (msg.body_text || '').split('\n').filter(l => l.startsWith('📇'));
+                                                            if (!lines.length) return <span><i className="bi bi-person-vcard me-1"></i>{t('Contact card')}</span>;
+                                                            return (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                                    {lines.map((line, li) => {
+                                                                        const withoutEmoji = line.replace(/^📇\s*/, '');
+                                                                        const [namePart, phonesPart] = withoutEmoji.split(' · ');
+                                                                        const phones = phonesPart ? phonesPart.split(', ').map(p => p.trim()).filter(Boolean) : [];
+                                                                        return (
+                                                                            <div key={li} style={{ background: '#f0f9f0', border: '1px solid #c3e6c3', borderRadius: 8, padding: '7px 10px', minWidth: 200 }}>
+                                                                                <div style={{ fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', gap: 5, marginBottom: phones.length ? 4 : 0 }}>
+                                                                                    <i className="bi bi-person-vcard text-success"></i>
+                                                                                    {namePart || t('Contact')}
+                                                                                </div>
+                                                                                {phones.map((ph, pi) => (
+                                                                                    <div key={pi} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                                                                        <span style={{ fontSize: 11, color: '#333', flex: 1 }}>{ph}</span>
+                                                                                        <button
+                                                                                            className="btn btn-sm btn-success"
+                                                                                            style={{ fontSize: 10, padding: '1px 7px', whiteSpace: 'nowrap' }}
+                                                                                            onClick={e => {
+                                                                                                e.stopPropagation();
+                                                                                                const clean = ph.trim().replace(/\s+/g, '');
+                                                                                                setSelectedThread({ contact_phone: clean, contact_name: namePart || clean });
+                                                                                                loadThread(clean);
+                                                                                                setComposeText('');
+                                                                                            }}
+                                                                                        >
+                                                                                            <i className="bi bi-whatsapp me-1"></i>{t('Chat')}
+                                                                                        </button>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            );
+                                                        })()
+                                                        : msg.body_text
+                                                            ? <span style={{ whiteSpace: 'pre-line' }}>{msg.body_text}</span>
                                                             : <span style={{ color: '#999', fontStyle: 'italic' }}>{t('(media)')}</span>}
                                                     </div>
                                                     {/* Inline translation result */}

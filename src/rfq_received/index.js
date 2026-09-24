@@ -1051,7 +1051,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                         <RFQWhatsAppConversationsPanel
                             storeId={storeId}
                             phones={(rfq.forwarded_to || []).map(s => s.phone).filter(Boolean)}
-                            phoneLabels={Object.fromEntries((rfq.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                            phoneLabels={Object.fromEntries((rfq.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.supplier_name || s.name || s.phone]))}
                             chatZIndex={20000}
                             emptyMessage="No suppliers have been added to this RFQ yet."
                             onUnreadCount={setSupplierConvUnread}
@@ -1837,7 +1837,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                     <RFQWhatsAppConversationsPanel
                         storeId={storeId}
                         phones={(rfq?.forwarded_to || []).map(s => s.phone).filter(Boolean)}
-                        phoneLabels={Object.fromEntries((rfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                        phoneLabels={Object.fromEntries((rfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.supplier_name || s.name || s.phone]))}
                         chatZIndex={20000}
                         emptyMessage="No suppliers have been sent this RFQ yet."
                         onUnreadCount={setSendSupplierConvUnread}

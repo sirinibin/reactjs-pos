@@ -460,7 +460,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                 <RFQWhatsAppConversationsPanel
                                     storeId={storeId}
                                     phones={(linkedRfq?.forwarded_to || []).map(s => s.phone).filter(Boolean)}
-                                    phoneLabels={Object.fromEntries((linkedRfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
+                                    phoneLabels={Object.fromEntries((linkedRfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.supplier_name || s.name || s.phone]))}
                                     chatZIndex={19999}
                                     emptyMessage={msg?.rfq_received_id ? 'Loading RFQ supplier data…' : 'No linked RFQ found for this email. Supplier conversations are available once an RFQ is created from this email.'}
                                     onUnreadCount={setSupplierConvUnread}
