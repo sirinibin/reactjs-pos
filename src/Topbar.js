@@ -672,7 +672,7 @@ function Topbar(props) {
                             </li>
                         )}
 
-                        {storeSettings?.enable_rfq_module && (
+                        {(storeSettings?.rfq_email_connected || (storeSettings?.rfq_email_accounts && storeSettings.rfq_email_accounts.length > 0)) && (
                             <li className="nav-item dropdown me-1">
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
