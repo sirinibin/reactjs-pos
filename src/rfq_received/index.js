@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { unstable_batchedUpdates } from 'react-dom';
 import eventEmitter from '../utils/eventEmitter';
 import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
@@ -2974,10 +2975,13 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
                 const data = await res.json();
                 if (data?.id) {
-                    setPendingSendTab(tab || 'supplier_conv');
-                    setPendingSendPhone(phone || null);
-                    setRfqForSend(data);
-                    setShowSendModal(true);
+                    // Batch all updates so the modal mounts with all props correct in one render
+                    unstable_batchedUpdates(() => {
+                        setPendingSendTab(tab || 'supplier_conv');
+                        setPendingSendPhone(phone || null);
+                        setRfqForSend(data);
+                        setShowSendModal(true);
+                    });
                 }
             } catch (_) {}
         };

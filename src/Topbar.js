@@ -570,6 +570,7 @@ function Topbar(props) {
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
                                         as="span"
+                                        bsPrefix="wa-unread-toggle"
                                         style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
                                         id="wa-unread-toggle"
                                     >

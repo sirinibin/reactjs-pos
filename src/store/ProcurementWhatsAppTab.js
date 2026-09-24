@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory, useLocation } from 'react-router-dom';
+import eventEmitter from '../utils/eventEmitter';
 import { AI_PROVIDERS, modelsForProvider, fileCapabilityLabel } from '../utils/aiProviders.js';
 import RFQCreate from '../rfq_received/create.js';
 import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
@@ -1105,7 +1106,12 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 return next;
             });
             if (!silent) {
-                setThreads(prev => prev.map(t => t.contact_phone === contactPhone ? { ...t, unread_count: 0 } : t));
+                setThreads(prev => {
+                    const had = prev.find(t => t.contact_phone === contactPhone)?.unread_count > 0;
+                    const next = prev.map(t => t.contact_phone === contactPhone ? { ...t, unread_count: 0 } : t);
+                    if (had) eventEmitter.emit('wa_unread_changed');
+                    return next;
+                });
             }
         } catch (_) {} finally { if (!silent) setThreadMsgLoading(false); }
     }, [storeId, token]);

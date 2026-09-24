@@ -21,6 +21,7 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
     const [newPhone, setNewPhone]   = useState('');
     const newPhoneRef = useRef(null);
     const initialChatOpened = useRef(false);
+    const lastInitialChatPhone = useRef(null);
 
     const load = useCallback(async () => {
         if (!storeId || !phones || phones.length === 0) return;
@@ -45,8 +46,13 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
 
     useEffect(() => { load(); }, [load]);
 
-    // Auto-open a specific chat when initialChatPhone is given (e.g. opened from header notification)
+    // Auto-open a specific chat when initialChatPhone is given (e.g. opened from header notification).
+    // Reset the guard whenever initialChatPhone changes so a new notification always auto-opens.
     useEffect(() => {
+        if (initialChatPhone !== lastInitialChatPhone.current) {
+            initialChatOpened.current = false;
+            lastInitialChatPhone.current = initialChatPhone;
+        }
         if (!initialChatPhone || initialChatOpened.current || threads === null) return;
         initialChatOpened.current = true;
         setChatPhone(initialChatPhone.replace(/^\+/, ''));
