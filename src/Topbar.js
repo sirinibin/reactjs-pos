@@ -126,8 +126,6 @@ function Topbar(props) {
                     if (data.result.settings) {
                         setStoreSettings(data.result.settings);
                         localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
-                        // Fetch unread WA count now that settings are confirmed loaded
-                        if (data.result.settings.enable_rfq_module) fetchWaUnread();
                     }
                     if (data.result.code) setStoreCode(data.result.code);
                     if (data.result.zatca) setStoreZatca(data.result.zatca);

@@ -2450,6 +2450,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     );
 }
 
+// eslint-disable-next-line no-unused-vars
 function RFQRepliesPanel({ rfq, storeId, onAdded, replies }) {
     const token                                     = localStorage.getItem('access_token');
     const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
