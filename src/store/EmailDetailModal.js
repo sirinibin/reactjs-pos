@@ -125,6 +125,8 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const emailRfqRef = useRef(null);
     const bodyRef = useRef(null);
     const [activeDetailTab, setActiveDetailTab] = useState('email'); // 'email' | 'supplier_conv' | 'customer_conv'
+    const [supplierConvUnread, setSupplierConvUnread] = useState(0);
+    const [customerConvUnread, setCustomerConvUnread] = useState(0);
     // Linked RFQ data (for conversation tabs) — loaded on demand
     const [linkedRfq, setLinkedRfq] = useState(null);
 
@@ -440,11 +442,13 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                         <li className="nav-item">
                             <button className={`nav-link py-1 ${activeDetailTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('supplier_conv'); loadLinkedRfq(); }}>
                                 <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                                {supplierConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{supplierConvUnread}</span>}
                             </button>
                         </li>
                         <li className="nav-item">
                             <button className={`nav-link py-1 ${activeDetailTab === 'customer_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('customer_conv'); loadLinkedRfq(); }}>
                                 <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
+                                {customerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerConvUnread}</span>}
                             </button>
                         </li>
                     </ul>
@@ -459,6 +463,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     phoneLabels={Object.fromEntries((linkedRfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
                                     chatZIndex={19999}
                                     emptyMessage={msg?.rfq_received_id ? 'Loading RFQ supplier data…' : 'No linked RFQ found for this email. Supplier conversations are available once an RFQ is created from this email.'}
+                                    onUnreadCount={setSupplierConvUnread}
                                 />
                             )}
                             {activeDetailTab === 'customer_conv' && (
@@ -468,6 +473,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     phoneLabels={linkedRfq?.customer_phone ? { [linkedRfq.customer_phone]: linkedRfq.customer_name || linkedRfq.customer_phone } : {}}
                                     chatZIndex={19999}
                                     emptyMessage={msg?.rfq_received_id ? 'Loading customer data…' : 'No linked RFQ found. Customer conversation requires a customer with a WhatsApp phone number.'}
+                                    onUnreadCount={setCustomerConvUnread}
                                 />
                             )}
                         </div>

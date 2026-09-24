@@ -568,6 +568,8 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [resolvedSuppliers, setResolvedSuppliers] = useState({});
     const [chatModal, setChatModal] = useState({ type: null, value: '' });
+    const [supplierConvUnread, setSupplierConvUnread] = useState(0);
+    const [customerConvUnread, setCustomerConvUnread] = useState(0);
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
@@ -762,11 +764,13 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                     <li className="nav-item">
                         <button className={`nav-link ${activeTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => setActiveTab('supplier_conv')}>
                             <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                            {supplierConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{supplierConvUnread}</span>}
                         </button>
                     </li>
                     <li className="nav-item">
                         <button className={`nav-link ${activeTab === 'customer_conv' ? 'active' : ''}`} onClick={() => setActiveTab('customer_conv')}>
                             <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
+                            {customerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerConvUnread}</span>}
                         </button>
                     </li>
                 </ul>
@@ -1049,6 +1053,8 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             phoneLabels={Object.fromEntries((rfq.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
                             chatZIndex={20000}
                             emptyMessage="No suppliers have been added to this RFQ yet."
+                            onUnreadCount={setSupplierConvUnread}
+                            onEditSupplier={() => setActiveTab('suppliers')}
                         />
                     )}
 
@@ -1059,6 +1065,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             phoneLabels={rfq.customer_phone ? { [rfq.customer_phone]: rfq.customer_name || rfq.customer_phone } : {}}
                             chatZIndex={20000}
                             emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
+                            onUnreadCount={setCustomerConvUnread}
                         />
                     )}
                 </div>
@@ -1371,7 +1378,9 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [loadingPreview, setLoadingPreview]       = useState(false);
     const [storeData, setStoreData]               = useState(null);
     const [phase, setPhase]                       = useState('preview'); // preview | sending | done
-    const [sendModalTab, setSendModalTab]          = useState('send'); // send | replies
+    const [sendModalTab, setSendModalTab]          = useState('send'); // send | supplier_conv | customer_conv
+    const [sendSupplierConvUnread, setSendSupplierConvUnread] = useState(0);
+    const [sendCustomerConvUnread, setSendCustomerConvUnread] = useState(0);
     const [supplierStatuses, setSupplierStatuses] = useState({});
     const [sentPhones, setSentPhones]             = useState(new Set()); // phones already successfully sent
     const [error, setError]                       = useState('');
@@ -1806,11 +1815,13 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                     <li className="nav-item">
                         <button className={`nav-link ${sendModalTab === 'supplier_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('supplier_conv')}>
                             <i className="bi bi-whatsapp me-1"></i>Supplier Conversations
+                            {sendSupplierConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendSupplierConvUnread}</span>}
                         </button>
                     </li>
                     <li className="nav-item">
                         <button className={`nav-link ${sendModalTab === 'customer_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('customer_conv')}>
                             <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
+                            {sendCustomerConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendCustomerConvUnread}</span>}
                         </button>
                     </li>
                 </ul>
@@ -1825,6 +1836,8 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         phoneLabels={Object.fromEntries((rfq?.forwarded_to || []).filter(s => s.phone).map(s => [s.phone, s.name || s.phone]))}
                         chatZIndex={20000}
                         emptyMessage="No suppliers have been sent this RFQ yet."
+                        onUnreadCount={setSendSupplierConvUnread}
+                        onEditSupplier={() => setSendModalTab('send')}
                     />
                 ) : sendModalTab === 'customer_conv' ? (
                     <RFQWhatsAppConversationsPanel
@@ -1833,6 +1846,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         phoneLabels={rfq?.customer_phone ? { [rfq.customer_phone]: rfq.customer_name || rfq.customer_phone } : {}}
                         chatZIndex={20000}
                         emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
+                        onUnreadCount={setSendCustomerConvUnread}
                     />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">
@@ -2872,6 +2886,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [deletingAll, setDeletingAll] = useState(false);
     const [deletingRFQId, setDeletingRFQId] = useState(null);
     const [deleteConfirmRFQ, setDeleteConfirmRFQ] = useState(null);
+    const [rfqUnreadMap, setRfqUnreadMap] = useState({}); // { rfqId → total unread count }
     const rfqCreateRef = useRef(null);
     const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
@@ -2905,6 +2920,42 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     }, [storeId, token, page, pageSize, statusFilter, search, showToastMessage, t]);
 
     useEffect(() => { fetchList(); }, [fetchList]);
+
+    // Batch-fetch WhatsApp unread counts for all visible RFQs
+    useEffect(() => {
+        if (!list?.length || !storeId || !token) return;
+        const phoneToRfqIds = {};
+        list.forEach(rfq => {
+            (rfq.forwarded_to || []).forEach(s => {
+                if (!s.phone) return;
+                const norm = s.phone.replace(/^\+/, '');
+                if (!phoneToRfqIds[norm]) phoneToRfqIds[norm] = [];
+                if (!phoneToRfqIds[norm].includes(rfq.id)) phoneToRfqIds[norm].push(rfq.id);
+            });
+            if (rfq.customer_phone) {
+                const norm = rfq.customer_phone.replace(/^\+/, '');
+                if (!phoneToRfqIds[norm]) phoneToRfqIds[norm] = [];
+                if (!phoneToRfqIds[norm].includes(rfq.id)) phoneToRfqIds[norm].push(rfq.id);
+            }
+        });
+        const allPhones = Object.keys(phoneToRfqIds);
+        if (!allPhones.length) return;
+        const params = new URLSearchParams({ store_id: storeId, type: 'whatsapp', limit: '1000', phones: allPhones.join(',') });
+        fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                const newMap = {};
+                (data.threads || []).forEach(t => {
+                    if (!t.unread_count) return;
+                    const norm = (t.contact_phone || '').replace(/^\+/, '');
+                    (phoneToRfqIds[norm] || []).forEach(rfqId => {
+                        newMap[rfqId] = (newMap[rfqId] || 0) + t.unread_count;
+                    });
+                });
+                setRfqUnreadMap(newMap);
+            })
+            .catch(() => {});
+    }, [list, storeId, token]);
 
     // Auto-open detail when ?id= is in URL (e.g. navigated from procurement emails "View RFQ")
     useEffect(() => {
@@ -3316,9 +3367,19 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                                     </Button>
                                                 )}
                                                 {rfq.status === 'forwarded' && (
-                                                    <Button variant="outline-primary" size="sm" title="View Send Status"
-                                                        onClick={() => openSendModal(rfq)}>
+                                                    <Button variant="outline-primary" size="sm" title="View Send Status / Conversations"
+                                                        onClick={() => openSendModal(rfq)}
+                                                        style={{ position: 'relative' }}>
                                                         <i className="bi bi-whatsapp"></i>
+                                                        {rfqUnreadMap[rfq.id] > 0 && (
+                                                            <span style={{
+                                                                position: 'absolute', top: -5, right: -5,
+                                                                background: '#dc3545', color: '#fff',
+                                                                borderRadius: '50%', width: 16, height: 16,
+                                                                fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                fontWeight: 700, lineHeight: 1,
+                                                            }}>{rfqUnreadMap[rfq.id] > 99 ? '99+' : rfqUnreadMap[rfq.id]}</span>
+                                                        )}
                                                     </Button>
                                                 )}
                                                 {(rfq.status === 'failed' || rfq.status === 'received') && (

@@ -13,7 +13,7 @@ import { WhatsAppChatModal } from '../store/ConversationModal';
  *   chatZIndex  – z-index to pass to WhatsAppChatModal (default 20000)
  *   emptyMessage – string shown when phones is empty / null
  */
-export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage }) {
+export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, onEditSupplier }) {
     const token = localStorage.getItem('access_token');
     const [threads, setThreads]     = useState(null); // null = not loaded yet
     const [loading, setLoading]     = useState(false);
@@ -33,10 +33,14 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
             });
             const res  = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
             const data = await res.json();
-            setThreads(data.threads || []);
-        } catch (_) { setThreads([]); }
+            const fetched = data.threads || [];
+            setThreads(fetched);
+            if (onUnreadCount) {
+                onUnreadCount(fetched.reduce((sum, t) => sum + (t.unread_count || 0), 0));
+            }
+        } catch (_) { setThreads([]); if (onUnreadCount) onUnreadCount(0); }
         setLoading(false);
-    }, [storeId, phones, token]);
+    }, [storeId, phones, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => { load(); }, [load]);
 
@@ -60,16 +64,19 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
         );
     }
 
-    // Build merged list: thread rows + placeholder rows for phones with no thread
+    // Build list: only phones that have a thread (have message history)
     const threadByPhone = {};
     (threads || []).forEach(t => { threadByPhone[t.contact_phone] = t; });
-    // Normalise phone for lookup (strip leading +)
     const normalise = p => p ? p.replace(/^\+/, '') : p;
-    const rows = phones.map(phone => {
-        const norm = normalise(phone);
-        const thread = threadByPhone[norm] || threadByPhone[phone];
-        return { phone, norm, thread, label: phoneLabels?.[phone] || phoneLabels?.[norm] || thread?.sender_name || phone };
-    });
+    const rows = phones
+        .map(phone => {
+            const norm = normalise(phone);
+            const thread = threadByPhone[norm] || threadByPhone[phone];
+            return { phone, norm, thread, label: phoneLabels?.[phone] || phoneLabels?.[norm] || thread?.sender_name || phone };
+        })
+        .filter(row => row.thread); // only show phones with existing message history
+
+    const hasLoaded = threads !== null;
 
     return (
         <div>
@@ -80,7 +87,14 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
                 </div>
             )}
 
-            {!loading && (
+            {!loading && hasLoaded && rows.length === 0 && (
+                <div className="text-muted text-center py-4" style={{ fontSize: 13 }}>
+                    <i className="bi bi-chat-dots" style={{ fontSize: 24, display: 'block', marginBottom: 8, color: '#adb5bd' }}></i>
+                    No conversations yet with the linked contacts.
+                </div>
+            )}
+
+            {!loading && rows.length > 0 && (
                 <div style={{ border: '1px solid #dee2e6', borderRadius: 8, overflow: 'hidden' }}>
                     {rows.map(({ phone, thread, label }, idx) => (
                         <div
@@ -99,11 +113,11 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
                             {/* Avatar */}
                             <div style={{
                                 width: 40, height: 40, borderRadius: '50%',
-                                background: thread ? '#25D366' : '#e9ecef',
+                                background: '#25D366',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: thread ? '#fff' : '#6c757d', flexShrink: 0, fontSize: 16,
+                                color: '#fff', flexShrink: 0, fontSize: 16,
                             }}>
-                                <i className={`bi ${thread ? 'bi-whatsapp' : 'bi-person'}`}></i>
+                                <i className="bi bi-whatsapp"></i>
                             </div>
 
                             {/* Info */}
@@ -112,32 +126,40 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
                                 {phone !== label && (
                                     <div style={{ fontSize: 11, color: '#6c757d' }}>{phone}</div>
                                 )}
-                                {thread ? (
-                                    <div style={{ fontSize: 11, color: '#6c757d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>
-                                        {thread.last_message_text || '—'}
-                                    </div>
-                                ) : (
-                                    <div style={{ fontSize: 11, color: '#adb5bd', fontStyle: 'italic' }}>No messages yet</div>
-                                )}
+                                <div style={{ fontSize: 11, color: '#6c757d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>
+                                    {thread.last_message_text || '—'}
+                                </div>
                             </div>
 
-                            {/* Right side: unread + date + open btn */}
+                            {/* Right side: unread + date + open + edit btns */}
                             <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                                {thread?.unread_count > 0 && (
+                                {thread.unread_count > 0 && (
                                     <span className="badge bg-success rounded-pill" style={{ fontSize: 10 }}>{thread.unread_count}</span>
                                 )}
-                                {thread?.last_message_date && (
+                                {thread.last_message_date && (
                                     <div style={{ fontSize: 10, color: '#6c757d' }}>
                                         {new Date(thread.last_message_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                                     </div>
                                 )}
-                                <button
-                                    className="btn btn-sm btn-outline-success"
-                                    style={{ fontSize: 10, padding: '1px 7px', whiteSpace: 'nowrap' }}
-                                    onClick={e => { e.stopPropagation(); openChat(phone); }}
-                                >
-                                    <i className="bi bi-whatsapp me-1"></i>Open
-                                </button>
+                                <div className="d-flex gap-1">
+                                    {onEditSupplier && (
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            style={{ fontSize: 10, padding: '1px 6px', whiteSpace: 'nowrap' }}
+                                            title="Edit supplier in RFQ"
+                                            onClick={e => { e.stopPropagation(); onEditSupplier(phone); }}
+                                        >
+                                            <i className="bi bi-pencil"></i>
+                                        </button>
+                                    )}
+                                    <button
+                                        className="btn btn-sm btn-outline-success"
+                                        style={{ fontSize: 10, padding: '1px 7px', whiteSpace: 'nowrap' }}
+                                        onClick={e => { e.stopPropagation(); openChat(phone); }}
+                                    >
+                                        <i className="bi bi-whatsapp me-1"></i>Open
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
