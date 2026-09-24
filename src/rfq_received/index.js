@@ -3242,6 +3242,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             <QuotationCreate ref={quotationCreateRef} showToastMessage={showToastMessage} refreshList={() => {}} />
             <RFQPreview ref={rfqPreviewRef} />
             <RFQSendModal
+                key={`${rfqForSend?.id || ''}:${pendingSendTab || ''}`}
                 rfq={rfqForSend}
                 storeId={storeId}
                 show={showSendModal}

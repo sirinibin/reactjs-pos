@@ -9,6 +9,7 @@ import ChangePasswordModal from './user/ChangePasswordModal';
 import ManageUsersModal from './user/ManageUsersModal';
 import AdminSettingsModal from './AdminSettingsModal';
 import ServerStatusModal from './ServerStatusModal';
+import EmailDetailModal from './store/EmailDetailModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -59,6 +60,10 @@ function Topbar(props) {
     }
     const [waUnreadItems, setWaUnreadItems] = useState([]);
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
+    const [emailUnreadItems, setEmailUnreadItems] = useState([]);
+    const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
+    const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
+    const [topbarEmailShow, setTopbarEmailShow] = useState(false);
 
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
@@ -166,6 +171,31 @@ function Topbar(props) {
             eventEmitter.off('socket_connection_open', fetchWaUnread);
         };
     }, [fetchWaUnread]);
+
+    const fetchEmailUnread = useCallback(() => {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        fetch(`/v1/email-unread?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                setEmailUnreadItems(data.items || []);
+                setEmailUnreadTotal(data.total_unread || 0);
+            })
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        fetchEmailUnread();
+        const id = setInterval(fetchEmailUnread, 5 * 60 * 1000);
+        eventEmitter.on('email_unread_changed', fetchEmailUnread);
+        eventEmitter.on('socket_connection_open', fetchEmailUnread);
+        return () => {
+            clearInterval(id);
+            eventEmitter.off('email_unread_changed', fetchEmailUnread);
+            eventEmitter.off('socket_connection_open', fetchEmailUnread);
+        };
+    }, [fetchEmailUnread]);
 
     useEffect(() => {
         const observer = new MutationObserver(() => setDirTick(n => n + 1));
@@ -642,6 +672,90 @@ function Topbar(props) {
                             </li>
                         )}
 
+                        {storeSettings?.enable_rfq_module && (
+                            <li className="nav-item dropdown me-1">
+                                <Dropdown align="end">
+                                    <Dropdown.Toggle
+                                        as="span"
+                                        bsPrefix="email-unread-toggle"
+                                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                        id="email-unread-toggle"
+                                    >
+                                        <i className="bi bi-envelope-fill" style={{ fontSize: 20, color: '#0d6efd' }}></i>
+                                        <span style={{
+                                            position: 'absolute', top: -4, right: 2,
+                                            background: emailUnreadTotal > 0 ? '#dc3545' : '#6c757d',
+                                            color: '#fff', borderRadius: '50%',
+                                            fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                                        }}>{emailUnreadTotal > 99 ? '99+' : emailUnreadTotal}</span>
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu style={{ minWidth: 360, maxHeight: 450, overflowY: 'auto' }}>
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
+                                            <i className="bi bi-envelope-fill text-primary me-1"></i>
+                                            Unread Emails
+                                        </Dropdown.ItemText>
+                                        {emailUnreadItems.length === 0 && (
+                                            <div style={{ padding: '16px 14px', color: '#6c757d', fontSize: 12, textAlign: 'center' }}>
+                                                No unread emails
+                                            </div>
+                                        )}
+                                        {emailUnreadItems.map((item, idx) => {
+                                            const handleEmailClick = () => {
+                                                const storeId = localStorage.getItem('store_id');
+                                                const token = localStorage.getItem('access_token');
+                                                fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
+                                                    .then(r => r.json())
+                                                    .then(msg => { if (msg?.id) { setTopbarEmailMsg(msg); setTopbarEmailShow(true); } })
+                                                    .catch(() => {});
+                                            };
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                                                    onClick={handleEmailClick}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                        <div style={{
+                                                            width: 34, height: 34, borderRadius: '50%',
+                                                            background: '#0d6efd',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: '#fff', flexShrink: 0, fontSize: 15,
+                                                        }}>
+                                                            <i className="bi bi-envelope-fill"></i>
+                                                        </div>
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {item.subject || '(No Subject)'}
+                                                            </div>
+                                                            <div style={{ fontSize: 11, color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
+                                                                {item.from}
+                                                            </div>
+                                                            {item.snippet && (
+                                                                <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260, marginTop: 1 }}>
+                                                                    {item.snippet}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                                                            <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
+                                                            {item.message_date && (
+                                                                <span style={{ fontSize: 10, color: '#6c757d' }}>
+                                                                    {new Date(item.message_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </li>
+                        )}
+
                         <li className="nav-item dropdown">
                             <LanguageSwitcher />
                         </li>
@@ -854,6 +968,15 @@ function Topbar(props) {
             <ServerStatusModal show={serverStatusOpen} onHide={() => setServerStatusOpen(false)} />
             <ChangePasswordModal ref={changePwRef} showToastMessage={props.showToastMessage} />
             <ManageUsersModal ref={manageUsersRef} showToastMessage={props.showToastMessage} />
+            {topbarEmailMsg && (
+                <EmailDetailModal
+                    msg={topbarEmailMsg}
+                    show={topbarEmailShow}
+                    onClose={() => { setTopbarEmailShow(false); setTopbarEmailMsg(null); }}
+                    storeId={localStorage.getItem('store_id')}
+                    token={localStorage.getItem('access_token')}
+                />
+            )}
         </>
     );
 }
