@@ -474,6 +474,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     chatZIndex={19999}
                                     emptyMessage={msg?.rfq_received_id ? 'Loading customer data…' : 'No linked RFQ found. Customer conversation requires a customer with a WhatsApp phone number.'}
                                     onUnreadCount={setCustomerConvUnread}
+                                    showEmptyPhones
                                 />
                             )}
                         </div>

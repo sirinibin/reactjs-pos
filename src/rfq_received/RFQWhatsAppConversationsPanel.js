@@ -13,7 +13,7 @@ import { WhatsAppChatModal } from '../store/ConversationModal';
  *   chatZIndex  – z-index to pass to WhatsAppChatModal (default 20000)
  *   emptyMessage – string shown when phones is empty / null
  */
-export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, onEditSupplier, initialChatPhone }) {
+export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, onEditSupplier, initialChatPhone, showEmptyPhones }) {
     const token = localStorage.getItem('access_token');
     const [threads, setThreads]     = useState(null); // null = not loaded yet
     const [loading, setLoading]     = useState(false);
@@ -88,7 +88,7 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
             const thread = threadByPhone[norm] || threadByPhone[phone];
             return { phone, norm, thread, label: phoneLabels?.[phone] || phoneLabels?.[norm] || thread?.sender_name || phone };
         })
-        .filter(row => row.thread); // only show phones with existing message history
+        .filter(row => showEmptyPhones || row.thread); // hide threadless phones unless explicitly shown
 
     const hasLoaded = threads !== null;
 
@@ -141,16 +141,16 @@ export default function RFQWhatsAppConversationsPanel({ phones, phoneLabels, sto
                                     <div style={{ fontSize: 11, color: '#6c757d' }}>{phone}</div>
                                 )}
                                 <div style={{ fontSize: 11, color: '#6c757d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>
-                                    {thread.last_message_text || '—'}
+                                    {thread?.last_message_text || (thread ? '—' : 'No messages yet')}
                                 </div>
                             </div>
 
                             {/* Right side: unread + date + open + edit btns */}
                             <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                                {thread.unread_count > 0 && (
+                                {thread?.unread_count > 0 && (
                                     <span className="badge bg-success rounded-pill" style={{ fontSize: 10 }}>{thread.unread_count}</span>
                                 )}
-                                {thread.last_message_date && (
+                                {thread?.last_message_date && (
                                     <div style={{ fontSize: 10, color: '#6c757d' }}>
                                         {new Date(thread.last_message_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                                     </div>

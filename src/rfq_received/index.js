@@ -1068,6 +1068,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             chatZIndex={20000}
                             emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
                             onUnreadCount={setCustomerConvUnread}
+                            showEmptyPhones
                         />
                     )}
                 </div>
@@ -1854,6 +1855,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         emptyMessage="Customer phone number is not available. Add a phone number to the customer record."
                         onUnreadCount={setSendCustomerConvUnread}
                         initialChatPhone={sendModalTab === 'customer_conv' ? initialPhone : null}
+                        showEmptyPhones
                     />
                 ) : loadingPreview ? (
                     <div className="text-center py-5">
