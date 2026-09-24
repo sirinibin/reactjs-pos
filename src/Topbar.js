@@ -690,7 +690,7 @@ function Topbar(props) {
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
                                         }}>{emailUnreadTotal > 99 ? '99+' : emailUnreadTotal}</span>
                                     </Dropdown.Toggle>
-                                    <Dropdown.Menu style={{ minWidth: 360, maxHeight: 450, overflowY: 'auto' }}>
+                                    <Dropdown.Menu style={{ minWidth: 340, maxWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
                                         <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
                                             <i className="bi bi-envelope-fill text-primary me-1"></i>
                                             Unread Emails
@@ -702,12 +702,19 @@ function Topbar(props) {
                                         )}
                                         {emailUnreadItems.map((item, idx) => {
                                             const handleEmailClick = () => {
+                                                // Optimistic update: remove this item immediately so badge decrements at once
+                                                setEmailUnreadItems(prev => prev.filter((_, i) => i !== idx));
+                                                setEmailUnreadTotal(prev => Math.max(0, prev - 1));
                                                 const storeId = localStorage.getItem('store_id');
                                                 const token = localStorage.getItem('access_token');
                                                 fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
                                                     .then(r => r.json())
-                                                    .then(msg => { if (msg?.id) { setTopbarEmailMsg(msg); setTopbarEmailShow(true); } })
-                                                    .catch(() => {});
+                                                    .then(msg => {
+                                                        if (msg?.id) { setTopbarEmailMsg(msg); setTopbarEmailShow(true); }
+                                                        // Sync real count after backend marked it as read
+                                                        fetchEmailUnread();
+                                                    })
+                                                    .catch(() => { fetchEmailUnread(); });
                                             };
                                             return (
                                                 <div
@@ -726,15 +733,15 @@ function Topbar(props) {
                                                         }}>
                                                             <i className="bi bi-envelope-fill"></i>
                                                         </div>
-                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                                                             <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {item.subject || '(No Subject)'}
                                                             </div>
-                                                            <div style={{ fontSize: 11, color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
+                                                            <div style={{ fontSize: 11, color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {item.from}
                                                             </div>
                                                             {item.snippet && (
-                                                                <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260, marginTop: 1 }}>
+                                                                <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
                                                                     {item.snippet}
                                                                 </div>
                                                             )}
