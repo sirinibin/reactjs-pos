@@ -695,7 +695,7 @@ function Topbar(props) {
                                             color: '#fff', borderRadius: '50%',
                                             fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
-                                        }}>{emailUnreadTotal > 99 ? '99+' : emailUnreadTotal}</span>
+                                        }}>{emailUnreadTotal}</span>
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu style={{ minWidth: 340, maxWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
                                         <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
