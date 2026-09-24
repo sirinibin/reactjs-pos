@@ -159,8 +159,8 @@ function Topbar(props) {
     useEffect(() => {
         // Initial fetch
         fetchWaUnread();
-        // Fallback poll every 5 min in case WebSocket event is missed
-        const id = setInterval(fetchWaUnread, 5 * 60 * 1000);
+        // Fallback poll every 30 s in case WebSocket event is missed
+        const id = setInterval(fetchWaUnread, 30 * 1000);
         // Real-time: re-fetch when backend pushes wa_unread_changed
         eventEmitter.on('wa_unread_changed', fetchWaUnread);
         // Re-fetch on WebSocket reconnect
@@ -187,7 +187,7 @@ function Topbar(props) {
 
     useEffect(() => {
         fetchEmailUnread();
-        const id = setInterval(fetchEmailUnread, 5 * 60 * 1000);
+        const id = setInterval(fetchEmailUnread, 30 * 1000);
         eventEmitter.on('email_unread_changed', fetchEmailUnread);
         eventEmitter.on('socket_connection_open', fetchEmailUnread);
         return () => {
