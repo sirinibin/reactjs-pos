@@ -1571,7 +1571,18 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             if (!data.error) {
                 setPreview(data);
                 const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
-                setSelectedPhones(new Set([...extraPhones, ...(data.suppliers || []).filter(s => !alreadySent.has(s.phone)).map(s => s.phone)]));
+                let defaultMarkets = null;
+                try {
+                    const cached = JSON.parse(localStorage.getItem('_store_settings_cache') || '{}');
+                    if (Array.isArray(cached.rfq_forward_markets) && cached.rfq_forward_markets.length > 0) {
+                        defaultMarkets = new Set(cached.rfq_forward_markets);
+                    }
+                } catch (_) {}
+                const allSuppliers = (data.suppliers || []).filter(s => !alreadySent.has(s.phone));
+                const filtered = defaultMarkets
+                    ? allSuppliers.filter(s => !s.purchase_market || defaultMarkets.has(s.purchase_market))
+                    : allSuppliers;
+                setSelectedPhones(new Set([...extraPhones, ...filtered.map(s => s.phone)]));
             }
             setLoadingPreview(false);
         };

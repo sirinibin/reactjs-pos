@@ -2,10 +2,18 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AI_PROVIDERS, modelsForProvider } from '../utils/aiProviders.js';
 import PurchaseCreate from '../purchase/create.js';
+import { ViewButton } from './FileViewerModal.js';
 
 const PAGE_SIZE = 20;
 
 const isImageMime = mime => mime && mime.startsWith('image/');
+
+const ImageLightbox = ({ src, alt, onClose }) => (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', color: '#fff', fontSize: '28px', lineHeight: 1, cursor: 'pointer' }}>×</button>
+        <img src={src} alt={alt} onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '6px', boxShadow: '0 4px 32px rgba(0,0,0,0.6)', cursor: 'default' }} />
+    </div>
+);
 
 const AttachmentThumb = ({ att }) => {
     const [lightbox, setLightbox] = useState(false);
@@ -14,28 +22,39 @@ const AttachmentThumb = ({ att }) => {
     }
     if (isImageMime(att.content_type)) {
         return (
-            <>
-                {lightbox && (
-                    <div onClick={() => setLightbox(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
-                        <button onClick={() => setLightbox(false)} style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', color: '#fff', fontSize: '28px', lineHeight: 1, cursor: 'pointer' }}>×</button>
-                        <img src={att.url} alt={att.filename} onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '6px', boxShadow: '0 4px 32px rgba(0,0,0,0.6)', cursor: 'default' }} />
-                    </div>
-                )}
+            <div style={{ marginBottom: '6px' }}>
+                {lightbox && <ImageLightbox src={att.url} alt={att.filename} onClose={() => setLightbox(false)} />}
                 <img
                     src={att.url}
                     alt={att.filename}
                     onClick={() => setLightbox(true)}
-                    style={{ maxHeight: '120px', maxWidth: '180px', borderRadius: '6px', border: '1px solid #dee2e6', cursor: 'zoom-in', objectFit: 'cover' }}
+                    style={{ maxHeight: '140px', maxWidth: '200px', borderRadius: '6px', border: '1px solid #dee2e6', cursor: 'zoom-in', objectFit: 'cover', display: 'block' }}
                 />
-            </>
+                <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                    <button className="btn btn-sm btn-outline-secondary" style={{ padding: '2px 8px', fontSize: '11px' }} onClick={() => setLightbox(true)}>
+                        <i className="bi bi-eye me-1"></i>View
+                    </button>
+                    <a href={att.url} download={att.filename || 'image'} target="_blank" rel="noreferrer"
+                        className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px' }}>
+                        <i className="bi bi-download me-1"></i>Download
+                    </a>
+                </div>
+            </div>
         );
     }
-    const docIcon = att.filename?.endsWith('.pdf') ? '📄' : '📎';
+    const isPdf = (att.filename || '').toLowerCase().endsWith('.pdf') || att.content_type === 'application/pdf';
+    const docIcon = isPdf ? '📄' : '📎';
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid #dee2e6', borderRadius: '6px', padding: '4px 8px', background: '#f8f9fa' }}>
-            <span style={{ fontSize: '18px' }}>{docIcon}</span>
-            <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename || att.content_type}</span>
-            <a href={att.url} target="_blank" rel="noreferrer" style={{ color: '#0d6efd', fontSize: '11px' }}>View</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid #dee2e6', borderRadius: '6px', padding: '6px 10px', background: '#f8f9fa', marginBottom: '4px' }}>
+            <span style={{ fontSize: '20px' }}>{docIcon}</span>
+            <span style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{att.filename || att.content_type}</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+                <ViewButton att={att} style={{ padding: '2px 8px', fontSize: '11px' }} zIndex={100001} />
+                <a href={att.url} download={att.filename || 'file'} target="_blank" rel="noreferrer"
+                    className="btn btn-sm btn-outline-primary" style={{ padding: '2px 8px', fontSize: '11px' }}>
+                    <i className="bi bi-download me-1"></i>Download
+                </a>
+            </div>
         </div>
     );
 };
@@ -106,9 +125,12 @@ function PurchaseBillExtractModal({ msg, storeId, token, onClose, onCreatePurcha
             <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ maxWidth: '860px' }}>
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f0fff4', borderBottom: '3px solid #25D366' }}>
-                        <h6 className="modal-title fw-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h6 className="modal-title fw-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <i className="bi bi-receipt me-2 text-success"></i>
                             {t('Extract Purchase Bill Data')}
+                            {msg.purchase_bill_code && (
+                                <span className="badge" style={{ background: '#1a4d2e', color: '#fff', fontSize: '12px', fontWeight: 700 }}>{msg.purchase_bill_code}</span>
+                            )}
                             <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from}</small>
                         </h6>
                         <button className="btn-close" onClick={onClose} />
@@ -353,7 +375,12 @@ export default function PurchaseBillsTab({ storeId }) {
                     <div key={msg.id} style={{ border: '1px solid #dee2e6', borderRadius: '10px', padding: '14px 16px', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
                             <div>
-                                <div style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                    {msg.purchase_bill_code && (
+                                        <span className="badge" style={{ background: '#1a4d2e', color: '#fff', fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', padding: '3px 8px', borderRadius: '6px' }}>
+                                            {msg.purchase_bill_code}
+                                        </span>
+                                    )}
                                     <i className="bi bi-whatsapp" style={{ color: '#25D366' }}></i>
                                     {msg.sender_name || msg.from}
                                     {msg.sender_name && msg.from && msg.sender_name !== msg.from && (
