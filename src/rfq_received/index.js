@@ -1725,7 +1725,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                 return true;
             });
             if (toAdd.length > 0) {
-                setExtraSuppliers(prev => [...prev, ...toAdd.map(s => ({ id: s.id, name: s.name, phone: s.phone, purchase_market: s.purchase_market, categories: s.categories }))]);
+                setExtraSuppliers(prev => [...prev, ...toAdd.map(s => ({ id: s.id, name: s.name, phone: s.phone, purchase_market: s.purchase_market, categories: s.categories, source: 'maps' }))]);
                 setSelectedPhones(prev => { const next = new Set(prev); toAdd.forEach(s => next.add(s.phone)); return next; });
             }
             setMapsResult({ found: data.found, added: toAdd.length, fromDb: data.from_db ?? 0, fromMaps: data.from_maps ?? 0 });
@@ -2184,7 +2184,23 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                             {totalCount > 0 && (
                                 <div style={{ marginBottom: isSending ? 6 : 10 }}>
                                     <div className="d-flex justify-content-between align-items-center mb-1">
-                                        <span className="text-muted fw-semibold" style={{ fontSize: 11, letterSpacing: 1 }}>RECIPIENTS</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                            <span className="text-muted fw-semibold" style={{ fontSize: 11, letterSpacing: 1 }}>RECIPIENTS</span>
+                                            {(() => {
+                                                const _extraPhones = new Set(extraSuppliers.map(e => e.phone));
+                                                const _mapsPhones  = new Set(extraSuppliers.filter(e => e.source === 'maps').map(e => e.phone));
+                                                const dbCount     = supplierList.filter(s => !_extraPhones.has(s.phone)).length;
+                                                const mapsCount   = supplierList.filter(s => _mapsPhones.has(s.phone)).length;
+                                                const manualCount = supplierList.filter(s => _extraPhones.has(s.phone) && !_mapsPhones.has(s.phone)).length;
+                                                return (
+                                                    <>
+                                                        {dbCount > 0 && <span style={{ fontSize: 10, background: '#e0f2fe', color: '#0369a1', borderRadius: 8, padding: '1px 6px', fontWeight: 600 }}><i className="bi bi-database-fill me-1"></i>{dbCount} DB</span>}
+                                                        {mapsCount > 0 && <span style={{ fontSize: 10, background: '#fef3c7', color: '#92400e', borderRadius: 8, padding: '1px 6px', fontWeight: 600 }}><i className="bi bi-map-fill me-1"></i>{mapsCount} Maps</span>}
+                                                        {manualCount > 0 && <span style={{ fontSize: 10, background: '#ede9fe', color: '#5b21b6', borderRadius: 8, padding: '1px 6px', fontWeight: 600 }}><i className="bi bi-person-plus-fill me-1"></i>{manualCount} added</span>}
+                                                    </>
+                                                );
+                                            })()}
+                                        </span>
                                         <span style={{ fontSize: 12, color: sentCount === totalCount && totalCount > 0 ? '#198754' : '#555' }}>
                                             {sentCount} / {totalCount} sent ({progressPct}%)
                                             {!isSending && !isDone && unsentSelected.length > 0 && (
