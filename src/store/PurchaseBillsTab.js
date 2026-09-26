@@ -323,12 +323,42 @@ function compressImage(file) {
     });
 }
 
+// Convert a PDF file to an array of JPEG File objects (one per page) using PDF.js
+async function pdfToImages(file) {
+    try {
+        const pdfjsLib = await import('pdfjs-dist/build/pdf');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.js`;
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const images = [];
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 2.0 }); // 2x for quality
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
+            const baseName = file.name.replace(/\.pdf$/i, '');
+            const imgFile = new File([blob], `${baseName}_page${pageNum}.jpg`, { type: 'image/jpeg' });
+            images.push(imgFile);
+        }
+        return images;
+    } catch (_) {
+        return [file]; // fallback: upload original PDF if conversion fails
+    }
+}
+
 async function prepareFileForUpload(file) {
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        return await pdfToImages(file); // returns array of image files
+    }
     const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
     if (imageTypes.includes(file.type)) {
-        try { return await compressImage(file); } catch (_) { return file; }
+        try { return [await compressImage(file)]; } catch (_) { return [file]; }
     }
-    return file; // PDFs and others sent as-is
+    return [file];
 }
 
 // ── Manual Upload Modal ───────────────────────────────────────────────────────
@@ -354,15 +384,18 @@ function ManualUploadModal({ storeId, token, onClose, onUploaded }) {
         let successCount = 0;
         for (let i = 0; i < files.length; i++) {
             try {
+                // prepareFileForUpload returns an array: PDFs → one File per page; images → [compressed file]
                 const prepared = await prepareFileForUpload(files[i]);
-                const fd = new FormData();
-                fd.append('files', prepared, files[i].name);
-                const res = await fetch(`/v1/procurement-messages/upload-purchase-bill?store_id=${storeId}`, {
-                    method: 'POST',
-                    headers: { Authorization: token },
-                    body: fd,
-                });
-                if (res.ok) successCount++;
+                for (const uploadFile of prepared) {
+                    const fd = new FormData();
+                    fd.append('files', uploadFile, uploadFile.name);
+                    const res = await fetch(`/v1/procurement-messages/upload-purchase-bill?store_id=${storeId}`, {
+                        method: 'POST',
+                        headers: { Authorization: token },
+                        body: fd,
+                    });
+                    if (res.ok) successCount++;
+                }
             } catch (_) {}
             setProgress({ done: i + 1, total: files.length });
         }
@@ -441,7 +474,6 @@ export default function PurchaseBillsTab({ storeId }) {
     const [extractMsg, setExtractMsg] = useState(null);
     const [showUpload, setShowUpload] = useState(false);
     const purchaseCreateRef = useRef(null);
-    const viewPurchaseRef = useRef(null);
 
     const load = useCallback(async (pg = 1, s = search) => {
         if (!storeId) return;
@@ -493,8 +525,8 @@ export default function PurchaseBillsTab({ storeId }) {
     };
 
     const handleViewPurchase = (purchaseId) => {
-        if (viewPurchaseRef.current) {
-            viewPurchaseRef.current.open(purchaseId);
+        if (purchaseCreateRef.current) {
+            purchaseCreateRef.current.open(purchaseId);
         }
     };
 
@@ -641,7 +673,6 @@ export default function PurchaseBillsTab({ storeId }) {
             )}
 
             <PurchaseCreate ref={purchaseCreateRef} />
-            <PurchaseCreate ref={viewPurchaseRef} />
         </div>
     );
 }
