@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
-import EmailDetailModal from './EmailDetailModal.js';
+import EmailDetailModal, { fixEmailHtml } from './EmailDetailModal.js';
 import RFQCreate from '../rfq_received/create.js';
 import { ExtractModal } from './ProcurementEmailsTab.js';
 import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
@@ -750,7 +750,7 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                                                 {/* Email body */}
                                                 <div style={{ padding: '12px 16px', fontSize: '14px', lineHeight: '1.6', color: '#202124', maxHeight: '500px', overflowY: 'auto' }}>
                                                     {msg.body_html ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: msg.body_html }} />
+                                                        <div dangerouslySetInnerHTML={{ __html: fixEmailHtml(msg.body_html) }} />
                                                     ) : (
                                                         <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>
                                                             {bodyText || <span style={{ color: '#9aa0a6' }}>{t('(empty body)')}</span>}

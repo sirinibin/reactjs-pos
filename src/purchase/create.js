@@ -2262,26 +2262,33 @@ const PurchaseCreate = forwardRef((props, ref) => {
             .catch(() => setSelectedVendors([fallbackData]));
     }
 
-    // ── Auto vendor find/create (called from openFromExtraction, mirrors RFQ autoCreateOrFindCustomer) ──
+    // ── Auto vendor find/create (called from openFromExtraction) ──
     async function autoFindOrCreateVendor(extractionData) {
         const stId = localStorage.getItem('store_id');
         const at = localStorage.getItem('access_token');
         const companyName = (extractionData.vendor_company_name || '').trim();
         const vatNo = (extractionData.vendor_vat_no || '').trim();
+        console.log('[autoFindOrCreateVendor] start', { companyName, vatNo, stId, hasToken: !!at });
         if (!companyName && !vatNo) return;
         try {
             let vendorId = null;
 
             if (vatNo) {
                 const r = await fetch(`/v1/vendor?search[vat_no]=${encodeURIComponent(vatNo)}&store_id=${stId}&limit=1`, { headers: { Authorization: at } });
-                const d = await r.json();
-                if ((d.result || []).length > 0) vendorId = d.result[0].id;
+                if (r.ok) {
+                    const d = await r.json();
+                    console.log('[autoFindOrCreateVendor] VAT search results:', d.result?.length, d.result?.[0]?.id);
+                    if ((d.result || []).length > 0) vendorId = d.result[0].id;
+                } else { console.error('[autoFindOrCreateVendor] VAT search HTTP error:', r.status); }
             }
             if (!vendorId && companyName) {
                 const r = await fetch(`/v1/vendor?query=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
-                const d = await r.json();
-                const match = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0];
-                if (match) vendorId = match.id;
+                if (r.ok) {
+                    const d = await r.json();
+                    console.log('[autoFindOrCreateVendor] name search results:', d.result?.length);
+                    const match = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0];
+                    if (match) vendorId = match.id;
+                } else { console.error('[autoFindOrCreateVendor] name search HTTP error:', r.status); }
             }
             if (!vendorId && companyName) {
                 const isValidVat = /^3\d{13}3$/.test(vatNo);
@@ -2290,35 +2297,46 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 if (extractionData.vendor_cr_no) body.cr_no = extractionData.vendor_cr_no;
                 if (extractionData.vendor_mobile) body.phone = extractionData.vendor_mobile;
                 if (extractionData.vendor_national_address) body.address = extractionData.vendor_national_address;
+                console.log('[autoFindOrCreateVendor] creating vendor:', body);
                 const r = await fetch('/v1/vendor', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                const d = await r.json();
-                if (d.result?.id) vendorId = d.result.id;
+                if (r.ok) {
+                    const d = await r.json();
+                    console.log('[autoFindOrCreateVendor] created vendor id:', d.result?.id);
+                    if (d.result?.id) vendorId = d.result.id;
+                } else { console.error('[autoFindOrCreateVendor] create vendor HTTP error:', r.status); }
             }
             if (vendorId) {
+                console.log('[autoFindOrCreateVendor] fetching full vendor:', vendorId);
                 const sel = 'id,code,credit_balance,credit_limit,use_remarks_in_purchases,remarks,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,address';
                 const r = await fetch(`/v1/vendor/${vendorId}?search[store_id]=${stId}&select=${sel}`, { headers: { Authorization: at } });
-                const d = await r.json();
-                if (d.result) {
-                    const v = d.result;
-                    formData.vendor_id = v.id;
-                    if (v.use_remarks_in_purchases && v.remarks) {
-                        formData.remarks = v.remarks;
+                if (r.ok) {
+                    const d = await r.json();
+                    console.log('[autoFindOrCreateVendor] vendor detail:', d.result?.id, d.result?.name);
+                    if (d.result) {
+                        const v = d.result;
+                        formData.vendor_id = v.id;
+                        if (v.use_remarks_in_purchases && v.remarks) {
+                            formData.remarks = v.remarks;
+                        }
+                        setFormData({ ...formData });
+                        autoSettingVendorRef.current = true;
+                        setSelectedVendors([{ ...v, search_label: v.search_label || v.name || '' }]);
+                        setTimeout(() => { autoSettingVendorRef.current = false; }, 600);
+                        console.log('[autoFindOrCreateVendor] done — vendor set:', v.name);
                     }
-                    setFormData({ ...formData });
-                    autoSettingVendorRef.current = true;
-                    setSelectedVendors([{ ...v, search_label: v.search_label || v.name || '' }]);
-                    setTimeout(() => { autoSettingVendorRef.current = false; }, 600);
-                }
+                } else { console.error('[autoFindOrCreateVendor] vendor detail HTTP error:', r.status); }
+            } else {
+                console.warn('[autoFindOrCreateVendor] no vendorId found/created');
             }
-        } catch (_) {}
+        } catch (e) { console.error('[autoFindOrCreateVendor] exception:', e); }
     }
 
     // ── Auto product find/create (called from openFromExtraction) ──
-    // Replicates user selection: fetch/create each product in DB, then add via addProduct.
     async function autoSyncProductsFromExtraction(extractionProducts) {
-        if (!extractionProducts.length) return;
+        if (!extractionProducts || !extractionProducts.length) return;
         const stId = localStorage.getItem('store_id');
         const at = localStorage.getItem('access_token');
+        console.log('[autoSyncProducts] start', extractionProducts.length, 'products, stId:', stId);
         const selectFields = [
             'id', 'name', 'part_number', 'unit', 'item_code', 'prefix_part_number', 'allow_duplicates',
             `product_stores.${stId}.purchase_unit_price`,
@@ -2335,54 +2353,67 @@ const PurchaseCreate = forwardRef((props, ref) => {
         for (const ep of extractionProducts) {
             try {
                 let dbProduct = null;
+                console.log('[autoSyncProducts] processing ep:', ep.part_no, ep.name);
                 if (ep.part_no) {
                     const r = await fetch(
                         `/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`,
                         { headers: { Authorization: at } }
                     );
-                    const d = await r.json();
-                    if ((d.result || []).length > 0) dbProduct = d.result[0];
+                    if (r.ok) {
+                        const d = await r.json();
+                        console.log('[autoSyncProducts] part_no search results:', d.result?.length, d.result?.[0]?.id);
+                        if ((d.result || []).length > 0) dbProduct = d.result[0];
+                    } else { console.error('[autoSyncProducts] part_no search HTTP error:', r.status); }
                 }
                 if (!dbProduct) {
-                    // Create new product
                     const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
                     if (ep.part_no) body.part_number = ep.part_no;
                     if (ep.unit) body.unit = ep.unit;
+                    console.log('[autoSyncProducts] creating product:', body);
                     const cr = await fetch('/v1/product', {
                         method: 'POST',
                         headers: { Authorization: at, 'Content-Type': 'application/json' },
                         body: JSON.stringify(body),
                     });
-                    const cd = await cr.json();
-                    if (cd.result?.id) {
-                        // Fetch created product with prices
-                        const pr = await fetch(
-                            `/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`,
-                            { headers: { Authorization: at } }
-                        );
-                        const pd = await pr.json();
-                        dbProduct = pd.result || cd.result;
-                    }
+                    if (cr.ok) {
+                        const cd = await cr.json();
+                        console.log('[autoSyncProducts] created product id:', cd.result?.id);
+                        if (cd.result?.id) {
+                            const pr = await fetch(
+                                `/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`,
+                                { headers: { Authorization: at } }
+                            );
+                            if (pr.ok) {
+                                const pd = await pr.json();
+                                dbProduct = pd.result || cd.result;
+                            } else {
+                                dbProduct = cd.result;
+                            }
+                        }
+                    } else { console.error('[autoSyncProducts] create product HTTP error:', cr.status); }
                 }
-                if (dbProduct?.id) resolved.push({ ep, dbProduct });
-            } catch (_) {}
+                if (dbProduct?.id) {
+                    console.log('[autoSyncProducts] resolved product:', dbProduct.id, dbProduct.name);
+                    resolved.push({ ep, dbProduct });
+                } else {
+                    console.warn('[autoSyncProducts] could not find/create product for:', ep.part_no, ep.name);
+                }
+            } catch (e) { console.error('[autoSyncProducts] exception for', ep?.part_no, e); }
         }
 
-        // Phase 2: add all products synchronously using addProduct pattern
-        // (same structure addProduct builds, so edit-product button works correctly)
-        for (const { ep, dbProduct } of resolved) {
+        console.log('[autoSyncProducts] Phase 2: adding', resolved.length, 'products');
+        // Phase 2: build new product rows (independent of selectedProducts closure)
+        const newRows = resolved.map(({ ep, dbProduct }) => {
             const sp = dbProduct.product_stores?.[stId] || {};
-            const extractionPrice = parseFloat(ep.unit_price) || 0;
-            const extractionQty = parseFloat(ep.quantity) || 1;
-            selectedProducts.push({
+            return {
                 product_id: dbProduct.id,
                 code: dbProduct.item_code || '',
                 prefix_part_number: dbProduct.prefix_part_number || '',
                 part_number: dbProduct.part_number || '',
                 name: dbProduct.name || ep.name || '',
-                quantity: extractionQty,
+                quantity: parseFloat(ep.quantity) || 1,
                 product_stores: dbProduct.product_stores || {},
-                purchase_unit_price: sp.purchase_unit_price || extractionPrice,
+                purchase_unit_price: sp.purchase_unit_price || 0,
                 purchase_unit_price_with_vat: sp.purchase_unit_price_with_vat || 0,
                 retail_unit_price: sp.retail_unit_price || 0,
                 retail_unit_price_with_vat: sp.retail_unit_price_with_vat || 0,
@@ -2394,12 +2425,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 unit_discount_percent: 0,
                 unit_discount_percent_vat: 0,
                 stock: sp.stock || 0,
-            });
-        }
+            };
+        });
 
-        if (resolved.length > 0) {
-            setSelectedProducts([...selectedProducts]);
+        if (newRows.length > 0) {
+            selectedProducts = [...newRows];
+            setSelectedProducts([...newRows]);
             setTimeout(() => reCalculate(), 100);
+            console.log('[autoSyncProducts] done — set', newRows.length, 'products');
         }
     }
 

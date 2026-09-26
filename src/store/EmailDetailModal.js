@@ -6,13 +6,25 @@ import RFQWhatsAppConversationsPanel from '../rfq_received/RFQWhatsAppConversati
 import RFQEmailConversationsPanel from '../rfq_received/RFQEmailConversationsPanel.js';
 import CustomerCreate from '../customer/create';
 
-const fixEmailHtml = html => {
+export const fixEmailHtml = html => {
     if (!html) return html;
     // Zoho Mail embeds inline images as relative paths like src="/mail/ImageDisplay?..."
     // Make them absolute so the browser can attempt to load them.
-    return html
+    let fixed = html
         .replace(/src="\/mail\//g, 'src="https://mail.zoho.com/mail/')
         .replace(/src='\/mail\//g,  "src='https://mail.zoho.com/mail/");
+    // Proxy external http:// and https:// image sources through our backend to avoid
+    // mixed-content blocking and to handle images that require specific headers.
+    fixed = fixed.replace(/(<img[^>]+)src="(https?:\/\/[^"]+)"/gi, (_, pre, url) => {
+        // Skip data URIs and already-proxied URLs
+        if (url.startsWith('data:') || url.includes('/v1/proxy-image')) return _;
+        return `${pre}src="/v1/proxy-image?url=${encodeURIComponent(url)}"`;
+    });
+    fixed = fixed.replace(/(<img[^>]+)src='(https?:\/\/[^']+)'/gi, (_, pre, url) => {
+        if (url.startsWith('data:') || url.includes('/v1/proxy-image')) return _;
+        return `${pre}src="/v1/proxy-image?url=${encodeURIComponent(url)}"`;
+    });
+    return fixed;
 };
 
 const directionBadge = dir =>

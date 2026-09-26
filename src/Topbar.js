@@ -699,7 +699,7 @@ function Topbar(props) {
                                                         </span>
                                                         {item.last_message_date && (
                                                             <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
-                                                                {timeAgo(new Date(item.last_message_date))}
+                                                                {formatTimeAgo(item.last_message_date)}
                                                             </span>
                                                         )}
                                                         {item.last_message_date && (
@@ -797,7 +797,7 @@ function Topbar(props) {
                                                             <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
                                                             {item.message_date && (
                                                                 <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
-                                                                    {timeAgo(new Date(item.message_date))}
+                                                                    {formatTimeAgo(item.message_date)}
                                                                 </span>
                                                             )}
                                                             {item.message_date && (
