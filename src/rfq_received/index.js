@@ -2235,18 +2235,13 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                 );
                             })()}
 
-                            {/* Select-all-by-market buttons (non-default markets with unselected suppliers) */}
+                            {/* Select-all-by-market buttons (any market with unselected suppliers) */}
                             {(() => {
-                                const defaultSet = new Set(
-                                    (storeDataRef.current?.settings?.rfq_forward_markets || []).map(m => toTitleCase(m))
-                                );
                                 const selectCounts = {};
                                 supplierList.forEach(s => {
                                     if (s.purchase_market && !selectedPhones.has(s.phone) && !sentPhones.has(s.phone)) {
                                         const mk = toTitleCase(s.purchase_market);
-                                        if (defaultSet.size === 0 || !defaultSet.has(mk)) {
-                                            selectCounts[mk] = (selectCounts[mk] || 0) + 1;
-                                        }
+                                        selectCounts[mk] = (selectCounts[mk] || 0) + 1;
                                     }
                                 });
                                 const markets = Object.keys(selectCounts).filter(mk => selectCounts[mk] > 0);
