@@ -1175,6 +1175,7 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
         { id: 'whatsapp_settings', label: 'WhatsApp Settings', icon: 'bi-whatsapp' },
+        { id: 'purchase_bills_settings', label: 'Purchase Bills', icon: 'bi-receipt' },
         { id: 'email_settings', label: 'Email Settings', icon: 'bi-envelope-fill' },
         { id: 'google_settings', label: 'Google Settings', icon: 'bi-geo-alt-fill' },
         { id: 'rfq_settings', label: 'RFQ Settings', icon: 'bi-list-check' },
@@ -7251,106 +7252,70 @@ const StoreCreate = forwardRef((props, ref) => {
                                         <div className="form-text">{t('rfq_intro_help')}</div>
                                     </div>
 
-                                    {/* Allowed senders whitelist */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
-                                            <i className="bi bi-shield-lock-fill text-primary me-2"></i>
-                                            {t('rfq_allowed_senders_label')}
-                                        </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('rfq_allowed_senders_help')}
-                                        </p>
-                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-                                            <input
-                                                type="text"
-                                                className={`form-control form-control-sm${waCheck.status === 'valid' ? ' is-valid' : waCheck.status === 'invalid' ? ' is-invalid' : ''}`}
-                                                placeholder={t('rfq_allowed_senders_placeholder')}
-                                                id="rfq-allowed-sender-input"
-                                                disabled={waCheck.status === 'checking'}
-                                                onChange={() => { if (waCheck.status !== 'idle') setWaCheck({ status: 'idle', name: '', error: '' }); }}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        document.getElementById('rfq-wa-add-btn').click();
-                                                    }
-                                                }}
-                                            />
-                                            <button
-                                                id="rfq-wa-add-btn"
-                                                type="button"
-                                                className="btn btn-sm btn-outline-primary"
-                                                disabled={waCheck.status === 'checking'}
-                                                onClick={async () => {
-                                                    const input = document.getElementById('rfq-allowed-sender-input');
-                                                    const val = input.value.trim().replace(/\D/g, '');
-                                                    if (!val) return;
+                                </div>)}
 
-                                                    const list = formData.settings.rfq_allowed_senders || [];
-                                                    if (list.includes(val)) { input.value = ''; return; }
+                                {activeTab === 'purchase_bills_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-receipt" style={{ fontSize: '18px', color: '#25D366' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Purchase Bills Settings')}</h3>
+                                    </div>
 
-                                                    // If already validated as valid, just add
-                                                    if (waCheck.status === 'valid') {
-                                                        formData.settings.rfq_allowed_senders = [...list, val];
-                                                        setFormData({ ...formData });
-                                                        input.value = '';
-                                                        setWaCheck({ status: 'idle', name: '', error: '' });
-                                                        return;
-                                                    }
-
-                                                    // Check WhatsApp
-                                                    setWaCheck({ status: 'checking', name: '', error: '' });
-                                                    try {
-                                                        const res = await fetch(`/v1/rfq-bot/check-whatsapp?store_id=${formData.id}&phone=${encodeURIComponent(val)}`);
-                                                        const data = await res.json();
-                                                        if (data.exists) {
-                                                            setWaCheck({ status: 'valid', name: data.name || '', error: '' });
-                                                        } else if (data.error) {
-                                                            setWaCheck({ status: 'invalid', name: '', error: data.error });
-                                                        } else {
-                                                            setWaCheck({ status: 'invalid', name: '', error: t('wa_number_not_found') });
-                                                        }
-                                                    } catch (err) {
-                                                        setWaCheck({ status: 'invalid', name: '', error: err.message });
-                                                    }
-                                                }}
-                                            >
-                                                {waCheck.status === 'checking'
-                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
-                                                    : waCheck.status === 'valid'
-                                                        ? <><i className="bi bi-check-lg me-1"></i>{t('add_button')}</>
-                                                        : t('wa_check_and_add')}
-                                            </button>
+                                    {/* ── Purchase Bills Tracking ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
+                                        <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
+                                            <i className="bi bi-receipt" style={{ color: '#25d366', fontSize: '14px' }}></i>
+                                            <span style={{ color: '#1a4d2e' }}>{t('Purchase Bills Tracking (WhatsApp)')}</span>
                                         </div>
-                                        {waCheck.status === 'valid' && (
-                                            <div className="valid-feedback d-block" style={{ fontSize: '12px' }}>
-                                                <i className="bi bi-whatsapp me-1"></i>
-                                                {t('wa_number_valid')}{waCheck.name ? ` — ${waCheck.name}` : ''}.
-                                                {' '}{t('wa_click_add_to_confirm')}
-                                            </div>
-                                        )}
-                                        {waCheck.status === 'invalid' && (
-                                            <div className="invalid-feedback d-block" style={{ fontSize: '12px' }}>
-                                                <i className="bi bi-x-circle me-1"></i>
-                                                {waCheck.error || t('wa_number_not_found')}
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                            {(formData.settings.rfq_allowed_senders || []).map((num, i) => (
-                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <i className="bi bi-whatsapp me-1"></i>+{num}
+                                        <div style={{ marginBottom: '14px' }}>
+                                            <label className="pw-check" htmlFor="enable_purchase_bills_tracking2" style={{ maxWidth: '480px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
+                                                <input type="checkbox" id="enable_purchase_bills_tracking2" checked={!!formData.settings.enable_purchase_bills_tracking} onChange={() => { formData.settings.enable_purchase_bills_tracking = !formData.settings.enable_purchase_bills_tracking; setFormData({ ...formData }); }} />
+                                                <span style={{ color: '#1a4d2e', fontWeight: 600 }}>{t('Enable Purchase Bills Tracking')}</span>
+                                            </label>
+                                            <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c' }}>{t('When enabled, images and PDFs received from Purchase Managers numbers are shown in the Purchase Bill images/PDFs tab for extraction and purchase creation.')}</p>
+                                        </div>
+                                        {!!formData.settings.enable_purchase_bills_tracking && (
+                                            <div>
+                                                <div className="pw-field" style={{ marginBottom: '10px' }}>
+                                                    <label style={{ fontWeight: 600 }}>{t('Purchase Managers Numbers')}</label>
+                                                    <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '8px' }}>{t('Add the WhatsApp numbers of your purchase managers. All incoming images/PDFs from these numbers will appear in the Purchase Bills tab.')}</p>
+                                                    {(formData.settings.purchase_bills_manager_numbers || []).map((num, idx) => (
+                                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                            <input
+                                                                type="text"
+                                                                value={num}
+                                                                placeholder={t('e.g. 966501234567')}
+                                                                style={{ flex: 1, padding: '6px 10px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }}
+                                                                onChange={(e) => {
+                                                                    const nums = [...(formData.settings.purchase_bills_manager_numbers || [])];
+                                                                    nums[idx] = e.target.value;
+                                                                    formData.settings.purchase_bills_manager_numbers = nums;
+                                                                    setFormData({ ...formData });
+                                                                }}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-danger"
+                                                                onClick={() => {
+                                                                    const nums = (formData.settings.purchase_bills_manager_numbers || []).filter((_, i) => i !== idx);
+                                                                    formData.settings.purchase_bills_manager_numbers = nums;
+                                                                    setFormData({ ...formData });
+                                                                }}
+                                                            ><i className="bi bi-trash"></i></button>
+                                                        </div>
+                                                    ))}
                                                     <button
                                                         type="button"
-                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        className="btn btn-sm btn-outline-success"
+                                                        style={{ marginTop: '4px' }}
                                                         onClick={() => {
-                                                            formData.settings.rfq_allowed_senders = (formData.settings.rfq_allowed_senders || []).filter((_, j) => j !== i);
+                                                            const nums = [...(formData.settings.purchase_bills_manager_numbers || []), ''];
+                                                            formData.settings.purchase_bills_manager_numbers = nums;
                                                             setFormData({ ...formData });
                                                         }}
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
+                                                    ><i className="bi bi-plus-circle me-1"></i>{t('Add Number')}</button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                 </div>)}
@@ -7563,132 +7528,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-
-                                    {/* Auto-populate on purchase create/update */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!formData.settings.enable_rfq_supplier_on_purchase}
-                                                onChange={() => {
-                                                    formData.settings.enable_rfq_supplier_on_purchase = !formData.settings.enable_rfq_supplier_on_purchase;
-                                                    setFormData({ ...formData });
-                                                }}
-                                            />
-                                            <span style={{ marginLeft: '8px' }}>
-                                                <strong>{t('Enable Populate RFQ Supplier on Create/Update')}</strong>
-                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
-                                                    {t('When enabled, automatically create or update the RFQ supplier record whenever a purchase is created or updated. Requires Google Maps API key and LLM API key.')}
-                                                </div>
-                                            </span>
-                                        </label>
-                                    </div>
-
-
-                                    {/* Populate RFQ Suppliers from Vendors */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
-                                            <i className="bi bi-people-fill text-primary me-2"></i>
-                                            {t('Populate RFQ Suppliers from Vendors')}
-                                        </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
-                                        </p>
-
-                                        {/* LLM selection for vendor population */}
-                                        <div className="row g-2 mb-3">
-                                            <div className="col-md-4">
-                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
-                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
-                                                >
-                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
-                                                    {AI_PROVIDERS.map(p => {
-                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
-                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
-                                                    })}
-                                                </select>
-                                            </div>
-                                            <div className="col-md-8">
-                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={formData.settings.populate_suppliers_llm_model || ''}
-                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
-                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
-                                                >
-                                                    <option value="">{t('— Select model —')}</option>
-                                                    {(formData.settings.populate_suppliers_llm_provider
-                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
-                                                        : []
-                                                    ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
-                                                    ))}
-                                                </select>
-                                                {formData.settings.populate_suppliers_llm_provider && (
-                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
-                                                        {t('API key from AI Models tab will be used')}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-primary"
-                                            disabled={populateVendors.running || !formData.id}
-                                            onClick={async () => {
-                                                if (!formData.id) return;
-                                                setPopulateVendors({ running: true, percent: 0, message: 'Starting...', done: false });
-
-                                                // POST to start the background job
-                                                try {
-                                                    await fetch(`/v1/rfq-bot/populate-suppliers?store_id=${formData.id}`, {
-                                                        method: 'POST',
-                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
-                                                    });
-                                                } catch (e) {
-                                                    setPopulateVendors({ running: false, percent: 0, message: 'Failed to start: ' + e.message, done: true });
-                                                    return;
-                                                }
-
-                                                // Listen for progress via SSE
-                                                const es = new EventSource(`/v1/rfq-bot/events?store_id=${formData.id}`);
-                                                es.addEventListener('populate_progress', (e) => {
-                                                    try {
-                                                        const d = JSON.parse(e.data);
-                                                        setPopulateVendors({ running: !d.done, percent: d.percent || 0, message: d.message || '', done: !!d.done });
-                                                        if (d.done) { es.close(); }
-                                                    } catch (_) {}
-                                                });
-                                                es.onerror = () => {
-                                                    es.close();
-                                                    setPopulateVendors(prev => ({ ...prev, running: false, done: true }));
-                                                };
-                                            }}
-                                        >
-                                            {populateVendors.running
-                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Populating...')}</>
-                                                : <><i className="bi bi-arrow-repeat me-2"></i>{t('Populate RFQ Suppliers from Vendors')}</>}
-                                        </button>
-
-                                        {(populateVendors.running || populateVendors.done) && (
-                                            <div style={{ marginTop: '12px' }}>
-                                                <div className="progress" style={{ height: '8px', marginBottom: '6px' }}>
-                                                    <div
-                                                        className={`progress-bar${populateVendors.done ? ' bg-success' : ''}`}
-                                                        role="progressbar"
-                                                        style={{ width: `${populateVendors.percent}%` }}
-                                                    />
-                                                </div>
-                                                <div style={{ fontSize: '12px', color: '#555' }}>
-                                                    {populateVendors.percent}% — {populateVendors.message}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
 
                                 </div>)}
 
@@ -8307,6 +8146,220 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             );
                                         })()}
+                                    </div>
+
+                                    {/* Allowed senders whitelist */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-shield-lock-fill text-primary me-2"></i>
+                                            {t('rfq_allowed_senders_label')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('rfq_allowed_senders_help')}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                                            <input
+                                                type="text"
+                                                className={`form-control form-control-sm${waCheck.status === 'valid' ? ' is-valid' : waCheck.status === 'invalid' ? ' is-invalid' : ''}`}
+                                                placeholder={t('rfq_allowed_senders_placeholder')}
+                                                id="rfq-allowed-sender-input"
+                                                disabled={waCheck.status === 'checking'}
+                                                onChange={() => { if (waCheck.status !== 'idle') setWaCheck({ status: 'idle', name: '', error: '' }); }}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        document.getElementById('rfq-wa-add-btn').click();
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                id="rfq-wa-add-btn"
+                                                type="button"
+                                                className="btn btn-sm btn-outline-primary"
+                                                disabled={waCheck.status === 'checking'}
+                                                onClick={async () => {
+                                                    const input = document.getElementById('rfq-allowed-sender-input');
+                                                    const val = input.value.trim().replace(/\D/g, '');
+                                                    if (!val) return;
+                                                    const list = formData.settings.rfq_allowed_senders || [];
+                                                    if (list.includes(val)) { input.value = ''; return; }
+                                                    if (waCheck.status === 'valid') {
+                                                        formData.settings.rfq_allowed_senders = [...list, val];
+                                                        setFormData({ ...formData });
+                                                        input.value = '';
+                                                        setWaCheck({ status: 'idle', name: '', error: '' });
+                                                        return;
+                                                    }
+                                                    setWaCheck({ status: 'checking', name: '', error: '' });
+                                                    try {
+                                                        const res = await fetch(`/v1/rfq-bot/check-whatsapp?store_id=${formData.id}&phone=${encodeURIComponent(val)}`);
+                                                        const data = await res.json();
+                                                        if (data.exists) {
+                                                            setWaCheck({ status: 'valid', name: data.name || '', error: '' });
+                                                        } else if (data.error) {
+                                                            setWaCheck({ status: 'invalid', name: '', error: data.error });
+                                                        } else {
+                                                            setWaCheck({ status: 'invalid', name: '', error: t('wa_number_not_found') });
+                                                        }
+                                                    } catch (err) {
+                                                        setWaCheck({ status: 'invalid', name: '', error: err.message });
+                                                    }
+                                                }}
+                                            >
+                                                {waCheck.status === 'checking'
+                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
+                                                    : waCheck.status === 'valid'
+                                                        ? <><i className="bi bi-check-lg me-1"></i>{t('add_button')}</>
+                                                        : t('wa_check_and_add')}
+                                            </button>
+                                        </div>
+                                        {waCheck.status === 'valid' && (
+                                            <div className="valid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-whatsapp me-1"></i>
+                                                {t('wa_number_valid')}{waCheck.name ? ` — ${waCheck.name}` : ''}.
+                                                {' '}{t('wa_click_add_to_confirm')}
+                                            </div>
+                                        )}
+                                        {waCheck.status === 'invalid' && (
+                                            <div className="invalid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-x-circle me-1"></i>
+                                                {waCheck.error || t('wa_number_not_found')}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                            {(formData.settings.rfq_allowed_senders || []).map((num, i) => (
+                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <i className="bi bi-whatsapp me-1"></i>+{num}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.rfq_allowed_senders = (formData.settings.rfq_allowed_senders || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Enable Populate RFQ Supplier on Create/Update */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.settings.enable_rfq_supplier_on_purchase}
+                                                onChange={() => {
+                                                    formData.settings.enable_rfq_supplier_on_purchase = !formData.settings.enable_rfq_supplier_on_purchase;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable Populate RFQ Supplier on Create/Update')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('When enabled, automatically create or update the RFQ supplier record whenever a purchase is created or updated. Requires Google Maps API key and LLM API key.')}
+                                                </div>
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {/* Populate RFQ Suppliers from Vendors */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-people-fill text-primary me-2"></i>
+                                            {t('Populate RFQ Suppliers from Vendors')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
+                                        </p>
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_model || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.populate_suppliers_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                                {formData.settings.populate_suppliers_llm_provider && (
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                        {t('API key from AI Models tab will be used')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-primary"
+                                            disabled={populateVendors.running || !formData.id}
+                                            onClick={async () => {
+                                                if (!formData.id) return;
+                                                setPopulateVendors({ running: true, percent: 0, message: 'Starting...', done: false });
+                                                try {
+                                                    await fetch(`/v1/rfq-bot/populate-suppliers?store_id=${formData.id}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                                                    });
+                                                } catch (e) {
+                                                    setPopulateVendors({ running: false, percent: 0, message: 'Failed to start: ' + e.message, done: true });
+                                                    return;
+                                                }
+                                                const es = new EventSource(`/v1/rfq-bot/events?store_id=${formData.id}`);
+                                                es.addEventListener('populate_progress', (e) => {
+                                                    try {
+                                                        const d = JSON.parse(e.data);
+                                                        setPopulateVendors({ running: !d.done, percent: d.percent || 0, message: d.message || '', done: !!d.done });
+                                                        if (d.done) { es.close(); }
+                                                    } catch (_) {}
+                                                });
+                                                es.onerror = () => {
+                                                    es.close();
+                                                    setPopulateVendors(prev => ({ ...prev, running: false, done: true }));
+                                                };
+                                            }}
+                                        >
+                                            {populateVendors.running
+                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Populating...')}</>
+                                                : <><i className="bi bi-arrow-repeat me-2"></i>{t('Populate RFQ Suppliers from Vendors')}</>}
+                                        </button>
+                                        {(populateVendors.running || populateVendors.done) && (
+                                            <div style={{ marginTop: '12px' }}>
+                                                <div className="progress" style={{ height: '8px', marginBottom: '6px' }}>
+                                                    <div
+                                                        className={`progress-bar${populateVendors.done ? ' bg-success' : ''}`}
+                                                        role="progressbar"
+                                                        style={{ width: `${populateVendors.percent}%` }}
+                                                    />
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#555' }}>
+                                                    {populateVendors.percent}% — {populateVendors.message}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                 </div>)}

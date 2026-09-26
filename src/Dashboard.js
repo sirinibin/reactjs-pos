@@ -77,6 +77,8 @@ import RFQReceivedIndex from './rfq_received/index.js';
 import RFQSuppliersIndex from './rfq_suppliers/index.js';
 import ProcurementEmailsIndex from './procurement_emails/index.js';
 import ProcurementWhatsAppIndex from './procurement_whatsapp/index.js';
+// eslint-disable-next-line no-unused-vars
+import PurchaseBillImagesIndex from './purchase_bill_images/index.js';
 
 // Checks RBAC READ permission for every route change.
 // Only runs when the store has enable_rbac_module = true.
@@ -570,6 +572,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <ProcurementWhatsAppIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/purchase-bill-images">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseBillImagesIndex />
                         </main>
                         <Footer />
                     </div>

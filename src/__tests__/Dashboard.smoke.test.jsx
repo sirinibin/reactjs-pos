@@ -117,6 +117,7 @@ jest.mock('../employee/index.js', () => () => null);
 jest.mock('../employee/salaryIndex.js', () => () => null);
 jest.mock('../vehicle/index.js', () => () => null);
 jest.mock('../repair_job/index.js', () => () => null);
+jest.mock('../purchase_bill_images/index.js', () => () => null);
 
 // ── Global fetch stub ──────────────────────────────────────────────────────
 global.fetch = jest.fn().mockResolvedValue({

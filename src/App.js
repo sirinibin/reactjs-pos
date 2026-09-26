@@ -103,6 +103,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/purchase-bill-images">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/purchase-cash-discounts">
             <Dashboard />
           </Route>

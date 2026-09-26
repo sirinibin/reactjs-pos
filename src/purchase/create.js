@@ -208,6 +208,45 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setShow(true);
         },
 
+        openFromExtraction(data, msgId, msgCode) {
+            const vendorName = data.vendor_company_name || "";
+            this.open(null, vendorName ? [{ id: "", name: vendorName }] : undefined);
+            setTimeout(() => {
+                if (data.vendor_invoice_no) {
+                    formData.vendor_invoice_no = data.vendor_invoice_no;
+                }
+                if (data.vendor_national_address) {
+                    formData.vendor_national_address = data.vendor_national_address;
+                }
+                if (data.total_amount > 0) {
+                    formData.net_total = data.total_amount;
+                }
+                setFormData({ ...formData });
+
+                if ((data.products || []).length > 0) {
+                    const prods = data.products.map(p => ({
+                        product_id: "",
+                        name: p.name || "",
+                        part_number: p.part_no || "",
+                        quantity: parseFloat(p.quantity) || 1,
+                        unit: p.unit || "",
+                        purchase_unit_price: parseFloat(p.unit_price) || 0,
+                        purchase_unit_price_with_vat: 0,
+                        retail_unit_price: 0,
+                        retail_unit_price_with_vat: 0,
+                        wholesale_unit_price: 0,
+                        wholesale_unit_price_with_vat: 0,
+                        unit_discount: 0,
+                        unit_discount_with_vat: 0,
+                        line_total: 0,
+                        line_total_with_vat: 0,
+                    }));
+                    selectedProducts = prods;
+                    setSelectedProducts([...prods]);
+                }
+            }, 150);
+        },
+
         openDraft(id) {
             setIsResumingDraft(true);
             clearDraftRef.current();

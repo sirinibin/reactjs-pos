@@ -12,6 +12,7 @@ export const DEFAULT_MENU = [
     { id: "rfq_suppliers", resource: "rfq_suppliers", label: "RFQ Suppliers", path: "/dashboard/rfq-suppliers", icon: "bi-building-fill", requiresAIRFQBot: true, requiresRFQModule: true },
     { id: "procurement_emails", resource: "procurement_emails", label: "Emails", path: "/dashboard/procurement-emails", icon: "bi-envelope-open-fill", requiresAIRFQBot: true },
     { id: "procurement_whatsapp", resource: "procurement_whatsapp", label: "WhatsApp Messages", path: "/dashboard/procurement-whatsapp", icon: "bi-whatsapp", requiresAIRFQBot: true },
+    { id: "purchase_bill_images", resource: "purchase_bill_images", label: "Purchase Bill images/PDFs", path: "/dashboard/purchase-bill-images", icon: "bi-receipt", requiresPurchaseBillsTracking: true },
     { id: "purchase_return", resource: "purchase_return", label: "Purchase Returns", path: "/dashboard/purchasereturn", icon: "bi-cart-x", productsOnly: true },
     { id: "delivery_notes", resource: "delivery_notes", label: "Delivery Notes", path: "/dashboard/delivery-notes", icon: "bi-truck" },
     { id: "quotations", resource: "quotations", label: "Quotations", path: "/dashboard/quotations", icon: "bi-clipboard2-check" },

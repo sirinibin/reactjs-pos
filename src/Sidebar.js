@@ -111,6 +111,7 @@ function Sidebar(props) {
         if (item.requiresSalesInQuotation && !store?.settings?.enable_sales_in_quotation) return false;
         if (item.requiresAIRFQBot && !store?.settings?.enable_ai_rfq_bot) return false;
         if (item.requiresRFQModule && !store?.settings?.enable_rfq_module) return false;
+        if (item.requiresPurchaseBillsTracking && !store?.settings?.enable_purchase_bills_tracking) return false;
         // productsOnly: hide only when services mode is active but products are not enabled.
         // Backward compat: if neither flag is set (old stores), show everything.
         if (item.productsOnly && store?.settings?.enable_services && !store?.settings?.enable_products) return false;

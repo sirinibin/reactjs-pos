@@ -195,12 +195,12 @@ async function renderWithProcurementTab(storeOverrides = {}) {
 
     await waitFor(() => expect(screen.getByText(/Update Store/)).toBeInTheDocument());
 
-    // Navigate to Google Settings tab (where Populate features live)
+    // Navigate to RFQ Settings tab (where Populate features live)
     await waitFor(() => {
-        const googleBtn = screen.getAllByRole('button').find(
-            b => b.textContent.includes('Google Settings')
+        const rfqBtn = screen.getAllByRole('button').find(
+            b => b.textContent.includes('RFQ Settings')
         );
-        if (googleBtn) fireEvent.click(googleBtn);
+        if (rfqBtn) fireEvent.click(rfqBtn);
     });
 
     return { ref, store };
