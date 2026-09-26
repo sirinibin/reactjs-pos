@@ -161,32 +161,61 @@ const C = {
 };
 
 // Renders product notes as a structured Key/Value table when the text follows
-// "Key: Value, Key: Value" format; falls back to plain text otherwise.
+// "Key: Value, Key: Value" or "Key: Value\nKey: Value" format; falls back to
+// clean pre-wrapped plain text otherwise.
 function renderProductNotes(notes) {
     if (!notes) return null;
-    // Split on commas that are followed by a new "Word(s):" label (lookahead).
-    const segments = notes.split(/,\s*(?=[A-Za-z][^,]*:)/);
-    const pairs = segments.map(seg => {
+
+    // Normalise: replace literal \n / \\n escape sequences, then split on real newlines.
+    const normalised = notes.replace(/\\n/g, '\n');
+
+    // Try newline-delimited "Key: Value" pairs first.
+    const lines = normalised.split('\n').map(l => l.trim()).filter(Boolean);
+    const linePairs = lines.map(seg => {
         const idx = seg.indexOf(':');
         if (idx > 0) return { k: seg.slice(0, idx).trim(), v: seg.slice(idx + 1).trim() };
         return null;
-    }).filter(Boolean);
-    if (pairs.length < 2) return <span style={{ fontSize: '11px', lineHeight: 1.5 }}>{notes}</span>;
+    });
+
+    // Fall back to comma-delimited "Key: Value, Key: Value" parsing.
+    const commaPairs = normalised
+        .split(/,\s*(?=[A-Za-z؀-ۿ][^,]*:)/)
+        .map(seg => {
+            const idx = seg.indexOf(':');
+            if (idx > 0) return { k: seg.slice(0, idx).trim(), v: seg.slice(idx + 1).trim() };
+            return null;
+        });
+
+    // Choose the set that produced the most valid Key:Value pairs.
+    const bestPairs = (linePairs.filter(Boolean).length >= commaPairs.filter(Boolean).length
+        ? linePairs
+        : commaPairs
+    ).filter(Boolean);
+
+    if (bestPairs.length >= 2) {
+        return (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', tableLayout: 'fixed' }}>
+                <tbody>
+                    {bestPairs.map((p, i) => (
+                        <tr key={i} style={{ background: i % 2 === 0 ? '#f1f5f9' : '#ffffff' }}>
+                            <td style={{ padding: '4px 7px', fontWeight: 700, color: '#1e3a5f', width: '42%', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', wordBreak: 'break-word', overflowWrap: 'break-word', letterSpacing: '0.2px' }}>
+                                {p.k}
+                            </td>
+                            <td style={{ padding: '4px 7px', color: '#374151', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', lineHeight: 1.4, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                {p.v}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
+    }
+
+    // Plain text — preserve line breaks and wrap properly.
     return (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
-            <tbody>
-                {pairs.map((p, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? '#f1f5f9' : '#ffffff' }}>
-                        <td style={{ padding: '4px 7px', fontWeight: 700, color: '#1e3a5f', width: '42%', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', whiteSpace: 'nowrap', letterSpacing: '0.2px' }}>
-                            {p.k}
-                        </td>
-                        <td style={{ padding: '4px 7px', color: '#374151', borderBottom: '1px solid #e2e8f0', verticalAlign: 'top', lineHeight: 1.4 }}>
-                            {p.v}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+        <span style={{ fontSize: '11px', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word', display: 'block' }}>
+            {normalised}
+        </span>
     );
 }
 
@@ -429,7 +458,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                         style={{ overflow: 'hidden', borderRadius: '4px', border: `2px solid ${C.navy}`, boxShadow: '0 2px 6px rgba(15,52,96,0.08)' }}
                         onClick={() => selectText('tableBody')}
                     >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs('tableBody') || '12px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: fs('tableBody') || '12px' }}>
                             <thead>
                                 <tr
                                     style={{ cursor: 'pointer' }}
@@ -524,7 +553,7 @@ function RFQPreviewContent({ rfq, store, invoiceBackground, fontSizes = {}, sele
                                             {product.unit || <span style={{ color: '#cbd5e1' }}>—</span>}
                                         </td>
                                         {/* Notes */}
-                                        <td style={{ padding: '8px 10px', textAlign: 'left', color: '#4b5563', fontSize: fs('tableBody') || '11px', lineHeight: 1.5 }}>
+                                        <td style={{ padding: '8px 10px', textAlign: 'left', color: '#4b5563', fontSize: fs('tableBody') || '11px', lineHeight: 1.5, wordBreak: 'break-word', overflowWrap: 'break-word', verticalAlign: 'top' }}>
                                             {renderProductNotes(product.notes)}
                                         </td>
                                     </tr>

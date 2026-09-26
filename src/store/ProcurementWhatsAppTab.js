@@ -8,6 +8,8 @@ import { ForwardDetail, RFQSendModal } from '../rfq_received/index.js';
 import QuotationCreate from '../quotation/create.js';
 import EmailDetailModal from './EmailDetailModal.js';
 import { ViewButton } from './FileViewerModal.js';
+import { SupplierForm } from '../rfq_suppliers/index';
+import CustomerCreate from '../customer/create';
 
 const PAGE_SIZE = 20;
 
@@ -803,9 +805,12 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const [forwardEmailSubject, setForwardEmailSubject]   = useState('');
     const [forwardEmailStatus, setForwardEmailStatus]     = useState(null);
 
-    // Customer lookup state
+    // Customer / supplier lookup state
     const [customerByPhone, setCustomerByPhone] = useState({}); // phone → { id, name }
     const [threadCustomer, setThreadCustomer] = useState(null);
+    const [threadSupplier, setThreadSupplier] = useState(null);
+    const [editingSupplier, setEditingSupplier] = useState(null);
+    const customerEditRef = useRef(null);
     const [customerRfqOpen, setCustomerRfqOpen] = useState(false);
     const [customerRfqList, setCustomerRfqList] = useState([]);
     const [customerRfqLoading, setCustomerRfqLoading] = useState(false);
@@ -838,6 +843,19 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             if (!res.ok) return null;
             const data = await res.json();
             return data.id ? { id: data.id, name: data.name } : null;
+        } catch (_) { return null; }
+    }, [storeId, token]);
+
+    // Look up RFQ supplier by phone; returns full supplier object or null
+    const lookupSupplierByPhone = useCallback(async (phone) => {
+        if (!phone) return null;
+        try {
+            const res = await fetch(`/v1/rfq-suppliers?store_id=${storeId}&search=${encodeURIComponent(phone)}&limit=1`, {
+                headers: { Authorization: token },
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.items?.[0] || null;
         } catch (_) { return null; }
     }, [storeId, token]);
 
@@ -920,6 +938,9 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             } else {
                 setThreadCustomer(customerByPhone[selectedThread.contact_phone]);
             }
+            // Look up supplier for selected thread
+            setThreadSupplier(null);
+            lookupSupplierByPhone(selectedThread.contact_phone).then(s => setThreadSupplier(s));
             // Reset customer RFQ panel
             setCustomerRfqOpen(false);
             setCustomerRfqList([]);
@@ -1701,6 +1722,27 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                                             {_isSelectedCustomer && <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}><i className="bi bi-person me-1"></i>{t('Customer')}</span>}
                                                         </div>
                                                     </div>
+                                                    {/* Edit Supplier / Edit Customer buttons */}
+                                                    {threadSupplier && (
+                                                        <button
+                                                            title={t('Edit RFQ Supplier')}
+                                                            onClick={() => setEditingSupplier(threadSupplier)}
+                                                            style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', color: '#fff', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                                                        >
+                                                            <i className="bi bi-building-gear"></i>
+                                                            <span style={{ fontSize: '12px' }}>{t('Edit Supplier')}</span>
+                                                        </button>
+                                                    )}
+                                                    {threadCustomer?.id && (
+                                                        <button
+                                                            title={t('Edit Customer')}
+                                                            onClick={() => customerEditRef.current?.open(threadCustomer.id)}
+                                                            style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', color: '#fff', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                                                        >
+                                                            <i className="bi bi-person-gear"></i>
+                                                            <span style={{ fontSize: '12px' }}>{t('Edit Customer')}</span>
+                                                        </button>
+                                                    )}
                                                     {/* Supplier RFQs button — only for suppliers */}
                                                     {_isSelectedSupplier && <div ref={rfqHistoryRef} style={{ position: 'relative' }}>
                                             <button
@@ -2898,6 +2940,18 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 storeId={storeId}
                 token={token}
             />
+
+            {/* Edit Supplier form */}
+            {editingSupplier && (
+                <SupplierForm
+                    supplier={editingSupplier}
+                    onClose={() => setEditingSupplier(null)}
+                    onSave={saved => { setThreadSupplier(s => ({ ...s, ...saved })); setEditingSupplier(null); }}
+                />
+            )}
+
+            {/* Edit Customer form */}
+            <CustomerCreate ref={customerEditRef} />
         </div>
     );
 }

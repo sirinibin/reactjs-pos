@@ -2962,7 +2962,8 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [reprocessing, setReprocessing] = useState(null);
     const [showSendModal, setShowSendModal] = useState(false);
     const [rfqForSend, setRfqForSend] = useState(null);
-    const [procMsgModal, setProcMsgModal] = useState({ show: false, loading: false, msg: null, code: '' });
+    const [emailDetailMsg, setEmailDetailMsg] = useState(null);
+    const [emailDetailShow, setEmailDetailShow] = useState(false);
     const [liveProgress, setLiveProgress] = useState(null);
     const [deletingAll, setDeletingAll] = useState(false);
     const [deletingRFQId, setDeletingRFQId] = useState(null);
@@ -3180,17 +3181,15 @@ export default function RFQReceivedIndex({ showToastMessage }) {
         setShowSendModal(true);
     };
 
-    const openProcurementMsgModal = async (msgId, code) => {
-        setProcMsgModal({ show: true, loading: true, msg: null, code: code || '' });
+    const openProcurementMsgModal = async (msgId) => {
+        if (!msgId) return;
         try {
             const res = await fetch(`/v1/procurement-messages/${msgId}?store_id=${storeId}`, {
                 headers: { Authorization: token },
             });
             const data = await res.json();
-            setProcMsgModal({ show: true, loading: false, msg: data, code: code || '' });
-        } catch {
-            setProcMsgModal({ show: true, loading: false, msg: null, code: code || '' });
-        }
+            if (data?.id) { setEmailDetailMsg(data); setEmailDetailShow(true); }
+        } catch {}
     };
 
     const downloadPDF = (rfq) => {
@@ -3576,109 +3575,13 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             />
 
             {/* Procurement Message Modal */}
-            {procMsgModal.show && (
-                <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}
-                    onClick={e => { if (e.target === e.currentTarget) setProcMsgModal(s => ({ ...s, show: false })); }}>
-                    <div className="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">
-                                    {procMsgModal.msg?.type === 'email'
-                                        ? <><i className="bi bi-envelope-fill text-primary me-2"></i>Email Message</>
-                                        : <><i className="bi bi-whatsapp text-success me-2"></i>WhatsApp Message</>}
-                                    {procMsgModal.code && <span className="badge bg-secondary ms-2" style={{ fontSize: '13px' }}>{procMsgModal.code}</span>}
-                                </h5>
-                                <button className="btn-close" onClick={() => setProcMsgModal(s => ({ ...s, show: false }))} />
-                            </div>
-                            <div className="modal-body">
-                                {procMsgModal.loading && (
-                                    <div className="text-center py-4">
-                                        <span className="spinner-border spinner-border-sm me-2" />Loading…
-                                    </div>
-                                )}
-                                {!procMsgModal.loading && !procMsgModal.msg && (
-                                    <div className="text-center text-muted py-4">Message not found</div>
-                                )}
-                                {!procMsgModal.loading && procMsgModal.msg && (() => {
-                                    const m = procMsgModal.msg;
-                                    return (
-                                        <>
-                                            <table className="table table-sm" style={{ fontSize: '13px', marginBottom: '16px' }}>
-                                                <tbody>
-                                                    <tr><th style={{ width: 110, fontWeight: 600 }}>ID</th><td><code style={{ fontSize: '11px' }}>{m.id}</code></td></tr>
-                                                    <tr><th style={{ fontWeight: 600 }}>Direction</th><td>{m.direction === 'in' ? '⬇️ Incoming' : '⬆️ Outgoing'}</td></tr>
-                                                    <tr><th style={{ fontWeight: 600 }}>From</th><td>{m.from || '—'}</td></tr>
-                                                    {(m.to || []).length > 0 && <tr><th style={{ fontWeight: 600 }}>To</th><td>{m.to.join(', ')}</td></tr>}
-                                                    {m.subject && <tr><th style={{ fontWeight: 600 }}>Subject</th><td>{m.subject}</td></tr>}
-                                                    <tr><th style={{ fontWeight: 600 }}>Provider</th><td>{m.provider}</td></tr>
-                                                    <tr><th style={{ fontWeight: 600 }}>Date</th><td>{m.message_date ? new Date(m.message_date).toLocaleString() : '—'}</td></tr>
-                                                    <tr><th style={{ fontWeight: 600 }}>Created At</th><td>{m.created_at ? new Date(m.created_at).toLocaleString() : '—'}</td></tr>
-                                                </tbody>
-                                            </table>
-
-                                            {/* Body */}
-                                            {m.type === 'email' ? (
-                                                <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', overflow: 'hidden' }}>
-                                                    <div style={{ maxHeight: '480px', overflow: 'auto', padding: '20px 24px', fontSize: '14px', lineHeight: '1.6', color: '#202124' }}>
-                                                        {m.body_html
-                                                            ? <div dangerouslySetInnerHTML={{ __html: m.body_html }} />
-                                                            : <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', fontSize: '14px' }}>{m.body_text || <span style={{ color: '#9aa0a6' }}>(empty body)</span>}</pre>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div style={{ display: 'flex', justifyContent: m.direction === 'out' ? 'flex-end' : 'flex-start' }}>
-                                                    <div style={{ background: m.direction === 'out' ? '#dcf8c6' : '#fff', border: '1px solid #e0e0e0', borderRadius: m.direction === 'out' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '10px 14px', maxWidth: '85%', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word', boxShadow: '0 1px 2px rgba(0,0,0,0.12)' }}>
-                                                        {m.body_text || <em style={{ color: '#999' }}>(media message)</em>}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Attachments — Gmail-style cards */}
-                                            {(m.attachments || []).length > 0 && (
-                                                <div style={{ marginTop: '16px' }}>
-                                                    <div style={{ fontSize: '12px', color: '#5f6368', fontWeight: 500, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                        <i className="bi bi-paperclip me-1"></i>{m.attachments.length} Attachment{m.attachments.length !== 1 ? 's' : ''}
-                                                    </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                        {m.attachments.map((att, i) => {
-                                                            const isPDF = att.content_type === 'application/pdf' || att.filename?.toLowerCase().endsWith('.pdf');
-                                                            const isImage = att.content_type?.startsWith('image/');
-                                                            const isExcel = att.filename?.match(/\.(xlsx?|csv)$/i);
-                                                            const icon = isPDF ? 'bi-file-earmark-pdf text-danger' : isImage ? 'bi-file-earmark-image text-primary' : isExcel ? 'bi-file-earmark-excel text-success' : 'bi-file-earmark text-secondary';
-                                                            return (
-                                                                <div key={i} style={{ border: '1px solid #dadce0', borderRadius: '8px', padding: '10px 14px', minWidth: '180px', maxWidth: '220px', background: '#f8f9fa' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                                        <i className={`bi ${icon}`} style={{ fontSize: '22px' }}></i>
-                                                                        <div style={{ overflow: 'hidden' }}>
-                                                                            <div style={{ fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.filename || `Attachment ${i + 1}`}</div>
-                                                                            {att.size > 0 && <div style={{ fontSize: '11px', color: '#5f6368' }}>{(att.size / 1024).toFixed(0)} KB</div>}
-                                                                        </div>
-                                                                    </div>
-                                                                    {att.url
-                                                                        ? <a href={att.url} target="_blank" rel="noopener noreferrer" download={att.filename}
-                                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#1a73e8', textDecoration: 'none', marginTop: '6px' }}>
-                                                                            <i className="bi bi-download"></i> Download
-                                                                          </a>
-                                                                        : <span style={{ fontSize: '11px', color: '#9aa0a6' }}>Not downloaded</span>
-                                                                    }
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-secondary" onClick={() => setProcMsgModal(s => ({ ...s, show: false }))}>Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <EmailDetailModal
+                msg={emailDetailMsg}
+                show={emailDetailShow && !!emailDetailMsg}
+                onClose={() => setEmailDetailShow(false)}
+                storeId={storeId}
+                token={token}
+            />
         </div>
     );
 }
