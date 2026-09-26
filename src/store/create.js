@@ -7352,7 +7352,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             {t('Incoming Email')} — {t('Keyword Filter')}
                                         </h6>
                                         <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('Accept only emails whose subject or body contains at least one of these words (case-insensitive). Emails that don\'t match are ignored before reaching the database, reducing LLM token usage. Leave empty to accept all incoming emails.')}
+                                            {t('Accept only emails whose subject contains at least one of these keywords (case-insensitive). Emails whose subject does not match are discarded before reaching the database. Leave empty to accept all incoming emails.')}
                                         </p>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                             <input

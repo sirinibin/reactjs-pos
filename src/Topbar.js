@@ -693,9 +693,21 @@ function Topbar(props) {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700, flexShrink: 0, alignSelf: 'center' }}>
-                                                        {item.unread_count}
-                                                    </span>
+                                                    <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                                                        <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700 }}>
+                                                            {item.unread_count}
+                                                        </span>
+                                                        {item.last_message_date && (
+                                                            <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
+                                                                {timeAgo(new Date(item.last_message_date))}
+                                                            </span>
+                                                        )}
+                                                        {item.last_message_date && (
+                                                            <span style={{ fontSize: 10, color: '#adb5bd', textAlign: 'right' }}>
+                                                                {new Date(item.last_message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             );
@@ -784,8 +796,13 @@ function Topbar(props) {
                                                         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
                                                             <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
                                                             {item.message_date && (
-                                                                <span style={{ fontSize: 10, color: '#6c757d' }}>
-                                                                    {new Date(item.message_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                                                <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
+                                                                    {timeAgo(new Date(item.message_date))}
+                                                                </span>
+                                                            )}
+                                                            {item.message_date && (
+                                                                <span style={{ fontSize: 10, color: '#adb5bd', textAlign: 'right' }}>
+                                                                    {new Date(item.message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                                 </span>
                                                             )}
                                                         </div>

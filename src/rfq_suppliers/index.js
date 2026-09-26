@@ -17,7 +17,7 @@ const EMPTY_SUPPLIER = {
     purchase_market: '',
 };
 
-export function SupplierForm({ supplier, onSave, onClose }) {
+export function SupplierForm({ supplier, onSave, onClose, zIndex }) {
     const { t } = useTranslation('common');
     const [form, setForm] = useState({ ...EMPTY_SUPPLIER, ...supplier });
     const [catInput, setCatInput] = useState('');
@@ -65,7 +65,7 @@ export function SupplierForm({ supplier, onSave, onClose }) {
     };
 
     return (
-        <Modal show onHide={onClose} size="lg" centered>
+        <Modal show onHide={onClose} size="lg" centered {...(zIndex ? { style: { zIndex } } : {})}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i className="bi bi-building me-2"></i>

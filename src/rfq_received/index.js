@@ -848,7 +848,9 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                                     <strong>{t('products_extracted')}</strong>
                                     <ul className="mb-0 mt-1" style={{ fontSize: '13px' }}>
                                         {rfq.products.map((p, i) => (
-                                            <li key={i}>{p.name}{p.part_no && ` (${p.part_no})`}{p.quantity ? ` × ${p.quantity} ${p.unit || ''}` : ''}</li>
+                                            <li key={i}>
+                                                {p.name}{p.name_in_arabic && <span dir="rtl" style={{ marginRight: '4px', color: '#6b7280' }}>{' — '}{p.name_in_arabic}</span>}{p.part_no && ` (${p.part_no})`}{p.quantity ? ` × ${p.quantity} ${p.unit || ''}` : ''}
+                                            </li>
                                         ))}
                                     </ul>
                                 </div>
@@ -1431,6 +1433,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const [preview, setPreview]                   = useState(null);
     const [loadingPreview, setLoadingPreview]       = useState(false);
+    const [rfqCategories, setRfqCategories]         = useState(rfq?.categories || []);
     const [storeData, setStoreData]               = useState(null);
     const storeDataRef = useRef(null); // always-current storeData for use inside closures
     const [phase, setPhase]                       = useState('preview'); // preview | sending | done
@@ -1564,6 +1567,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
         setTestPhone(''); setTestResult(null);
         setPdfUrl(null); setShowPdfModal(false);
         setPhase('preview');
+        setRfqCategories(rfq?.categories || []);
         // Do NOT reset sendModalTab here — useState(initialTab||'send') on mount
         // already initialises correctly, and overriding it here would fight the
         // tab set by the notification click handler.
@@ -1587,6 +1591,9 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             setError(data.error || data.config_warning || '');
             if (!data.error) {
                 setPreview(data);
+                if (Array.isArray(data.rfq_categories) && data.rfq_categories.length > 0) {
+                    setRfqCategories(data.rfq_categories);
+                }
                 const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
                 // Prefer storeDataRef (always current, no async race) then fall back to localStorage cache
                 let defaultMarkets = null;
@@ -1964,10 +1971,10 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         <i className={`bi ${pdfLoading ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'} me-1`}></i>
                         {pdfLoading ? 'Loading…' : 'PDF'}
                     </button>
-                    {(rfq?.categories || []).length > 0 && (
+                    {rfqCategories.length > 0 && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', width: '100%', marginTop: '4px' }}>
                             <i className="bi bi-tags-fill" style={{ color: '#8b5cf6', fontSize: '12px' }}></i>
-                            {rfq.categories.map((cat, i) => (
+                            {rfqCategories.map((cat, i) => (
                                 <span key={i} style={{ background: '#ede9fe', color: '#5b21b6', fontSize: '11px', fontWeight: 500, padding: '1px 8px', borderRadius: '10px' }}>
                                     {cat}
                                 </span>

@@ -75,6 +75,7 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex }) {
                     supplier={editingSupplier}
                     onClose={() => setEditingSupplier(null)}
                     onSave={saved => { setSupplier({ ...editingSupplier, ...saved }); setEditingSupplier(null); }}
+                    zIndex={21000}
                 />
             )}
 
