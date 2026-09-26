@@ -2235,6 +2235,41 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                 );
                             })()}
 
+                            {/* Select-all-by-market buttons (non-default markets with unselected suppliers) */}
+                            {(() => {
+                                const defaultSet = new Set(
+                                    (storeDataRef.current?.settings?.rfq_forward_markets || []).map(m => toTitleCase(m))
+                                );
+                                const selectCounts = {};
+                                supplierList.forEach(s => {
+                                    if (s.purchase_market && !selectedPhones.has(s.phone) && !sentPhones.has(s.phone)) {
+                                        const mk = toTitleCase(s.purchase_market);
+                                        if (defaultSet.size === 0 || !defaultSet.has(mk)) {
+                                            selectCounts[mk] = (selectCounts[mk] || 0) + 1;
+                                        }
+                                    }
+                                });
+                                const markets = Object.keys(selectCounts).filter(mk => selectCounts[mk] > 0);
+                                if (markets.length === 0 || isSending) return null;
+                                return (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                        {markets.map(mkt => (
+                                            <button key={mkt}
+                                                title={`Select all ${mkt} suppliers`}
+                                                onClick={() => {
+                                                    const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
+                                                    setSelectedPhones(prev => new Set([...prev, ...phones]));
+                                                }}
+                                                style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #86efac', background: '#f0fdf4', color: '#15803d', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <i className="bi bi-check-circle" style={{ fontSize: 10 }}></i>
+                                                Select all: {mkt}
+                                                <span style={{ background: '#86efac', color: '#14532d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{selectCounts[mkt]}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+
                             <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #f0f0f0', borderRadius: 8 }}>
                                 {supplierList.map((s, i) => {
                                     const alreadySent = sentPhones.has(s.phone);
