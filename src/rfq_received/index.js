@@ -3495,7 +3495,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                                                                 borderRadius: '50%', width: 16, height: 16,
                                                                 fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 fontWeight: 700, lineHeight: 1,
-                                                            }}>{rfqUnreadMap[rfq.id] > 99 ? '99+' : rfqUnreadMap[rfq.id]}</span>
+                                                            }}>{rfqUnreadMap[rfq.id]}</span>
                                                         )}
                                                     </Button>
                                                 )}
