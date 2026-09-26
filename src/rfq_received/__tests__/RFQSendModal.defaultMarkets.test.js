@@ -97,3 +97,85 @@ describe('RFQSendModal — default market pre-selection', () => {
         expect(result.map(s => s.phone)).toEqual(['+1', '+2']);
     });
 });
+
+// ── Per-market toggle button logic (Remove All ↔ Select All) ──────────────────
+// Mirrors the unified button section in rfq_received/index.js.
+// Rule: if a market has ANY selected supplier → show Remove All.
+//       if a market has NO selected suppliers  → show Select All.
+// Both never appear simultaneously for the same market.
+
+function computeMarketButtons(supplierList, selectedPhones, sentPhones) {
+    const selectedCount = {};
+    const unselectedCount = {};
+    supplierList.forEach(s => {
+        if (!s.purchase_market || sentPhones.has(s.phone)) return;
+        const mk = s.purchase_market;
+        if (selectedPhones.has(s.phone)) {
+            selectedCount[mk] = (selectedCount[mk] || 0) + 1;
+        } else {
+            unselectedCount[mk] = (unselectedCount[mk] || 0) + 1;
+        }
+    });
+    const allMarkets = new Set([...Object.keys(selectedCount), ...Object.keys(unselectedCount)]);
+    const buttons = {};
+    for (const mk of allMarkets) {
+        buttons[mk] = (selectedCount[mk] || 0) > 0 ? 'remove' : 'select';
+    }
+    return { buttons, selectedCount, unselectedCount };
+}
+
+const mkS = (phone, market) => ({ phone, purchase_market: market });
+
+describe('RFQSendModal — per-market Remove All / Select All mutual exclusivity', () => {
+    it('8. All selected in market → Remove All shown', () => {
+        const suppliers = [mkS('+1', 'Jeddah'), mkS('+2', 'Jeddah')];
+        const { buttons } = computeMarketButtons(suppliers, new Set(['+1', '+2']), new Set());
+        expect(buttons['Jeddah']).toBe('remove');
+    });
+
+    it('9. None selected in market → Select All shown', () => {
+        const suppliers = [mkS('+1', 'Jeddah'), mkS('+2', 'Jeddah')];
+        const { buttons } = computeMarketButtons(suppliers, new Set(), new Set());
+        expect(buttons['Jeddah']).toBe('select');
+    });
+
+    it('10. Partial selection → Remove All shown (any selected = remove)', () => {
+        const suppliers = [mkS('+1', 'Jeddah'), mkS('+2', 'Jeddah')];
+        const { buttons } = computeMarketButtons(suppliers, new Set(['+1']), new Set());
+        expect(buttons['Jeddah']).toBe('remove');
+    });
+
+    it('11. After remove-all click (all deselected) → flips to Select All', () => {
+        const suppliers = [mkS('+1', 'Jeddah'), mkS('+2', 'Jeddah')];
+        // Before: all selected → remove
+        const before = computeMarketButtons(suppliers, new Set(['+1', '+2']), new Set());
+        expect(before.buttons['Jeddah']).toBe('remove');
+        // After remove all: selectedPhones emptied for Jeddah
+        const after = computeMarketButtons(suppliers, new Set(), new Set());
+        expect(after.buttons['Jeddah']).toBe('select');
+    });
+
+    it('12. After select-all click (all selected) → flips to Remove All', () => {
+        const suppliers = [mkS('+1', 'Dubai'), mkS('+2', 'Dubai')];
+        // Before: none selected → select
+        const before = computeMarketButtons(suppliers, new Set(), new Set());
+        expect(before.buttons['Dubai']).toBe('select');
+        // After select all: all selected
+        const after = computeMarketButtons(suppliers, new Set(['+1', '+2']), new Set());
+        expect(after.buttons['Dubai']).toBe('remove');
+    });
+
+    it('13. Two markets: one fully selected (remove), one fully deselected (select)', () => {
+        const suppliers = [mkS('+1', 'Jeddah'), mkS('+2', 'Dubai')];
+        const { buttons } = computeMarketButtons(suppliers, new Set(['+1']), new Set());
+        expect(buttons['Jeddah']).toBe('remove');
+        expect(buttons['Dubai']).toBe('select');
+    });
+
+    it('14. Sent suppliers ignored — do not affect button type', () => {
+        const suppliers = [mkS('+1', 'Riyadh'), mkS('+2', 'Riyadh')];
+        // +1 is sent (ignored), +2 is unselected → Select All
+        const { buttons } = computeMarketButtons(suppliers, new Set(), new Set(['+1']));
+        expect(buttons['Riyadh']).toBe('select');
+    });
+});

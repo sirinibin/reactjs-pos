@@ -2203,64 +2203,59 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                 </Alert>
                             )}
 
-                            {/* Remove-all-by-market buttons */}
+                            {/* Per-market toggle buttons: Remove All (if any selected) OR Select All (if none selected) — never both */}
                             {(() => {
-                                const marketCounts = {};
+                                // Build per-market counts of selected and unselected (non-sent) suppliers
+                                const selectedCount = {};
+                                const unselectedCount = {};
                                 supplierList.forEach(s => {
-                                    if (s.purchase_market && selectedPhones.has(s.phone) && !sentPhones.has(s.phone)) {
-                                        const mk = toTitleCase(s.purchase_market);
-                                        marketCounts[mk] = (marketCounts[mk] || 0) + 1;
+                                    if (!s.purchase_market || sentPhones.has(s.phone)) return;
+                                    const mk = toTitleCase(s.purchase_market);
+                                    if (selectedPhones.has(s.phone)) {
+                                        selectedCount[mk] = (selectedCount[mk] || 0) + 1;
+                                    } else {
+                                        unselectedCount[mk] = (unselectedCount[mk] || 0) + 1;
                                     }
                                 });
-                                const markets = Object.keys(marketCounts).filter(mk => marketCounts[mk] > 0);
-                                if (markets.length === 0 || isSending) return null;
+                                const allMarkets = new Set([...Object.keys(selectedCount), ...Object.keys(unselectedCount)]);
+                                if (allMarkets.size === 0 || isSending) return null;
                                 return (
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                                        {markets.map(mkt => (
-                                            <button key={mkt}
-                                                title={`Remove all ${mkt} suppliers from this list`}
-                                                onClick={() => {
-                                                    const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
-                                                    setRemovedFromList(prev => new Set([...prev, ...phones]));
-                                                    setSelectedPhones(prev => { const next = new Set(prev); phones.forEach(p => next.delete(p)); return next; });
-                                                    setExtraSuppliers(prev => prev.filter(ex => !ex.purchase_market || toTitleCase(ex.purchase_market) !== mkt));
-                                                }}
-                                                style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <i className="bi bi-x-circle" style={{ fontSize: 10 }}></i>
-                                                Remove all: {mkt}
-                                                <span style={{ background: '#fca5a5', color: '#7f1d1d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{marketCounts[mkt]}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
-
-                            {/* Select-all-by-market buttons (any market with unselected suppliers) */}
-                            {(() => {
-                                const selectCounts = {};
-                                supplierList.forEach(s => {
-                                    if (s.purchase_market && !selectedPhones.has(s.phone) && !sentPhones.has(s.phone)) {
-                                        const mk = toTitleCase(s.purchase_market);
-                                        selectCounts[mk] = (selectCounts[mk] || 0) + 1;
-                                    }
-                                });
-                                const markets = Object.keys(selectCounts).filter(mk => selectCounts[mk] > 0);
-                                if (markets.length === 0 || isSending) return null;
-                                return (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                                        {markets.map(mkt => (
-                                            <button key={mkt}
-                                                title={`Select all ${mkt} suppliers`}
-                                                onClick={() => {
-                                                    const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
-                                                    setSelectedPhones(prev => new Set([...prev, ...phones]));
-                                                }}
-                                                style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #86efac', background: '#f0fdf4', color: '#15803d', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <i className="bi bi-check-circle" style={{ fontSize: 10 }}></i>
-                                                Select all: {mkt}
-                                                <span style={{ background: '#86efac', color: '#14532d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{selectCounts[mkt]}</span>
-                                            </button>
-                                        ))}
+                                        {[...allMarkets].sort().map(mkt => {
+                                            const hasSelected = (selectedCount[mkt] || 0) > 0;
+                                            if (hasSelected) {
+                                                // Show Remove All — clicking deselects all, which will flip this to Select All
+                                                return (
+                                                    <button key={mkt}
+                                                        title={`Remove all ${mkt} suppliers from selection`}
+                                                        onClick={() => {
+                                                            const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
+                                                            setRemovedFromList(prev => new Set([...prev, ...phones]));
+                                                            setSelectedPhones(prev => { const next = new Set(prev); phones.forEach(p => next.delete(p)); return next; });
+                                                            setExtraSuppliers(prev => prev.filter(ex => !ex.purchase_market || toTitleCase(ex.purchase_market) !== mkt));
+                                                        }}
+                                                        style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                        <i className="bi bi-x-circle" style={{ fontSize: 10 }}></i>
+                                                        Remove all: {mkt}
+                                                        <span style={{ background: '#fca5a5', color: '#7f1d1d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{selectedCount[mkt]}</span>
+                                                    </button>
+                                                );
+                                            }
+                                            // No selected suppliers in this market — show Select All
+                                            return (
+                                                <button key={mkt}
+                                                    title={`Select all ${mkt} suppliers`}
+                                                    onClick={() => {
+                                                        const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
+                                                        setSelectedPhones(prev => new Set([...prev, ...phones]));
+                                                    }}
+                                                    style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #86efac', background: '#f0fdf4', color: '#15803d', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <i className="bi bi-check-circle" style={{ fontSize: 10 }}></i>
+                                                    Select all: {mkt}
+                                                    <span style={{ background: '#86efac', color: '#14532d', borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 700, marginLeft: 2 }}>{unselectedCount[mkt]}</span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 );
                             })()}
