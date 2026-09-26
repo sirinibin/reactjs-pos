@@ -574,6 +574,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     const [supplierConvUnread, setSupplierConvUnread] = useState(0);
     const [customerConvUnread, setCustomerConvUnread] = useState(0);
     const [customerEmailConvUnread, setCustomerEmailConvUnread] = useState(0);
+    const [supplierEmailConvUnread, setSupplierEmailConvUnread] = useState(0);
     const rfqPreviewRef = useRef(null);
     const rfqEditRef = useRef(null);
     const customerEditRef = useRef(null);
@@ -604,9 +605,9 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
         } catch (_) {}
     }, [storeId, rfq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Trigger supplier resolution when the suppliers tab becomes active
+    // Trigger supplier resolution when the suppliers or supplier_email_conv tab becomes active
     useEffect(() => {
-        if (activeTab === 'suppliers') fetchResolvedSuppliers();
+        if (activeTab === 'suppliers' || activeTab === 'supplier_email_conv') fetchResolvedSuppliers();
     }, [activeTab, fetchResolvedSuppliers]);
 
     if (!rfq) return null;
@@ -781,6 +782,12 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                         <button className={`nav-link ${activeTab === 'customer_email_conv' ? 'active' : ''}`} onClick={() => setActiveTab('customer_email_conv')}>
                             <i className="bi bi-envelope-fill me-1"></i>Customer Email
                             {customerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerEmailConvUnread}</span>}
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${activeTab === 'supplier_email_conv' ? 'active' : ''}`} onClick={() => setActiveTab('supplier_email_conv')}>
+                            <i className="bi bi-building-check me-1"></i>Supplier Email
+                            {supplierEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{supplierEmailConvUnread}</span>}
                         </button>
                     </li>
                 </ul>
@@ -1090,6 +1097,32 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             showEmptyEmails
                         />
                     )}
+                    {activeTab === 'supplier_email_conv' && (() => {
+                        // Collect supplier emails from resolved supplier records + supplier_replies
+                        const seMap = new Map(); // email → label
+                        (rfq.forwarded_to || []).forEach(s => {
+                            const rs = resolvedSuppliers[s.phone] || resolvedSuppliers['+' + s.phone];
+                            if (rs?.email) seMap.set(rs.email.toLowerCase(), rs.name || s.supplier_name || rs.email);
+                        });
+                        (rfq.supplier_replies || []).forEach(r => {
+                            if (r.supplier_email) seMap.set(r.supplier_email.toLowerCase(), r.supplier_name || r.supplier_email);
+                        });
+                        const seEmails = [...seMap.keys()];
+                        const seLabels = Object.fromEntries([...seMap.entries()]);
+                        const seCompose = [...seMap.entries()].map(([email, label]) => ({ email, label }));
+                        return (
+                            <RFQEmailConversationsPanel
+                                storeId={storeId}
+                                emails={seEmails}
+                                emailLabels={seLabels}
+                                composeEmails={seCompose}
+                                chatZIndex={20000}
+                                emptyMessage="No supplier email addresses found. Add emails to the supplier records."
+                                onUnreadCount={setSupplierEmailConvUnread}
+                                showEmptyEmails
+                            />
+                        );
+                    })()}
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -1404,6 +1437,27 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [sendSupplierConvUnread, setSendSupplierConvUnread] = useState(0);
     const [sendCustomerConvUnread, setSendCustomerConvUnread] = useState(0);
     const [sendCustomerEmailConvUnread, setSendCustomerEmailConvUnread] = useState(0);
+    const [sendSupplierEmailConvUnread, setSendSupplierEmailConvUnread] = useState(0);
+    const [resolvedSuppliersByPhone, setResolvedSuppliersByPhone] = useState({});
+
+    // Fetch full supplier records to get email addresses
+    const fetchSendResolvedSuppliers = useCallback(async () => {
+        if (!storeId || !rfq?.forwarded_to?.length || Object.keys(resolvedSuppliersByPhone).length > 0) return;
+        try {
+            const res = await fetch(`/v1/rfq-suppliers?store_id=${storeId}&limit=500`, { headers: { Authorization: token } });
+            const data = await res.json();
+            const map = {};
+            (data.result || []).forEach(s => {
+                if (s.phone) { map[s.phone] = s; if (s.phone.startsWith('+')) map[s.phone.slice(1)] = s; else map['+' + s.phone] = s; }
+                if (s.phone2) { map[s.phone2] = s; if (s.phone2.startsWith('+')) map[s.phone2.slice(1)] = s; else map['+' + s.phone2] = s; }
+            });
+            setResolvedSuppliersByPhone(map);
+        } catch (_) {}
+    }, [storeId, rfq?.id, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (sendModalTab === 'supplier_email_conv') fetchSendResolvedSuppliers();
+    }, [sendModalTab, fetchSendResolvedSuppliers]);
 
     // Sync tab when initialTab changes (e.g. opened from header notification)
     useEffect(() => { if (show && initialTab) setSendModalTab(initialTab); }, [show, initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1882,6 +1936,12 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                             {sendCustomerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendCustomerEmailConvUnread}</span>}
                         </button>
                     </li>
+                    <li className="nav-item">
+                        <button className={`nav-link ${sendModalTab === 'supplier_email_conv' ? 'active' : ''}`} onClick={() => setSendModalTab('supplier_email_conv')}>
+                            <i className="bi bi-building-check me-1"></i>Supplier Email
+                            {sendSupplierEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{sendSupplierEmailConvUnread}</span>}
+                        </button>
+                    </li>
                 </ul>
 
                 <div style={{ padding: '20px 24px' }}>
@@ -1919,7 +1979,31 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         onUnreadCount={setSendCustomerEmailConvUnread}
                         showEmptyEmails
                     />
-                ) : loadingPreview ? (
+                ) : sendModalTab === 'supplier_email_conv' ? (() => {
+                    const seMap = new Map();
+                    (rfq?.forwarded_to || []).forEach(s => {
+                        const rs = resolvedSuppliersByPhone[s.phone] || resolvedSuppliersByPhone['+' + s.phone];
+                        if (rs?.email) seMap.set(rs.email.toLowerCase(), rs.name || s.supplier_name || rs.email);
+                    });
+                    (rfq?.supplier_replies || []).forEach(r => {
+                        if (r.supplier_email) seMap.set(r.supplier_email.toLowerCase(), r.supplier_name || r.supplier_email);
+                    });
+                    const seEmails = [...seMap.keys()];
+                    const seLabels = Object.fromEntries([...seMap.entries()]);
+                    const seCompose = [...seMap.entries()].map(([email, label]) => ({ email, label }));
+                    return (
+                        <RFQEmailConversationsPanel
+                            storeId={storeId}
+                            emails={seEmails}
+                            emailLabels={seLabels}
+                            composeEmails={seCompose}
+                            chatZIndex={20000}
+                            emptyMessage="No supplier email addresses found. Add emails to the supplier records."
+                            onUnreadCount={setSendSupplierEmailConvUnread}
+                            showEmptyEmails
+                        />
+                    );
+                })() : loadingPreview ? (
                     <div className="text-center py-5">
                         <Spinner animation="border" />
                         <div className="text-muted mt-2">Loading preview…</div>

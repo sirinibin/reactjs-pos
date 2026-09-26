@@ -130,6 +130,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [supplierConvUnread, setSupplierConvUnread] = useState(0);
     const [customerConvUnread, setCustomerConvUnread] = useState(0);
     const [customerEmailConvUnread, setCustomerEmailConvUnread] = useState(0);
+    const [supplierEmailConvUnread, setSupplierEmailConvUnread] = useState(0);
     // Linked RFQ data (for conversation tabs) — loaded on demand
     const [linkedRfq, setLinkedRfq] = useState(null);
     // PDF view/download
@@ -486,6 +487,12 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                 {customerEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerEmailConvUnread}</span>}
                             </button>
                         </li>
+                        <li className="nav-item">
+                            <button className={`nav-link py-1 ${activeDetailTab === 'supplier_email_conv' ? 'active' : ''}`} onClick={() => { setActiveDetailTab('supplier_email_conv'); loadLinkedRfq(); }}>
+                                <i className="bi bi-building-check me-1"></i>Supplier Email
+                                {supplierEmailConvUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{supplierEmailConvUnread}</span>}
+                            </button>
+                        </li>
                     </ul>
 
                     {/* Supplier / Customer WhatsApp conversation tabs */}
@@ -523,6 +530,32 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                     showEmptyEmails
                                 />
                             )}
+                            {activeDetailTab === 'supplier_email_conv' && (() => {
+                                // Collect supplier emails: msg.from + supplier_replies from linked RFQ
+                                const seMap = new Map();
+                                if (msg?.from) {
+                                    const fromEmail = msg.from.includes('<') ? msg.from.match(/<(.+)>/)?.[1] : msg.from;
+                                    if (fromEmail) seMap.set(fromEmail.trim().toLowerCase(), msg.from_name || fromEmail.trim());
+                                }
+                                (linkedRfq?.supplier_replies || []).forEach(r => {
+                                    if (r.supplier_email) seMap.set(r.supplier_email.toLowerCase(), r.supplier_name || r.supplier_email);
+                                });
+                                const seEmails = [...seMap.keys()];
+                                const seLabels = Object.fromEntries([...seMap.entries()]);
+                                const seCompose = [...seMap.entries()].map(([email, label]) => ({ email, label }));
+                                return (
+                                    <RFQEmailConversationsPanel
+                                        storeId={storeId}
+                                        emails={seEmails}
+                                        emailLabels={seLabels}
+                                        composeEmails={seCompose}
+                                        chatZIndex={19999}
+                                        emptyMessage="No supplier email address available for this message."
+                                        onUnreadCount={setSupplierEmailConvUnread}
+                                        showEmptyEmails
+                                    />
+                                );
+                            })()}
                         </div>
                     )}
 

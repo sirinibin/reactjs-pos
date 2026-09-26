@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { EmailChatModal } from '../store/ConversationModal';
 
-export default function RFQEmailConversationsPanel({ emails, emailLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, showEmptyEmails }) {
+// composeEmails: array of { email, label } — when provided, "Compose" section shows
+// only those emails as quick-open buttons instead of a free-text input.
+export default function RFQEmailConversationsPanel({ emails, emailLabels, storeId, chatZIndex, emptyMessage, onUnreadCount, showEmptyEmails, composeEmails }) {
     const token = localStorage.getItem('access_token');
     const [threads, setThreads]     = useState(null);
     const [loading, setLoading]     = useState(false);
@@ -142,22 +144,42 @@ export default function RFQEmailConversationsPanel({ emails, emailLabels, storeI
                 </div>
             )}
 
-            {/* Compose to a new / custom email */}
-            <div className="mt-3 d-flex gap-2 align-items-center flex-wrap">
-                <span style={{ fontSize: 12, color: '#6c757d', fontWeight: 600 }}>Compose to new email:</span>
-                <input
-                    type="email"
-                    className="form-control form-control-sm"
-                    placeholder="someone@example.com"
-                    value={newEmail}
-                    onChange={e => setNewEmail(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && openNew()}
-                    style={{ maxWidth: 240, fontSize: 12 }}
-                />
-                <button className="btn btn-sm btn-primary" onClick={openNew} disabled={!newEmail.trim()}>
-                    <i className="bi bi-envelope me-1"></i>Open Chat
-                </button>
-            </div>
+            {/* Compose section */}
+            {composeEmails && composeEmails.length > 0 ? (
+                <div className="mt-3">
+                    <div style={{ fontSize: 12, color: '#6c757d', fontWeight: 600, marginBottom: 6 }}>
+                        <i className="bi bi-envelope-plus me-1"></i>Compose to:
+                    </div>
+                    <div className="d-flex gap-2 flex-wrap">
+                        {composeEmails.map(({ email: ce, label: cl }) => (
+                            <button
+                                key={ce}
+                                className="btn btn-sm btn-outline-primary"
+                                style={{ fontSize: 12 }}
+                                onClick={() => setChatEmail(normalise(ce))}
+                            >
+                                <i className="bi bi-envelope me-1"></i>{cl || ce}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="mt-3 d-flex gap-2 align-items-center flex-wrap">
+                    <span style={{ fontSize: 12, color: '#6c757d', fontWeight: 600 }}>Compose to new email:</span>
+                    <input
+                        type="email"
+                        className="form-control form-control-sm"
+                        placeholder="someone@example.com"
+                        value={newEmail}
+                        onChange={e => setNewEmail(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && openNew()}
+                        style={{ maxWidth: 240, fontSize: 12 }}
+                    />
+                    <button className="btn btn-sm btn-primary" onClick={openNew} disabled={!newEmail.trim()}>
+                        <i className="bi bi-envelope me-1"></i>Open Chat
+                    </button>
+                </div>
+            )}
 
             {chatEmail && (
                 <EmailChatModal

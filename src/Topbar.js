@@ -65,6 +65,7 @@ function Topbar(props) {
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
     const [emailUnreadItems, setEmailUnreadItems] = useState([]);
     const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
+    const emailUnreadCountRef = useRef(null);
     const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
     const [topbarEmailShow, setTopbarEmailShow] = useState(false);
     const [topbarExtractMsg, setTopbarExtractMsg] = useState(null);
@@ -179,6 +180,26 @@ function Topbar(props) {
         };
     }, [fetchWaUnread]);
 
+    const playNewEmailSound = useCallback(() => {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = ctx.currentTime;
+            [880, 1100].forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0, t + i * 0.15);
+                gain.gain.linearRampToValueAtTime(0.12, t + i * 0.15 + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.15 + 0.3);
+                osc.start(t + i * 0.15);
+                osc.stop(t + i * 0.15 + 0.35);
+            });
+        } catch (_) {}
+    }, []);
+
     const fetchEmailUnread = useCallback(() => {
         const storeId = localStorage.getItem('store_id');
         const token = localStorage.getItem('access_token');
@@ -186,11 +207,16 @@ function Topbar(props) {
         fetch(`/v1/email-unread?store_id=${storeId}`, { headers: { Authorization: token } })
             .then(r => r.json())
             .then(data => {
+                const newTotal = data.total_unread || 0;
+                if (emailUnreadCountRef.current !== null && newTotal > emailUnreadCountRef.current) {
+                    playNewEmailSound();
+                }
+                emailUnreadCountRef.current = newTotal;
                 setEmailUnreadItems(data.items || []);
-                setEmailUnreadTotal(data.total_unread || 0);
+                setEmailUnreadTotal(newTotal);
             })
             .catch(() => {});
-    }, []);
+    }, [playNewEmailSound]);
 
     useEffect(() => {
         fetchEmailUnread();
@@ -709,16 +735,18 @@ function Topbar(props) {
                                         )}
                                         {emailUnreadItems.map((item, idx) => {
                                             const handleEmailClick = () => {
-                                                // Optimistic update: remove this item immediately so badge decrements at once
-                                                setEmailUnreadItems(prev => prev.filter((_, i) => i !== idx));
-                                                setEmailUnreadTotal(prev => Math.max(0, prev - 1));
                                                 const storeId = localStorage.getItem('store_id');
                                                 const token = localStorage.getItem('access_token');
                                                 fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
                                                     .then(r => r.json())
                                                     .then(msg => {
-                                                        if (msg?.id) { setTopbarEmailMsg(msg); setTopbarEmailShow(true); }
-                                                        // Sync real count after backend marked it as read
+                                                        if (msg?.id) {
+                                                            // Remove from list only after modal is ready to open
+                                                            setEmailUnreadItems(prev => prev.filter((_, i) => i !== idx));
+                                                            setEmailUnreadTotal(prev => Math.max(0, prev - 1));
+                                                            setTopbarEmailMsg(msg);
+                                                            setTopbarEmailShow(true);
+                                                        }
                                                         fetchEmailUnread();
                                                     })
                                                     .catch(() => { fetchEmailUnread(); });
