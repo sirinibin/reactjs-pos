@@ -7743,7 +7743,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
                                             {t('These markets are pre-selected by default in the "Send RFQ to Suppliers" modal. Users can add or remove markets per-RFQ as needed.')}
                                         </p>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
                                             <input
                                                 type="text"
                                                 className="form-control form-control-sm"
@@ -7775,6 +7775,26 @@ const StoreCreate = forwardRef((props, ref) => {
                                             >
                                                 {t('Add')}
                                             </button>
+                                            {(() => {
+                                                const allMarkets = formData.settings.purchase_markets || [];
+                                                const alreadySet = new Set(formData.settings.rfq_forward_markets || []);
+                                                const toAdd = allMarkets.filter(m => !alreadySet.has(m));
+                                                if (toAdd.length === 0) return null;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-success"
+                                                        title="Add all Purchase Markets to this list"
+                                                        onClick={() => {
+                                                            formData.settings.rfq_forward_markets = [...new Set([...alreadySet, ...allMarkets])];
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-check-all me-1"></i>
+                                                        {t('Select All')} ({toAdd.length})
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                             {(formData.settings.rfq_forward_markets || []).map((market, i) => (

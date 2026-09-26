@@ -209,13 +209,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setShow(true);
         },
 
-        openFromExtraction(data, msgId, msgCode, onCreated) {
+        openFromExtraction(data, msgId, msgCode, onCreated, resolvedVendor, resolvedProducts) {
             onCreatedFromExtractionRef.current = onCreated || null;
-            // Open a blank new purchase — do NOT pre-fill vendor typeahead to avoid
-            // crashes from the missing search_label field on the fake vendor object.
+            // Open a blank new purchase — vendor is set below via setSelectedVendors
+            // to ensure the typeahead gets a proper object with search_label field.
             this.open(null, undefined);
             setTimeout(() => {
-                // Map purchase bill extraction fields to purchase formData fields
                 if (data.invoice_number) {
                     formData.vendor_invoice_no = data.invoice_number;
                 }
@@ -225,20 +224,29 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 if (data.total_amount > 0) {
                     formData.net_total = data.total_amount;
                 }
-                // Put vendor info in remarks so the user has it handy
-                const vendorHint = [
-                    data.vendor_company_name,
-                    data.vendor_vat_no ? 'VAT: ' + data.vendor_vat_no : '',
-                    data.vendor_cr_no ? 'CR: ' + data.vendor_cr_no : '',
-                    data.vendor_mobile || '',
-                ].filter(Boolean).join(' | ');
-                if (vendorHint && !formData.remarks) {
-                    formData.remarks = vendorHint;
+
+                if (resolvedVendor) {
+                    // Full vendor object with search_label — safe to pass to Typeahead
+                    formData.vendor_id = resolvedVendor.id;
+                    setSelectedVendors([resolvedVendor]);
+                } else {
+                    // Fallback: put vendor info in remarks for manual lookup
+                    const vendorHint = [
+                        data.vendor_company_name,
+                        data.vendor_vat_no ? 'VAT: ' + data.vendor_vat_no : '',
+                        data.vendor_cr_no ? 'CR: ' + data.vendor_cr_no : '',
+                        data.vendor_mobile || '',
+                    ].filter(Boolean).join(' | ');
+                    if (vendorHint && !formData.remarks) {
+                        formData.remarks = vendorHint;
+                    }
                 }
                 setFormData({ ...formData });
 
-                if ((data.products || []).length > 0) {
-                    const prods = data.products.map(p => ({
+                // Use pre-resolved products (with real IDs) if available, otherwise map raw extraction data
+                const productSource = (resolvedProducts && resolvedProducts.length > 0)
+                    ? resolvedProducts
+                    : (data.products || []).map(p => ({
                         product_id: "",
                         name: p.name || "",
                         part_number: p.part_no || "",
@@ -252,11 +260,21 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         wholesale_unit_price_with_vat: 0,
                         unit_discount: 0,
                         unit_discount_with_vat: 0,
-                        line_total: 0,
-                        line_total_with_vat: 0,
+                    }));
+
+                if (productSource.length > 0) {
+                    const prods = productSource.map(p => ({
+                        ...p,
+                        line_total: parseFloat(trimTo2Decimals(
+                            (parseFloat(p.purchase_unit_price) || 0) * (parseFloat(p.quantity) || 1)
+                        )),
+                        line_total_with_vat: parseFloat(trimTo2Decimals(
+                            (parseFloat(p.purchase_unit_price_with_vat) || 0) * (parseFloat(p.quantity) || 1)
+                        )),
                     }));
                     selectedProducts = prods;
                     setSelectedProducts([...prods]);
+                    setTimeout(() => reCalculate(), 100);
                 }
             }, 150);
         },
