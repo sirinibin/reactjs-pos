@@ -2207,12 +2207,12 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                             {(() => {
                                 const marketCounts = {};
                                 supplierList.forEach(s => {
-                                    if (s.purchase_market) {
+                                    if (s.purchase_market && selectedPhones.has(s.phone) && !sentPhones.has(s.phone)) {
                                         const mk = toTitleCase(s.purchase_market);
                                         marketCounts[mk] = (marketCounts[mk] || 0) + 1;
                                     }
                                 });
-                                const markets = Object.keys(marketCounts);
+                                const markets = Object.keys(marketCounts).filter(mk => marketCounts[mk] > 0);
                                 if (markets.length === 0 || isSending) return null;
                                 return (
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
