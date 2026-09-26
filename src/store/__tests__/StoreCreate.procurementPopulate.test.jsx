@@ -195,15 +195,7 @@ async function renderWithProcurementTab(storeOverrides = {}) {
 
     await waitFor(() => expect(screen.getByText(/Update Store/)).toBeInTheDocument());
 
-    // Navigate to Procurement tab
-    const procurementBtn = screen.getAllByRole('button').find(
-        b => b.textContent.trim() === 'Procurement'
-    );
-    if (procurementBtn) {
-        fireEvent.click(procurementBtn);
-    }
-
-    // Navigate to Google Settings sub-tab (where Populate features live)
+    // Navigate to Google Settings tab (where Populate features live)
     await waitFor(() => {
         const googleBtn = screen.getAllByRole('button').find(
             b => b.textContent.includes('Google Settings')

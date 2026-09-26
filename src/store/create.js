@@ -1157,7 +1157,6 @@ const StoreCreate = forwardRef((props, ref) => {
     let [selectedCountries, setSelectedCountries] = useState([]);
     const [newMarket, setNewMarket] = React.useState('');
     const [newEmailKeyword, setNewEmailKeyword] = React.useState('');
-    const [procSubTab, setProcSubTab] = React.useState('whatsapp');
     const [newRfqForwardMarket, setNewRfqForwardMarket] = React.useState('');
     const [waCheck, setWaCheck] = React.useState({ status: 'idle', name: '', error: '' }); // idle|checking|valid|invalid
     const [populateVendors, setPopulateVendors] = React.useState({ running: false, percent: 0, message: '', done: false });
@@ -1175,7 +1174,10 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'serial_numbers', label: 'Serial Numbers', icon: 'bi-hash' },
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
-        { id: 'procurement', label: 'Procurement', icon: 'bi-robot' },
+        { id: 'whatsapp_settings', label: 'WhatsApp Settings', icon: 'bi-whatsapp' },
+        { id: 'email_settings', label: 'Email Settings', icon: 'bi-envelope-fill' },
+        { id: 'google_settings', label: 'Google Settings', icon: 'bi-geo-alt-fill' },
+        { id: 'rfq_settings', label: 'RFQ Settings', icon: 'bi-list-check' },
         { id: 'ai_models', label: 'AI Models', icon: 'bi-cpu' },
         { id: 'designs', label: 'Designs', icon: 'bi-palette' },
         { id: 'logo', label: 'Logo', icon: 'bi-image-fill' },
@@ -6963,29 +6965,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div></div>)}
 
-                                {activeTab === 'procurement' && (<div className="pw-tab-wrap">
-                                    {/* Sub-tab navigation */}
-                                    <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', flexWrap: 'wrap', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
-                                        {[
-                                            { id: 'whatsapp', label: 'WhatsApp Settings', icon: 'bi-whatsapp' },
-                                            { id: 'email', label: 'Email Settings', icon: 'bi-envelope-fill' },
-                                            { id: 'google', label: 'Google Settings', icon: 'bi-geo-alt-fill' },
-                                            { id: 'rfq', label: 'RFQ Settings', icon: 'bi-list-check' },
-                                        ].map(sub => (
-                                            <button key={sub.id} type="button" onClick={() => setProcSubTab(sub.id)}
-                                                style={{ padding: '6px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                                                    background: procSubTab === sub.id ? '#2563eb' : '#f1f3f4',
-                                                    color: procSubTab === sub.id ? '#fff' : '#374151',
-                                                    fontWeight: procSubTab === sub.id ? 700 : 400, fontSize: '13px',
-                                                    display: 'flex', alignItems: 'center', gap: '6px' }}
-                                            >
-                                                <i className={`bi ${sub.icon}`}></i>{t(sub.label)}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* ── WhatsApp Settings ── */}
-                                    {procSubTab === 'whatsapp' && (<>
+                                {activeTab === 'whatsapp_settings' && (<div className="pw-tab-wrap">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                         <i className="bi bi-whatsapp" style={{ fontSize: '18px', color: '#25D366' }}></i>
                                         <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('WhatsApp Settings')}</h3>
@@ -7252,10 +7232,130 @@ const StoreCreate = forwardRef((props, ref) => {
                                         />
                                     </div>
 
-                                    </>)}
 
-                                    {/* ── Email Settings ── */}
-                                    {procSubTab === 'email' && (<>
+                                    {/* Intro text for first-contact messages */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>
+                                            {t('rfq_intro_label')}
+                                        </label>
+                                        <textarea
+                                            className="form-control form-control-sm"
+                                            rows={3}
+                                            placeholder={t('rfq_intro_placeholder')}
+                                            value={formData.settings.rfq_intro || ''}
+                                            onChange={e => {
+                                                formData.settings.rfq_intro = e.target.value;
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                        <div className="form-text">{t('rfq_intro_help')}</div>
+                                    </div>
+
+                                    {/* Allowed senders whitelist */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-shield-lock-fill text-primary me-2"></i>
+                                            {t('rfq_allowed_senders_label')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('rfq_allowed_senders_help')}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                                            <input
+                                                type="text"
+                                                className={`form-control form-control-sm${waCheck.status === 'valid' ? ' is-valid' : waCheck.status === 'invalid' ? ' is-invalid' : ''}`}
+                                                placeholder={t('rfq_allowed_senders_placeholder')}
+                                                id="rfq-allowed-sender-input"
+                                                disabled={waCheck.status === 'checking'}
+                                                onChange={() => { if (waCheck.status !== 'idle') setWaCheck({ status: 'idle', name: '', error: '' }); }}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        document.getElementById('rfq-wa-add-btn').click();
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                id="rfq-wa-add-btn"
+                                                type="button"
+                                                className="btn btn-sm btn-outline-primary"
+                                                disabled={waCheck.status === 'checking'}
+                                                onClick={async () => {
+                                                    const input = document.getElementById('rfq-allowed-sender-input');
+                                                    const val = input.value.trim().replace(/\D/g, '');
+                                                    if (!val) return;
+
+                                                    const list = formData.settings.rfq_allowed_senders || [];
+                                                    if (list.includes(val)) { input.value = ''; return; }
+
+                                                    // If already validated as valid, just add
+                                                    if (waCheck.status === 'valid') {
+                                                        formData.settings.rfq_allowed_senders = [...list, val];
+                                                        setFormData({ ...formData });
+                                                        input.value = '';
+                                                        setWaCheck({ status: 'idle', name: '', error: '' });
+                                                        return;
+                                                    }
+
+                                                    // Check WhatsApp
+                                                    setWaCheck({ status: 'checking', name: '', error: '' });
+                                                    try {
+                                                        const res = await fetch(`/v1/rfq-bot/check-whatsapp?store_id=${formData.id}&phone=${encodeURIComponent(val)}`);
+                                                        const data = await res.json();
+                                                        if (data.exists) {
+                                                            setWaCheck({ status: 'valid', name: data.name || '', error: '' });
+                                                        } else if (data.error) {
+                                                            setWaCheck({ status: 'invalid', name: '', error: data.error });
+                                                        } else {
+                                                            setWaCheck({ status: 'invalid', name: '', error: t('wa_number_not_found') });
+                                                        }
+                                                    } catch (err) {
+                                                        setWaCheck({ status: 'invalid', name: '', error: err.message });
+                                                    }
+                                                }}
+                                            >
+                                                {waCheck.status === 'checking'
+                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
+                                                    : waCheck.status === 'valid'
+                                                        ? <><i className="bi bi-check-lg me-1"></i>{t('add_button')}</>
+                                                        : t('wa_check_and_add')}
+                                            </button>
+                                        </div>
+                                        {waCheck.status === 'valid' && (
+                                            <div className="valid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-whatsapp me-1"></i>
+                                                {t('wa_number_valid')}{waCheck.name ? ` — ${waCheck.name}` : ''}.
+                                                {' '}{t('wa_click_add_to_confirm')}
+                                            </div>
+                                        )}
+                                        {waCheck.status === 'invalid' && (
+                                            <div className="invalid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-x-circle me-1"></i>
+                                                {waCheck.error || t('wa_number_not_found')}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                            {(formData.settings.rfq_allowed_senders || []).map((num, i) => (
+                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <i className="bi bi-whatsapp me-1"></i>+{num}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.rfq_allowed_senders = (formData.settings.rfq_allowed_senders || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'email_settings' && (<div className="pw-tab-wrap">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                         <i className="bi bi-envelope-fill" style={{ fontSize: '18px', color: '#0d6efd' }}></i>
                                         <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Email Settings')}</h3>
@@ -7409,10 +7509,190 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    </>)}
+                                </div>)}
 
-                                    {/* ── RFQ Settings ── */}
-                                    {procSubTab === 'rfq' && (<>
+                                {activeTab === 'google_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-geo-alt-fill" style={{ fontSize: '18px', color: '#ea4335' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Google Settings')}</h3>
+                                    </div>
+
+                                    {/* 4. Google Maps API Key */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-geo-alt me-2 text-danger"></i>
+                                            {t('4. Google Maps API Key')} <small className="text-muted fw-normal">({t('finds suppliers by product category')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Used to search Google Maps Places API for suppliers matching the RFQ product categories.')} {t('Enable')} <strong>Places API</strong> {t('in your Google Cloud project. If enough suppliers are already in the RFQ Suppliers database, Google Maps won\'t be queried.')}
+                                        </p>
+                                        <div style={{ maxWidth: '480px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder="Google Maps API Key (AIza...)"
+                                                value={formData.settings.google_maps_api_key || ''}
+                                                onChange={e => { formData.settings.google_maps_api_key = e.target.value; setFormData({ ...formData }); }}
+                                            />
+                                        </div>
+                                        <GoogleMapsTestWidget
+                                            apiKey={formData.settings.google_maps_api_key}
+                                            storeId={formData.id || localStorage.getItem('store_id')}
+                                            purchaseMarkets={formData.settings.purchase_markets}
+                                        />
+                                        <div style={{ maxWidth: '240px', marginTop: '12px' }}>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
+                                                {t('rfq_min_suppliers_label')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="20"
+                                                className="form-control form-control-sm"
+                                                placeholder="2"
+                                                value={formData.settings.rfq_min_suppliers || ''}
+                                                onChange={e => {
+                                                    const v = parseInt(e.target.value, 10);
+                                                    formData.settings.rfq_min_suppliers = isNaN(v) ? 0 : Math.min(20, Math.max(1, v));
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
+                                                {t('rfq_min_suppliers_help')}
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    {/* Auto-populate on purchase create/update */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.settings.enable_rfq_supplier_on_purchase}
+                                                onChange={() => {
+                                                    formData.settings.enable_rfq_supplier_on_purchase = !formData.settings.enable_rfq_supplier_on_purchase;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable Populate RFQ Supplier on Create/Update')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('When enabled, automatically create or update the RFQ supplier record whenever a purchase is created or updated. Requires Google Maps API key and LLM API key.')}
+                                                </div>
+                                            </span>
+                                        </label>
+                                    </div>
+
+
+                                    {/* Populate RFQ Suppliers from Vendors */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-people-fill text-primary me-2"></i>
+                                            {t('Populate RFQ Suppliers from Vendors')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
+                                        </p>
+
+                                        {/* LLM selection for vendor population */}
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_model || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.populate_suppliers_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                                {formData.settings.populate_suppliers_llm_provider && (
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                        {t('API key from AI Models tab will be used')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-primary"
+                                            disabled={populateVendors.running || !formData.id}
+                                            onClick={async () => {
+                                                if (!formData.id) return;
+                                                setPopulateVendors({ running: true, percent: 0, message: 'Starting...', done: false });
+
+                                                // POST to start the background job
+                                                try {
+                                                    await fetch(`/v1/rfq-bot/populate-suppliers?store_id=${formData.id}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                                                    });
+                                                } catch (e) {
+                                                    setPopulateVendors({ running: false, percent: 0, message: 'Failed to start: ' + e.message, done: true });
+                                                    return;
+                                                }
+
+                                                // Listen for progress via SSE
+                                                const es = new EventSource(`/v1/rfq-bot/events?store_id=${formData.id}`);
+                                                es.addEventListener('populate_progress', (e) => {
+                                                    try {
+                                                        const d = JSON.parse(e.data);
+                                                        setPopulateVendors({ running: !d.done, percent: d.percent || 0, message: d.message || '', done: !!d.done });
+                                                        if (d.done) { es.close(); }
+                                                    } catch (_) {}
+                                                });
+                                                es.onerror = () => {
+                                                    es.close();
+                                                    setPopulateVendors(prev => ({ ...prev, running: false, done: true }));
+                                                };
+                                            }}
+                                        >
+                                            {populateVendors.running
+                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Populating...')}</>
+                                                : <><i className="bi bi-arrow-repeat me-2"></i>{t('Populate RFQ Suppliers from Vendors')}</>}
+                                        </button>
+
+                                        {(populateVendors.running || populateVendors.done) && (
+                                            <div style={{ marginTop: '12px' }}>
+                                                <div className="progress" style={{ height: '8px', marginBottom: '6px' }}>
+                                                    <div
+                                                        className={`progress-bar${populateVendors.done ? ' bg-success' : ''}`}
+                                                        role="progressbar"
+                                                        style={{ width: `${populateVendors.percent}%` }}
+                                                    />
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#555' }}>
+                                                    {populateVendors.percent}% — {populateVendors.message}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'rfq_settings' && (<div className="pw-tab-wrap">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                         <i className="bi bi-list-check" style={{ fontSize: '18px', color: '#004ac6' }}></i>
                                         <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('RFQ Settings')}</h3>
@@ -7518,64 +7798,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    </>)}
-
-                                    {/* ── Google Settings ── */}
-                                    {procSubTab === 'google' && (<>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                        <i className="bi bi-geo-alt-fill" style={{ fontSize: '18px', color: '#ea4335' }}></i>
-                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Google Settings')}</h3>
-                                    </div>
-
-                                    {/* 4. Google Maps API Key */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
-                                            <i className="bi bi-geo-alt me-2 text-danger"></i>
-                                            {t('4. Google Maps API Key')} <small className="text-muted fw-normal">({t('finds suppliers by product category')})</small>
-                                        </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('Used to search Google Maps Places API for suppliers matching the RFQ product categories.')} {t('Enable')} <strong>Places API</strong> {t('in your Google Cloud project. If enough suppliers are already in the RFQ Suppliers database, Google Maps won\'t be queried.')}
-                                        </p>
-                                        <div style={{ maxWidth: '480px' }}>
-                                            <input
-                                                type="text"
-                                                className="form-control form-control-sm"
-                                                placeholder="Google Maps API Key (AIza...)"
-                                                value={formData.settings.google_maps_api_key || ''}
-                                                onChange={e => { formData.settings.google_maps_api_key = e.target.value; setFormData({ ...formData }); }}
-                                            />
-                                        </div>
-                                        <GoogleMapsTestWidget
-                                            apiKey={formData.settings.google_maps_api_key}
-                                            storeId={formData.id || localStorage.getItem('store_id')}
-                                            purchaseMarkets={formData.settings.purchase_markets}
-                                        />
-                                        <div style={{ maxWidth: '240px', marginTop: '12px' }}>
-                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
-                                                {t('rfq_min_suppliers_label')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max="20"
-                                                className="form-control form-control-sm"
-                                                placeholder="2"
-                                                value={formData.settings.rfq_min_suppliers || ''}
-                                                onChange={e => {
-                                                    const v = parseInt(e.target.value, 10);
-                                                    formData.settings.rfq_min_suppliers = isNaN(v) ? 0 : Math.min(20, Math.max(1, v));
-                                                    setFormData({ ...formData });
-                                                }}
-                                            />
-                                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
-                                                {t('rfq_min_suppliers_help')}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    </>)}
-
-                                    {procSubTab === 'rfq' && (<>
 
                                     {/* RFQ Creation */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7737,157 +7959,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    </>)}
-
-                                    {procSubTab === 'whatsapp' && (<>
-
-                                    {/* Intro text for first-contact messages */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>
-                                            {t('rfq_intro_label')}
-                                        </label>
-                                        <textarea
-                                            className="form-control form-control-sm"
-                                            rows={3}
-                                            placeholder={t('rfq_intro_placeholder')}
-                                            value={formData.settings.rfq_intro || ''}
-                                            onChange={e => {
-                                                formData.settings.rfq_intro = e.target.value;
-                                                setFormData({ ...formData });
-                                            }}
-                                        />
-                                        <div className="form-text">{t('rfq_intro_help')}</div>
-                                    </div>
-
-                                    {/* Allowed senders whitelist */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
-                                            <i className="bi bi-shield-lock-fill text-primary me-2"></i>
-                                            {t('rfq_allowed_senders_label')}
-                                        </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('rfq_allowed_senders_help')}
-                                        </p>
-                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-                                            <input
-                                                type="text"
-                                                className={`form-control form-control-sm${waCheck.status === 'valid' ? ' is-valid' : waCheck.status === 'invalid' ? ' is-invalid' : ''}`}
-                                                placeholder={t('rfq_allowed_senders_placeholder')}
-                                                id="rfq-allowed-sender-input"
-                                                disabled={waCheck.status === 'checking'}
-                                                onChange={() => { if (waCheck.status !== 'idle') setWaCheck({ status: 'idle', name: '', error: '' }); }}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        document.getElementById('rfq-wa-add-btn').click();
-                                                    }
-                                                }}
-                                            />
-                                            <button
-                                                id="rfq-wa-add-btn"
-                                                type="button"
-                                                className="btn btn-sm btn-outline-primary"
-                                                disabled={waCheck.status === 'checking'}
-                                                onClick={async () => {
-                                                    const input = document.getElementById('rfq-allowed-sender-input');
-                                                    const val = input.value.trim().replace(/\D/g, '');
-                                                    if (!val) return;
-
-                                                    const list = formData.settings.rfq_allowed_senders || [];
-                                                    if (list.includes(val)) { input.value = ''; return; }
-
-                                                    // If already validated as valid, just add
-                                                    if (waCheck.status === 'valid') {
-                                                        formData.settings.rfq_allowed_senders = [...list, val];
-                                                        setFormData({ ...formData });
-                                                        input.value = '';
-                                                        setWaCheck({ status: 'idle', name: '', error: '' });
-                                                        return;
-                                                    }
-
-                                                    // Check WhatsApp
-                                                    setWaCheck({ status: 'checking', name: '', error: '' });
-                                                    try {
-                                                        const res = await fetch(`/v1/rfq-bot/check-whatsapp?store_id=${formData.id}&phone=${encodeURIComponent(val)}`);
-                                                        const data = await res.json();
-                                                        if (data.exists) {
-                                                            setWaCheck({ status: 'valid', name: data.name || '', error: '' });
-                                                        } else if (data.error) {
-                                                            setWaCheck({ status: 'invalid', name: '', error: data.error });
-                                                        } else {
-                                                            setWaCheck({ status: 'invalid', name: '', error: t('wa_number_not_found') });
-                                                        }
-                                                    } catch (err) {
-                                                        setWaCheck({ status: 'invalid', name: '', error: err.message });
-                                                    }
-                                                }}
-                                            >
-                                                {waCheck.status === 'checking'
-                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
-                                                    : waCheck.status === 'valid'
-                                                        ? <><i className="bi bi-check-lg me-1"></i>{t('add_button')}</>
-                                                        : t('wa_check_and_add')}
-                                            </button>
-                                        </div>
-                                        {waCheck.status === 'valid' && (
-                                            <div className="valid-feedback d-block" style={{ fontSize: '12px' }}>
-                                                <i className="bi bi-whatsapp me-1"></i>
-                                                {t('wa_number_valid')}{waCheck.name ? ` — ${waCheck.name}` : ''}.
-                                                {' '}{t('wa_click_add_to_confirm')}
-                                            </div>
-                                        )}
-                                        {waCheck.status === 'invalid' && (
-                                            <div className="invalid-feedback d-block" style={{ fontSize: '12px' }}>
-                                                <i className="bi bi-x-circle me-1"></i>
-                                                {waCheck.error || t('wa_number_not_found')}
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                            {(formData.settings.rfq_allowed_senders || []).map((num, i) => (
-                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <i className="bi bi-whatsapp me-1"></i>+{num}
-                                                    <button
-                                                        type="button"
-                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
-                                                        onClick={() => {
-                                                            formData.settings.rfq_allowed_senders = (formData.settings.rfq_allowed_senders || []).filter((_, j) => j !== i);
-                                                            setFormData({ ...formData });
-                                                        }}
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    </>)}
-
-                                    {procSubTab === 'google' && (<>
-
-                                    {/* Auto-populate on purchase create/update */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!formData.settings.enable_rfq_supplier_on_purchase}
-                                                onChange={() => {
-                                                    formData.settings.enable_rfq_supplier_on_purchase = !formData.settings.enable_rfq_supplier_on_purchase;
-                                                    setFormData({ ...formData });
-                                                }}
-                                            />
-                                            <span style={{ marginLeft: '8px' }}>
-                                                <strong>{t('Enable Populate RFQ Supplier on Create/Update')}</strong>
-                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
-                                                    {t('When enabled, automatically create or update the RFQ supplier record whenever a purchase is created or updated. Requires Google Maps API key and LLM API key.')}
-                                                </div>
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    </>)}
-
-                                    {procSubTab === 'rfq' && (<>
 
                                     {/* ── RFQ Module & Quotation Settings ────────────────── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7980,118 +8051,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    </>)}
-
-                                    {procSubTab === 'google' && (<>
-
-                                    {/* Populate RFQ Suppliers from Vendors */}
-                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <h6 className="fw-semibold mb-3">
-                                            <i className="bi bi-people-fill text-primary me-2"></i>
-                                            {t('Populate RFQ Suppliers from Vendors')}
-                                        </h6>
-                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
-                                            {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
-                                        </p>
-
-                                        {/* LLM selection for vendor population */}
-                                        <div className="row g-2 mb-3">
-                                            <div className="col-md-4">
-                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
-                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
-                                                >
-                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
-                                                    {AI_PROVIDERS.map(p => {
-                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
-                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
-                                                    })}
-                                                </select>
-                                            </div>
-                                            <div className="col-md-8">
-                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={formData.settings.populate_suppliers_llm_model || ''}
-                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
-                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
-                                                >
-                                                    <option value="">{t('— Select model —')}</option>
-                                                    {(formData.settings.populate_suppliers_llm_provider
-                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
-                                                        : []
-                                                    ).map(m => (
-                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
-                                                    ))}
-                                                </select>
-                                                {formData.settings.populate_suppliers_llm_provider && (
-                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
-                                                        {t('API key from AI Models tab will be used')}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-primary"
-                                            disabled={populateVendors.running || !formData.id}
-                                            onClick={async () => {
-                                                if (!formData.id) return;
-                                                setPopulateVendors({ running: true, percent: 0, message: 'Starting...', done: false });
-
-                                                // POST to start the background job
-                                                try {
-                                                    await fetch(`/v1/rfq-bot/populate-suppliers?store_id=${formData.id}`, {
-                                                        method: 'POST',
-                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
-                                                    });
-                                                } catch (e) {
-                                                    setPopulateVendors({ running: false, percent: 0, message: 'Failed to start: ' + e.message, done: true });
-                                                    return;
-                                                }
-
-                                                // Listen for progress via SSE
-                                                const es = new EventSource(`/v1/rfq-bot/events?store_id=${formData.id}`);
-                                                es.addEventListener('populate_progress', (e) => {
-                                                    try {
-                                                        const d = JSON.parse(e.data);
-                                                        setPopulateVendors({ running: !d.done, percent: d.percent || 0, message: d.message || '', done: !!d.done });
-                                                        if (d.done) { es.close(); }
-                                                    } catch (_) {}
-                                                });
-                                                es.onerror = () => {
-                                                    es.close();
-                                                    setPopulateVendors(prev => ({ ...prev, running: false, done: true }));
-                                                };
-                                            }}
-                                        >
-                                            {populateVendors.running
-                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Populating...')}</>
-                                                : <><i className="bi bi-arrow-repeat me-2"></i>{t('Populate RFQ Suppliers from Vendors')}</>}
-                                        </button>
-
-                                        {(populateVendors.running || populateVendors.done) && (
-                                            <div style={{ marginTop: '12px' }}>
-                                                <div className="progress" style={{ height: '8px', marginBottom: '6px' }}>
-                                                    <div
-                                                        className={`progress-bar${populateVendors.done ? ' bg-success' : ''}`}
-                                                        role="progressbar"
-                                                        style={{ width: `${populateVendors.percent}%` }}
-                                                    />
-                                                </div>
-                                                <div style={{ fontSize: '12px', color: '#555' }}>
-                                                    {populateVendors.percent}% — {populateVendors.message}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    </>)}
-
-                                    {procSubTab === 'rfq' && (<>
 
                                     {/* ── Content Extraction Test ─────────────────────────── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -8350,9 +8309,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                         })()}
                                     </div>
 
-                                    </>)}
-
                                 </div>)}
+
 
                                 {activeTab === 'ai_models' && (<div className="pw-tab-wrap">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
