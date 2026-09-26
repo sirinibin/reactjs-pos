@@ -125,16 +125,36 @@ function PurchaseBillExtractModal({ msg, storeId, token, onClose, onCreatePurcha
         <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 10000 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
             <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ maxWidth: '860px' }}>
                 <div className="modal-content">
-                    <div className="modal-header" style={{ background: '#f0fff4', borderBottom: '3px solid #25D366' }}>
-                        <h6 className="modal-title fw-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <i className="bi bi-receipt me-2 text-success"></i>
-                            {t('Extract Purchase Bill Data')}
-                            {msg.purchase_bill_code && (
-                                <span className="badge" style={{ background: '#1a4d2e', color: '#fff', fontSize: '12px', fontWeight: 700 }}>{msg.purchase_bill_code}</span>
+                    <div className="modal-header" style={{ background: '#f0fff4', borderBottom: '3px solid #25D366', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <h6 className="modal-title fw-bold mb-1" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <i className="bi bi-receipt me-1 text-success"></i>
+                                {t('Extract Purchase Bill Data')}
+                                {msg.purchase_bill_code && (
+                                    <span className="badge" style={{ background: '#1a4d2e', color: '#fff', fontSize: '12px', fontWeight: 700 }}>{msg.purchase_bill_code}</span>
+                                )}
+                                <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from}</small>
+                            </h6>
+                            {(msg.attachments || []).filter(a => a.url).length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                                    {msg.attachments.filter(a => a.url).map((att, i) => {
+                                        const isImg = att.content_type && att.content_type.startsWith('image/');
+                                        const isPdf = (att.filename || '').toLowerCase().endsWith('.pdf') || att.content_type === 'application/pdf';
+                                        if (isImg) {
+                                            return <AttachmentThumb key={i} att={att} />;
+                                        }
+                                        return (
+                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fff', border: '1px solid #dee2e6', borderRadius: '6px', padding: '4px 8px', fontSize: '12px' }}>
+                                                <span style={{ fontSize: '16px' }}>{isPdf ? '📄' : '📎'}</span>
+                                                <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename || att.content_type}</span>
+                                                <ViewButton att={att} style={{ padding: '2px 6px', fontSize: '11px' }} zIndex={100010} />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             )}
-                            <small className="text-muted fw-normal" style={{ fontSize: '13px' }}>— {msg.sender_name || msg.from}</small>
-                        </h6>
-                        <button className="btn-close" onClick={onClose} />
+                        </div>
+                        <button className="btn-close" onClick={onClose} style={{ flexShrink: 0 }} />
                     </div>
                     <div className="modal-body">
                         <div className="row g-3 mb-4">
