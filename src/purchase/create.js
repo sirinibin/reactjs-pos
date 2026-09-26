@@ -113,6 +113,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const draftFlashShownRef = useRef(false);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
+    const onCreatedFromExtractionRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         open(id, selectedVendorsValue) {
@@ -208,7 +209,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setShow(true);
         },
 
-        openFromExtraction(data, msgId, msgCode) {
+        openFromExtraction(data, msgId, msgCode, onCreated) {
+            onCreatedFromExtractionRef.current = onCreated || null;
             const vendorName = data.vendor_company_name || "";
             this.open(null, vendorName ? [{ id: "", name: vendorName }] : undefined);
             setTimeout(() => {
@@ -1168,6 +1170,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     if (props.showToastMessage) props.showToastMessage("Purchase updated successfully!", "success");
                 } else {
                     if (props.showToastMessage) props.showToastMessage("Purchase created successfully!", "success");
+                    if (onCreatedFromExtractionRef.current) {
+                        onCreatedFromExtractionRef.current(data.result.id, data.result.code);
+                        onCreatedFromExtractionRef.current = null;
+                    }
                 }
 
                 if (isResumingDraft) {

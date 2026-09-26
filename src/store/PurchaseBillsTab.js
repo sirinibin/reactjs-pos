@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import Resizer from 'react-image-file-resizer';
 import { AI_PROVIDERS, modelsForProvider } from '../utils/aiProviders.js';
 import PurchaseCreate from '../purchase/create.js';
 import { ViewButton } from './FileViewerModal.js';
@@ -287,6 +288,128 @@ function PurchaseBillExtractModal({ msg, storeId, token, onClose, onCreatePurcha
     );
 }
 
+// ── Image compression using react-image-file-resizer ─────────────────────────
+function compressImage(file) {
+    return new Promise(resolve => {
+        Resizer.imageFileResizer(
+            file,
+            1920, 1920,   // max width / height
+            'JPEG',
+            80,           // quality
+            0,            // rotation
+            uri => resolve(uri),
+            'file',
+        );
+    });
+}
+
+async function prepareFileForUpload(file) {
+    const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
+    if (imageTypes.includes(file.type)) {
+        try { return await compressImage(file); } catch (_) { return file; }
+    }
+    return file; // PDFs and others sent as-is
+}
+
+// ── Manual Upload Modal ───────────────────────────────────────────────────────
+function ManualUploadModal({ storeId, token, onClose, onUploaded }) {
+    const { t } = useTranslation();
+    const [files, setFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState({ done: 0, total: 0 });
+    const [error, setError] = useState('');
+    const fileInputRef = useRef(null);
+
+    const handleFiles = async (incoming) => {
+        setFiles(prev => [...prev, ...Array.from(incoming)]);
+    };
+
+    const handleDrop = e => { e.preventDefault(); handleFiles(e.dataTransfer.files); };
+
+    const handleUpload = async () => {
+        if (!files.length) return;
+        setUploading(true);
+        setError('');
+        setProgress({ done: 0, total: files.length });
+        let successCount = 0;
+        for (let i = 0; i < files.length; i++) {
+            try {
+                const prepared = await prepareFileForUpload(files[i]);
+                const fd = new FormData();
+                fd.append('files', prepared, files[i].name);
+                const res = await fetch(`/v1/procurement-messages/upload-purchase-bill?store_id=${storeId}`, {
+                    method: 'POST',
+                    headers: { Authorization: token },
+                    body: fd,
+                });
+                if (res.ok) successCount++;
+            } catch (_) {}
+            setProgress({ done: i + 1, total: files.length });
+        }
+        setUploading(false);
+        if (successCount > 0) { onUploaded(); onClose(); }
+        else setError(t('Upload failed — please try again.'));
+    };
+
+    return (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 10000 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+            <div className="modal-dialog modal-dialog-scrollable" style={{ maxWidth: '520px' }}>
+                <div className="modal-content">
+                    <div className="modal-header" style={{ background: '#f0fff4', borderBottom: '3px solid #25D366' }}>
+                        <h6 className="modal-title fw-bold"><i className="bi bi-cloud-upload me-2 text-success"></i>{t('Upload Purchase Bills')}</h6>
+                        <button className="btn-close" onClick={onClose} />
+                    </div>
+                    <div className="modal-body">
+                        <p style={{ fontSize: '13px', color: '#6c757d', marginBottom: '12px' }}>
+                            {t('Each file becomes a separate purchase bill entry. Images are automatically compressed before upload.')}
+                        </p>
+                        <div
+                            onDrop={handleDrop}
+                            onDragOver={e => e.preventDefault()}
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{ border: '2px dashed #25D366', borderRadius: '10px', padding: '24px', textAlign: 'center', cursor: 'pointer', background: '#f6fbf4', marginBottom: '12px' }}
+                        >
+                            <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#25D366', display: 'block', marginBottom: '8px' }}></i>
+                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1a4d2e' }}>{t('Click or drag files here')}</div>
+                            <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px' }}>{t('Images (JPG, PNG, WEBP) and PDFs')}</div>
+                            <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf" style={{ display: 'none' }}
+                                onChange={e => handleFiles(e.target.files)} />
+                        </div>
+                        {files.length > 0 && (
+                            <div style={{ maxHeight: '180px', overflowY: 'auto', marginBottom: '8px' }}>
+                                {files.map((f, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
+                                        <span style={{ fontSize: '16px' }}>{f.type === 'application/pdf' ? '📄' : '🖼️'}</span>
+                                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                                        <span style={{ color: '#6c757d', flexShrink: 0 }}>{(f.size / 1024).toFixed(0)} KB</span>
+                                        <button className="btn btn-sm p-0" style={{ lineHeight: 1, color: '#dc3545', fontSize: '14px' }}
+                                            onClick={e => { e.stopPropagation(); setFiles(prev => prev.filter((_, j) => j !== i)); }}>×</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {uploading && (
+                            <div style={{ marginBottom: '8px' }}>
+                                <div className="progress" style={{ height: '6px' }}>
+                                    <div className="progress-bar bg-success" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px', textAlign: 'center' }}>{progress.done} / {progress.total} {t('uploaded')}</div>
+                            </div>
+                        )}
+                        {error && <div className="alert alert-danger py-2" style={{ fontSize: '13px' }}>{error}</div>}
+                    </div>
+                    <div className="modal-footer">
+                        <button className="btn btn-success" onClick={handleUpload} disabled={uploading || !files.length}>
+                            {uploading ? <><span className="spinner-border spinner-border-sm me-1" />{t('Uploading…')}</> : <><i className="bi bi-cloud-upload me-1"></i>{t('Upload {n} file(s)').replace('{n}', files.length)}</>}
+                        </button>
+                        <button className="btn btn-secondary" onClick={onClose}>{t('Cancel')}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PurchaseBillsTab({ storeId }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
@@ -296,7 +419,9 @@ export default function PurchaseBillsTab({ storeId }) {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
     const [extractMsg, setExtractMsg] = useState(null);
+    const [showUpload, setShowUpload] = useState(false);
     const purchaseCreateRef = useRef(null);
+    const viewPurchaseRef = useRef(null);
 
     const load = useCallback(async (pg = 1, s = search) => {
         if (!storeId) return;
@@ -304,8 +429,6 @@ export default function PurchaseBillsTab({ storeId }) {
         try {
             const params = new URLSearchParams({
                 store_id: storeId,
-                type: 'whatsapp',
-                direction: 'in',
                 has_attachments: 'true',
                 purchase_bills: 'true',
                 page: pg,
@@ -328,13 +451,39 @@ export default function PurchaseBillsTab({ storeId }) {
         load(1, search);
     };
 
+    const linkPurchaseToMsg = async (msgId, purchaseId, purchaseCode) => {
+        try {
+            await fetch(`/v1/procurement-messages/${msgId}/link-purchase`, {
+                method: 'POST',
+                headers: { Authorization: token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purchase_id: purchaseId, purchase_code: purchaseCode }),
+            });
+            setMessages(prev => prev.map(m =>
+                m.id === msgId ? { ...m, linked_purchase_id: purchaseId, linked_purchase_code: purchaseCode } : m
+            ));
+        } catch (_) {}
+    };
+
     const handleCreatePurchase = (extractedData, msgId, msgCode) => {
         if (purchaseCreateRef.current) {
-            purchaseCreateRef.current.openFromExtraction(extractedData, msgId, msgCode);
+            purchaseCreateRef.current.openFromExtraction(extractedData, msgId, msgCode, (purchaseId, purchaseCode) => {
+                linkPurchaseToMsg(msgId, purchaseId, purchaseCode);
+            });
+        }
+    };
+
+    const handleViewPurchase = (purchaseId) => {
+        if (viewPurchaseRef.current) {
+            viewPurchaseRef.current.open(purchaseId);
         }
     };
 
     const totalPages = Math.ceil(total / PAGE_SIZE);
+
+    const msgSourceIcon = msg => {
+        if (msg.type === 'manual') return <span title="Manual upload"><i className="bi bi-upload" style={{ color: '#0d6efd' }}></i></span>;
+        return <i className="bi bi-whatsapp" style={{ color: '#25D366' }}></i>;
+    };
 
     return (
         <div>
@@ -344,20 +493,25 @@ export default function PurchaseBillsTab({ storeId }) {
                     {t('Purchase Bill images/PDFs')}
                     {total > 0 && <span className="badge bg-secondary" style={{ fontSize: '12px' }}>{total}</span>}
                 </h5>
-                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder={t('Search by sender / phone…')}
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        style={{ width: '220px' }}
-                    />
-                    <button type="submit" className="btn btn-sm btn-outline-secondary"><i className="bi bi-search"></i></button>
-                </form>
-                <button className="btn btn-sm btn-outline-secondary" onClick={() => load(page)} disabled={loading}>
-                    {loading ? <span className="spinner-border spinner-border-sm" /> : <i className="bi bi-arrow-clockwise"></i>}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder={t('Search by sender / phone…')}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            style={{ width: '200px' }}
+                        />
+                        <button type="submit" className="btn btn-sm btn-outline-secondary"><i className="bi bi-search"></i></button>
+                    </form>
+                    <button className="btn btn-sm btn-success" onClick={() => setShowUpload(true)}>
+                        <i className="bi bi-cloud-upload me-1"></i>{t('Upload Bill')}
+                    </button>
+                    <button className="btn btn-sm btn-outline-secondary" onClick={() => load(page)} disabled={loading}>
+                        {loading ? <span className="spinner-border spinner-border-sm" /> : <i className="bi bi-arrow-clockwise"></i>}
+                    </button>
+                </div>
             </div>
 
             {loading && <div className="text-center py-4"><span className="spinner-border text-success" /></div>}
@@ -365,8 +519,13 @@ export default function PurchaseBillsTab({ storeId }) {
             {!loading && messages.length === 0 && (
                 <div className="text-center py-5 text-muted">
                     <i className="bi bi-receipt" style={{ fontSize: '40px', display: 'block', marginBottom: '10px', opacity: 0.3 }}></i>
-                    <div style={{ fontSize: '14px' }}>{t('No purchase bill images/PDFs received yet.')}</div>
-                    <div style={{ fontSize: '12px', marginTop: '6px', color: '#adb5bd' }}>{t('Messages with attachments from Purchase Managers Numbers appear here.')}</div>
+                    <div style={{ fontSize: '14px' }}>{t('No purchase bill images/PDFs yet.')}</div>
+                    <div style={{ fontSize: '12px', marginTop: '6px', color: '#adb5bd' }}>
+                        {t('Upload bills manually or configure Purchase Managers Numbers to receive them via WhatsApp.')}
+                    </div>
+                    <button className="btn btn-success btn-sm mt-3" onClick={() => setShowUpload(true)}>
+                        <i className="bi bi-cloud-upload me-1"></i>{t('Upload Bill')}
+                    </button>
                 </div>
             )}
 
@@ -381,10 +540,15 @@ export default function PurchaseBillsTab({ storeId }) {
                                             {msg.purchase_bill_code}
                                         </span>
                                     )}
-                                    <i className="bi bi-whatsapp" style={{ color: '#25D366' }}></i>
-                                    {msg.sender_name || msg.from}
-                                    {msg.sender_name && msg.from && msg.sender_name !== msg.from && (
+                                    {msgSourceIcon(msg)}
+                                    {msg.type === 'manual' ? t('Manual Upload') : (msg.sender_name || msg.from)}
+                                    {msg.type !== 'manual' && msg.sender_name && msg.from && msg.sender_name !== msg.from && (
                                         <span className="text-muted fw-normal" style={{ fontSize: '12px' }}>{msg.from}</span>
+                                    )}
+                                    {msg.linked_purchase_code && (
+                                        <span className="badge bg-primary" style={{ fontSize: '11px', fontWeight: 600 }}>
+                                            <i className="bi bi-cart-check me-1"></i>{msg.linked_purchase_code}
+                                        </span>
                                     )}
                                 </div>
                                 <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
@@ -392,13 +556,24 @@ export default function PurchaseBillsTab({ storeId }) {
                                     {msg.message_date ? new Date(msg.message_date).toLocaleString() : new Date(msg.created_at).toLocaleString()}
                                 </div>
                             </div>
-                            <button
-                                className="btn btn-sm btn-success"
-                                style={{ fontSize: '12px' }}
-                                onClick={() => setExtractMsg(msg)}
-                            >
-                                <i className="bi bi-magic me-1"></i>{t('Extract')}
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {msg.linked_purchase_id && (
+                                    <button
+                                        className="btn btn-sm btn-outline-primary"
+                                        style={{ fontSize: '12px' }}
+                                        onClick={() => handleViewPurchase(msg.linked_purchase_id)}
+                                    >
+                                        <i className="bi bi-eye me-1"></i>{t('View Purchase')}
+                                    </button>
+                                )}
+                                <button
+                                    className="btn btn-sm btn-success"
+                                    style={{ fontSize: '12px' }}
+                                    onClick={() => setExtractMsg(msg)}
+                                >
+                                    <i className="bi bi-magic me-1"></i>{t('Extract')}
+                                </button>
+                            </div>
                         </div>
 
                         {msg.body_text && (
@@ -426,6 +601,15 @@ export default function PurchaseBillsTab({ storeId }) {
                 </div>
             )}
 
+            {showUpload && (
+                <ManualUploadModal
+                    storeId={storeId}
+                    token={token}
+                    onClose={() => setShowUpload(false)}
+                    onUploaded={() => load(1)}
+                />
+            )}
+
             {extractMsg && (
                 <PurchaseBillExtractModal
                     msg={extractMsg}
@@ -437,6 +621,7 @@ export default function PurchaseBillsTab({ storeId }) {
             )}
 
             <PurchaseCreate ref={purchaseCreateRef} />
+            <PurchaseCreate ref={viewPurchaseRef} />
         </div>
     );
 }
