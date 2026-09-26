@@ -1432,6 +1432,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     const [preview, setPreview]                   = useState(null);
     const [loadingPreview, setLoadingPreview]       = useState(false);
     const [storeData, setStoreData]               = useState(null);
+    const storeDataRef = useRef(null); // always-current storeData for use inside closures
     const [phase, setPhase]                       = useState('preview'); // preview | sending | done
     const [sendModalTab, setSendModalTab]          = useState(initialTab || 'send'); // send | supplier_conv | customer_conv
     const [sendSupplierConvUnread, setSendSupplierConvUnread] = useState(0);
@@ -1511,16 +1512,32 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     useEffect(() => {
         if (!show || !storeId) return;
         fetch(`/v1/store/${storeId}`, { headers: { Authorization: token } })
-            .then(r => r.json()).then(d => setStoreData(d.result || d)).catch(() => {});
+            .then(r => r.json()).then(d => {
+                const sd = d.result || d;
+                storeDataRef.current = sd;
+                setStoreData(sd);
+            }).catch(() => {});
     }, [show, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Pre-select rfq_forward_markets when store data loads
+    // Apply rfq_forward_markets default selection when store data loads.
+    // If preview is already available, immediately re-filter selectedPhones.
+    // If preview arrives later, applyData will use storeDataRef for the filter.
     useEffect(() => {
         if (!storeData) return;
         const defaults = storeData?.settings?.rfq_forward_markets;
-        if (Array.isArray(defaults) && defaults.length > 0) {
-            setMapsMarkets(new Set(defaults));
-        }
+        const defaultSet = (Array.isArray(defaults) && defaults.length > 0) ? new Set(defaults) : null;
+        setMapsMarkets(defaultSet || new Set());
+        if (!defaultSet || !preview) return;
+        // preview already loaded — re-filter the current selection
+        setSelectedPhones(prev => {
+            const knownSuppliers = new Map((preview.suppliers || []).map(s => [s.phone, s]));
+            const next = new Set();
+            for (const phone of prev) {
+                const s = knownSuppliers.get(phone);
+                if (!s || !s.purchase_market || defaultSet.has(s.purchase_market)) next.add(phone);
+            }
+            return next;
+        });
     }, [storeData]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadPdf = async () => {
@@ -1571,13 +1588,19 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             if (!data.error) {
                 setPreview(data);
                 const extraPhones = storedExtras.filter(s => !alreadySent.has(s.phone)).map(s => s.phone);
+                // Prefer storeDataRef (always current, no async race) then fall back to localStorage cache
                 let defaultMarkets = null;
-                try {
-                    const cached = JSON.parse(localStorage.getItem('_store_settings_cache') || '{}');
-                    if (Array.isArray(cached.rfq_forward_markets) && cached.rfq_forward_markets.length > 0) {
-                        defaultMarkets = new Set(cached.rfq_forward_markets);
-                    }
-                } catch (_) {}
+                const refDefaults = storeDataRef.current?.settings?.rfq_forward_markets;
+                if (Array.isArray(refDefaults) && refDefaults.length > 0) {
+                    defaultMarkets = new Set(refDefaults);
+                } else {
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('_store_settings_cache') || '{}');
+                        if (Array.isArray(cached.rfq_forward_markets) && cached.rfq_forward_markets.length > 0) {
+                            defaultMarkets = new Set(cached.rfq_forward_markets);
+                        }
+                    } catch (_) {}
+                }
                 const allSuppliers = (data.suppliers || []).filter(s => !alreadySent.has(s.phone));
                 const filtered = defaultMarkets
                     ? allSuppliers.filter(s => !s.purchase_market || defaultMarkets.has(s.purchase_market))
@@ -1926,6 +1949,26 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                         >
                             <i className="bi bi-person-gear me-1"></i>Edit Customer
                         </button>
+                    )}
+                    <button
+                        className="btn btn-sm btn-outline-danger"
+                        style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal', whiteSpace: 'nowrap' }}
+                        onClick={loadPdf}
+                        disabled={pdfLoading}
+                        title="View / Download RFQ PDF"
+                    >
+                        <i className={`bi ${pdfLoading ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'} me-1`}></i>
+                        {pdfLoading ? 'Loading…' : 'PDF'}
+                    </button>
+                    {(rfq?.categories || []).length > 0 && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', width: '100%', marginTop: '4px' }}>
+                            <i className="bi bi-tags-fill" style={{ color: '#8b5cf6', fontSize: '12px' }}></i>
+                            {rfq.categories.map((cat, i) => (
+                                <span key={i} style={{ background: '#ede9fe', color: '#5b21b6', fontSize: '11px', fontWeight: 500, padding: '1px 8px', borderRadius: '10px' }}>
+                                    {cat}
+                                </span>
+                            ))}
+                        </span>
                     )}
                 </Modal.Title>
             </Modal.Header>

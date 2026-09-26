@@ -379,10 +379,10 @@ describe('27-34. Backend controller source checks', () => {
     it('30. loads email body text from procMsg.BodyText', () => {
         expect(CONTROLLER_SRC).toContain('procMsg.BodyText');
     });
-    it('31. loads saved attachments from disk using att.URL', () => {
+    it('31. loads saved attachments from S3 using att.URL', () => {
         const handlerSection = CONTROLLER_SRC.slice(CONTROLLER_SRC.indexOf('func ExtractProcurementMessageHandler'));
         expect(handlerSection).toContain('att.URL');
-        expect(handlerSection).toContain('os.ReadFile');
+        expect(handlerSection).toContain('downloadAttachment');
     });
     it('32. accepts additional uploaded files from multipart form', () => {
         expect(CONTROLLER_SRC).toContain('r.MultipartForm.File["files"]');
