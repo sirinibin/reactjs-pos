@@ -1157,6 +1157,8 @@ const StoreCreate = forwardRef((props, ref) => {
     let [selectedCountries, setSelectedCountries] = useState([]);
     const [newMarket, setNewMarket] = React.useState('');
     const [newEmailKeyword, setNewEmailKeyword] = React.useState('');
+    const [procSubTab, setProcSubTab] = React.useState('whatsapp');
+    const [newRfqForwardMarket, setNewRfqForwardMarket] = React.useState('');
     const [waCheck, setWaCheck] = React.useState({ status: 'idle', name: '', error: '' }); // idle|checking|valid|invalid
     const [populateVendors, setPopulateVendors] = React.useState({ running: false, percent: 0, message: '', done: false });
     const [extractTest, setExtractTest] = React.useState({
@@ -6962,9 +6964,31 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div></div>)}
 
                                 {activeTab === 'procurement' && (<div className="pw-tab-wrap">
+                                    {/* Sub-tab navigation */}
+                                    <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', flexWrap: 'wrap', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
+                                        {[
+                                            { id: 'whatsapp', label: 'WhatsApp Settings', icon: 'bi-whatsapp' },
+                                            { id: 'email', label: 'Email Settings', icon: 'bi-envelope-fill' },
+                                            { id: 'google', label: 'Google Settings', icon: 'bi-geo-alt-fill' },
+                                            { id: 'rfq', label: 'RFQ Settings', icon: 'bi-list-check' },
+                                        ].map(sub => (
+                                            <button key={sub.id} type="button" onClick={() => setProcSubTab(sub.id)}
+                                                style={{ padding: '6px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                                                    background: procSubTab === sub.id ? '#2563eb' : '#f1f3f4',
+                                                    color: procSubTab === sub.id ? '#fff' : '#374151',
+                                                    fontWeight: procSubTab === sub.id ? 700 : 400, fontSize: '13px',
+                                                    display: 'flex', alignItems: 'center', gap: '6px' }}
+                                            >
+                                                <i className={`bi ${sub.icon}`}></i>{t(sub.label)}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* ── WhatsApp Settings ── */}
+                                    {procSubTab === 'whatsapp' && (<>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                        <i className="bi bi-robot" style={{ fontSize: '18px', color: '#004ac6' }}></i>
-                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('AI-Based WhatsApp RFQ Bot')}</h3>
+                                        <i className="bi bi-whatsapp" style={{ fontSize: '18px', color: '#25D366' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('WhatsApp Settings')}</h3>
                                     </div>
 
                                     {/* Feature toggle */}
@@ -7228,6 +7252,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                         />
                                     </div>
 
+                                    </>)}
+
+                                    {/* ── Email Settings ── */}
+                                    {procSubTab === 'email' && (<>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-envelope-fill" style={{ fontSize: '18px', color: '#0d6efd' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Email Settings')}</h3>
+                                    </div>
+
                                     {/* 1b. Email Source (receives RFQs) */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
@@ -7376,6 +7409,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                    </>)}
+
+                                    {/* ── RFQ Settings ── */}
+                                    {procSubTab === 'rfq' && (<>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-list-check" style={{ fontSize: '18px', color: '#004ac6' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('RFQ Settings')}</h3>
+                                    </div>
+
                                     {/* 2. LLM Model for auto-processing — provider/model selected from AI Models tab */}
                                     <div className="pw-card" style={{ marginBottom: '16px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
                                         <h6 className="fw-semibold mb-2">
@@ -7476,6 +7518,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                    </>)}
+
+                                    {/* ── Google Settings ── */}
+                                    {procSubTab === 'google' && (<>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-geo-alt-fill" style={{ fontSize: '18px', color: '#ea4335' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Google Settings')}</h3>
+                                    </div>
+
                                     {/* 4. Google Maps API Key */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <h6 className="fw-semibold mb-3">
@@ -7521,6 +7572,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    </>)}
+
+                                    {procSubTab === 'rfq' && (<>
 
                                     {/* RFQ Creation */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7617,6 +7672,74 @@ const StoreCreate = forwardRef((props, ref) => {
                                             ))}
                                         </div>
                                     </div>
+
+                                    {/* Default Purchase Markets to Forward RFQs */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-send text-success me-2"></i>
+                                            {t('Default Purchase Markets to Forward RFQs')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('These markets are pre-selected by default in the "Send RFQ to Suppliers" modal. Users can add or remove markets per-RFQ as needed.')}
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder={t('purchase_markets_placeholder')}
+                                                style={{ maxWidth: '240px' }}
+                                                value={newRfqForwardMarket}
+                                                onChange={e => setNewRfqForwardMarket(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (newRfqForwardMarket.trim()) {
+                                                            formData.settings.rfq_forward_markets = [...(formData.settings.rfq_forward_markets || []), newRfqForwardMarket.trim()];
+                                                            setFormData({ ...formData });
+                                                            setNewRfqForwardMarket('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary"
+                                                onClick={() => {
+                                                    if (newRfqForwardMarket.trim()) {
+                                                        formData.settings.rfq_forward_markets = [...(formData.settings.rfq_forward_markets || []), newRfqForwardMarket.trim()];
+                                                        setFormData({ ...formData });
+                                                        setNewRfqForwardMarket('');
+                                                    }
+                                                }}
+                                            >
+                                                {t('Add')}
+                                            </button>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {(formData.settings.rfq_forward_markets || []).map((market, i) => (
+                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    {market}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.rfq_forward_markets = (formData.settings.rfq_forward_markets || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {(formData.settings.rfq_forward_markets || []).length === 0 && (
+                                                <span style={{ fontSize: '12px', color: '#9aa0a6', fontStyle: 'italic' }}>{t('No defaults set — all purchase markets will be available for selection')}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    </>)}
+
+                                    {procSubTab === 'whatsapp' && (<>
 
                                     {/* Intro text for first-contact messages */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7738,6 +7861,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
+                                    </>)}
+
+                                    {procSubTab === 'google' && (<>
+
                                     {/* Auto-populate on purchase create/update */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
@@ -7757,6 +7884,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </span>
                                         </label>
                                     </div>
+
+                                    </>)}
+
+                                    {procSubTab === 'rfq' && (<>
 
                                     {/* ── RFQ Module & Quotation Settings ────────────────── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7848,6 +7979,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    </>)}
+
+                                    {procSubTab === 'google' && (<>
 
                                     {/* Populate RFQ Suppliers from Vendors */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -7953,6 +8088,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                         )}
                                     </div>
+
+                                    </>)}
+
+                                    {procSubTab === 'rfq' && (<>
 
                                     {/* ── Content Extraction Test ─────────────────────────── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
@@ -8210,6 +8349,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                             );
                                         })()}
                                     </div>
+
+                                    </>)}
 
                                 </div>)}
 

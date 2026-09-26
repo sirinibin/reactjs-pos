@@ -1514,6 +1514,15 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
             .then(r => r.json()).then(d => setStoreData(d.result || d)).catch(() => {});
     }, [show, storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Pre-select rfq_forward_markets when store data loads
+    useEffect(() => {
+        if (!storeData) return;
+        const defaults = storeData?.settings?.rfq_forward_markets;
+        if (Array.isArray(defaults) && defaults.length > 0) {
+            setMapsMarkets(new Set(defaults));
+        }
+    }, [storeData]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const loadPdf = async () => {
         if (pdfUrl) { setShowPdfModal(true); return; }
         setPdfLoading(true);

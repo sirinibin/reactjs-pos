@@ -203,6 +203,14 @@ async function renderWithProcurementTab(storeOverrides = {}) {
         fireEvent.click(procurementBtn);
     }
 
+    // Navigate to Google Settings sub-tab (where Populate features live)
+    await waitFor(() => {
+        const googleBtn = screen.getAllByRole('button').find(
+            b => b.textContent.includes('Google Settings')
+        );
+        if (googleBtn) fireEvent.click(googleBtn);
+    });
+
     return { ref, store };
 }
 
