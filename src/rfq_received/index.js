@@ -1631,7 +1631,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                 setExtraSuppliers(prev => [...prev, ...toAdd.map(s => ({ id: s.id, name: s.name, phone: s.phone, purchase_market: s.purchase_market, categories: s.categories }))]);
                 setSelectedPhones(prev => { const next = new Set(prev); toAdd.forEach(s => next.add(s.phone)); return next; });
             }
-            setMapsResult({ found: data.found, added: toAdd.length });
+            setMapsResult({ found: data.found, added: toAdd.length, fromDb: data.from_db ?? 0, fromMaps: data.from_maps ?? 0 });
         } catch (e) {
             setMapsResult({ error: e.message });
         } finally {
@@ -2265,8 +2265,16 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                                                 ? <span style={{ fontWeight: 600, fontSize: 13 }}>{mapsResult.error}</span>
                                                                 : isOk
                                                                     ? <>
-                                                                        <div style={{ fontWeight: 700, fontSize: 13 }}>{mapsResult.found} supplier{mapsResult.found !== 1 ? 's' : ''} found on Google Maps</div>
-                                                                        <div style={{ fontSize: 12, marginTop: 2 }}>{mapsResult.added} new added · {mapsResult.found - mapsResult.added} already in list</div>
+                                                                        <div style={{ fontWeight: 700, fontSize: 13 }}>{mapsResult.found} supplier{mapsResult.found !== 1 ? 's' : ''} found</div>
+                                                                        <div style={{ fontSize: 12, marginTop: 2 }}>
+                                                                            <span style={{ background: '#dbeafe', color: '#1d4ed8', borderRadius: 4, padding: '1px 6px', marginRight: 6 }}>
+                                                                                <i className="bi bi-database-fill me-1"></i>{mapsResult.fromDb ?? 0} from our DB
+                                                                            </span>
+                                                                            <span style={{ background: '#dcfce7', color: '#166534', borderRadius: 4, padding: '1px 6px', marginRight: 6 }}>
+                                                                                <i className="bi bi-map-fill me-1"></i>{mapsResult.fromMaps ?? 0} from Google Maps
+                                                                            </span>
+                                                                            <span style={{ color: '#6c757d' }}>{mapsResult.added} new added to list</span>
+                                                                        </div>
                                                                       </>
                                                                     : <span style={{ fontWeight: 600, fontSize: 13 }}>No suppliers found. Try different markets or ensure product categories are identified.</span>}
                                                         </div>
