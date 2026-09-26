@@ -211,8 +211,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         openFromExtraction(data, msgId, msgCode, onCreated, resolvedVendor, resolvedProducts) {
             onCreatedFromExtractionRef.current = onCreated || null;
-            // Open a blank new purchase — vendor is set below via setSelectedVendors
-            // to ensure the typeahead gets a proper object with search_label field.
             this.open(null, undefined);
             setTimeout(() => {
                 if (data.invoice_number) {
@@ -226,11 +224,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 }
 
                 if (resolvedVendor) {
-                    // Full vendor object with search_label — safe to pass to Typeahead
                     formData.vendor_id = resolvedVendor.id;
-                    setSelectedVendors([resolvedVendor]);
+                    // Always set search_label explicitly — newly created vendors may not have it indexed yet
+                    // (RFQ form always uses search_label: c.name for the same reason)
+                    setSelectedVendors([{ ...resolvedVendor, search_label: resolvedVendor.search_label || resolvedVendor.name || '' }]);
                 } else {
-                    // Fallback: put vendor info in remarks for manual lookup
                     const vendorHint = [
                         data.vendor_company_name,
                         data.vendor_vat_no ? 'VAT: ' + data.vendor_vat_no : '',
@@ -243,7 +241,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 }
                 setFormData({ ...formData });
 
-                // Use pre-resolved products (with real IDs) if available, otherwise map raw extraction data
                 const productSource = (resolvedProducts && resolvedProducts.length > 0)
                     ? resolvedProducts
                     : (data.products || []).map(p => ({
@@ -263,17 +260,42 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     }));
 
                 if (productSource.length > 0) {
-                    const prods = productSource.map(p => ({
-                        ...p,
-                        line_total: parseFloat(trimTo2Decimals(
-                            (parseFloat(p.purchase_unit_price) || 0) * (parseFloat(p.quantity) || 1)
-                        )),
-                        line_total_with_vat: parseFloat(trimTo2Decimals(
-                            (parseFloat(p.purchase_unit_price_with_vat) || 0) * (parseFloat(p.quantity) || 1)
-                        )),
-                    }));
-                    selectedProducts = prods;
-                    setSelectedProducts([...prods]);
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    for (const rp of productSource) {
+                        if (rp.product_id && rp.product_stores) {
+                            // Use addProduct — same code path as manual Typeahead selection
+                            addProduct({ ...rp, id: rp.product_id });
+                            // Fix quantity and price (addProduct hardcodes qty=1 and reads from product_stores)
+                            const idx = getProductIndex(rp.product_id);
+                            if (idx >= 0) {
+                                selectedProducts[idx].quantity = parseFloat(rp.quantity) || 1;
+                                if (parseFloat(rp.purchase_unit_price) > 0) {
+                                    selectedProducts[idx].purchase_unit_price = parseFloat(rp.purchase_unit_price);
+                                }
+                            }
+                        } else {
+                            selectedProducts.push({
+                                product_id: rp.product_id || '',
+                                name: rp.name || '',
+                                part_number: rp.part_number || '',
+                                quantity: parseFloat(rp.quantity) || 1,
+                                unit: rp.unit || '',
+                                purchase_unit_price: parseFloat(rp.purchase_unit_price) || 0,
+                                purchase_unit_price_with_vat: parseFloat(rp.purchase_unit_price_with_vat) || 0,
+                                retail_unit_price: parseFloat(rp.retail_unit_price) || 0,
+                                retail_unit_price_with_vat: parseFloat(rp.retail_unit_price_with_vat) || 0,
+                                wholesale_unit_price: parseFloat(rp.wholesale_unit_price) || 0,
+                                wholesale_unit_price_with_vat: parseFloat(rp.wholesale_unit_price_with_vat) || 0,
+                                unit_discount: 0,
+                                unit_discount_with_vat: 0,
+                                unit_discount_percent: 0,
+                                unit_discount_percent_vat: 0,
+                                stock: 0,
+                            });
+                        }
+                    }
+                    setSelectedProducts([...selectedProducts]);
                     setTimeout(() => reCalculate(), 100);
                 }
             }, 150);

@@ -1893,14 +1893,18 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     // Unsent = in selectedPhones, in supplierList, and NOT already sent
     const unsentSelected = [...selectedPhones].filter(p => supplierList.some(s => s.phone === p) && !sentPhones.has(p));
     const canSend = phase === 'preview' && !loadingPreview && !error && unsentSelected.length > 0;
-    // Progress
+    // Historical progress (already-sent / total)
     const totalCount = supplierList.length;
     const sentCount  = supplierList.filter(s => sentPhones.has(s.phone)).length;
     const progressPct = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
+    // Real-time sending progress (processed out of current batch)
+    const sendingTotal = Object.keys(supplierStatuses).length;
+    const sendingDone  = Object.values(supplierStatuses).filter(s => s !== 'pending').length;
+    const sendingPct   = isSending && sendingTotal > 0 ? Math.round((sendingDone / sendingTotal) * 100) : null;
 
     return (
         <>
-        <Modal show={show} onHide={onHide} size="xl" centered scrollable className="rfq-send-modal-wrap">
+        <Modal show={show} onHide={onHide} size="xl" centered scrollable className="rfq-send-modal-wrap" enforceFocus={false}>
             <Modal.Header closeButton style={{ background: '#f8f9fa' }}>
                 <Modal.Title style={{ fontSize: 17, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <i className="bi bi-whatsapp me-2" style={{ color: '#25d366' }}></i>
@@ -2066,7 +2070,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                             showEmptyEmails
                         />
                     );
-                })() : loadingPreview ? (
+                })() : (loadingPreview || (!preview && !error)) ? (
                     <div className="text-center py-5">
                         <Spinner animation="border" />
                         <div className="text-muted mt-2">Loading preview…</div>
@@ -2176,9 +2180,9 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
 
                         {/* ── Right: Recipient list ── */}
                         <div className="col-md-6">
-                            {/* Progress bar */}
+                            {/* Historical progress bar */}
                             {totalCount > 0 && (
-                                <div style={{ marginBottom: 10 }}>
+                                <div style={{ marginBottom: isSending ? 6 : 10 }}>
                                     <div className="d-flex justify-content-between align-items-center mb-1">
                                         <span className="text-muted fw-semibold" style={{ fontSize: 11, letterSpacing: 1 }}>RECIPIENTS</span>
                                         <span style={{ fontSize: 12, color: sentCount === totalCount && totalCount > 0 ? '#198754' : '#555' }}>
@@ -2190,6 +2194,23 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                     </div>
                                     <div style={{ height: 6, background: '#e9ecef', borderRadius: 4, overflow: 'hidden' }}>
                                         <div style={{ width: `${progressPct}%`, height: '100%', background: sentCount === totalCount ? '#198754' : '#0d6efd', borderRadius: 4, transition: 'width 0.5s ease' }}></div>
+                                    </div>
+                                </div>
+                            )}
+                            {/* Real-time sending progress — visible only while actively sending */}
+                            {sendingPct !== null && (
+                                <div style={{ marginBottom: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <span style={{ fontSize: 11, fontWeight: 600, color: '#15803d', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                            <Spinner animation="border" size="sm" style={{ width: 10, height: 10, borderWidth: 2, color: '#15803d' }} />
+                                            Sending…
+                                        </span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: '#15803d' }}>
+                                            {sendingDone} / {sendingTotal} &nbsp;({sendingPct}%)
+                                        </span>
+                                    </div>
+                                    <div style={{ height: 8, background: '#dcfce7', borderRadius: 4, overflow: 'hidden' }}>
+                                        <div style={{ width: `${sendingPct}%`, height: '100%', background: '#16a34a', borderRadius: 4, transition: 'width 0.4s ease' }}></div>
                                     </div>
                                 </div>
                             )}
@@ -2652,7 +2673,9 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
 
         {/* PDF viewer modal */}
         {showPdfModal && pdfUrl && (
-            <Modal show onHide={() => setShowPdfModal(false)} size="xl" centered>
+            <Modal show onHide={() => setShowPdfModal(false)} size="xl" centered
+                style={{ zIndex: 1070 }}
+                enforceFocus={false}>
                 <Modal.Header closeButton>
                     <Modal.Title style={{ fontSize: 16 }}>
                         <i className="bi bi-file-earmark-pdf me-2 text-danger"></i>

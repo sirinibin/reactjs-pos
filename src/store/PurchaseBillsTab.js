@@ -651,7 +651,21 @@ export default function PurchaseBillsTab({ storeId }) {
                         const cData = await cRes.json();
                         if (cData.result?.id) productId = cData.result.id;
                     }
-                    if (productId) productObj.product_id = productId;
+                    if (productId) {
+                        productObj.product_id = productId;
+                        productObj.id = productId;
+                        // Build product_stores so addProduct() in purchase/create.js can read prices
+                        productObj.product_stores = {
+                            [storeId]: {
+                                purchase_unit_price: productObj.purchase_unit_price,
+                                purchase_unit_price_with_vat: productObj.purchase_unit_price_with_vat,
+                                retail_unit_price: productObj.retail_unit_price,
+                                retail_unit_price_with_vat: productObj.retail_unit_price_with_vat,
+                                wholesale_unit_price: productObj.wholesale_unit_price,
+                                wholesale_unit_price_with_vat: productObj.wholesale_unit_price_with_vat,
+                            }
+                        };
+                    }
                 } catch (_) {}
             }
             resolvedProducts.push(productObj);
