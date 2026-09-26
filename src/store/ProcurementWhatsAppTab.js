@@ -1654,7 +1654,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
                                         <span style={{ fontSize: '12px', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
-                                            {th.last_message_text || t('(media)')}
+                                            {th.last_message_text || (th.last_message_type && th.last_message_type !== 'text' ? `${msgTypeIcon(th.last_message_type)} ${th.last_message_type}` : t('(media)'))}
                                         </span>
                                         {th.unread_count > 0 && (
                                             <span className="badge rounded-pill" style={{ background: WA_GREEN, fontSize: '10px', minWidth: '20px' }}>{th.unread_count}</span>
@@ -2301,7 +2301,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                         ? msg.body_text
                                         : msg.wa_message_type === 'contacts'
                                             ? <span className="text-muted"><i className="bi bi-person-vcard me-1"></i>{t('Contact card')}</span>
-                                            : <span className="text-muted">{t('(media)')}</span>}
+                                            : <span className="text-muted">{msgTypeIcon(msg.wa_message_type)} {msg.wa_message_type || t('(media)')}</span>}
                                 </td>
                                 <td style={{ verticalAlign: 'middle' }}>
                                     <span title={msg.wa_message_type}>{msgTypeIcon(msg.wa_message_type)} {msg.wa_message_type || 'text'}</span>
