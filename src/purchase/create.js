@@ -211,17 +211,29 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         openFromExtraction(data, msgId, msgCode, onCreated) {
             onCreatedFromExtractionRef.current = onCreated || null;
-            const vendorName = data.vendor_company_name || "";
-            this.open(null, vendorName ? [{ id: "", name: vendorName }] : undefined);
+            // Open a blank new purchase — do NOT pre-fill vendor typeahead to avoid
+            // crashes from the missing search_label field on the fake vendor object.
+            this.open(null, undefined);
             setTimeout(() => {
-                if (data.vendor_invoice_no) {
-                    formData.vendor_invoice_no = data.vendor_invoice_no;
+                // Map purchase bill extraction fields to purchase formData fields
+                if (data.invoice_number) {
+                    formData.vendor_invoice_no = data.invoice_number;
                 }
                 if (data.vendor_national_address) {
                     formData.vendor_national_address = data.vendor_national_address;
                 }
                 if (data.total_amount > 0) {
                     formData.net_total = data.total_amount;
+                }
+                // Put vendor info in remarks so the user has it handy
+                const vendorHint = [
+                    data.vendor_company_name,
+                    data.vendor_vat_no ? 'VAT: ' + data.vendor_vat_no : '',
+                    data.vendor_cr_no ? 'CR: ' + data.vendor_cr_no : '',
+                    data.vendor_mobile || '',
+                ].filter(Boolean).join(' | ');
+                if (vendorHint && !formData.remarks) {
+                    formData.remarks = vendorHint;
                 }
                 setFormData({ ...formData });
 
