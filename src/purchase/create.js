@@ -227,35 +227,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                 setFormData({ ...formData });
 
-                // Show placeholder products immediately from extraction data
-                const mappedProducts = (data.products || []).map(p => ({
-                    product_id: '',
-                    name: p.name || '',
-                    part_number: p.part_no || '',
-                    quantity: parseFloat(p.quantity) || 1,
-                    unit: p.unit || '',
-                    purchase_unit_price: parseFloat(p.unit_price) || 0,
-                    purchase_unit_price_with_vat: 0,
-                    retail_unit_price: 0,
-                    retail_unit_price_with_vat: 0,
-                    wholesale_unit_price: 0,
-                    wholesale_unit_price_with_vat: 0,
-                    unit_discount: 0,
-                    unit_discount_with_vat: 0,
-                    unit_discount_percent: 0,
-                    unit_discount_percent_vat: 0,
-                    stock: 0,
-                }));
-                if (mappedProducts.length > 0) {
-                    selectedProducts = [...mappedProducts];
-                    setSelectedProducts([...mappedProducts]);
-                    setTimeout(() => reCalculate(), 100);
-                }
-
-                // Async: find/create vendor in DB, then replace placeholder with real record
+                // Async: find/create vendor in DB — replicates Typeahead onChange logic
                 autoFindOrCreateVendor(data);
 
-                // Async: find/create products in DB, then update product rows with IDs and prices
+                // Async: find/create each product in DB — then add via addProduct (same as user selection)
                 if (data.products && data.products.length > 0) {
                     autoSyncProductsFromExtraction(data.products);
                 }
@@ -2338,12 +2313,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
         } catch (_) {}
     }
 
-    // ── Auto product find/create (called from openFromExtraction, mirrors RFQ autoSyncProducts) ──
+    // ── Auto product find/create (called from openFromExtraction) ──
+    // Replicates user selection: fetch/create each product in DB, then add via addProduct.
     async function autoSyncProductsFromExtraction(extractionProducts) {
         if (!extractionProducts.length) return;
         const stId = localStorage.getItem('store_id');
         const at = localStorage.getItem('access_token');
-        const priceFields = [
+        const selectFields = [
             'id', 'name', 'part_number', 'unit', 'item_code', 'prefix_part_number', 'allow_duplicates',
             `product_stores.${stId}.purchase_unit_price`,
             `product_stores.${stId}.purchase_unit_price_with_vat`,
@@ -2351,58 +2327,80 @@ const PurchaseCreate = forwardRef((props, ref) => {
             `product_stores.${stId}.retail_unit_price_with_vat`,
             `product_stores.${stId}.wholesale_unit_price`,
             `product_stores.${stId}.wholesale_unit_price_with_vat`,
+            `product_stores.${stId}.stock`,
         ].join(',');
 
-        for (let i = 0; i < extractionProducts.length; i++) {
-            const ep = extractionProducts[i];
-            if (!ep.part_no) continue;
+        // Phase 1: resolve all products from DB (find or create)
+        const resolved = [];
+        for (const ep of extractionProducts) {
             try {
-                const extractionPrice = parseFloat(ep.unit_price) || 0;
-                let productId = null;
-                let foundProduct = null;
-
-                const r = await fetch(
-                    `/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${priceFields}`,
-                    { headers: { Authorization: at } }
-                );
-                const d = await r.json();
-                if ((d.result || []).length > 0) {
-                    foundProduct = d.result[0];
-                    productId = foundProduct.id;
-                } else {
-                    const body = { store_id: stId, name: ep.name || ep.part_no };
+                let dbProduct = null;
+                if (ep.part_no) {
+                    const r = await fetch(
+                        `/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`,
+                        { headers: { Authorization: at } }
+                    );
+                    const d = await r.json();
+                    if ((d.result || []).length > 0) dbProduct = d.result[0];
+                }
+                if (!dbProduct) {
+                    // Create new product
+                    const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
                     if (ep.part_no) body.part_number = ep.part_no;
                     if (ep.unit) body.unit = ep.unit;
-                    const cr = await fetch('/v1/product', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                    const cd = await cr.json();
-                    if (cd.result?.id) { productId = cd.result.id; foundProduct = cd.result; }
-                }
-                if (productId) {
-                    const sp = foundProduct?.product_stores?.[stId] || {};
-                    setSelectedProducts(prev => {
-                        const updated = [...prev];
-                        if (i < updated.length) {
-                            updated[i] = {
-                                ...updated[i],
-                                product_id: productId,
-                                name: foundProduct?.name || updated[i].name,
-                                part_number: foundProduct?.part_number || updated[i].part_number,
-                                unit: foundProduct?.unit || updated[i].unit,
-                                purchase_unit_price: extractionPrice || sp.purchase_unit_price || 0,
-                                purchase_unit_price_with_vat: sp.purchase_unit_price_with_vat || 0,
-                                retail_unit_price: sp.retail_unit_price || 0,
-                                retail_unit_price_with_vat: sp.retail_unit_price_with_vat || 0,
-                                wholesale_unit_price: sp.wholesale_unit_price || 0,
-                                wholesale_unit_price_with_vat: sp.wholesale_unit_price_with_vat || 0,
-                            };
-                            selectedProducts = updated;
-                        }
-                        return updated;
+                    const cr = await fetch('/v1/product', {
+                        method: 'POST',
+                        headers: { Authorization: at, 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body),
                     });
+                    const cd = await cr.json();
+                    if (cd.result?.id) {
+                        // Fetch created product with prices
+                        const pr = await fetch(
+                            `/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`,
+                            { headers: { Authorization: at } }
+                        );
+                        const pd = await pr.json();
+                        dbProduct = pd.result || cd.result;
+                    }
                 }
+                if (dbProduct?.id) resolved.push({ ep, dbProduct });
             } catch (_) {}
         }
-        setTimeout(() => reCalculate(), 100);
+
+        // Phase 2: add all products synchronously using addProduct pattern
+        // (same structure addProduct builds, so edit-product button works correctly)
+        for (const { ep, dbProduct } of resolved) {
+            const sp = dbProduct.product_stores?.[stId] || {};
+            const extractionPrice = parseFloat(ep.unit_price) || 0;
+            const extractionQty = parseFloat(ep.quantity) || 1;
+            selectedProducts.push({
+                product_id: dbProduct.id,
+                code: dbProduct.item_code || '',
+                prefix_part_number: dbProduct.prefix_part_number || '',
+                part_number: dbProduct.part_number || '',
+                name: dbProduct.name || ep.name || '',
+                quantity: extractionQty,
+                product_stores: dbProduct.product_stores || {},
+                purchase_unit_price: sp.purchase_unit_price || extractionPrice,
+                purchase_unit_price_with_vat: sp.purchase_unit_price_with_vat || 0,
+                retail_unit_price: sp.retail_unit_price || 0,
+                retail_unit_price_with_vat: sp.retail_unit_price_with_vat || 0,
+                wholesale_unit_price: sp.wholesale_unit_price || 0,
+                wholesale_unit_price_with_vat: sp.wholesale_unit_price_with_vat || 0,
+                unit: dbProduct.unit || ep.unit || '',
+                unit_discount: 0,
+                unit_discount_with_vat: 0,
+                unit_discount_percent: 0,
+                unit_discount_percent_vat: 0,
+                stock: sp.stock || 0,
+            });
+        }
+
+        if (resolved.length > 0) {
+            setSelectedProducts([...selectedProducts]);
+            setTimeout(() => reCalculate(), 100);
+        }
     }
 
     const UserCreateFormRef = useRef();

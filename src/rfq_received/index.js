@@ -2264,12 +2264,10 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                                                 // Show Remove All — clicking deselects all, which will flip this to Select All
                                                 return (
                                                     <button key={mkt}
-                                                        title={`Remove all ${mkt} suppliers from selection`}
+                                                        title={`Deselect all ${mkt} suppliers (they stay in the list)`}
                                                         onClick={() => {
                                                             const phones = supplierList.filter(s => s.purchase_market && toTitleCase(s.purchase_market) === mkt && !sentPhones.has(s.phone)).map(s => s.phone);
-                                                            setRemovedFromList(prev => new Set([...prev, ...phones]));
                                                             setSelectedPhones(prev => { const next = new Set(prev); phones.forEach(p => next.delete(p)); return next; });
-                                                            setExtraSuppliers(prev => prev.filter(ex => !ex.purchase_market || toTitleCase(ex.purchase_market) !== mkt));
                                                         }}
                                                         style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <i className="bi bi-x-circle" style={{ fontSize: 10 }}></i>
