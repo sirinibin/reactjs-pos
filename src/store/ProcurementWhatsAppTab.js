@@ -111,11 +111,15 @@ const AttachmentPreview = ({ att }) => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <span style={{ color: '#6c757d', fontSize: '11px' }}>{att.size > 0 ? `${(att.size / 1024).toFixed(1)} KB` : ''}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                    <ViewButton att={att} />
-                    {att.url && (
-                        <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '3px 12px', fontSize: '11px' }}>
-                            <i className="bi bi-download me-1"></i>Download
-                        </a>
+                    {att.url ? (
+                        <>
+                            <ViewButton att={att} />
+                            <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '3px 12px', fontSize: '11px' }}>
+                                <i className="bi bi-download me-1"></i>Download
+                            </a>
+                        </>
+                    ) : (
+                        <span style={{ color: '#adb5bd', fontSize: '11px', fontStyle: 'italic' }}>File not saved (download failed)</span>
                     )}
                 </div>
             </div>
@@ -2048,7 +2052,9 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                                         })()
                                                         : msg.body_text
                                                             ? <span style={{ whiteSpace: 'pre-line' }}>{msg.body_text}</span>
-                                                            : <span style={{ color: '#999', fontStyle: 'italic' }}>{t('(media)')}</span>}
+                                                            : !(msg.attachments?.length)
+                                                                ? <span style={{ color: '#999', fontStyle: 'italic' }}>{msgTypeIcon(msg.wa_message_type)} {msg.wa_message_type || t('(media)')}</span>
+                                                                : null}
                                                     </div>
                                                     {/* Inline translation result */}
                                                     {trans?.text && (
