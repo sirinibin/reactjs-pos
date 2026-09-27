@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { EmailChatModal } from '../store/ConversationModal';
+import { EmailChatModal } from '../store/EmailChatModal';
 
 // composeEmails: array of { email, label } — when provided, "Compose" section shows
 // only those emails as quick-open buttons instead of a free-text input.

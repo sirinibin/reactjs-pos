@@ -828,7 +828,7 @@ function QuotationIndex(props) {
     try {
       const token = localStorage.getItem('access_token');
       const storeId = localStorage.getItem('store_id');
-      const res = await fetch(`/v1/quotation/${quotationId}/order/${orderId}?store_id=${storeId}`, {
+      const res = await fetch(`/v1/quotation/${quotationId}/order/${orderId}?search[store_id]=${storeId}`, {
         method: 'DELETE',
         headers: { Authorization: token },
       });
