@@ -651,7 +651,7 @@ function Topbar(props) {
                                         </Dropdown.ItemText>
                                         {waUnreadItems.map((item, idx) => {
                                             const tab = item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv';
-                                            const payload = { rfqId: item.rfq_id, tab, phone: item.phone };
+                                            const payload = { rfqId: item.rfq_id, tab, phone: item.phone, contactName: item.contact_name };
                                             const handleClick = () => {
                                                 if (window.location.pathname === '/dashboard/rfq-received') {
                                                     eventEmitter.emit('openRfqConversations', payload);

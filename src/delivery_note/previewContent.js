@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { storeLogoUrl } from '../utils/imageUtils';
+import { storeLogoUrl, resolveImageUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 
 

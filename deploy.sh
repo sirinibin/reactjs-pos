@@ -37,6 +37,22 @@ check_uncommitted() {
     echo "==> Working tree is clean."
 }
 
+# ─── eslint error check ───────────────────────────────────────────────────────
+
+check_eslint() {
+    echo ""
+    echo "==> Checking for ESLint errors (src, excluding __tests__)..."
+    cd "$FRONTEND_DIR"
+    # --quiet: report errors only (not warnings). Exit code 1 if any errors found.
+    # Exclude test files — they have pre-existing import/first issues that don't affect production.
+    if ! npx eslint src --ext .js,.jsx --quiet --ignore-pattern 'src/**/__tests__/**' --ignore-pattern 'src/**/*.test.js' --ignore-pattern 'src/**/*.test.jsx' 2>&1; then
+        echo ""
+        echo "==> ABORTED: ESLint errors found. Fix all errors before deploying."
+        exit 1
+    fi
+    echo "==> No ESLint errors."
+}
+
 # ─── tests ────────────────────────────────────────────────────────────────────
 
 run_tests() {
@@ -128,16 +144,19 @@ check_uncommitted
 
 case "$TARGET" in
     test)
+        check_eslint
         run_tests
         build "$TEST_API_URL"
         deploy_to "$FRONTEND_DIR/build" "$TEST_DEST" "test (https://startpos-test.startuptech.uk)"
         ;;
     production|prod)
+        check_eslint
         run_tests
         build "$PROD_API_URL"
         deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.startuptech.uk)"
         ;;
     both)
+        check_eslint
         run_tests
         echo ""
         echo "==> Building test and production in parallel..."

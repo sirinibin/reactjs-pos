@@ -29,7 +29,7 @@ function usePhoneContact(show, phone, storeId) {
     return { supplier, setSupplier, customer };
 }
 
-export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex }) {
+export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex, contactName }) {
     const { supplier, setSupplier, customer } = usePhoneContact(show, phone, storeId);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const customerEditRef = useRef(null);
@@ -40,25 +40,28 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex }) {
                 <Modal.Header closeButton style={{ padding: '8px 16px', background: '#f6fdf6', borderBottom: '1px solid #d4edda' }}>
                     <Modal.Title style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <i className="bi bi-whatsapp text-success" style={{ fontSize: '18px' }}></i>
-                        {phone}
+                        {/* Name: prefer resolved supplier/customer name, fall back to contactName from notification */}
+                        <span style={{ fontWeight: 700 }}>{supplier?.name || customer?.name || contactName || ''}</span>
+                        <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 400 }}>{phone}</span>
+                        {/* Small icon-only edit buttons */}
                         {supplier && (
                             <button
-                                className="btn btn-sm btn-outline-primary"
-                                style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal' }}
+                                className="btn btn-sm btn-outline-secondary"
+                                style={{ fontSize: '11px', padding: '2px 6px', lineHeight: 1 }}
                                 onClick={() => setEditingSupplier(supplier)}
                                 title="Edit RFQ Supplier"
                             >
-                                <i className="bi bi-building-gear me-1"></i>{supplier.name}
+                                <i className="bi bi-pencil-square"></i>
                             </button>
                         )}
                         {customer && (
                             <button
-                                className="btn btn-sm btn-outline-info"
-                                style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 'normal' }}
+                                className="btn btn-sm btn-outline-secondary"
+                                style={{ fontSize: '11px', padding: '2px 6px', lineHeight: 1 }}
                                 onClick={() => customerEditRef.current?.open(customer.id)}
                                 title="Edit Customer"
                             >
-                                <i className="bi bi-person-gear me-1"></i>{customer.name}
+                                <i className="bi bi-pencil-square"></i>
                             </button>
                         )}
                     </Modal.Title>

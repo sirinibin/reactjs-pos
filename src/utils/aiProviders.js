@@ -231,18 +231,56 @@ export const AI_PROVIDERS = [
     {
         value: 'nvidia', label: 'NVIDIA NIM', hint: 'nvapi-...', apiKeyField: 'extraction_nvidia_api_key',
         supportsFiles: false,
-        description: 'NVIDIA inference microservices · text-only · 1,000 free credits',
+        description: 'NVIDIA inference microservices · text-only · many free models available',
         docsUrl: 'https://build.nvidia.com',
-        keyInstructions: 'Includes 1,000 free credits on signup. Create account at build.nvidia.com, then generate an API key in the settings.',
+        keyInstructions: 'Many models are completely free. Create account at build.nvidia.com, then generate an API key in settings.',
         models: [
-            { value: 'meta/llama-3.1-8b-instruct',                  label: 'Llama 3.1 8B',             costPer1M: 0.20, costLabel: '$0.20/1M' },
-            { value: 'meta/llama-3.3-70b-instruct',                  label: 'Llama 3.3 70B',            costPer1M: 0.20, costLabel: '$0.20/1M' },
-            { value: 'nv-mistralai/mistral-nemo-12b-instruct',        label: 'Mistral Nemo 12B',         costPer1M: 0.20, costLabel: '$0.20/1M' },
-            { value: 'mistralai/mistral-7b-instruct-v0.3',            label: 'Mistral 7B v0.3',          costPer1M: 0.20, costLabel: '$0.20/1M' },
-            { value: 'meta/llama-3.1-70b-instruct',                  label: 'Llama 3.1 70B',            costPer1M: 0.35, costLabel: '$0.35/1M' },
-            { value: 'nvidia/llama-3.1-nemotron-70b-instruct',        label: 'Nemotron 70B',             costPer1M: 0.35, costLabel: '$0.35/1M' },
-            { value: 'nvidia/llama-3.1-nemotron-ultra-253b-v1',       label: 'Nemotron Ultra 253B',      costPer1M: 0.80, costLabel: '$0.80/1M' },
-            { value: 'meta/llama-3.1-405b-instruct',                  label: 'Llama 3.1 405B',           costPer1M: 5.00, costLabel: '$5.00/1M' },
+            // ── Meta Llama (Free) ──────────────────────────────────────────────
+            { value: 'meta/llama-3.2-1b-instruct',                    label: 'Llama 3.2 1B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'meta/llama-3.2-3b-instruct',                    label: 'Llama 3.2 3B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'meta/llama-3.1-8b-instruct',                    label: 'Llama 3.1 8B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'meta/llama-3.1-70b-instruct',                   label: 'Llama 3.1 70B',             costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'meta/llama-3.1-405b-instruct',                  label: 'Llama 3.1 405B',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'meta/llama-3.3-70b-instruct',                   label: 'Llama 3.3 70B',             costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── NVIDIA Nemotron (Free) ─────────────────────────────────────────
+            { value: 'nvidia/llama-3.1-nemotron-nano-8b-v1',          label: 'Nemotron Nano 8B',          costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nvidia/llama-3.1-nemotron-70b-instruct',        label: 'Nemotron 70B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nvidia/llama-3.3-nemotron-super-49b-v1',        label: 'Nemotron Super 49B',        costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nvidia/llama-3.1-nemotron-ultra-253b-v1',       label: 'Nemotron Ultra 253B',       costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nvidia/llama3-chatqa-1.5-8b',                   label: 'ChatQA 1.5 8B',             costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nvidia/llama3-chatqa-1.5-70b',                  label: 'ChatQA 1.5 70B',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── Mistral (Free) ────────────────────────────────────────────────
+            { value: 'mistralai/mistral-7b-instruct-v0.3',            label: 'Mistral 7B v0.3',           costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'nv-mistralai/mistral-nemo-12b-instruct',        label: 'Mistral Nemo 12B',          costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'mistralai/mixtral-8x7b-instruct-v0.1',          label: 'Mixtral 8x7B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'mistralai/mixtral-8x22b-instruct-v0.1',         label: 'Mixtral 8x22B',             costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'mistralai/mamba-codestral-7b-v0.1',             label: 'Mamba Codestral 7B',        costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── Google Gemma (Free) ───────────────────────────────────────────
+            { value: 'google/gemma-7b',                               label: 'Gemma 7B',                  costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'google/gemma-2-9b-it',                          label: 'Gemma 2 9B',                costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'google/gemma-2-27b-it',                         label: 'Gemma 2 27B',               costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── Microsoft Phi (Free) ──────────────────────────────────────────
+            { value: 'microsoft/phi-3-mini-4k-instruct',              label: 'Phi-3 Mini 4K',             costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'microsoft/phi-3-small-8k-instruct',             label: 'Phi-3 Small 8K',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'microsoft/phi-3-medium-4k-instruct',            label: 'Phi-3 Medium 4K',           costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'microsoft/phi-3.5-mini-instruct',               label: 'Phi-3.5 Mini',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── Qwen (Free) ───────────────────────────────────────────────────
+            { value: 'qwen/qwen2-7b-instruct',                        label: 'Qwen2 7B',                  costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'qwen/qwen2.5-7b-instruct',                      label: 'Qwen 2.5 7B',               costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'qwen/qwen2.5-72b-instruct',                     label: 'Qwen 2.5 72B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── DeepSeek (Free) ───────────────────────────────────────────────
+            { value: 'deepseek-ai/deepseek-r1',                       label: 'DeepSeek R1',               costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'deepseek-ai/deepseek-r1-distill-llama-70b',     label: 'DeepSeek R1 Distill 70B',   costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'deepseek-ai/deepseek-r1-distill-qwen-32b',      label: 'DeepSeek R1 Distill 32B',   costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── IBM Granite (Free) ────────────────────────────────────────────
+            { value: 'ibm/granite-3.0-8b-instruct',                   label: 'Granite 3.0 8B',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'ibm/granite-3.1-8b-instruct',                   label: 'Granite 3.1 8B',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'ibm/granite-3.2-8b-instruct',                   label: 'Granite 3.2 8B',            costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            // ── Other Free Models ─────────────────────────────────────────────
+            { value: 'upstage/solar-10.7b-instruct',                  label: 'Solar 10.7B',               costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'snowflake/arctic-instruct',                     label: 'Snowflake Arctic',           costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'baichuan-inc/baichuan2-7b-chat',                label: 'Baichuan2 7B',              costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
+            { value: 'writer/palmyra-med-70b-32k',                    label: 'Palmyra Med 70B',           costPer1M: 0.00, costLabel: 'Free', badge: 'Free' },
         ],
     },
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { unstable_batchedUpdates } from 'react-dom';
 import eventEmitter from '../utils/eventEmitter';
 import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
@@ -1176,6 +1175,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
         <WhatsAppChatModal
             show={chatModal.type === 'whatsapp'}
             phone={chatModal.value}
+            contactName={chatModal.contactName}
             storeId={storeId}
             onHide={() => setChatModal({ type: null, value: '' })}
         />
@@ -3187,6 +3187,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     const [rfqUnreadMap, setRfqUnreadMap] = useState({}); // { rfqId → total unread count }
     const [pendingSendTab, setPendingSendTab] = useState(null);
     const [pendingSendPhone, setPendingSendPhone] = useState(null);
+    const [chatModal, setChatModal] = useState({ type: null, value: '', contactName: '' });
     const rfqCreateRef = useRef(null);
     const quotationCreateRef = useRef(null);
     const selectedIdRef = useRef(null);
@@ -3260,10 +3261,10 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     // Handle openRfqConversations events (emitted by Topbar header WhatsApp badge)
     // and pendingRfqConversations stored in sessionStorage when navigating from another page
     useEffect(() => {
-        const handleOpen = ({ phone }) => {
+        const handleOpen = ({ phone, contactName }) => {
             if (!phone) return;
             // Open a standalone WhatsApp chat window directly — no RFQ fetch, no send modal
-            setChatModal({ type: 'whatsapp', value: phone.replace(/^\+/, '') });
+            setChatModal({ type: 'whatsapp', value: phone.replace(/^\+/, ''), contactName: contactName || '' });
         };
         eventEmitter.on('openRfqConversations', handleOpen);
 
@@ -3786,6 +3787,15 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 onClose={() => setEmailDetailShow(false)}
                 storeId={storeId}
                 token={token}
+            />
+
+            {/* Standalone WhatsApp chat — opened from notification badge */}
+            <WhatsAppChatModal
+                show={chatModal.type === 'whatsapp'}
+                phone={chatModal.value}
+                contactName={chatModal.contactName}
+                storeId={storeId}
+                onHide={() => setChatModal({ type: null, value: '', contactName: '' })}
             />
         </div>
     );
