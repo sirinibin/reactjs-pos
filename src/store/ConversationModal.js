@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from 'react-bootstrap';
 import ProcurementWhatsAppTab from './ProcurementWhatsAppTab';
-import RFQEmailConversationsPanel from '../rfq_received/RFQEmailConversationsPanel';
 import { SupplierForm } from '../rfq_suppliers/index';
 import CustomerCreate from '../customer/create';
 export { EmailChatModal } from './EmailChatModal';
@@ -34,26 +33,13 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex, contac
     const { supplier, setSupplier, customer } = usePhoneContact(show, phone, storeId);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const customerEditRef = useRef(null);
-    const [activeTab, setActiveTab] = useState('whatsapp');
-    const [customerEmailUnread, setCustomerEmailUnread] = useState(0);
-    const [supplierEmailUnread, setSupplierEmailUnread] = useState(0);
-
-    // Reset to WhatsApp tab when a new conversation opens
-    useEffect(() => {
-        if (show) setActiveTab('whatsapp');
-    }, [show, phone]);
 
     const displayName = supplier?.name || customer?.name || contactName || '';
-
-    const customerEmails = customer?.email ? [customer.email] : [];
-    const customerEmailLabels = customer?.email ? { [customer.email]: customer.name || customer.email } : {};
-
-    const supplierEmails = supplier?.email ? [supplier.email] : [];
-    const supplierEmailLabels = supplier?.email ? { [supplier.email]: supplier.name || supplier.email } : {};
+    const modalZIndex = zIndex || 1060;
 
     return (
         <>
-            <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: zIndex || 1060 }}>
+            <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: modalZIndex }}>
                 <Modal.Header closeButton style={{ padding: '8px 16px', background: '#f6fdf6', borderBottom: '1px solid #d4edda' }}>
                     <Modal.Title style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <i className="bi bi-whatsapp text-success" style={{ fontSize: '18px' }}></i>
@@ -66,7 +52,7 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex, contac
                                 onClick={() => setEditingSupplier(supplier)}
                                 title="Edit RFQ Supplier"
                             >
-                                <i className="bi bi-pencil-square"></i>
+                                <i className="bi bi-pencil-square"></i> Edit Supplier
                             </button>
                         )}
                         {customer && (
@@ -76,78 +62,14 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex, contac
                                 onClick={() => customerEditRef.current?.open(customer.id)}
                                 title="Edit Customer"
                             >
-                                <i className="bi bi-pencil-square"></i>
+                                <i className="bi bi-pencil-square"></i> Edit Customer
                             </button>
                         )}
                     </Modal.Title>
                 </Modal.Header>
-
-                {/* Subtabs */}
-                <ul className="nav nav-tabs px-3 pt-1" style={{ borderBottom: '1px solid #dee2e6', background: '#f8f9fa', fontSize: 13, marginBottom: 0 }}>
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link py-1 ${activeTab === 'whatsapp' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('whatsapp')}
-                        >
-                            <i className="bi bi-person-lines-fill me-1"></i>Customer Conversations
-                        </button>
-                    </li>
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link py-1 ${activeTab === 'customer_email' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('customer_email')}
-                        >
-                            <i className="bi bi-envelope-fill me-1"></i>Customer Email
-                            {customerEmailUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{customerEmailUnread}</span>}
-                        </button>
-                    </li>
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link py-1 ${activeTab === 'supplier_email' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('supplier_email')}
-                        >
-                            <i className="bi bi-building-check me-1"></i>Supplier Email
-                            {supplierEmailUnread > 0 && <span className="badge bg-danger ms-1 rounded-pill" style={{ fontSize: 9 }}>{supplierEmailUnread}</span>}
-                        </button>
-                    </li>
-                </ul>
-
                 <Modal.Body style={{ padding: 0, overflowY: 'auto', maxHeight: '85vh' }}>
-                    {/* Customer Conversations (WhatsApp) */}
-                    <div style={{ display: activeTab === 'whatsapp' ? undefined : 'none', height: '100%' }}>
-                        {show && phone && (
-                            <ProcurementWhatsAppTab key={phone} storeId={storeId} initialPhone={phone} />
-                        )}
-                    </div>
-
-                    {/* Customer Email */}
-                    {activeTab === 'customer_email' && (
-                        <div style={{ padding: '12px' }}>
-                            <RFQEmailConversationsPanel
-                                storeId={storeId}
-                                emails={customerEmails}
-                                emailLabels={customerEmailLabels}
-                                chatZIndex={(zIndex || 1060) + 100}
-                                emptyMessage="No email address found for this customer."
-                                onUnreadCount={setCustomerEmailUnread}
-                                showEmptyEmails
-                            />
-                        </div>
-                    )}
-
-                    {/* Supplier Email */}
-                    {activeTab === 'supplier_email' && (
-                        <div style={{ padding: '12px' }}>
-                            <RFQEmailConversationsPanel
-                                storeId={storeId}
-                                emails={supplierEmails}
-                                emailLabels={supplierEmailLabels}
-                                chatZIndex={(zIndex || 1060) + 100}
-                                emptyMessage="No email address found for this supplier."
-                                onUnreadCount={setSupplierEmailUnread}
-                                showEmptyEmails
-                            />
-                        </div>
+                    {show && phone && (
+                        <ProcurementWhatsAppTab key={phone} storeId={storeId} initialPhone={phone} zIndexBase={modalZIndex} />
                     )}
                 </Modal.Body>
             </Modal>
@@ -157,11 +79,41 @@ export function WhatsAppChatModal({ show, phone, storeId, onHide, zIndex, contac
                     supplier={editingSupplier}
                     onClose={() => setEditingSupplier(null)}
                     onSave={saved => { setSupplier({ ...editingSupplier, ...saved }); setEditingSupplier(null); }}
-                    zIndex={21000}
+                    zIndex={modalZIndex + 10000}
                 />
             )}
 
             <CustomerCreate ref={customerEditRef} />
         </>
+    );
+}
+
+// WhatsAppNotificationModal — opened from the app header notification.
+// Shows the full ProcurementWhatsAppTab (sidebar + chat) in a modal.
+// The clicked conversation loads first; sidebar loads other conversations after.
+// WhatsAppNotificationModal — opens procurement-whatsapp in a modal.
+// Loads the clicked phone's messages first, then loads the full sidebar.
+export function WhatsAppNotificationModal({ show, storeId, phone, onHide }) {
+    const MODAL_Z = 15000;
+    return (
+        <Modal show={show} onHide={onHide} size="xl" fullscreen="lg-down" backdrop="static" style={{ zIndex: MODAL_Z }}>
+            <Modal.Header closeButton style={{ padding: '8px 16px', background: '#f6fdf6', borderBottom: '1px solid #d4edda' }}>
+                <Modal.Title style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="bi bi-whatsapp text-success" style={{ fontSize: '18px' }}></i>
+                    WhatsApp Conversations
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ padding: 0, overflowY: 'hidden', height: '85vh' }}>
+                {show && (
+                    <ProcurementWhatsAppTab
+                        key={phone || 'wa-modal'}
+                        storeId={storeId}
+                        initialPhone={phone}
+                        showSidebar
+                        zIndexBase={MODAL_Z}
+                    />
+                )}
+            </Modal.Body>
+        </Modal>
     );
 }

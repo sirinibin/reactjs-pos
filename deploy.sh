@@ -22,6 +22,29 @@ PROD_DEST="/home/ubuntu/reactjs-pos/build/"
 
 FRONTEND_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# ─── guard: test-deploy window (10 pm – 6 am Saudi time) ─────────────────────
+
+# Returns 0 (allowed) if the current Saudi time is within the test-deploy window.
+# Saudi Arabia is UTC+3; allowed hours are 22, 23, 0, 1, 2, 3, 4, 5.
+test_window_open() {
+    local sa_hour
+    sa_hour=$(TZ='Asia/Riyadh' date +%H)
+    # Strip leading zero so the comparison is numeric, not octal.
+    sa_hour=$((10#$sa_hour))
+    [ "$sa_hour" -ge 22 ] || [ "$sa_hour" -le 5 ]
+}
+
+check_test_window() {
+    if ! test_window_open; then
+        local sa_time
+        sa_time=$(TZ='Asia/Riyadh' date '+%H:%M')
+        echo ""
+        echo "==> ABORTED: test deploy is only allowed between 10 pm and 6 am Saudi time."
+        echo "    Current Saudi time: $sa_time. Try again after 10 pm."
+        exit 1
+    fi
+}
+
 # ─── guard: uncommitted changes ───────────────────────────────────────────────
 
 check_uncommitted() {
@@ -137,13 +160,34 @@ deploy_to() {
 }
 
 # ─── main ─────────────────────────────────────────────────────────────────────
+#
+# Usage:
+#   ./deploy.sh [test|production|both] [--force]
+#
+#   --force  bypass the 10 pm–6 am Saudi time restriction on test deployments
 
 TARGET="${1:-both}"
+FORCE=false
+for arg in "$@"; do [ "$arg" = "--force" ] && FORCE=true; done
 
 check_uncommitted
 
+# Helper: returns 0 when test deploy is allowed (window open OR --force given).
+test_allowed() {
+    $FORCE && return 0
+    test_window_open
+}
+
 case "$TARGET" in
     test)
+        if ! test_allowed; then
+            sa_time=$(TZ='Asia/Riyadh' date '+%H:%M')
+            echo ""
+            echo "==> ABORTED: test deploy is only allowed between 10 pm and 6 am Saudi time."
+            echo "    Current Saudi time: $sa_time. Use --force to override."
+            exit 1
+        fi
+        $FORCE && echo "==> [--force] Bypassing test deploy time restriction."
         check_eslint
         run_tests
         build "$TEST_API_URL"
@@ -158,22 +202,32 @@ case "$TARGET" in
     both)
         check_eslint
         run_tests
-        echo ""
-        echo "==> Building test and production in parallel..."
-        build "$TEST_API_URL" "$FRONTEND_DIR/build_test" > /tmp/build_test.log 2>&1 &
-        PID_TEST=$!
-        build "$PROD_API_URL" "$FRONTEND_DIR/build_prod" > /tmp/build_prod.log 2>&1 &
-        PID_PROD=$!
-        wait $PID_TEST || { echo "==> Test build FAILED:"; cat /tmp/build_test.log; exit 1; }
-        echo "==> Test build done."
-        wait $PID_PROD || { echo "==> Production build FAILED:"; cat /tmp/build_prod.log; exit 1; }
-        echo "==> Production build done."
-        deploy_to "$FRONTEND_DIR/build_test" "$TEST_DEST" "test (https://startpos-test.startuptech.uk)" &
-        PID_RSYNC_TEST=$!
-        deploy_to "$FRONTEND_DIR/build_prod" "$PROD_DEST" "production (https://startpos.startuptech.uk)" &
-        PID_RSYNC_PROD=$!
-        wait $PID_RSYNC_TEST || { echo "==> Test deploy FAILED"; exit 1; }
-        wait $PID_RSYNC_PROD || { echo "==> Production deploy FAILED"; exit 1; }
+        if test_allowed; then
+            $FORCE && ! test_window_open && echo "==> [--force] Bypassing test deploy time restriction."
+            echo ""
+            echo "==> Building test and production in parallel..."
+            build "$TEST_API_URL" "$FRONTEND_DIR/build_test" > /tmp/build_test.log 2>&1 &
+            PID_TEST=$!
+            build "$PROD_API_URL" "$FRONTEND_DIR/build_prod" > /tmp/build_prod.log 2>&1 &
+            PID_PROD=$!
+            wait $PID_TEST || { echo "==> Test build FAILED:"; cat /tmp/build_test.log; exit 1; }
+            echo "==> Test build done."
+            wait $PID_PROD || { echo "==> Production build FAILED:"; cat /tmp/build_prod.log; exit 1; }
+            echo "==> Production build done."
+            deploy_to "$FRONTEND_DIR/build_test" "$TEST_DEST" "test (https://startpos-test.startuptech.uk)" &
+            PID_RSYNC_TEST=$!
+            deploy_to "$FRONTEND_DIR/build_prod" "$PROD_DEST" "production (https://startpos.startuptech.uk)" &
+            PID_RSYNC_PROD=$!
+            wait $PID_RSYNC_TEST || { echo "==> Test deploy FAILED"; exit 1; }
+            wait $PID_RSYNC_PROD || { echo "==> Production deploy FAILED"; exit 1; }
+        else
+            sa_time=$(TZ='Asia/Riyadh' date '+%H:%M')
+            echo ""
+            echo "==> Note: test deploy skipped (outside 10 pm–6 am Saudi window; current: $sa_time). Use --force to override."
+            echo "==> Building production only..."
+            build "$PROD_API_URL"
+            deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.startuptech.uk)"
+        fi
         ;;
     *)
         echo "Unknown target: $TARGET"

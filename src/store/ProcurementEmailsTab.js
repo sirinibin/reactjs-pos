@@ -338,6 +338,7 @@ export default function ProcurementEmailsTab({ storeId }) {
     const token = localStorage.getItem('access_token');
     const history = useHistory();
     const location = useLocation();
+    const [viewMode, setViewMode] = useState('messages'); // 'messages' | 'conversations'
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -345,12 +346,16 @@ export default function ProcurementEmailsTab({ storeId }) {
     const [search, setSearch] = useState(() => new URLSearchParams(location.search).get('email') || '');
     const [direction, setDirection] = useState('in');
     const [loading, setLoading] = useState(false);
+    const [threads, setThreads] = useState([]);
+    const [threadsLoading, setThreadsLoading] = useState(false);
     const [selected, setSelected] = useState(null);
     const [deleting, setDeleting] = useState(null);
     const [syncing, setSyncing] = useState(false);
     const [deletingAll, setDeletingAll] = useState(false);
     const [diskUsage, setDiskUsage] = useState(null);
     const [rfqFilter, setRfqFilter] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     // eslint-disable-next-line no-unused-vars
     const [creatingRfq, setCreatingRfq] = useState(null); // message id currently creating RFQ
     const [extractMsg, setExtractMsg] = useState(null);   // message currently being extracted
@@ -378,7 +383,7 @@ export default function ProcurementEmailsTab({ storeId }) {
     // eslint-disable-next-line no-unused-vars
     const autoRfqDisabled = storeSettings?.disable_auto_rfq_from_email === true;
 
-    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter) => {
+    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter, from = dateFrom, to = dateTo) => {
         if (!storeId) return;
         setLoading(true);
         try {
@@ -386,13 +391,28 @@ export default function ProcurementEmailsTab({ storeId }) {
             if (q) params.set('search', q);
             if (dir) params.set('direction', dir);
             if (rfq) params.set('rfq_filter', rfq);
+            if (from) params.set('date_from', from);
+            if (to) params.set('date_to', to);
             const res = await fetch(`/v1/procurement-messages?${params}`, { headers: { Authorization: token } });
             const data = await res.json();
             setMessages(data.messages || []);
             setTotal(data.total || 0);
             setPage(pg);
         } finally { setLoading(false); }
-    }, [storeId, token, search, direction, rfqFilter]);
+    }, [storeId, token, search, direction, rfqFilter, dateFrom, dateTo]);
+
+    const loadThreads = useCallback(async (from = dateFrom, to = dateTo) => {
+        if (!storeId) return;
+        setThreadsLoading(true);
+        try {
+            const params = new URLSearchParams({ store_id: storeId, type: 'email', limit: 100 });
+            if (from) params.set('date_from', from);
+            if (to) params.set('date_to', to);
+            const res = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            setThreads(data.threads || []);
+        } catch (_) { setThreads([]); } finally { setThreadsLoading(false); }
+    }, [storeId, token, dateFrom, dateTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         load(1);
@@ -412,13 +432,35 @@ export default function ProcurementEmailsTab({ storeId }) {
     const handleDirection = e => {
         const d = e.target.value;
         setDirection(d);
-        load(1, search, d, rfqFilter);
+        load(1, search, d, rfqFilter, dateFrom, dateTo);
     };
 
     const handleRfqFilter = e => {
         const f = e.target.value;
         setRfqFilter(f);
-        load(1, search, direction, f);
+        load(1, search, direction, f, dateFrom, dateTo);
+    };
+
+    const handleSingleDate = e => {
+        const v = e.target.value;
+        setDateFrom(v);
+        setDateTo(v);
+        load(1, search, direction, rfqFilter, v, v);
+        loadThreads(v, v);
+    };
+
+    const handleDateFrom = e => {
+        const v = e.target.value;
+        setDateFrom(v);
+        load(1, search, direction, rfqFilter, v, dateTo);
+        loadThreads(v, dateTo);
+    };
+
+    const handleDateTo = e => {
+        const v = e.target.value;
+        setDateTo(v);
+        load(1, search, direction, rfqFilter, dateFrom, v);
+        loadThreads(dateFrom, v);
     };
 
     const openRfqModal = async (rfqId, e) => {
@@ -631,6 +673,42 @@ export default function ProcurementEmailsTab({ storeId }) {
                     <option value="other">{t('Other')}</option>
                     <option value="no">{t('No RFQ')}</option>
                 </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="bi bi-calendar3" style={{ fontSize: '13px', color: '#6c757d' }}></i>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '140px' }}
+                        value={dateFrom === dateTo ? dateFrom : ''}
+                        onChange={handleSingleDate}
+                        title={t('Single date')}
+                        placeholder={t('Date')}
+                    />
+                    <span style={{ color: '#6c757d', fontSize: '12px' }}>{t('or range')}</span>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '130px' }}
+                        value={dateFrom}
+                        onChange={handleDateFrom}
+                        title={t('From date')}
+                    />
+                    <span style={{ color: '#6c757d', fontSize: '12px' }}>–</span>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '130px' }}
+                        value={dateTo}
+                        onChange={handleDateTo}
+                        title={t('To date')}
+                    />
+                    {(dateFrom || dateTo) && (
+                        <button className="btn btn-sm btn-outline-secondary" title={t('Clear date filter')}
+                            onClick={() => { setDateFrom(''); setDateTo(''); load(1, search, direction, rfqFilter, '', ''); loadThreads('', ''); }}>
+                            <i className="bi bi-x"></i>
+                        </button>
+                    )}
+                </div>
                 <button
                     className="btn btn-sm btn-outline-primary ms-auto"
                     disabled={syncing}
@@ -679,8 +757,91 @@ export default function ProcurementEmailsTab({ storeId }) {
                 )}
             </div>
 
+            {/* View mode toggle */}
+            <div className="btn-group btn-group-sm mb-3" role="group">
+                <button
+                    type="button"
+                    className={`btn ${viewMode === 'conversations' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => { setViewMode('conversations'); loadThreads(); }}
+                >
+                    <i className="bi bi-people me-1"></i>{t('Conversations')}
+                </button>
+                <button
+                    type="button"
+                    className={`btn ${viewMode === 'messages' ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                    onClick={() => setViewMode('messages')}
+                >
+                    <i className="bi bi-list-ul me-1"></i>{t('All Messages')}
+                </button>
+            </div>
+
+            {/* Conversations view */}
+            {viewMode === 'conversations' && (
+                <div>
+                    {threadsLoading && (
+                        <div className="text-center py-4">
+                            <span className="spinner-border spinner-border-sm text-primary me-2" />
+                            {t('Loading conversations…')}
+                        </div>
+                    )}
+                    {!threadsLoading && threads.length === 0 && (
+                        <div className="text-muted text-center py-5" style={{ fontSize: 13 }}>
+                            <i className="bi bi-envelope" style={{ fontSize: 28, display: 'block', marginBottom: 8, color: '#adb5bd' }}></i>
+                            {t('No email conversations found.')}
+                        </div>
+                    )}
+                    {!threadsLoading && threads.length > 0 && (
+                        <div style={{ border: '1px solid #dee2e6', borderRadius: 8, overflow: 'hidden' }}>
+                            {threads.map((th, idx) => (
+                                <div
+                                    key={th.contact_phone}
+                                    className="d-flex align-items-center gap-3 px-3 py-2"
+                                    style={{
+                                        cursor: 'pointer',
+                                        borderBottom: idx < threads.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                        background: '#fff',
+                                        transition: 'background 0.12s',
+                                    }}
+                                    onClick={() => {
+                                        setSearch(th.contact_phone);
+                                        setViewMode('messages');
+                                        load(1, th.contact_phone, direction, rfqFilter, dateFrom, dateTo);
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                >
+                                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0, fontSize: 16 }}>
+                                        <i className="bi bi-envelope"></i>
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 13 }}>{th.sender_name || th.contact_phone}</div>
+                                        {th.sender_name && th.contact_phone !== th.sender_name && (
+                                            <div style={{ fontSize: 11, color: '#6c757d' }}>{th.contact_phone}</div>
+                                        )}
+                                        <div style={{ fontSize: 11, color: '#6c757d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 400 }}>
+                                            {th.last_message_text || '—'}
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                        {th.unread_count > 0 && (
+                                            <span className="badge bg-primary rounded-pill d-block mb-1" style={{ fontSize: 10 }}>{th.unread_count}</span>
+                                        )}
+                                        {th.last_message_date && (
+                                            <div style={{ fontSize: 10, color: '#6c757d' }}>
+                                                {new Date(th.last_message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        )}
+                                        <div style={{ fontSize: 10, color: '#adb5bd' }}>{th.message_count} {t('msgs')}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Top pagination + count */}
-            {!loading && total > 0 && (
+            {viewMode === 'messages' && !loading && total > 0 && (
                 <div className="d-flex justify-content-between align-items-center mb-1" style={{ flexWrap: 'wrap', gap: '4px' }}>
                     <small style={{ color: '#6c757d', fontSize: '12px' }}>
                         {((page - 1) * PAGE_SIZE + 1).toLocaleString()}–{Math.min(page * PAGE_SIZE, total).toLocaleString()} of {total.toLocaleString()}
@@ -688,7 +849,7 @@ export default function ProcurementEmailsTab({ storeId }) {
                     <PageNav />
                 </div>
             )}
-            <div style={{ overflowX: 'auto' }}>
+            {viewMode === 'messages' && <div style={{ overflowX: 'auto' }}>
                 <table className="table table-sm table-hover" style={{ fontSize: '13px', minWidth: '600px' }}>
                     <thead>
                         <tr style={{ background: '#f8f9fa' }}>
@@ -857,10 +1018,10 @@ export default function ProcurementEmailsTab({ storeId }) {
                         })()}
                     </tbody>
                 </table>
-            </div>
+            </div>}
 
             {/* Bottom pagination */}
-            <PageNav />
+            {viewMode === 'messages' && <PageNav />}
 
             {/* Detail Modal */}
             <EmailDetailModal

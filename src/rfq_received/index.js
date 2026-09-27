@@ -46,26 +46,49 @@ function fmt(v) {
     return Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) {
+function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload, initialAddFile }) {
     const { t } = useTranslation('common');
     const token = localStorage.getItem('access_token');
 
-    // Manual reply form state
-    const [showAddReply, setShowAddReply] = useState(false);
-    const [replyForm, setReplyForm]       = useState({ supplier_name: '', supplier_phone: '', supplier_email: '', raw_text: '' });
-    const [addingReply, setAddingReply]   = useState(false);
-    const [addError, setAddError]         = useState('');
-    const [addOk, setAddOk]               = useState(false);
-    // File upload state
-    const [uploadingFile, setUploadingFile] = useState(false);
-    const [uploadedFileName, setUploadedFileName] = useState('');
-    const fileInputRef = useRef(null);
+    // Add Quotation — new PDF extract flow
+    const [showAddReply, setShowAddReply]     = useState(false);
+    const [addError, setAddError]             = useState('');
+    const [addOk, setAddOk]                   = useState(false);
+    const fileInputRef                        = useRef(null);
+    // Step 1: file + provider/model selection
+    const defaultAddProvider = (() => {
+        const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+        const last = localStorage.getItem('_rfq_extract_provider');
+        if (last && AI_PROVIDERS.find(p => p.value === last)) return AI_PROVIDERS.find(p => p.value === last);
+        return AI_PROVIDERS.find(p => storeSettings?.[p.apiKeyField]) || AI_PROVIDERS[0];
+    })();
+    const [addProvider, setAddProvider] = useState(defaultAddProvider.value);
+    const [addModel, setAddModel]       = useState(modelsForProvider(defaultAddProvider.value)[0]?.value || '');
+    const [addFiles, setAddFiles]        = useState([]);
+    const [extracting, setExtracting]   = useState(false);
+    // Step 2: preview extracted prices
+    const [extractResult, setExtractResult] = useState(null); // { prices, supplier_name, supplier_phone, general_notes, price_count }
+    const [previewRows, setPreviewRows]     = useState([]);   // editable rows: { productIndex, productName, partNo, qty, unit, unitPrice, currency }
+    // Step 3: saving
+    const [addingReply, setAddingReply]     = useState(false);
     // Update product prices state
     const [updatingPrices, setUpdatingPrices] = useState(false);
     const [priceUpdateResult, setPriceUpdateResult] = useState(null);
     // Delete supplier reply state
     const [deletingReplyId, setDeletingReplyId] = useState(null);
     const [deleteReplyError, setDeleteReplyError] = useState('');
+
+    // When opened from an email attachment, pre-load the file and open the add panel.
+    useEffect(() => {
+        if (initialAddFile) {
+            setAddFiles([initialAddFile]);
+            setShowAddReply(true);
+            setPreviewRows([]);
+            setExtractResult(null);
+            setAddError('');
+            setAddOk(false);
+        }
+    }, [initialAddFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Per-product: selected supplier and margin %
     const products = rfq.products || [];
@@ -160,45 +183,119 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
         return null;
     };
 
-    const handleAddReply = async () => {
+    const handleExtractQuotation = async () => {
+        if (!addFiles.length) { setAddError(t('Please select a file to upload.')); return; }
+        setExtracting(true);
+        setAddError('');
+        setExtractResult(null);
+        setPreviewRows([]);
+        try {
+            // Process each file and merge results
+            let allPrices = [];
+            let supplierName = '';
+            let supplierPhone = '';
+            let generalNotes = '';
+            const url = `/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}&llm_provider=${encodeURIComponent(addProvider)}&llm_model=${encodeURIComponent(addModel)}`;
+            for (const file of addFiles) {
+                const fd = new FormData();
+                fd.append('file', file);
+                const res = await fetch(url, { method: 'POST', headers: { Authorization: token }, body: fd });
+                const data = await res.json();
+                if (data.error) { setAddError(data.error); return; }
+                if (!supplierName && data.supplier_name) supplierName = data.supplier_name;
+                if (!supplierPhone && data.supplier_phone) supplierPhone = data.supplier_phone;
+                if (data.general_notes) generalNotes = generalNotes ? generalNotes + '; ' + data.general_notes : data.general_notes;
+                allPrices = allPrices.concat(data.prices || []);
+            }
+            // Deduplicate by product_index: keep first entry with a known index
+            const seenIdx = new Set();
+            const dedupedPrices = [];
+            for (const p of allPrices) {
+                if (p.product_index >= 0 && seenIdx.has(p.product_index)) continue;
+                if (p.product_index >= 0) seenIdx.add(p.product_index);
+                dedupedPrices.push(p);
+            }
+            const mergedResult = { prices: dedupedPrices, supplier_name: supplierName, supplier_phone: supplierPhone, general_notes: generalNotes };
+            setExtractResult(mergedResult);
+            const prices = mergedResult.prices;
+            // Normalise a string for loose part-number matching: lowercase, strip hyphens/spaces.
+            const norm = s => (s || '').toLowerCase().replace(/[-\s()]/g, '');
+            const rows = products.map((prod, i) => {
+                const partLow  = (prod.part_no || '').toLowerCase();
+                const nameLow  = (prod.name || prod.product_name || '').toLowerCase();
+                const byPart = prices.find(p => {
+                    const pno = (p.part_no || '').toLowerCase();
+                    const nameNorm = norm(nameLow);
+                    if (pno) {
+                        // Exact match on the RFQ's internal part_no field
+                        if (partLow && pno === partLow) return true;
+                        // LLM's part_no found inside the RFQ product name (e.g. "FC5723" in "Fuel Filter (FC-5723)")
+                        const pnoNorm = norm(p.part_no);
+                        if (pnoNorm.length > 3 && nameNorm.includes(pnoNorm)) return true;
+                    }
+                    // LLM's product_name contains the RFQ part_no
+                    if (partLow.length > 3 && (p.product_name || '').toLowerCase().includes(partLow)) return true;
+                    // LLM may put part number in product_name without a separate part_no field.
+                    // Extract alphanumeric tokens containing digits (e.g. "FC5723" from "FC5723 FUEL FILTER...").
+                    const pnTokens = (p.product_name || '').split(/[\s,;()]+/).filter(t => t.length > 3 && /\d/.test(t));
+                    for (const tok of pnTokens) {
+                        if (nameNorm.includes(norm(tok))) return true;
+                    }
+                    return false;
+                });
+                const byIdx  = prices.find(p => p.product_index === i);
+                // Positional fallback: LLM often returns prices in the same order as products.
+                const byPos  = prices.length === products.length ? prices[i] : null;
+                const match  = byPart || byIdx || byPos || (prices.length === 1 ? prices[0] : null);
+                return {
+                    productIndex: i,
+                    productName:  prod.name || prod.part_no || `Product ${i + 1}`,
+                    partNo:       prod.part_no || '',
+                    qty:          prod.quantity || 1,
+                    unit:         prod.unit || '',
+                    unitPrice:    match ? String(match.unit_price ?? '') : '',
+                    currency:     match ? (match.currency || 'SAR') : 'SAR',
+                    matched:      !!match,
+                };
+            });
+            setPreviewRows(rows);
+        } catch (e) { setAddError(e.message); }
+        finally { setExtracting(false); }
+    };
+
+    const handleConfirmExtractedPrices = async () => {
         setAddingReply(true);
         setAddError('');
         setAddOk(false);
         try {
+            const prices = previewRows
+                .filter(r => parseFloat(r.unitPrice) > 0)
+                .map(r => ({ product_index: r.productIndex, product_name: r.productName, part_no: r.partNo, unit_price: parseFloat(r.unitPrice), currency: r.currency, quantity: r.qty }));
+            if (!prices.length) { setAddError(t('No prices to save — enter at least one price.')); setAddingReply(false); return; }
+            const body = {
+                supplier_name:     extractResult?.supplier_name || '',
+                supplier_phone:    extractResult?.supplier_phone || '',
+                raw_text:          '',
+                prices,
+                run_llm_extraction: false,
+            };
             const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies?store_id=${storeId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ ...replyForm, run_llm_extraction: true }),
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.error) { setAddError(data.error); return; }
             setAddOk(true);
-            setReplyForm({ supplier_name: '', supplier_phone: '', supplier_email: '', raw_text: '' });
-            setUploadedFileName('');
             setShowAddReply(false);
+            setAddFiles([]);
+            setExtractResult(null);
+            setPreviewRows([]);
+            if (onRfqReload) onRfqReload();
         } catch (e) { setAddError(e.message); }
         finally { setAddingReply(false); }
     };
 
-    const handleFileUpload = async (file) => {
-        if (!file) return;
-        setUploadingFile(true);
-        setAddError('');
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const res = await fetch(`/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}`, {
-                method: 'POST',
-                headers: { Authorization: token },
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.error) { setAddError(data.error); return; }
-            setReplyForm(f => ({ ...f, raw_text: data.extracted_text || '' }));
-            setUploadedFileName(data.file_name || file.name);
-        } catch (e) { setAddError(e.message); }
-        finally { setUploadingFile(false); }
-    };
 
     const handleDeleteReply = async (replyId) => {
         if (!window.confirm(t('Confirm delete this supplier quotation?'))) return;
@@ -342,7 +439,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
 
             {addOk && <Alert variant="success" className="py-1 px-2 mb-2" style={{ fontSize: '12px' }}>{t('reply_added_ok')}</Alert>}
 
-            {/* Add Quotation manually */}
+            {/* Add Quotation Prices — PDF extract flow */}
             <div className="mb-3">
                 {!showAddReply ? (
                     <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setShowAddReply(true)}>
@@ -352,68 +449,139 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
                     <div className="border rounded p-3" style={{ background: '#f8f9fa' }}>
                         <h6 className="mb-3" style={{ fontSize: '13px' }}><i className="bi bi-receipt me-1 text-primary"></i>{t('add_quotation')}</h6>
 
-                        {/* Supplier info row */}
-                        <div className="row g-2 mb-2">
-                            <div className="col-md-4">
-                                <input className="form-control form-control-sm" placeholder={t('supplier_name')}
-                                    value={replyForm.supplier_name} onChange={e => setReplyForm({ ...replyForm, supplier_name: e.target.value })} />
-                            </div>
-                            <div className="col-md-4">
-                                <input className="form-control form-control-sm" placeholder={t('supplier_phone')}
-                                    value={replyForm.supplier_phone} onChange={e => setReplyForm({ ...replyForm, supplier_phone: e.target.value })} />
-                            </div>
-                            <div className="col-md-4">
-                                <input type="email" className="form-control form-control-sm" placeholder={t('supplier_email')}
-                                    value={replyForm.supplier_email} onChange={e => setReplyForm({ ...replyForm, supplier_email: e.target.value })} />
-                            </div>
-                        </div>
+                        {/* Step 1: upload + provider/model (shown until extraction is done) */}
+                        {!extractResult && (
+                            <>
+                                {/* File drop zone */}
+                                <div
+                                    style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '16px', textAlign: 'center', cursor: 'pointer', background: addFiles.length > 0 ? '#f0fff4' : '#fff', marginBottom: '12px' }}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#0d6efd'; }}
+                                    onDragLeave={e => { e.currentTarget.style.borderColor = '#ced4da'; }}
+                                    onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#ced4da'; const fs = e.dataTransfer.files; if (fs?.length) setAddFiles(Array.from(fs)); }}
+                                >
+                                    <input ref={fileInputRef} type="file" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.xlsx,.xls,.csv,.txt" onChange={e => { if (e.target.files?.length) setAddFiles(Array.from(e.target.files)); }} />
+                                    <i className="bi bi-cloud-upload" style={{ fontSize: '24px', color: addFiles.length > 0 ? '#198754' : '#6c757d' }}></i>
+                                    {addFiles.length > 0 ? (
+                                        <div style={{ marginTop: '6px', fontSize: '13px', color: '#198754', fontWeight: 600 }}>
+                                            {addFiles.map((f, i) => (
+                                                <div key={i}><i className="bi bi-file-earmark me-1"></i>{f.name}</div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div style={{ marginTop: '6px', fontSize: '13px', color: '#6c757d' }}>{t('Click or drag one or more quotation PDFs / images / Excel here')}</div>
+                                    )}
+                                </div>
 
-                        {/* File upload */}
-                        <div className="mb-2">
-                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
-                                {t('upload_quotation_file')}
-                            </label>
-                            <div className="d-flex align-items-center gap-2">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.xlsx,.xls,.csv,.txt"
-                                    className="form-control form-control-sm"
-                                    style={{ maxWidth: '340px' }}
-                                    onChange={e => { if (e.target.files?.[0]) handleFileUpload(e.target.files[0]); }}
-                                />
-                                {uploadingFile && <Spinner animation="border" size="sm" />}
-                                {uploadedFileName && !uploadingFile && (
-                                    <span className="text-success" style={{ fontSize: '12px' }}>
-                                        <i className="bi bi-check-circle me-1"></i>{uploadedFileName}
-                                    </span>
-                                )}
-                            </div>
-                            <small className="text-muted" style={{ fontSize: '11px' }}>
-                                {t('upload_quotation_hint')}
-                            </small>
-                        </div>
+                                {/* Provider + Model */}
+                                <div className="row g-2 mb-3">
+                                    <div className="col-md-4">
+                                        <label className="form-label mb-1" style={{ fontSize: '11px', fontWeight: 600 }}>{t('Provider')}</label>
+                                        <select className="form-select form-select-sm" value={addProvider} onChange={e => { setAddProvider(e.target.value); setAddModel(modelsForProvider(e.target.value)[0]?.value || ''); try { localStorage.setItem('_rfq_extract_provider', e.target.value); } catch (_) {} }}>
+                                            {AI_PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="col-md-8">
+                                        <label className="form-label mb-1" style={{ fontSize: '11px', fontWeight: 600 }}>{t('Model')} <span className="text-muted fw-normal">({t('sorted cheapest first')})</span></label>
+                                        <select className="form-select form-select-sm" value={addModel} onChange={e => { setAddModel(e.target.value); try { localStorage.setItem('_rfq_extract_model', e.target.value); } catch (_) {} }}>
+                                            {modelsForProvider(addProvider).map(m => <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{fileCapabilityLabel(m)}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
 
-                        {/* Quotation text — populated by file upload or typed manually */}
-                        <textarea className="form-control form-control-sm mb-2" rows={5}
-                            placeholder={t('paste_supplier_reply_text')}
-                            value={replyForm.raw_text} onChange={e => setReplyForm({ ...replyForm, raw_text: e.target.value })} />
+                                {addError && <div className="text-danger mb-2" style={{ fontSize: '12px' }}>{addError}</div>}
+                                <div className="d-flex gap-2">
+                                    <button type="button" className="btn btn-primary btn-sm" onClick={handleExtractQuotation} disabled={extracting || !addFiles.length}>
+                                        {extracting ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-cpu me-1"></i>}
+                                        {extracting ? t('Extracting…') : t('Extract')}
+                                    </button>
+                                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => { setShowAddReply(false); setAddFiles([]); setExtractResult(null); setPreviewRows([]); setAddError(''); }}>
+                                        {t('cancel')}
+                                    </button>
+                                </div>
+                            </>
+                        )}
 
-                        {addError && <div className="text-danger mb-2" style={{ fontSize: '12px' }}>{addError}</div>}
-                        <div className="d-flex gap-2">
-                            <button type="button" className="btn btn-primary btn-sm" onClick={handleAddReply}
-                                disabled={addingReply || !replyForm.raw_text}>
-                                {addingReply ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-cpu me-1"></i>}
-                                {t('save_and_extract')}
-                            </button>
-                            <button type="button" className="btn btn-outline-secondary btn-sm"
-                                onClick={() => { setShowAddReply(false); setUploadedFileName(''); setAddError(''); }}>
-                                {t('cancel')}
-                            </button>
-                        </div>
-                        <small className="text-muted d-block mt-1" style={{ fontSize: '11px' }}>
-                            {t('llm_extract_hint')}
-                        </small>
+                        {/* Step 2: preview matched prices */}
+                        {extractResult && (
+                            <>
+                                <div className="mb-2" style={{ fontSize: '12px', color: '#155724', background: '#d4edda', borderRadius: '6px', padding: '8px 12px' }}>
+                                    <i className="bi bi-check-circle me-1"></i>
+                                    <strong>{t('Extraction complete')}</strong>
+                                    {extractResult.supplier_name && <span className="ms-2 text-muted">· {extractResult.supplier_name}</span>}
+                                    <span className="ms-2 text-muted">· {(extractResult.prices || []).length} prices found</span>
+                                    {previewRows.filter(r => r.matched).length > 0 && (
+                                        <span className="ms-2 text-muted">· {previewRows.filter(r => r.matched).length} matched</span>
+                                    )}
+                                    {extractResult.general_notes && <div className="mt-1 text-muted" style={{ fontSize: '11px' }}>{extractResult.general_notes}</div>}
+                                </div>
+
+                                <div className="table-responsive mb-3">
+                                    <table className="table table-sm table-bordered" style={{ fontSize: '12px' }}>
+                                        <thead className="table-light">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>{t('col_part_no')}</th>
+                                                <th>{t('col_product')}</th>
+                                                <th style={{ width: 55 }}>{t('col_qty')}</th>
+                                                <th style={{ width: 120 }}>{t('Unit Price')}</th>
+                                                <th style={{ width: 70 }}>{t('Currency')}</th>
+                                                <th style={{ width: 30 }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {previewRows.map((row, i) => (
+                                                <tr key={i} style={{ background: row.matched ? '#fff' : '#fffbf0' }}>
+                                                    <td className="text-center text-muted">{i + 1}</td>
+                                                    <td style={{ color: '#666' }}>{row.partNo || '—'}</td>
+                                                    <td><strong>{row.productName}</strong></td>
+                                                    <td className="text-center">{row.qty} {row.unit}</td>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            className="form-control form-control-sm"
+                                                            style={{ fontSize: '12px' }}
+                                                            value={row.unitPrice}
+                                                            min="0"
+                                                            step="0.01"
+                                                            onChange={e => setPreviewRows(prev => prev.map((r, j) => j === i ? { ...r, unitPrice: e.target.value } : r))}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            style={{ fontSize: '12px' }}
+                                                            value={row.currency}
+                                                            onChange={e => setPreviewRows(prev => prev.map((r, j) => j === i ? { ...r, currency: e.target.value } : r))}
+                                                        />
+                                                    </td>
+                                                    <td className="text-center">
+                                                        {row.matched
+                                                            ? <i className="bi bi-check-circle-fill text-success" title={t('Matched')}></i>
+                                                            : <i className="bi bi-question-circle text-warning" title={t('Not matched — enter price manually')}></i>}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {addError && <div className="text-danger mb-2" style={{ fontSize: '12px' }}>{addError}</div>}
+                                <div className="d-flex gap-2 flex-wrap">
+                                    <button type="button" className="btn btn-success btn-sm" onClick={handleConfirmExtractedPrices} disabled={addingReply}>
+                                        {addingReply ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-check2 me-1"></i>}
+                                        {t('Add Prices to RFQ')}
+                                    </button>
+                                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => { setExtractResult(null); setPreviewRows([]); setAddError(''); }}>
+                                        <i className="bi bi-arrow-left me-1"></i>{t('Back')}
+                                    </button>
+                                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => { setShowAddReply(false); setAddFiles([]); setExtractResult(null); setPreviewRows([]); setAddError(''); }}>
+                                        {t('cancel')}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
@@ -556,10 +724,15 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload }) 
 
 // ── Forward / Detail Modal ────────────────────────────────────────────────────
 
-export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, onOpenQuotation, liveProgress, onSendToSuppliers, onReload, zIndex }) {
+export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, onOpenQuotation, liveProgress, onSendToSuppliers, onReload, zIndex, initialTab, initialAddFile }) {
     const { t } = useTranslation('common');
     const history = useHistory();
     const [activeTab, setActiveTab] = useState('info');
+
+    // Auto-switch to the requested tab when opened from an email PDF attachment.
+    useEffect(() => {
+        if (initialTab) setActiveTab(initialTab);
+    }, [initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
     const [expandedMsg, setExpandedMsg] = useState(null);
     const [pdfUrl, setPdfUrl] = useState(null);
     const [pdfLoading, setPdfLoading] = useState(false);
@@ -608,6 +781,17 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
     useEffect(() => {
         if (activeTab === 'suppliers' || activeTab === 'supplier_email_conv') fetchResolvedSuppliers();
     }, [activeTab, fetchResolvedSuppliers]);
+
+    useEffect(() => {
+        if (!show || !zIndex) return;
+        const apply = () => {
+            const el = document.querySelector('.modal.rfq-detail-modal');
+            if (el) el.style.setProperty('z-index', String(zIndex), 'important');
+        };
+        apply();
+        const t = setTimeout(apply, 80);
+        return () => clearTimeout(t);
+    }, [show, zIndex]);
 
     if (!rfq) return null;
 
@@ -1057,6 +1241,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
                             storeId={storeId}
                             onCreateQuotation={onCreateQuotation}
                             onRfqReload={onReload}
+                            initialAddFile={initialAddFile}
                         />
                     )}
 
@@ -1169,7 +1354,7 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
             storeId={storeId}
             token={localStorage.getItem('access_token')}
         />
-        <RFQPreview ref={rfqPreviewRef} />
+        <RFQPreview ref={rfqPreviewRef} zIndex={zIndex ? zIndex + 100 : undefined} />
         <RFQCreate ref={rfqEditRef} showToastMessage={() => {}} onCreated={() => {}} />
         <CustomerCreate ref={customerEditRef} />
         <WhatsAppChatModal
@@ -1178,12 +1363,14 @@ export function ForwardDetail({ rfq, show, onHide, storeId, onCreateQuotation, o
             contactName={chatModal.contactName}
             storeId={storeId}
             onHide={() => setChatModal({ type: null, value: '' })}
+            zIndex={zIndex ? zIndex + 100 : undefined}
         />
         <EmailChatModal
             show={chatModal.type === 'email'}
             email={chatModal.value}
             storeId={storeId}
             onHide={() => setChatModal({ type: null, value: '' })}
+            zIndex={zIndex ? zIndex + 100 : undefined}
         />
         </>
     );
@@ -1416,19 +1603,20 @@ const STAGE_LABELS = {
 
 // ── RFQSendModal ─────────────────────────────────────────────────────────────
 
-export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails, initialTab, initialPhone }) {
+export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails, initialTab, initialPhone, zIndex }) {
     const token = localStorage.getItem('access_token');
     const rfqPreviewRef = useRef(null);
     useEffect(() => {
         if (!show) return;
+        const targetZ = zIndex || 1600;
         const apply = () => {
             const el = document.querySelector('.modal.rfq-send-modal-wrap');
-            if (el) el.style.setProperty('z-index', '1600', 'important');
+            if (el) el.style.setProperty('z-index', String(targetZ), 'important');
         };
         apply();
         const t = setTimeout(apply, 80);
         return () => clearTimeout(t);
-    }, [show]);
+    }, [show, zIndex]);
 
     const [chatModal, setChatModal] = useState({ type: null, value: '' });
     const [preview, setPreview]                   = useState(null);
@@ -2714,7 +2902,7 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
                 </Modal.Footer>
             </Modal>
         )}
-        <RFQPreview ref={rfqPreviewRef} />
+        <RFQPreview ref={rfqPreviewRef} zIndex={zIndex ? zIndex + 100 : undefined} />
         <CustomerCreate ref={customerEditRef} />
         <EmailDetailModal
             msg={emailDetail}
@@ -3517,7 +3705,7 @@ export default function RFQReceivedIndex({ showToastMessage }) {
                 fetchList();
                 if (newRfq?.id) { setRfqForSend(newRfq); setShowSendModal(true); }
             }} />
-            <QuotationCreate ref={quotationCreateRef} showToastMessage={showToastMessage} refreshList={() => {}} />
+            <QuotationCreate ref={quotationCreateRef} showToastMessage={showToastMessage} refreshList={() => {}} zIndex={2000} />
             <RFQPreview ref={rfqPreviewRef} />
             <RFQSendModal
                 key={`${rfqForSend?.id || ''}:${pendingSendTab || ''}`}

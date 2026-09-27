@@ -42,7 +42,7 @@ const ImageLightbox = ({ src, alt, onClose }) => (
     </div>
 );
 
-const AttachmentPreview = ({ att }) => {
+const AttachmentPreview = ({ att, zIndex }) => {
     const [lightbox, setLightbox] = useState(false);
     if (isImageMime(att.content_type)) {
         return (
@@ -115,7 +115,7 @@ const AttachmentPreview = ({ att }) => {
                 <div style={{ display: 'flex', gap: '6px' }}>
                     {att.url ? (
                         <>
-                            <ViewButton att={att} />
+                            <ViewButton att={att} zIndex={zIndex} />
                             <a href={att.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" style={{ padding: '3px 12px', fontSize: '11px' }}>
                                 <i className="bi bi-download me-1"></i>Download
                             </a>
@@ -166,6 +166,21 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
     const [selectedRFQ, setSelectedRFQ]     = useState(null);
     const [priceRows, setPriceRows]         = useState([]);
     const [saveError, setSaveError]         = useState('');
+
+    // Auto-load all supplier RFQs when auto-match fires (no RFQ ID in document)
+    const [autoMatchList, setAutoMatchList]         = useState([]);
+    const [loadingAutoMatch, setLoadingAutoMatch]   = useState(false);
+    useEffect(() => {
+        if (!result || result.rfq_code || !result.suggested_rfq_code) { setAutoMatchList([]); return; }
+        const phone = (msg.from || '').replace(/^\+/, '');
+        if (!phone) return;
+        setLoadingAutoMatch(true);
+        fetch(`/v1/rfq-received?store_id=${storeId}&supplier_phone=${encodeURIComponent(phone)}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => setAutoMatchList(d.items || []))
+            .catch(() => {})
+            .finally(() => setLoadingAutoMatch(false));
+    }, [result, msg.from, storeId, token]);
 
     const matchExtractedPrice = (rfqProduct, rfqIndex, extractedPrices) => {
         if (rfqProduct.part_no) {
@@ -489,17 +504,46 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
                                                 <strong>{t('Quotation Terms')}:</strong> {result.general_notes}
                                             </div>
                                         )}
-                                        {/* Suggest a matching RFQ when no RFQ ID was in the document */}
+                                        {/* Suggest matching RFQs when no RFQ ID was in the document */}
                                         {!result.rfq_code && result.suggested_rfq_code && (
                                             <div className="mt-3 p-2" style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', fontSize: '12px' }}>
                                                 <i className="bi bi-search me-1 text-warning"></i>
-                                                {t('No RFQ ID in document — auto-matched by supplier phone:')}{' '}
-                                                <strong>{result.suggested_rfq_code}</strong>
-                                                <div className="mt-2 d-flex gap-2 flex-wrap">
-                                                    <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }} onClick={() => onViewRFQ && onViewRFQ(result.suggested_rfq_id)}>
-                                                        <i className="bi bi-file-earmark-text me-1"></i>{t('View')} {result.suggested_rfq_code}
-                                                    </button>
-                                                </div>
+                                                <strong>{t('No RFQ ID found in document')}</strong>
+                                                {' — '}{t('select the matching RFQ from this supplier\'s history:')}
+                                                {loadingAutoMatch && <div className="mt-2 text-muted"><span className="spinner-border spinner-border-sm me-1"></span>{t('Loading…')}</div>}
+                                                {!loadingAutoMatch && autoMatchList.length === 0 && (
+                                                    <div className="mt-2 d-flex gap-2 flex-wrap">
+                                                        <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '12px' }} onClick={() => onViewRFQ && onViewRFQ(result.suggested_rfq_id)}>
+                                                            <i className="bi bi-file-earmark-text me-1"></i>{t('View')} {result.suggested_rfq_code}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                {!loadingAutoMatch && autoMatchList.length > 0 && (
+                                                    <div className="mt-2" style={{ display: 'flex', flexDirection: 'column', gap: '5px', maxHeight: '220px', overflowY: 'auto' }}>
+                                                        {autoMatchList.map(rfq => (
+                                                            <div key={rfq.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '5px', background: rfq.id === result.suggested_rfq_id ? '#fffbe6' : '#fff', border: rfq.id === result.suggested_rfq_id ? '1px solid #ffc107' : '1px solid #e9ecef' }}>
+                                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                                    <span className="fw-semibold" style={{ color: '#0d6efd' }}>{rfq.code}</span>
+                                                                    {rfq.id === result.suggested_rfq_id && <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '10px' }}>{t('auto-matched')}</span>}
+                                                                    {rfq.customer_name && <span className="text-muted ms-1" style={{ fontSize: '11px' }}>· {rfq.customer_name}</span>}
+                                                                    {(rfq.products || []).length > 0 && (
+                                                                        <div className="text-muted" style={{ fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                            {rfq.products.slice(0, 3).map(p => p.name || p.part_no).join(', ')}{rfq.products.length > 3 ? ` +${rfq.products.length - 3} more` : ''}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="d-flex gap-1 flex-shrink-0">
+                                                                    <button className="btn btn-sm btn-success" style={{ fontSize: '11px' }} onClick={() => handleSelectRFQ(rfq)}>
+                                                                        <i className="bi bi-plus-circle me-1"></i>{t('Add Prices')}
+                                                                    </button>
+                                                                    <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '11px' }} onClick={() => onViewRFQ && onViewRFQ(rfq.id)}>
+                                                                        <i className="bi bi-file-earmark-text me-1"></i>{t('View')}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -718,7 +762,7 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
     );
 }
 
-export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialPhoneProp }) {
+export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialPhoneProp, showSidebar, zIndexBase = 0 }) {
     const { t } = useTranslation();
     const token = localStorage.getItem('access_token');
     const history = useHistory();
@@ -727,8 +771,9 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const initialPhoneRef = useRef(
         initialPhoneProp || new URLSearchParams(location.search).get('phone') || ''
     );
-    // directMode: opened from a notification — show only the chat, no sidebar, no toolbar
-    const [directMode] = useState(!!initialPhoneRef.current);
+    // directMode: opened from notification without full UI — hide header/filters/toolbar/sidebar.
+    // When showSidebar=true we want the full page, just with a pre-selected conversation.
+    const [directMode] = useState(!!initialPhoneRef.current && !showSidebar);
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -736,6 +781,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const [direction, setDirection] = useState('');
     const [rfqFilter, setRfqFilter] = useState('');
     const [attachmentFilter, setAttachmentFilter] = useState(false);
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     const [loading, setLoading] = useState(false);
     const [selected, setSelected] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -940,9 +987,15 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             } else {
                 setThreadCustomer(customerByPhone[selectedThread.contact_phone]);
             }
-            // Look up supplier for selected thread
+            // Look up supplier for selected thread; also backfill selectedThread if it was created
+            // from a notification click (minimal object with no sender_name / sender_type).
             setThreadSupplier(null);
-            lookupSupplierByPhone(selectedThread.contact_phone).then(s => setThreadSupplier(s));
+            lookupSupplierByPhone(selectedThread.contact_phone).then(s => {
+                setThreadSupplier(s);
+                if (s && !selectedThread.sender_name) {
+                    setSelectedThread(prev => prev ? { ...prev, sender_name: s.name, sender_type: 'supplier' } : prev);
+                }
+            });
             // Reset customer RFQ panel
             setCustomerRfqOpen(false);
             setCustomerRfqList([]);
@@ -1087,12 +1140,14 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
 
     // ── Conversation threading ────────────────────────────────────────────────
 
-    const loadThreads = useCallback(async (q = threadSearch, silent = false) => {
+    const loadThreads = useCallback(async (q = threadSearch, silent = false, from = dateFrom, to = dateTo) => {
         if (!storeId) return;
         if (!silent) setThreadsLoading(true);
         try {
             const params = new URLSearchParams({ store_id: storeId, type: 'whatsapp', limit: 50 });
             if (q) params.set('search', q);
+            if (from) params.set('date_from', from);
+            if (to) params.set('date_to', to);
             const res = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
             const data = await res.json();
             const next = data.threads || [];
@@ -1105,7 +1160,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             // Enrich threads with customer info for phones not yet resolved
             enrichThreadsWithCustomers(next);
         } catch (_) {} finally { if (!silent) setThreadsLoading(false); }
-    }, [storeId, token, threadSearch, enrichThreadsWithCustomers]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [storeId, token, threadSearch, dateFrom, dateTo, enrichThreadsWithCustomers]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const togglePin = useCallback(async (th, msgType) => {
         const method = th.pinned ? 'DELETE' : 'POST';
@@ -1133,12 +1188,12 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 return next;
             });
             if (!silent) {
-                setThreads(prev => {
-                    const had = prev.find(t => t.contact_phone === contactPhone)?.unread_count > 0;
-                    const next = prev.map(t => t.contact_phone === contactPhone ? { ...t, unread_count: 0 } : t);
-                    if (had) eventEmitter.emit('wa_unread_changed');
-                    return next;
-                });
+                setThreads(prev => prev.map(t => t.contact_phone === contactPhone ? { ...t, unread_count: 0 } : t));
+                // Always emit — server marks messages read on every thread fetch,
+                // so the unread count may have changed regardless of local thread state.
+                // (When opened from the notification modal, threads is still [] so
+                // checking the local unread_count would always give false.)
+                eventEmitter.emit('wa_unread_changed');
             }
         } catch (_) {} finally { if (!silent) setThreadMsgLoading(false); }
     }, [storeId, token]);
@@ -1261,7 +1316,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
         }
     };
 
-    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter, hasAtt = attachmentFilter) => {
+    const load = useCallback(async (pg = 1, q = search, dir = direction, rfq = rfqFilter, hasAtt = attachmentFilter, from = dateFrom, to = dateTo) => {
         if (!storeId) return;
         setLoading(true);
         try {
@@ -1270,22 +1325,25 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             if (dir) params.set('direction', dir);
             if (rfq) params.set('rfq_filter', rfq);
             if (hasAtt) params.set('has_attachments', 'true');
+            if (from) params.set('date_from', from);
+            if (to) params.set('date_to', to);
             const res = await fetch(`/v1/procurement-messages?${params}`, { headers: { Authorization: token } });
             const data = await res.json();
             setMessages(data.messages || []);
             setTotal(data.total || 0);
             setPage(pg);
         } finally { setLoading(false); }
-    }, [storeId, token, search, direction, rfqFilter, attachmentFilter]);
+    }, [storeId, token, search, direction, rfqFilter, attachmentFilter, dateFrom, dateTo]);
 
     useEffect(() => {
         const directPhone = initialPhoneRef.current;
         if (directPhone) {
-            // Opened from a notification — load only the target conversation, skip sidebar
+            // Load the target conversation first (priority), then sidebar if requested
             setSelectedThread({ contact_phone: directPhone, contact_name: directPhone });
             loadThread(directPhone);
             setViewMode('conversations');
             initialPhoneRef.current = ''; // consume
+            if (showSidebar) loadThreads();
         } else {
             // Normal open — load full sidebar and message list
             load(1);
@@ -1317,25 +1375,45 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
         const q = e.target.value;
         setSearch(q);
         clearTimeout(searchTimeout.current);
-        searchTimeout.current = setTimeout(() => load(1, q, direction, rfqFilter, attachmentFilter), 350);
+        searchTimeout.current = setTimeout(() => load(1, q, direction, rfqFilter, attachmentFilter, dateFrom, dateTo), 350);
     };
 
     const handleDirection = e => {
         const d = e.target.value;
         setDirection(d);
-        load(1, search, d, rfqFilter, attachmentFilter);
+        load(1, search, d, rfqFilter, attachmentFilter, dateFrom, dateTo);
     };
 
     const handleRfqFilter = e => {
         const f = e.target.value;
         setRfqFilter(f);
-        load(1, search, direction, f, attachmentFilter);
+        load(1, search, direction, f, attachmentFilter, dateFrom, dateTo);
     };
 
     const handleAttachmentFilter = () => {
         const next = !attachmentFilter;
         setAttachmentFilter(next);
-        load(1, search, direction, rfqFilter, next);
+        load(1, search, direction, rfqFilter, next, dateFrom, dateTo);
+    };
+
+    const handleDateFrom = v => {
+        setDateFrom(v);
+        load(1, search, direction, rfqFilter, attachmentFilter, v, dateTo);
+        loadThreads(threadSearch, false, v, dateTo);
+    };
+
+    const handleDateTo = v => {
+        setDateTo(v);
+        load(1, search, direction, rfqFilter, attachmentFilter, dateFrom, v);
+        loadThreads(threadSearch, false, dateFrom, v);
+    };
+
+    const handleSingleDate = e => {
+        const v = e.target.value;
+        setDateFrom(v);
+        setDateTo(v);
+        load(1, search, direction, rfqFilter, attachmentFilter, v, v);
+        loadThreads(threadSearch, false, v, v);
     };
 
     const openRfqModal = (rfqId, e) => {
@@ -1436,8 +1514,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 </div>
             )}
 
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            {/* Header — hidden in directMode (opened from notification) */}
+            {!directMode && <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <i className="bi bi-whatsapp" style={{ fontSize: '20px', color: WA_GREEN }}></i>
                 <h5 style={{ margin: 0, fontWeight: 600, fontSize: '15px' }}>{t('WhatsApp Messages')}</h5>
                 <span className="badge bg-secondary ms-auto">{total} {t('messages')}</span>
@@ -1446,10 +1524,10 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                         <i className="bi bi-hdd me-1"></i>{diskUsage} {t('used')}
                     </span>
                 )}
-            </div>
+            </div>}
 
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            {/* Filters — hidden in directMode */}
+            {!directMode && <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 <div className="input-group input-group-sm" style={{ maxWidth: '280px' }}>
                     <span className="input-group-text"><i className="bi bi-search"></i></span>
                     <input
@@ -1476,6 +1554,42 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 >
                     <i className="bi bi-paperclip me-1"></i>{t('Has Attachments')}
                 </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="bi bi-calendar3" style={{ fontSize: '13px', color: '#6c757d' }}></i>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '140px' }}
+                        value={dateFrom === dateTo ? dateFrom : ''}
+                        onChange={handleSingleDate}
+                        title={t('Single date')}
+                        placeholder={t('Date')}
+                    />
+                    <span style={{ color: '#6c757d', fontSize: '12px' }}>{t('or range')}</span>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '130px' }}
+                        value={dateFrom}
+                        onChange={e => handleDateFrom(e.target.value)}
+                        title={t('From date')}
+                    />
+                    <span style={{ color: '#6c757d', fontSize: '12px' }}>–</span>
+                    <input
+                        type="date"
+                        className="form-control form-control-sm"
+                        style={{ width: '130px' }}
+                        value={dateTo}
+                        onChange={e => handleDateTo(e.target.value)}
+                        title={t('To date')}
+                    />
+                    {(dateFrom || dateTo) && (
+                        <button className="btn btn-sm btn-outline-secondary" title={t('Clear date filter')}
+                            onClick={() => { setDateFrom(''); setDateTo(''); load(1, search, direction, rfqFilter, attachmentFilter, '', ''); loadThreads(threadSearch, false, '', ''); }}>
+                            <i className="bi bi-x"></i>
+                        </button>
+                    )}
+                </div>
                 <button
                     className="btn btn-sm btn-outline-success ms-auto"
                     disabled={syncing}
@@ -1533,7 +1647,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                             : <><i className="bi bi-trash3-fill me-1"></i>{t('Delete All')}</>}
                     </button>
                 )}
-            </div>
+            </div>}
 
             {/* View mode toggle — hidden when opened directly from a notification */}
             <div className="btn-group btn-group-sm mb-3" role="group" style={{ display: directMode ? 'none' : undefined }}>
@@ -1556,8 +1670,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             {/* ── Conversations view ─────────────────────────────────────────── */}
             {viewMode === 'conversations' && (
                 <div style={{ display: 'flex', border: '1px solid #dee2e6', borderRadius: '8px', overflow: 'hidden', height: isMobile ? 'calc(100vh - 200px)' : 'calc(100vh - 280px)', minHeight: '400px', background: '#f5f5f5' }}>
-                    {/* Contact list — hidden on mobile when chat is open, hidden in directMode */}
-                    <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (directMode || (isMobile && mobilePanel === 'chat')) ? 'none' : 'flex', flexDirection: 'column' }}>
+                    {/* Contact list — hidden on mobile when chat is open; in directMode hidden unless showSidebar */}
+                    <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: ((directMode && !showSidebar) || (isMobile && mobilePanel === 'chat')) ? 'none' : 'flex', flexDirection: 'column' }}>
                         <div style={{ padding: '10px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
                             <div style={{ display: 'flex', gap: '6px', marginBottom: showNewConvInput ? '8px' : 0 }}>
                                 <input
@@ -1701,17 +1815,18 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                             </button>
                                         )}
                                         {(() => {
-                                            const _isSelectedSupplier = selectedThread.sender_type === 'supplier';
+                                            const _isSelectedSupplier = selectedThread.sender_type === 'supplier' || !!threadSupplier;
                                             const _isSelectedCustomer = selectedThread.sender_type === 'customer' || !!threadCustomer?.id;
+                                            const _displayName = selectedThread.sender_name || threadSupplier?.name || threadCustomer?.name || selectedThread.contact_phone;
                                             return (
                                                 <>
                                                     <i className="bi bi-whatsapp fs-5"></i>
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ fontWeight: 600, fontSize: '14px' }}>
-                                                            {selectedThread.sender_name || threadCustomer?.name || selectedThread.contact_phone}
+                                                            {_displayName}
                                                         </div>
                                                         <div style={{ fontSize: '11px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                                                            {(selectedThread.sender_name || threadCustomer?.name) && <span>{selectedThread.contact_phone} · </span>}
+                                                            {(_displayName !== selectedThread.contact_phone) && <span>{selectedThread.contact_phone} · </span>}
                                                             <span>{selectedThread.message_count} {t('messages')}</span>
                                                             {_isSelectedSupplier && <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}><i className="bi bi-truck me-1"></i>{t('Supplier')}</span>}
                                                             {_isSelectedCustomer && <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}><i className="bi bi-person me-1"></i>{t('Customer')}</span>}
@@ -2105,7 +2220,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                                     )}
                                                     {(msg.attachments || []).map((att, ai) => (
                                                         <div key={ai} style={{ marginTop: '4px', whiteSpace: 'normal', wordBreak: 'normal' }}>
-                                                            <AttachmentPreview att={att} />
+                                                            <AttachmentPreview att={att} zIndex={zIndexBase ? zIndexBase + 1000 : undefined} />
                                                         </div>
                                                     ))}
                                                     {/* Extract Quotation Prices button — only for incoming messages with PDF attachments */}
@@ -2528,7 +2643,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                                     <div style={{ marginTop: '12px' }}>
                                         <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '8px' }}>{t('Attachments')}</div>
                                         {selected.attachments.map((att, i) => (
-                                            <AttachmentPreview key={i} att={att} />
+                                            <AttachmentPreview key={i} att={att} zIndex={zIndexBase ? zIndexBase + 1000 : undefined} />
                                         ))}
                                     </div>
                                 )}
@@ -2915,8 +3030,9 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 storeId={storeId}
                 onCreateQuotation={handleCreateQuotation}
                 onSendToSuppliers={rfq => { setRfqForSend(rfq); setShowSendModal(true); }}
+                zIndex={zIndexBase ? zIndexBase + 2000 : 11000}
             />
-            <QuotationCreate ref={quotationCreateRef} showToastMessage={(msg, type) => showToast(msg, type)} refreshList={() => {}} />
+            <QuotationCreate ref={quotationCreateRef} showToastMessage={(msg, type) => showToast(msg, type)} refreshList={() => {}} zIndex={zIndexBase ? zIndexBase + 3000 : 12000} />
 
             {/* Send RFQ modal — stays on this page, no navigation */}
             <RFQSendModal
@@ -2925,6 +3041,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 show={showSendModal}
                 onHide={() => setShowSendModal(false)}
                 onSent={() => {}}
+                zIndex={zIndexBase ? zIndexBase + 2000 : undefined}
             />
 
             {/* Email Detail modal (opened from linked email badge in RFQ history) */}
@@ -2934,6 +3051,7 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 onClose={() => setEmailDetailShow(false)}
                 storeId={storeId}
                 token={token}
+                zIndex={zIndexBase ? zIndexBase + 2000 : 10500}
             />
 
             {/* Edit Supplier form */}
@@ -2942,11 +3060,12 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                     supplier={editingSupplier}
                     onClose={() => setEditingSupplier(null)}
                     onSave={saved => { setThreadSupplier(s => ({ ...s, ...saved })); setEditingSupplier(null); }}
+                    zIndex={16000}
                 />
             )}
 
             {/* Edit Customer form */}
-            <CustomerCreate ref={customerEditRef} />
+            <CustomerCreate ref={customerEditRef} zIndex={zIndexBase ? zIndexBase + 2000 : undefined} />
         </div>
     );
 }

@@ -113,7 +113,7 @@ function ThreadMessage({ m, t }) {
     );
 }
 
-export default function EmailDetailModal({ msg, show, onClose, storeId, token, onExtract, onLinkQuotation, linkingFor, onDeleted }) {
+export default function EmailDetailModal({ msg, show, onClose, storeId, token, onExtract, onLinkQuotation, linkingFor, onDeleted, zIndex }) {
     const { t } = useTranslation('common');
     const [replyOpen, setReplyOpen] = useState(false);
     const [replyFrom, setReplyFrom] = useState('');
@@ -149,6 +149,10 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
     const [pdfUrl, setPdfUrl] = useState(null);
     const [pdfLoading, setPdfLoading] = useState(false);
     const [showPdfModal, setShowPdfModal] = useState(false);
+    // Extract quotation prices from email attachment
+    const [rfqInitialTab, setRfqInitialTab] = useState(null);
+    const [rfqInitialFile, setRfqInitialFile] = useState(null);
+    const [extractingAttUrl, setExtractingAttUrl] = useState(null);
     // Customer edit
     const customerEditRef = useRef(null);
 
@@ -265,6 +269,29 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         } catch (_) {}
     };
 
+    const handleExtractPricesFromAtt = async (att) => {
+        const rfqId = msg?.rfq_received_id || msg?.linked_rfq_received_id;
+        if (!rfqId || !att.url) return;
+        setExtractingAttUrl(att.url);
+        try {
+            let rfq = linkedRfq;
+            if (!rfq) {
+                const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
+                const data = await res.json();
+                rfq = data.result || data;
+                if (rfq?.id || rfq?._id) setLinkedRfq(rfq);
+            }
+            const pdfRes = await fetch(att.url, { headers: { Authorization: token } });
+            const blob = await pdfRes.blob();
+            const file = new File([blob], att.filename || 'quotation.pdf', { type: blob.type || 'application/pdf' });
+            setRfqDetail(rfq);
+            setRfqInitialTab('prices');
+            setRfqInitialFile(file);
+            setRfqDetailShow(true);
+        } catch (_) {}
+        setExtractingAttUrl(null);
+    };
+
     const handleDelete = async () => {
         if (!window.confirm(t('Confirm delete this message?'))) return;
         setDeleting(true);
@@ -293,7 +320,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         // For outbound messages (store sent it) reply to the original recipient (msg.to[0]).
         const externalAddr = msg.direction === 'out'
             ? extractEmail((msg.to && msg.to[0]) || '')
-            : extractEmail(msg.from || '');
+            : extractEmail(msg.from || '') || extractEmail(msg.reply_to || '') || extractEmail((msg.to && msg.to[0]) || '');
         setReplyTo(externalAddr);
         setReplyFrom(extractEmail(msg.direction === 'out' ? (msg.from || '') : ((msg.to && msg.to[0]) || '')));
         setReplyAttachments([]);
@@ -367,7 +394,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
 
     return (
     <>
-        {!rfqDetailShow && <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)', zIndex: 9999 }}>
+        {!rfqDetailShow && <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)', zIndex: zIndex || 9999 }}>
             <div className="modal-dialog modal-lg modal-dialog-scrollable" style={{ maxWidth: '760px' }}>
                 <div className="modal-content">
                     <div className="modal-header" style={{ background: '#f8f9fa' }}>
@@ -617,7 +644,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                                     <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                                                         <span style={{ fontSize: '11px', color: '#5f6368', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.filename || `Image ${i + 1}`}</span>
                                                         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                                                            <ViewButton att={att} zIndex={10100} />
+                                                            <ViewButton att={att} zIndex={(zIndex || 9999) + 100} />
                                                             <a href={att.url} target="_blank" rel="noreferrer" download={att.filename} className="btn btn-sm btn-outline-secondary" style={{ padding: '2px 8px', fontSize: '11px' }}>
                                                                 <i className="bi bi-download"></i>
                                                             </a>
@@ -626,6 +653,7 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                                 </div>
                                             );
                                         }
+                                        const hasLinkedRfq = !!(msg?.rfq_received_id || msg?.linked_rfq_received_id);
                                         return (
                                             <div key={i} style={{ border: '1px solid #dadce0', borderRadius: '8px', padding: '10px 14px', minWidth: '160px', maxWidth: '220px', background: '#f8f9fa' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -636,11 +664,24 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                    <ViewButton att={att} zIndex={10100} />
+                                                    <ViewButton att={att} zIndex={(zIndex || 9999) + 100} />
                                                     {att.url && (
                                                         <a href={att.url} target="_blank" rel="noreferrer" download={att.filename} className="btn btn-sm btn-outline-secondary" style={{ padding: '3px 10px', fontSize: '11px' }}>
                                                             <i className="bi bi-download me-1"></i>Download
                                                         </a>
+                                                    )}
+                                                    {isPDF && hasLinkedRfq && att.url && (
+                                                        <button
+                                                            className="btn btn-sm btn-outline-success"
+                                                            style={{ padding: '3px 10px', fontSize: '11px' }}
+                                                            onClick={() => handleExtractPricesFromAtt(att)}
+                                                            disabled={extractingAttUrl === att.url}
+                                                            title="Extract supplier quotation prices from this PDF into the linked RFQ"
+                                                        >
+                                                            {extractingAttUrl === att.url
+                                                                ? <><span className="spinner-border spinner-border-sm me-1" />Loading…</>
+                                                                : <><i className="bi bi-magic me-1"></i>Extract Prices</>}
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>
@@ -774,11 +815,17 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
                                         onClick={handleSendReply}
                                         disabled={replySending || !replyBody.trim() || !replyTo.includes('@')}
                                         style={{ borderRadius: '20px', padding: '5px 18px', fontWeight: 500 }}
+                                        title={!replyTo.includes('@') ? 'Enter a recipient email in the To field above' : ''}
                                     >
                                         {replySending
                                             ? <><span className="spinner-border spinner-border-sm me-1" />Sending…</>
                                             : <><i className="bi bi-send me-1"></i>Send</>}
                                     </button>
+                                    {!replyTo.includes('@') && replyBody.trim() && (
+                                        <span style={{ fontSize: '11px', color: '#dc3545' }}>
+                                            <i className="bi bi-exclamation-circle me-1"></i>Fill in the To field
+                                        </span>
+                                    )}
 
                                     {/* Attach file button */}
                                     <button
@@ -924,9 +971,11 @@ export default function EmailDetailModal({ msg, show, onClose, storeId, token, o
         <ForwardDetail
             rfq={rfqDetail}
             show={rfqDetailShow && !!rfqDetail}
-            onHide={() => { setRfqDetailShow(false); }}
+            onHide={() => { setRfqDetailShow(false); setRfqInitialTab(null); setRfqInitialFile(null); }}
             storeId={storeId}
             zIndex={19999}
+            initialTab={rfqInitialTab}
+            initialAddFile={rfqInitialFile}
         />
     </>
     );

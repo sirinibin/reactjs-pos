@@ -7,6 +7,7 @@ const fs   = require('fs');
 const path = require('path');
 
 const CONV_MODAL  = fs.readFileSync(path.join(__dirname, 'ConversationModal.js'), 'utf8');
+const EMAIL_MODAL = fs.readFileSync(path.join(__dirname, 'EmailChatModal.js'), 'utf8');
 const WA_TAB      = fs.readFileSync(path.join(__dirname, 'ProcurementWhatsAppTab.js'), 'utf8');
 const EMAIL_TAB   = fs.readFileSync(path.join(__dirname, 'ProcurementEmailConversationTab.js'), 'utf8');
 const RFQ_RECV    = fs.readFileSync(path.join(__dirname, '../rfq_received/index.js'), 'utf8');
@@ -19,8 +20,13 @@ describe('ConversationModal.js', () => {
         expect(CONV_MODAL).toMatch(/export function WhatsAppChatModal/);
     });
 
-    test('1.2  exports EmailChatModal', () => {
-        expect(CONV_MODAL).toMatch(/export function EmailChatModal/);
+    test('1.2  exports EmailChatModal (directly or via re-export from EmailChatModal.js)', () => {
+        // EmailChatModal was extracted to its own file to avoid circular imports.
+        // ConversationModal re-exports it; EmailChatModal.js defines it.
+        const reExport = CONV_MODAL.match(/export\s*\{[\s\S]{0,50}EmailChatModal[\s\S]{0,50}\}/);
+        const directExport = CONV_MODAL.match(/export function EmailChatModal/);
+        const emailModalDef = EMAIL_MODAL.match(/export function EmailChatModal/);
+        expect(reExport || directExport || emailModalDef).not.toBeNull();
     });
 
     test('1.3  WhatsAppChatModal passes initialPhone prop to ProcurementWhatsAppTab', () => {
@@ -28,12 +34,13 @@ describe('ConversationModal.js', () => {
     });
 
     test('1.4  EmailChatModal passes initialEmail prop to ProcurementEmailConversationTab', () => {
-        expect(CONV_MODAL).toMatch(/ProcurementEmailConversationTab[\s\S]{0,200}initialEmail/);
+        // EmailChatModal is in its own file now
+        expect(EMAIL_MODAL).toMatch(/ProcurementEmailConversationTab[\s\S]{0,200}initialEmail/);
     });
 
     test('1.5  both modals use key prop for remount on contact change', () => {
-        const waKey   = CONV_MODAL.match(/ProcurementWhatsAppTab[\s\S]{0,100}key=/);
-        const emailKey = CONV_MODAL.match(/ProcurementEmailConversationTab[\s\S]{0,100}key=/);
+        const waKey    = CONV_MODAL.match(/ProcurementWhatsAppTab[\s\S]{0,100}key=/);
+        const emailKey = EMAIL_MODAL.match(/ProcurementEmailConversationTab[\s\S]{0,100}key=/);
         expect(waKey).not.toBeNull();
         expect(emailKey).not.toBeNull();
     });

@@ -1791,6 +1791,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
                                     if (!el) return;
+                                    if (pendingView) return;
                                     const fit = () => {
                                         const top = el.getBoundingClientRect().top;
                                         el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";

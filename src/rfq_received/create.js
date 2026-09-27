@@ -89,6 +89,7 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     const [extractionModel, setExtractionModel] = useState("");
     const [extractedCategories, setExtractedCategories] = useState([]);
     const [syncingProducts, setSyncingProducts] = useState(false);
+    const [syncProgress, setSyncProgress] = useState({ done: 0, total: 0 });
     const productFileInputRef    = useRef(null);
     const additionalFileInputRef = useRef(null);
     const productDropZoneRef     = useRef(null);
@@ -540,11 +541,13 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     // For each product: find by part_no → find by name → create new.
     // Returns same-length array as input with product_ids filled in (never drops products).
     // Caches part_no lookups to avoid redundant API calls for duplicate part_nos.
-    const syncProductListToDB = async (productList, storeId, token, showErr) => {
+    const syncProductListToDB = async (productList, storeId, token, showErr, onProgress) => {
         const headers = { Authorization: token };
         // Cache: part_no → found DB product (or null if not found/created with that part_no)
         const partNoCache = new Map();
         const result = [];
+        const total = productList.length;
+        let done = 0;
         for (const ep of productList) {
             const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "", notes: ep.notes || "" };
             // Already has a product_id — keep it as-is
@@ -616,6 +619,8 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 part_no: found?.part_number || found?.part_no || base.part_no,
                 unit:    found ? resolveUnit(found.unit) : (base.unit || "PCE"),
             });
+            done++;
+            onProgress && onProgress(done, total);
         }
         return result;
     };
@@ -652,9 +657,15 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
         const storeId = localStorage.getItem("store_id");
         const token   = localStorage.getItem("access_token");
         setSyncingProducts(true);
+        setSyncProgress({ done: 0, total: productList.length });
         const before = productList.filter(p => p.product_id).length;
-        const synced = await syncProductListToDB(productList, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
+        const synced = await syncProductListToDB(
+            productList, storeId, token,
+            msg => showToastMessage && showToastMessage(msg, "danger"),
+            (done, total) => setSyncProgress({ done, total }),
+        );
         setSyncingProducts(false);
+        setSyncProgress({ done: 0, total: 0 });
         // Update products in-place by index so that all originally extracted rows are preserved.
         // syncProductListToDB may return fewer rows when it deduplicates by product_id;
         // we keep the full extracted list and just fill in product_id where found.
@@ -817,8 +828,14 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                 showToastMessage && showToastMessage(`Saving ${currentProducts.filter(p => p.name && p.name.trim() && !p.product_id).length} product(s) to DB…`, "info");
                 try {
                     setSyncingProducts(true);
-                    currentProducts = await syncProductListToDB(currentProducts, storeId, token, msg => showToastMessage && showToastMessage(msg, "danger"));
+                    setSyncProgress({ done: 0, total: currentProducts.length });
+                    currentProducts = await syncProductListToDB(
+                        currentProducts, storeId, token,
+                        msg => showToastMessage && showToastMessage(msg, "danger"),
+                        (done, total) => setSyncProgress({ done, total }),
+                    );
                     setSyncingProducts(false);
+                    setSyncProgress({ done: 0, total: 0 });
                     setProducts(currentProducts);
                     const created = currentProducts.filter(p => p.product_id).length;
                     showToastMessage && showToastMessage(`${created} product(s) saved to DB ✓`, "success");
@@ -1113,6 +1130,12 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
                             <span className="text-muted small d-flex align-items-center gap-1">
                                 <Spinner animation="border" size="sm" />
                                 Syncing products…
+                                {syncProgress.total > 0 && (
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                        {syncProgress.done}/{syncProgress.total}
+                                        {' '}({Math.round(syncProgress.done / syncProgress.total * 100)}%)
+                                    </span>
+                                )}
                             </span>
                         )}
                         {openProductSearch && (

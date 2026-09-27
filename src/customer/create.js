@@ -597,7 +597,7 @@ const CustomerCreate = forwardRef((props, ref) => {
             <QuotationSalesReturns ref={QtnSalesReturnsRef} showToastMessage={props.showToastMessage} />
             {!props.noVehicleCreate && <VehicleCreate ref={VehicleCreateRef} refreshList={() => loadCustomerVehicles()} showToastMessage={props.showToastMessage} />}
             {/*  <CustomerView ref={DetailsViewRef} />*/}
-            <style>{`.cust-create-wrap { z-index: 1600 !important; }`}</style>
+            <style>{`.cust-create-wrap { z-index: ${props.zIndex || 1600} !important; }`}</style>
             <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="cust-create-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}

@@ -9,21 +9,22 @@ import "../order/print.css";
 
 const MODEL = 'rfq_received';
 
-const RFQPreview = forwardRef((props, ref) => {
+const RFQPreview = forwardRef(({ zIndex } = {}, ref) => {
     const { t } = useTranslation('common');
 
     // ── modal state ──────────────────────────────────────────────────────────
     const [show, setShow]                   = useState(false);
     useEffect(() => {
         if (!show) return;
+        const targetZ = String(zIndex || 1600);
         const apply = () => {
             const el = document.querySelector('.modal.order-preview-wrap');
-            if (el) el.style.setProperty('z-index', '1600', 'important');
+            if (el) el.style.setProperty('z-index', targetZ, 'important');
         };
         apply();
         const t = setTimeout(apply, 80);
         return () => clearTimeout(t);
-    }, [show]);
+    }, [show, zIndex]);
     const [rfq, setRfq]                     = useState(null);
     const [store, setStore]                 = useState(null);
     const [invoiceBackground, setInvoiceBackground] = useState('');

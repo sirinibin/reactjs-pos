@@ -13,6 +13,7 @@ import EmailDetailModal from './store/EmailDetailModal';
 import { ExtractModal } from './store/ProcurementEmailsTab';
 import RFQCreate from './rfq_received/create.js';
 import { RFQSendModal } from './rfq_received/index.js';
+import { WhatsAppNotificationModal } from './store/ConversationModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -63,6 +64,7 @@ function Topbar(props) {
     }
     const [waUnreadItems, setWaUnreadItems] = useState([]);
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
+    const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone }
     const [emailUnreadItems, setEmailUnreadItems] = useState([]);
     const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
     const emailUnreadCountRef = useRef(null);
@@ -158,7 +160,10 @@ function Topbar(props) {
         fetch(`/v1/rfq-whatsapp-unread?store_id=${storeId}`, { headers: { Authorization: token } })
             .then(r => r.json())
             .then(data => {
-                setWaUnreadItems(data.items || []);
+                const items = (data.items || []).slice().sort((a, b) =>
+                    new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0)
+                );
+                setWaUnreadItems(items);
                 setWaUnreadTotal(data.total_unread || 0);
             })
             .catch(() => {});
@@ -627,6 +632,18 @@ function Topbar(props) {
                         )}
 
                         {storeSettings?.enable_rfq_module && (
+                            <li className="nav-item me-1">
+                                <span
+                                    title="RFQ History"
+                                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                    onClick={() => { window.location.href = '/dashboard/rfq-received'; }}
+                                >
+                                    <i className="bi bi-clipboard2-check" style={{ fontSize: 20, color: '#0d6efd' }}></i>
+                                </span>
+                            </li>
+                        )}
+
+                        {storeSettings?.enable_rfq_module && (
                             <li className="nav-item dropdown me-1">
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
@@ -650,15 +667,8 @@ function Topbar(props) {
                                             Unread WhatsApp Messages
                                         </Dropdown.ItemText>
                                         {waUnreadItems.map((item, idx) => {
-                                            const tab = item.phone_type === 'customer' ? 'customer_conv' : 'supplier_conv';
-                                            const payload = { rfqId: item.rfq_id, tab, phone: item.phone, contactName: item.contact_name };
                                             const handleClick = () => {
-                                                if (window.location.pathname === '/dashboard/rfq-received') {
-                                                    eventEmitter.emit('openRfqConversations', payload);
-                                                } else {
-                                                    sessionStorage.setItem('pendingRfqConversations', JSON.stringify(payload));
-                                                    window.location.href = '/dashboard/rfq-received';
-                                                }
+                                                setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone });
                                             };
                                             return (
                                             <div
@@ -1065,6 +1075,14 @@ function Topbar(props) {
                     storeId={localStorage.getItem('store_id')}
                     show={topbarShowSendModal}
                     onHide={() => { setTopbarShowSendModal(false); setTopbarRfqForSend(null); }}
+                />
+            )}
+            {waNotifModal && (
+                <WhatsAppNotificationModal
+                    show={!!waNotifModal}
+                    storeId={waNotifModal.storeId}
+                    phone={waNotifModal.phone}
+                    onHide={() => setWaNotifModal(null)}
                 />
             )}
         </>

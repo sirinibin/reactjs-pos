@@ -65,6 +65,9 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
     const rfqCreateRef = useRef(null);
     const [extractMsg, setExtractMsg] = useState(null);
     const [rfqDetail, setRfqDetail] = useState(null);
+    const [rfqDetailInitialTab, setRfqDetailInitialTab] = useState(null);
+    const [rfqDetailInitialFile, setRfqDetailInitialFile] = useState(null);
+    const [extractingAttUrl, setExtractingAttUrl] = useState(null);
     const [rfqForSend, setRfqForSend] = useState(null);
     const [showSendModal, setShowSendModal] = useState(false);
     const [toast, setToast]       = useState(null);
@@ -102,6 +105,24 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
     // ── Delete conversation (admin only) ──────────────────────────────────────
     const [deletingThread, setDeletingThread]   = useState(false);
     const isAdmin = localStorage.getItem('user_role') === 'Admin';
+
+    const handleExtractPricesFromAtt = async (msg, att) => {
+        const rfqId = msg?.rfq_received_id;
+        if (!rfqId || !att.url) return;
+        setExtractingAttUrl(att.url);
+        try {
+            const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
+            const data = await res.json();
+            const rfq = data.result || data;
+            const pdfRes = await fetch(att.url, { headers: { Authorization: token } });
+            const blob = await pdfRes.blob();
+            const file = new File([blob], att.filename || 'quotation.pdf', { type: blob.type || 'application/pdf' });
+            setRfqDetailInitialTab('prices');
+            setRfqDetailInitialFile(file);
+            setRfqDetail(rfq);
+        } catch (_) {}
+        setExtractingAttUrl(null);
+    };
 
     const deleteThread = async () => {
         if (!selectedThread) return;
@@ -802,11 +823,26 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                                                                                 {att.size > 0 && <div style={{ fontSize: '11px', color: '#5f6368' }}>{(att.size / 1024).toFixed(0)} KB</div>}
                                                                             </div>
                                                                         </div>
-                                                                        {att.url && (
-                                                                            <a href={att.url} target="_blank" rel="noreferrer" download={att.filename} className="btn btn-sm btn-outline-secondary" style={{ padding: '2px 8px', fontSize: '11px', alignSelf: 'flex-start' }}>
-                                                                                <i className="bi bi-download me-1"></i>Download
-                                                                            </a>
-                                                                        )}
+                                                                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                                                            {att.url && (
+                                                                                <a href={att.url} target="_blank" rel="noreferrer" download={att.filename} className="btn btn-sm btn-outline-secondary" style={{ padding: '2px 8px', fontSize: '11px' }}>
+                                                                                    <i className="bi bi-download me-1"></i>Download
+                                                                                </a>
+                                                                            )}
+                                                                            {isPDF && msg?.rfq_received_id && att.url && (
+                                                                                <button
+                                                                                    className="btn btn-sm btn-outline-success"
+                                                                                    style={{ padding: '2px 8px', fontSize: '11px' }}
+                                                                                    onClick={e => { e.stopPropagation(); handleExtractPricesFromAtt(msg, att); }}
+                                                                                    disabled={extractingAttUrl === att.url}
+                                                                                    title="Extract supplier quotation prices from this PDF"
+                                                                                >
+                                                                                    {extractingAttUrl === att.url
+                                                                                        ? <span className="spinner-border spinner-border-sm" style={{ width: '10px', height: '10px' }} />
+                                                                                        : <i className="bi bi-magic"></i>}
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             })}
@@ -1177,12 +1213,14 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                 }}
             />
 
-            {/* RFQ Detail modal — opened from RFQ code badge */}
+            {/* RFQ Detail modal — opened from RFQ code badge or PDF extract button */}
             <ForwardDetail
                 rfq={rfqDetail}
                 show={!!rfqDetail}
                 storeId={localStorage.getItem('store_id')}
-                onHide={() => setRfqDetail(null)}
+                onHide={() => { setRfqDetail(null); setRfqDetailInitialTab(null); setRfqDetailInitialFile(null); }}
+                initialTab={rfqDetailInitialTab}
+                initialAddFile={rfqDetailInitialFile}
             />
 
             {/* Send RFQ modal — opened after new RFQ creation */}

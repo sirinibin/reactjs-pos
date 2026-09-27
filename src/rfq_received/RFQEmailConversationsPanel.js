@@ -12,6 +12,10 @@ export default function RFQEmailConversationsPanel({ emails, emailLabels, storeI
 
     const normalise = e => e ? e.trim().toLowerCase() : e;
 
+    // Stable string key so a new array reference from the parent
+    // doesn't retrigger the fetch on every render (prevents blinking).
+    const emailsKey = (emails || []).slice().sort().join(',');
+
     const load = useCallback(async () => {
         if (!storeId || !emails || emails.length === 0) return;
         setLoading(true);
@@ -31,7 +35,7 @@ export default function RFQEmailConversationsPanel({ emails, emailLabels, storeI
             }
         } catch (_) { setThreads([]); if (onUnreadCount) onUnreadCount(0); }
         setLoading(false);
-    }, [storeId, emails, token]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [storeId, emailsKey, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => { load(); }, [load]);
 

@@ -161,11 +161,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
             if (selectedVendorsValue?.length > 0) {
-                setSelectedVendors([...selectedVendorsValue]);
                 formData.vendor_id = selectedVendorsValue[0].id;
                 if (selectedVendorsValue[0].use_remarks_in_purchases && selectedVendorsValue[0].remarks) {
                     formData.remarks = selectedVendorsValue[0].remarks;
                 }
+                autoSettingVendorRef.current = true;
+                console.error('[open] setting vendor:', JSON.stringify({id: selectedVendorsValue[0].id, search_label: selectedVendorsValue[0].search_label}), 'autoSettingVendorRef:', autoSettingVendorRef.current);
+                setSelectedVendors([...selectedVendorsValue]);
+                setTimeout(() => { autoSettingVendorRef.current = false; }, 1000);
+            } else {
+                console.error('[open] no selectedVendorsValue, vendors will be empty');
             }
 
             ResetForm();
@@ -209,32 +214,39 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setShow(true);
         },
 
-        openFromExtraction(data, msgId, msgCode, onCreated) {
+        openFromExtraction(data, msgId, msgCode, vendorObj, resolvedProducts, onCreated) {
             onCreatedFromExtractionRef.current = onCreated || null;
-            this.open(null, undefined);
+            // Pass pre-resolved vendor to open() so it is set synchronously before the form renders
+            const vendors = vendorObj?.id ? [{ ...vendorObj, search_label: vendorObj.search_label || vendorObj.name || '' }] : undefined;
+            console.error('[openFromExtraction] vendorObj:', JSON.stringify(vendorObj ? {id: vendorObj.id, name: vendorObj.name} : null), 'vendors:', JSON.stringify(vendors ? vendors.map(v => ({id: v.id, search_label: v.search_label})) : null));
+            this.open(null, vendors);
+            // 100ms > open()'s internal 50ms clear timeout, so our state survives
             setTimeout(() => {
+                // Set basic form fields
                 if (data.invoice_number) formData.vendor_invoice_no = data.invoice_number;
                 if (data.vendor_national_address) formData.vendor_national_address = data.vendor_national_address;
                 if (data.total_amount > 0) formData.net_total = data.total_amount;
-
-                // Show placeholder vendor name immediately (like RFQ form); DB record replaces it async
-                const companyName = (data.vendor_company_name || '').trim();
-                if (companyName) {
-                    autoSettingVendorRef.current = true;
-                    setSelectedVendors([{ id: '', name: companyName, search_label: companyName }]);
-                    setTimeout(() => { autoSettingVendorRef.current = false; }, 600);
-                }
-
                 setFormData({ ...formData });
 
-                // Async: find/create vendor in DB — replicates Typeahead onChange logic
-                autoFindOrCreateVendor(data);
-
-                // Async: find/create each product in DB — then add via addProduct (same as user selection)
-                if (data.products && data.products.length > 0) {
-                    autoSyncProductsFromExtraction(data.products);
+                // Add pre-resolved products synchronously
+                if (resolvedProducts && resolvedProducts.length > 0) {
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    for (const rp of resolvedProducts) {
+                        addProduct(rp.dbProduct);
+                        const idx = selectedProducts.length - 1;
+                        if (idx >= 0) {
+                            if (rp.quantity !== 1) selectedProducts[idx].quantity = rp.quantity;
+                            if (rp.unit_price > 0) {
+                                selectedProducts[idx].purchase_unit_price = rp.unit_price;
+                                selectedProducts[idx].purchase_unit_price_with_vat = rp.unit_price * (1 + (formData.vat_percent || 15) / 100);
+                            }
+                        }
+                    }
+                    setSelectedProducts([...selectedProducts]);
+                    setTimeout(() => reCalculate(), 100);
                 }
-            }, 150);
+            }, 100);
         },
 
         openDraft(id) {
@@ -2262,179 +2274,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             .catch(() => setSelectedVendors([fallbackData]));
     }
 
-    // ── Auto vendor find/create (called from openFromExtraction) ──
-    async function autoFindOrCreateVendor(extractionData) {
-        const stId = localStorage.getItem('store_id');
-        const at = localStorage.getItem('access_token');
-        const companyName = (extractionData.vendor_company_name || '').trim();
-        const vatNo = (extractionData.vendor_vat_no || '').trim();
-        console.log('[autoFindOrCreateVendor] start', { companyName, vatNo, stId, hasToken: !!at });
-        if (!companyName && !vatNo) return;
-        try {
-            let vendorId = null;
-
-            if (vatNo) {
-                const r = await fetch(`/v1/vendor?search[vat_no]=${encodeURIComponent(vatNo)}&store_id=${stId}&limit=1`, { headers: { Authorization: at } });
-                if (r.ok) {
-                    const d = await r.json();
-                    console.log('[autoFindOrCreateVendor] VAT search results:', d.result?.length, d.result?.[0]?.id);
-                    if ((d.result || []).length > 0) vendorId = d.result[0].id;
-                } else { console.error('[autoFindOrCreateVendor] VAT search HTTP error:', r.status); }
-            }
-            if (!vendorId && companyName) {
-                const r = await fetch(`/v1/vendor?query=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
-                if (r.ok) {
-                    const d = await r.json();
-                    console.log('[autoFindOrCreateVendor] name search results:', d.result?.length);
-                    const match = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0];
-                    if (match) vendorId = match.id;
-                } else { console.error('[autoFindOrCreateVendor] name search HTTP error:', r.status); }
-            }
-            if (!vendorId && companyName) {
-                const isValidVat = /^3\d{13}3$/.test(vatNo);
-                const body = { store_id: stId, name: companyName };
-                if (vatNo && isValidVat) body.vat_no = vatNo;
-                if (extractionData.vendor_cr_no) body.cr_no = extractionData.vendor_cr_no;
-                if (extractionData.vendor_mobile) body.phone = extractionData.vendor_mobile;
-                if (extractionData.vendor_national_address) body.address = extractionData.vendor_national_address;
-                console.log('[autoFindOrCreateVendor] creating vendor:', body);
-                const r = await fetch('/v1/vendor', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                if (r.ok) {
-                    const d = await r.json();
-                    console.log('[autoFindOrCreateVendor] created vendor id:', d.result?.id);
-                    if (d.result?.id) vendorId = d.result.id;
-                } else { console.error('[autoFindOrCreateVendor] create vendor HTTP error:', r.status); }
-            }
-            if (vendorId) {
-                console.log('[autoFindOrCreateVendor] fetching full vendor:', vendorId);
-                const sel = 'id,code,credit_balance,credit_limit,use_remarks_in_purchases,remarks,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,address';
-                const r = await fetch(`/v1/vendor/${vendorId}?search[store_id]=${stId}&select=${sel}`, { headers: { Authorization: at } });
-                if (r.ok) {
-                    const d = await r.json();
-                    console.log('[autoFindOrCreateVendor] vendor detail:', d.result?.id, d.result?.name);
-                    if (d.result) {
-                        const v = d.result;
-                        formData.vendor_id = v.id;
-                        if (v.use_remarks_in_purchases && v.remarks) {
-                            formData.remarks = v.remarks;
-                        }
-                        setFormData({ ...formData });
-                        autoSettingVendorRef.current = true;
-                        setSelectedVendors([{ ...v, search_label: v.search_label || v.name || '' }]);
-                        setTimeout(() => { autoSettingVendorRef.current = false; }, 600);
-                        console.log('[autoFindOrCreateVendor] done — vendor set:', v.name);
-                    }
-                } else { console.error('[autoFindOrCreateVendor] vendor detail HTTP error:', r.status); }
-            } else {
-                console.warn('[autoFindOrCreateVendor] no vendorId found/created');
-            }
-        } catch (e) { console.error('[autoFindOrCreateVendor] exception:', e); }
-    }
-
-    // ── Auto product find/create (called from openFromExtraction) ──
-    async function autoSyncProductsFromExtraction(extractionProducts) {
-        if (!extractionProducts || !extractionProducts.length) return;
-        const stId = localStorage.getItem('store_id');
-        const at = localStorage.getItem('access_token');
-        console.log('[autoSyncProducts] start', extractionProducts.length, 'products, stId:', stId);
-        const selectFields = [
-            'id', 'name', 'part_number', 'unit', 'item_code', 'prefix_part_number', 'allow_duplicates',
-            `product_stores.${stId}.purchase_unit_price`,
-            `product_stores.${stId}.purchase_unit_price_with_vat`,
-            `product_stores.${stId}.retail_unit_price`,
-            `product_stores.${stId}.retail_unit_price_with_vat`,
-            `product_stores.${stId}.wholesale_unit_price`,
-            `product_stores.${stId}.wholesale_unit_price_with_vat`,
-            `product_stores.${stId}.stock`,
-        ].join(',');
-
-        // Phase 1: resolve all products from DB (find or create)
-        const resolved = [];
-        for (const ep of extractionProducts) {
-            try {
-                let dbProduct = null;
-                console.log('[autoSyncProducts] processing ep:', ep.part_no, ep.name);
-                if (ep.part_no) {
-                    const r = await fetch(
-                        `/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`,
-                        { headers: { Authorization: at } }
-                    );
-                    if (r.ok) {
-                        const d = await r.json();
-                        console.log('[autoSyncProducts] part_no search results:', d.result?.length, d.result?.[0]?.id);
-                        if ((d.result || []).length > 0) dbProduct = d.result[0];
-                    } else { console.error('[autoSyncProducts] part_no search HTTP error:', r.status); }
-                }
-                if (!dbProduct) {
-                    const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
-                    if (ep.part_no) body.part_number = ep.part_no;
-                    if (ep.unit) body.unit = ep.unit;
-                    console.log('[autoSyncProducts] creating product:', body);
-                    const cr = await fetch('/v1/product', {
-                        method: 'POST',
-                        headers: { Authorization: at, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body),
-                    });
-                    if (cr.ok) {
-                        const cd = await cr.json();
-                        console.log('[autoSyncProducts] created product id:', cd.result?.id);
-                        if (cd.result?.id) {
-                            const pr = await fetch(
-                                `/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`,
-                                { headers: { Authorization: at } }
-                            );
-                            if (pr.ok) {
-                                const pd = await pr.json();
-                                dbProduct = pd.result || cd.result;
-                            } else {
-                                dbProduct = cd.result;
-                            }
-                        }
-                    } else { console.error('[autoSyncProducts] create product HTTP error:', cr.status); }
-                }
-                if (dbProduct?.id) {
-                    console.log('[autoSyncProducts] resolved product:', dbProduct.id, dbProduct.name);
-                    resolved.push({ ep, dbProduct });
-                } else {
-                    console.warn('[autoSyncProducts] could not find/create product for:', ep.part_no, ep.name);
-                }
-            } catch (e) { console.error('[autoSyncProducts] exception for', ep?.part_no, e); }
-        }
-
-        console.log('[autoSyncProducts] Phase 2: adding', resolved.length, 'products');
-        // Phase 2: build new product rows (independent of selectedProducts closure)
-        const newRows = resolved.map(({ ep, dbProduct }) => {
-            const sp = dbProduct.product_stores?.[stId] || {};
-            return {
-                product_id: dbProduct.id,
-                code: dbProduct.item_code || '',
-                prefix_part_number: dbProduct.prefix_part_number || '',
-                part_number: dbProduct.part_number || '',
-                name: dbProduct.name || ep.name || '',
-                quantity: parseFloat(ep.quantity) || 1,
-                product_stores: dbProduct.product_stores || {},
-                purchase_unit_price: sp.purchase_unit_price || 0,
-                purchase_unit_price_with_vat: sp.purchase_unit_price_with_vat || 0,
-                retail_unit_price: sp.retail_unit_price || 0,
-                retail_unit_price_with_vat: sp.retail_unit_price_with_vat || 0,
-                wholesale_unit_price: sp.wholesale_unit_price || 0,
-                wholesale_unit_price_with_vat: sp.wholesale_unit_price_with_vat || 0,
-                unit: dbProduct.unit || ep.unit || '',
-                unit_discount: 0,
-                unit_discount_with_vat: 0,
-                unit_discount_percent: 0,
-                unit_discount_percent_vat: 0,
-                stock: sp.stock || 0,
-            };
-        });
-
-        if (newRows.length > 0) {
-            selectedProducts = [...newRows];
-            setSelectedProducts([...newRows]);
-            setTimeout(() => reCalculate(), 100);
-            console.log('[autoSyncProducts] done — set', newRows.length, 'products');
-        }
-    }
 
     const UserCreateFormRef = useRef();
 
@@ -3923,6 +3762,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onInputChange={(searchTerm, e) => {
                                                             formData.vendor_name = searchTerm;
+                                                            if (!searchTerm) { console.error('[onInputChange] EMPTY searchTerm, autoSettingVendorRef:', autoSettingVendorRef.current, '→ will clear:', !autoSettingVendorRef.current); }
                                                             if (!searchTerm && !autoSettingVendorRef.current) { formData.vendor_id = ""; setSelectedVendors([]); }
                                                             setFormData({ ...formData });
                                                             if (timerRef.current) clearTimeout(timerRef.current);

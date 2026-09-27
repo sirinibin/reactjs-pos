@@ -281,6 +281,12 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             ];
 
+            // Clear quotation links so they don't carry over from the previous sale
+            formData.quotation_id = "";
+            formData.quotation_code = "";
+            formData.quotation_ids = [];
+            formData.quotation_codes = [];
+
             ResetForm();
 
             pendingOrderIdRef.current = id || null;
@@ -429,6 +435,12 @@ const OrderCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         formData.products = [];
+
+        // Clear quotation links so they don't carry over from the previous sale
+        formData.quotation_id = "";
+        formData.quotation_code = "";
+        formData.quotation_ids = [];
+        formData.quotation_codes = [];
 
         selectedCustomers = [];
         setSelectedCustomers([]);

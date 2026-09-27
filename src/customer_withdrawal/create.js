@@ -94,6 +94,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
+    const submittingRef = useRef(false);
 
 
     //fields
@@ -566,10 +567,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     }
 
     function handleCreate(event) {
-        if (isProcessing) {
-            return;
-        }
+        if (submittingRef.current || isProcessing) return;
+        submittingRef.current = true;
         if (formData.id && formData.zatca?.reporting_passed) {
+            submittingRef.current = false;
             return;
         }
 
@@ -646,6 +647,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                 setErrors({});
                 setProcessing(false);
+                submittingRef.current = false;
 
                 console.log("Response:");
                 console.log(data);
@@ -664,6 +666,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
+                submittingRef.current = false;
                 if (error?.zatca_reconnect) {
                     zatcaConnectRef.current?.open(store.id, true);
                     return;

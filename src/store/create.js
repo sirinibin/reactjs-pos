@@ -6967,9 +6967,22 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div></div>)}
 
                                 {activeTab === 'whatsapp_settings' && (<div className="pw-tab-wrap">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                                         <i className="bi bi-whatsapp" style={{ fontSize: '18px', color: '#25D366' }}></i>
                                         <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('WhatsApp Settings')}</h3>
+                                    </div>
+
+                                    {/* Meta quick-access links */}
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                                        <a href="https://business.facebook.com/latest/whatsapp_manager/phone_numbers?business_id=1442312137713796&asset_id=28106721685688550" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-bar-chart me-1"></i>{t('Insights')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=1442312137713796&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=28106721685688550" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-grid me-1"></i>{t('Templates')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/details/?asset_id=28106721685688550&business_id=1442312137713796&payment_account_id=2075149283102188&placement=whatsapp_ads&payment_method_id=" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-credit-card me-1"></i>{t('Billing')}
+                                        </a>
                                     </div>
 
                                     {/* Feature toggle */}

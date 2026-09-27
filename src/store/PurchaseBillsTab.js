@@ -264,7 +264,7 @@ function PurchaseBillExtractModal({ msg, storeId, token, onClose, onCreatePurcha
                                                             <td>{p.part_no || '—'}</td>
                                                             <td>{p.name || '—'}</td>
                                                             <td>{p.quantity || 1}</td>
-                                                            <td>{p.unit_price > 0 ? p.unit_price?.toFixed(2) : '—'}</td>
+                                                            <td>{(p.unit_price > 0) ? <strong>{Number(p.unit_price).toFixed(2)}</strong> : '—'}</td>
                                                             <td>{p.unit || '—'}</td>
                                                             <td style={{ maxWidth: '200px', fontSize: '11px' }}>{p.notes || '—'}</td>
                                                         </tr>
@@ -514,10 +514,127 @@ export default function PurchaseBillsTab({ storeId }) {
         } catch (_) {}
     };
 
-    const handleCreatePurchase = (extractedData, msgId, msgCode) => {
+    const handleCreatePurchase = async (extractedData, msgId, msgCode) => {
         if (!purchaseCreateRef.current) return;
+
+        // Pre-resolve vendor here (in PurchaseBillsTab, not inside PurchaseCreate closure)
+        // so we can pass it synchronously to open() which already handles selectedVendorsValue.
+        let vendorObj = null;
+        console.error('[handleCreatePurchase] START extractedData:', JSON.stringify({vendor_company_name: extractedData.vendor_company_name, vendor_vat_no: extractedData.vendor_vat_no, products_count: (extractedData.products||[]).length}));
+        try {
+            const at = token;
+            const stId = storeId;
+            console.error('[handleCreatePurchase] token present:', !!at, 'storeId:', stId);
+            const companyName = (extractedData.vendor_company_name || '').trim();
+            const vatNo = (extractedData.vendor_vat_no || '').trim();
+
+            if (companyName || vatNo) {
+                // 1. Direct VAT lookup
+                if (vatNo) {
+                    const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&store_id=${stId}`, { headers: { Authorization: at } });
+                    if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
+                }
+                // 2. Name search
+                if (!vendorObj && companyName) {
+                    const r = await fetch(`/v1/vendor?search[query]=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
+                    if (r.ok) {
+                        const d = await r.json();
+                        vendorObj = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0] || null;
+                    }
+                }
+                // 3. Create if not found
+                if (!vendorObj && companyName) {
+                    const isValidVat = /^3\d{13}3$/.test(vatNo);
+                    const body = { store_id: stId, name: companyName };
+                    if (vatNo && isValidVat) body.vat_no = vatNo;
+                    if (extractedData.vendor_cr_no) body.cr_no = extractedData.vendor_cr_no;
+                    if (extractedData.vendor_mobile) body.phone = extractedData.vendor_mobile;
+                    if (extractedData.vendor_national_address) body.address = extractedData.vendor_national_address;
+                    const r = await fetch('/v1/vendor', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                    if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
+                    else {
+                        // Creation failed (duplicate) — retry lookups
+                        if (vatNo) {
+                            const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&store_id=${stId}`, { headers: { Authorization: at } });
+                            if (r2.ok) { const d2 = await r2.json(); if (d2.result?.id) vendorObj = d2.result; }
+                        }
+                        if (!vendorObj && companyName) {
+                            const r2 = await fetch(`/v1/vendor?search[query]=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
+                            if (r2.ok) { const d2 = await r2.json(); vendorObj = (d2.result || [])[0] || null; }
+                        }
+                    }
+                }
+                // 4. Fetch full vendor record with all needed fields
+                if (vendorObj?.id) {
+                    const sel = 'id,code,credit_balance,credit_limit,use_remarks_in_purchases,remarks,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,address';
+                    const r = await fetch(`/v1/vendor/${vendorObj.id}?search[store_id]=${stId}&select=${sel}`, { headers: { Authorization: at } });
+                    if (r.ok) { const d = await r.json(); if (d.result) vendorObj = d.result; }
+                }
+            }
+        } catch (_) {}
+
+        // Pre-resolve products (find or create each in DB)
+        let resolvedProducts = [];
+        try {
+            const at = token;
+            const stId = storeId;
+            const products = extractedData.products || [];
+            const selectFields = [
+                'id', 'name', 'part_number', 'unit', 'item_code', 'prefix_part_number', 'allow_duplicates',
+                `product_stores.${stId}.purchase_unit_price`,
+                `product_stores.${stId}.purchase_unit_price_with_vat`,
+                `product_stores.${stId}.retail_unit_price`,
+                `product_stores.${stId}.retail_unit_price_with_vat`,
+                `product_stores.${stId}.wholesale_unit_price`,
+                `product_stores.${stId}.wholesale_unit_price_with_vat`,
+                `product_stores.${stId}.stock`,
+            ].join(',');
+
+            for (const ep of products) {
+                let dbProduct = null;
+                // Find by part_no
+                if (ep.part_no) {
+                    const r = await fetch(`/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                    if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
+                }
+                // Find by name
+                if (!dbProduct && ep.name) {
+                    const r = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                    if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
+                }
+                // Create if not found
+                if (!dbProduct) {
+                    const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
+                    if (ep.part_no) body.part_number = ep.part_no;
+                    if (ep.unit) body.unit = ep.unit;
+                    const cr = await fetch('/v1/product', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                    if (cr.ok) {
+                        const cd = await cr.json();
+                        if (cd.result?.id) {
+                            const pr = await fetch(`/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`, { headers: { Authorization: at } });
+                            dbProduct = pr.ok ? (await pr.json()).result || cd.result : cd.result;
+                        }
+                    } else if (ep.name) {
+                        // Retry by name after failed creation (duplicate)
+                        const r2 = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                        if (r2.ok) { const d2 = await r2.json(); if ((d2.result || []).length > 0) dbProduct = d2.result[0]; }
+                    }
+                }
+                if (dbProduct?.id) {
+                    if (!dbProduct.product_stores) dbProduct.product_stores = {};
+                    resolvedProducts.push({
+                        dbProduct,
+                        quantity: parseFloat(ep.quantity) || 1,
+                        unit_price: parseFloat(ep.unit_price) || 0,
+                    });
+                }
+            }
+        } catch (e) { console.error('[handleCreatePurchase] vendor lookup error:', e); }
+
+        console.error('[handleCreatePurchase] vendorObj after lookup:', JSON.stringify(vendorObj ? {id: vendorObj.id, name: vendorObj.name, vat_no: vendorObj.vat_no} : null));
+
         purchaseCreateRef.current.openFromExtraction(
-            extractedData, msgId, msgCode,
+            extractedData, msgId, msgCode, vendorObj, resolvedProducts,
             (purchaseId, purchaseCode) => { linkPurchaseToMsg(msgId, purchaseId, purchaseCode); },
         );
     };
@@ -526,6 +643,18 @@ export default function PurchaseBillsTab({ storeId }) {
         if (purchaseCreateRef.current) {
             purchaseCreateRef.current.open(purchaseId);
         }
+    };
+
+    const handleDelete = async (msgId) => {
+        if (!window.confirm('Delete this purchase bill image? This cannot be undone.')) return;
+        try {
+            await fetch(`/v1/procurement-messages/${msgId}?store_id=${storeId}`, {
+                method: 'DELETE',
+                headers: { Authorization: token },
+            });
+            setMessages(prev => prev.filter(m => m.id !== msgId));
+            setTotal(prev => prev - 1);
+        } catch (_) {}
     };
 
     const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -622,6 +751,14 @@ export default function PurchaseBillsTab({ storeId }) {
                                     onClick={() => setExtractMsg(msg)}
                                 >
                                     <i className="bi bi-magic me-1"></i>{t('Extract')}
+                                </button>
+                                <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    style={{ fontSize: '12px' }}
+                                    onClick={() => handleDelete(msg.id)}
+                                    title={t('Delete this purchase bill')}
+                                >
+                                    <i className="bi bi-trash"></i>
                                 </button>
                             </div>
                         </div>

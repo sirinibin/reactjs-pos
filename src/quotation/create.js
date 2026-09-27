@@ -515,6 +515,17 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [importPickerSelected, setImportPickerSelected] = useState({});
 
   useEffect(() => {
+    if (!show || !props.zIndex) return;
+    const apply = () => {
+      const el = document.querySelector('.modal.quotation-create-wrap');
+      if (el) el.style.setProperty('z-index', String(props.zIndex), 'important');
+    };
+    apply();
+    const t = setTimeout(apply, 80);
+    return () => clearTimeout(t);
+  }, [show, props.zIndex]);
+
+  useEffect(() => {
     if (!show || props.fromHistory) return;
     document.body.classList.add('quotation-form-open');
     if (props.modalClass === 'above-pending-modal') {
