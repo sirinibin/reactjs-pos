@@ -53,7 +53,7 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
     const [fixingFrontendEnv, setFixingFrontendEnv] = useState(null); // 'production' | 'test' | null
     const [frontendFixResults, setFrontendFixResults] = useState({}); // {production?: repairResult, test?: repairResult}
-    const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
+    const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8, frontend_auto_fix: false, frontend_auto_fix_minutes: 3 });
     const [autoRestartSaving, setAutoRestartSaving] = useState(false);
     const [restartLog, setRestartLog] = useState([]);
     const [userSearchOptions, setUserSearchOptions] = useState([]);
@@ -106,7 +106,12 @@ export default function AdminSettingsModal({ show, onHide }) {
             const resp = await fetch('/health-monitor/config', { headers: { Authorization: `Bearer ${token}` } });
             if (!resp.ok) return;
             const data = await resp.json();
-            setAutoRestart({ enabled: data.enabled ?? false, minutes: data.minutes ?? 8 });
+            setAutoRestart({
+                enabled: data.enabled ?? false,
+                minutes: data.minutes ?? 8,
+                frontend_auto_fix: data.frontend_auto_fix ?? false,
+                frontend_auto_fix_minutes: data.frontend_auto_fix_minutes ?? 3,
+            });
             const ids = Array.isArray(data.allowed_users) ? data.allowed_users : [];
             if (ids.length > 0) {
                 // Resolve stored IDs to user objects so Typeahead can display them
@@ -1322,6 +1327,46 @@ export default function AdminSettingsModal({ show, onHide }) {
                             }}
                         />
                         <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#6b7280' }}>minutes</span>
+                        {autoRestartSaving && (
+                            <span style={{ fontSize: '11px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>Saving…</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Frontend auto-fix config ──────────────────────────── */}
+                <div style={{ marginBottom: '16px', padding: '14px 16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <input
+                            type="checkbox"
+                            id="frontendAutoFixEnabled"
+                            checked={autoRestart.frontend_auto_fix}
+                            onChange={e => {
+                                const next = { ...autoRestart, frontend_auto_fix: e.target.checked };
+                                setAutoRestart(next);
+                                saveAutoRestartConfig(next);
+                            }}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                        />
+                        <label htmlFor="frontendAutoFixEnabled" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#374151', cursor: 'pointer', margin: 0 }}>
+                            Auto-fix frontend build if missing for more than
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="1440"
+                            value={autoRestart.frontend_auto_fix_minutes}
+                            onChange={e => setAutoRestart(prev => ({ ...prev, frontend_auto_fix_minutes: Math.max(1, parseInt(e.target.value, 10) || 1) }))}
+                            onBlur={() => saveAutoRestartConfig(autoRestart)}
+                            disabled={!autoRestart.frontend_auto_fix}
+                            style={{
+                                width: '64px', padding: '4px 8px', borderRadius: '6px',
+                                border: '1px solid #d1d5db', fontFamily: '"Inter", sans-serif',
+                                fontSize: '13px', textAlign: 'center',
+                                opacity: autoRestart.frontend_auto_fix ? 1 : 0.45,
+                            }}
+                        />
+                        <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#6b7280' }}>minutes</span>
+                        <span style={{ fontSize: '11px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>(checks every 5s)</span>
                         {autoRestartSaving && (
                             <span style={{ fontSize: '11px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>Saving…</span>
                         )}
