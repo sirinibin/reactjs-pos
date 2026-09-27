@@ -90,8 +90,9 @@ deploy_to() {
     echo ""
     echo "==> Deploying to $label ($SERVER_HOST:$dest) ..."
 
-    # Ensure temp dir exists on first run so --partial has somewhere to resume into
-    ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" "mkdir -p $tmp" 2>/dev/null || true
+    # Ensure both the temp dir and the live dir exist so the atomic swap never fails
+    # on a fresh server where the live dir hasn't been created yet.
+    ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" "mkdir -p $tmp $dest" 2>/dev/null || true
 
     while [ "$attempt" -le "$max" ]; do
         [ "$attempt" -gt 1 ] && { echo "==> [$label] Retry $attempt/$max in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
