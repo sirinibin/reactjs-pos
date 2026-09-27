@@ -727,6 +727,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     const initialPhoneRef = useRef(
         initialPhoneProp || new URLSearchParams(location.search).get('phone') || ''
     );
+    // directMode: opened from a notification — show only the chat, no sidebar, no toolbar
+    const [directMode] = useState(!!initialPhoneRef.current);
     const [messages, setMessages] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -1277,30 +1279,23 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
     }, [storeId, token, search, direction, rfqFilter, attachmentFilter]);
 
     useEffect(() => {
-        load(1);
-        loadThreads();
-        if (storeId) {
-            fetch(`/v1/procurement-messages/disk-usage?store_id=${storeId}`, { headers: { Authorization: token } })
-                .then(r => r.json()).then(d => setDiskUsage(d.formatted)).catch(() => {});
+        const directPhone = initialPhoneRef.current;
+        if (directPhone) {
+            // Opened from a notification — load only the target conversation, skip sidebar
+            setSelectedThread({ contact_phone: directPhone, contact_name: directPhone });
+            loadThread(directPhone);
+            setViewMode('conversations');
+            initialPhoneRef.current = ''; // consume
+        } else {
+            // Normal open — load full sidebar and message list
+            load(1);
+            loadThreads();
+            if (storeId) {
+                fetch(`/v1/procurement-messages/disk-usage?store_id=${storeId}`, { headers: { Authorization: token } })
+                    .then(r => r.json()).then(d => setDiskUsage(d.formatted)).catch(() => {});
+            }
         }
     }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Auto-select thread when arriving via ?phone= URL param
-    useEffect(() => {
-        const phone = initialPhoneRef.current;
-        if (!phone || !threads.length) return;
-        const normalised = phone.replace(/^\+/, '');
-        const found = threads.find(t =>
-            t.contact_phone === phone ||
-            t.contact_phone === '+' + phone ||
-            t.contact_phone === normalised
-        );
-        const thread = found || { contact_phone: phone, contact_name: phone };
-        setSelectedThread(thread);
-        loadThread(phone);
-        setViewMode('conversations');
-        initialPhoneRef.current = ''; // consume so it doesn't re-trigger
-    }, [threads]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Fast poll: refresh active thread every 3 seconds for near-realtime incoming messages.
     const selectedThreadRef = useRef(selectedThread);
@@ -1540,8 +1535,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
                 )}
             </div>
 
-            {/* View mode toggle */}
-            <div className="btn-group btn-group-sm mb-3" role="group">
+            {/* View mode toggle — hidden when opened directly from a notification */}
+            <div className="btn-group btn-group-sm mb-3" role="group" style={{ display: directMode ? 'none' : undefined }}>
                 <button
                     type="button"
                     className={`btn ${viewMode === 'conversations' ? 'btn-success' : 'btn-outline-success'}`}
@@ -1561,8 +1556,8 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
             {/* ── Conversations view ─────────────────────────────────────────── */}
             {viewMode === 'conversations' && (
                 <div style={{ display: 'flex', border: '1px solid #dee2e6', borderRadius: '8px', overflow: 'hidden', height: isMobile ? 'calc(100vh - 200px)' : 'calc(100vh - 280px)', minHeight: '400px', background: '#f5f5f5' }}>
-                    {/* Contact list — hidden on mobile when chat is open */}
-                    <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (isMobile && mobilePanel === 'chat') ? 'none' : 'flex', flexDirection: 'column' }}>
+                    {/* Contact list — hidden on mobile when chat is open, hidden in directMode */}
+                    <div style={{ width: isMobile ? '100%' : '280px', minWidth: isMobile ? undefined : '200px', borderRight: isMobile ? 'none' : '1px solid #dee2e6', background: '#fff', display: (directMode || (isMobile && mobilePanel === 'chat')) ? 'none' : 'flex', flexDirection: 'column' }}>
                         <div style={{ padding: '10px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}>
                             <div style={{ display: 'flex', gap: '6px', marginBottom: showNewConvInput ? '8px' : 0 }}>
                                 <input
