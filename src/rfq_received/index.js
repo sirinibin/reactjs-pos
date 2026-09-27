@@ -3260,21 +3260,10 @@ export default function RFQReceivedIndex({ showToastMessage }) {
     // Handle openRfqConversations events (emitted by Topbar header WhatsApp badge)
     // and pendingRfqConversations stored in sessionStorage when navigating from another page
     useEffect(() => {
-        const handleOpen = async ({ rfqId, tab, phone }) => {
-            if (!rfqId || !storeId || !token) return;
-            try {
-                const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${storeId}`, { headers: { Authorization: token } });
-                const data = await res.json();
-                if (data?.id) {
-                    // Batch all updates so the modal mounts with all props correct in one render
-                    unstable_batchedUpdates(() => {
-                        setPendingSendTab(tab || 'supplier_conv');
-                        setPendingSendPhone(phone || null);
-                        setRfqForSend(data);
-                        setShowSendModal(true);
-                    });
-                }
-            } catch (_) {}
+        const handleOpen = ({ phone }) => {
+            if (!phone) return;
+            // Open a standalone WhatsApp chat window directly — no RFQ fetch, no send modal
+            setChatModal({ type: 'whatsapp', value: phone.replace(/^\+/, '') });
         };
         eventEmitter.on('openRfqConversations', handleOpen);
 
