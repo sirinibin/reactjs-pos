@@ -820,6 +820,35 @@ function QuotationIndex(props) {
     }, 50);
   }
 
+  const [unlinkingOrder, setUnlinkingOrder] = useState(null); // { quotationId, orderId, orderCode }
+
+  async function unlinkOrderFromQuotation(quotationId, orderId, orderCode) {
+    if (!window.confirm(`Unlink sales ${orderCode} from this quotation?`)) return;
+    setUnlinkingOrder({ quotationId, orderId });
+    try {
+      const token = localStorage.getItem('access_token');
+      const storeId = localStorage.getItem('store_id');
+      const res = await fetch(`/v1/quotation/${quotationId}/order/${orderId}?store_id=${storeId}`, {
+        method: 'DELETE',
+        headers: { Authorization: token },
+      });
+      const data = await res.json();
+      if (data.status) {
+        setQuotationList(prev => prev.map(q => {
+          if (q.id !== quotationId) return q;
+          const updated = data.result;
+          return { ...q, order_id: updated.order_id, order_code: updated.order_code, order_ids: updated.order_ids || [], order_codes: updated.order_codes || [] };
+        }));
+      } else {
+        alert('Failed to unlink: ' + (data.errors?.unlink || JSON.stringify(data.errors)));
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setUnlinkingOrder(null);
+    }
+  }
+
   //Printing
   const [selectedQuotation, setSelectedQuotation] = useState({});
   let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
@@ -2445,17 +2474,32 @@ function QuotationIndex(props) {
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.order_codes && quotation.order_codes.length > 1
-                                    ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                        {quotation.order_codes.map((code, ci) => (
-                                          <span key={ci} style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                            if (quotation.order_ids && quotation.order_ids[ci]) openSalesUpdateForm(quotation.order_ids[ci]);
-                                            else openSalesUpdateForm(quotation.order_id);
-                                          }}>{code}</span>
-                                        ))}
+                                    ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                        {quotation.order_codes.map((code, ci) => {
+                                          const oid = quotation.order_ids && quotation.order_ids[ci] ? quotation.order_ids[ci] : quotation.order_id;
+                                          const isUnlinking = unlinkingOrder && unlinkingOrder.quotationId === quotation.id && unlinkingOrder.orderId === oid;
+                                          return (
+                                            <span key={ci} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                              <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(oid)}>{code}</span>
+                                              <button
+                                                title={`Unlink ${code}`}
+                                                disabled={isUnlinking}
+                                                onClick={() => unlinkOrderFromQuotation(quotation.id, oid, code)}
+                                                style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                              >{isUnlinking ? '…' : '×'}</button>
+                                            </span>
+                                          );
+                                        })}
                                       </span>
-                                    : quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                        openSalesUpdateForm(quotation.order_id);
-                                      }}>{quotation.order_code}</span>
+                                    : quotation.order_code && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                        <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(quotation.order_id)}>{quotation.order_code}</span>
+                                        <button
+                                          title={`Unlink ${quotation.order_code}`}
+                                          disabled={!!(unlinkingOrder && unlinkingOrder.quotationId === quotation.id)}
+                                          onClick={() => unlinkOrderFromQuotation(quotation.id, quotation.order_id, quotation.order_code)}
+                                          style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                        >{(unlinkingOrder && unlinkingOrder.quotationId === quotation.id) ? '…' : '×'}</button>
+                                      </span>
                                   }
                                 </td>}
                                 {(col.fieldName === "rfq_received_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2610,17 +2654,32 @@ function QuotationIndex(props) {
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {quotation.order_codes && quotation.order_codes.length > 1
-                                ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                    {quotation.order_codes.map((code, ci) => (
-                                      <span key={ci} style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                        if (quotation.order_ids && quotation.order_ids[ci]) openSalesUpdateForm(quotation.order_ids[ci]);
-                                        else openSalesUpdateForm(quotation.order_id);
-                                      }}>{code}</span>
-                                    ))}
+                                ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                    {quotation.order_codes.map((code, ci) => {
+                                      const oid = quotation.order_ids && quotation.order_ids[ci] ? quotation.order_ids[ci] : quotation.order_id;
+                                      const isUnlinking = unlinkingOrder && unlinkingOrder.quotationId === quotation.id && unlinkingOrder.orderId === oid;
+                                      return (
+                                        <span key={ci} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                          <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(oid)}>{code}</span>
+                                          <button
+                                            title={`Unlink ${code}`}
+                                            disabled={isUnlinking}
+                                            onClick={() => unlinkOrderFromQuotation(quotation.id, oid, code)}
+                                            style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                          >{isUnlinking ? '…' : '×'}</button>
+                                        </span>
+                                      );
+                                    })}
                                   </span>
-                                : quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                    openSalesUpdateForm(quotation.order_id);
-                                  }}>{quotation.order_code}</span>
+                                : quotation.order_code && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                    <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(quotation.order_id)}>{quotation.order_code}</span>
+                                    <button
+                                      title={`Unlink ${quotation.order_code}`}
+                                      disabled={!!(unlinkingOrder && unlinkingOrder.quotationId === quotation.id)}
+                                      onClick={() => unlinkOrderFromQuotation(quotation.id, quotation.order_id, quotation.order_code)}
+                                      style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                    >{(unlinkingOrder && unlinkingOrder.quotationId === quotation.id) ? '…' : '×'}</button>
+                                  </span>
                               }
                             </td>
 
