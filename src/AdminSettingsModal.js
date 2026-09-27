@@ -51,6 +51,8 @@ export default function AdminSettingsModal({ show, onHide }) {
     const [serverStatus, setServerStatus] = useState(null);
     const [serverStatusError, setServerStatusError] = useState(null);
     const [restartingEnv, setRestartingEnv] = useState(null); // 'production' | 'test' | null
+    const [fixingFrontendEnv, setFixingFrontendEnv] = useState(null); // 'production' | 'test' | null
+    const [frontendFixResults, setFrontendFixResults] = useState({}); // {production?: repairResult, test?: repairResult}
     const [autoRestart, setAutoRestart] = useState({ enabled: false, minutes: 8 });
     const [autoRestartSaving, setAutoRestartSaving] = useState(false);
     const [restartLog, setRestartLog] = useState([]);
@@ -198,6 +200,26 @@ export default function AdminSettingsModal({ show, onHide }) {
             });
         } catch (_) {
             // Production restart kills itself — connection error is expected
+        }
+    };
+
+    const handleRepairFrontend = async (env) => {
+        setFixingFrontendEnv(env);
+        setFrontendFixResults(prev => ({ ...prev, [env]: null }));
+        try {
+            const token = localStorage.getItem('access_token');
+            const resp = await fetch('/health-monitor/repair-frontend', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ env }),
+            });
+            const data = await resp.json();
+            const result = data?.results?.[env];
+            setFrontendFixResults(prev => ({ ...prev, [env]: result || { message: 'Unknown response' } }));
+        } catch (e) {
+            setFrontendFixResults(prev => ({ ...prev, [env]: { message: 'Request failed: ' + e.message } }));
+        } finally {
+            setFixingFrontendEnv(null);
         }
     };
 
@@ -1316,6 +1338,8 @@ export default function AdminSettingsModal({ show, onHide }) {
                     {['production', 'test'].map(env => {
                         const srv = serverStatus?.[env];
                         const isRestarting = restartingEnv === env;
+                        const isFixingFrontend = fixingFrontendEnv === env;
+                        const frontendFixResult = frontendFixResults[env];
                         const rawOverall = srv?.overall || 'unknown';
                         const overall = isRestarting && rawOverall !== 'running' ? 'restarting' : rawOverall;
 
@@ -1368,6 +1392,7 @@ export default function AdminSettingsModal({ show, onHide }) {
                                         <ComponentRow label="API Service" st={srv.api} />
                                         <ComponentRow label="Redis" st={srv.redis} />
                                         <ComponentRow label="MongoDB" st={srv.mongodb} />
+                                        <ComponentRow label="Frontend" st={srv.frontend} />
                                     </div>
                                 ) : (
                                     <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '10px', fontFamily: '"Inter", sans-serif', padding: '8px 0' }}>
@@ -1382,25 +1407,56 @@ export default function AdminSettingsModal({ show, onHide }) {
                                     </div>
                                 )}
 
+                                {/* Frontend repair banner */}
+                                {frontendFixResult && (
+                                    <div style={{
+                                        fontSize: '11px', borderRadius: '6px', padding: '6px 8px', marginBottom: '8px',
+                                        fontFamily: '"Inter", sans-serif', lineHeight: 1.5,
+                                        background: frontendFixResult.fixed ? '#f0fdf4' : frontendFixResult.already_ok ? '#eff6ff' : '#fef2f2',
+                                        border: `1px solid ${frontendFixResult.fixed ? '#86efac' : frontendFixResult.already_ok ? '#93c5fd' : '#fca5a5'}`,
+                                        color: frontendFixResult.fixed ? '#15803d' : frontendFixResult.already_ok ? '#1e40af' : '#991b1b',
+                                    }}>
+                                        {frontendFixResult.fixed ? '✓ ' : frontendFixResult.already_ok ? 'ℹ ' : '✗ '}{frontendFixResult.message}
+                                    </div>
+                                )}
+
                                 {/* Footer */}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                                     <span style={{ fontSize: '10px', color: '#9ca3af', fontFamily: '"Inter", sans-serif' }}>
                                         {srv?.updated_at ? new Date(srv.updated_at).toLocaleTimeString() : '—'}
                                     </span>
-                                    <button
-                                        type="button"
-                                        disabled={isRestarting}
-                                        onClick={() => handleRestart(env)}
-                                        style={{
-                                            padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db',
-                                            background: '#fff', color: '#374151',
-                                            fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600,
-                                            cursor: isRestarting ? 'not-allowed' : 'pointer',
-                                            opacity: isRestarting ? 0.5 : 1,
-                                        }}
-                                    >
-                                        {isRestarting ? 'Restarting…' : '↺ Restart'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                        {srv && !srv.frontend?.ok && (
+                                            <button
+                                                type="button"
+                                                disabled={isFixingFrontend}
+                                                onClick={() => handleRepairFrontend(env)}
+                                                style={{
+                                                    padding: '5px 12px', borderRadius: '6px', border: '1px solid #fca5a5',
+                                                    background: '#fef2f2', color: '#991b1b',
+                                                    fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600,
+                                                    cursor: isFixingFrontend ? 'not-allowed' : 'pointer',
+                                                    opacity: isFixingFrontend ? 0.5 : 1,
+                                                }}
+                                            >
+                                                {isFixingFrontend ? 'Fixing…' : '⚙ Fix Frontend'}
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            disabled={isRestarting}
+                                            onClick={() => handleRestart(env)}
+                                            style={{
+                                                padding: '5px 12px', borderRadius: '6px', border: '1px solid #d1d5db',
+                                                background: '#fff', color: '#374151',
+                                                fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600,
+                                                cursor: isRestarting ? 'not-allowed' : 'pointer',
+                                                opacity: isRestarting ? 0.5 : 1,
+                                            }}
+                                        >
+                                            {isRestarting ? 'Restarting…' : '↺ Restart'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         );
