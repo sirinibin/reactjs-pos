@@ -545,15 +545,16 @@ export default function PurchaseBillsTab({ storeId }) {
                 // 1. Direct VAT+name lookup (backend requires both fields)
                 if (vatNo && companyName) {
                     const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
-                    if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
+                    const d = await r.json();
+                    console.error('[step1] status:', r.status, 'body:', JSON.stringify(d));
+                    if (r.ok && d.result?.id) vendorObj = d.result;
                 }
                 // 2. Name search
                 if (!vendorObj && companyName) {
                     const r = await fetch(`/v1/vendor?search[query]=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
-                    if (r.ok) {
-                        const d = await r.json();
-                        vendorObj = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0] || null;
-                    }
+                    const d = await r.json();
+                    console.error('[step2] status:', r.status, 'count:', (d.result||[]).length, 'names:', JSON.stringify((d.result||[]).map(v=>v.name)));
+                    if (r.ok) vendorObj = (d.result || []).find(v => (v.name || '').toLowerCase() === companyName.toLowerCase()) || (d.result || [])[0] || null;
                 }
                 // 3. Create if not found
                 if (!vendorObj && companyName) {
@@ -566,14 +567,20 @@ export default function PurchaseBillsTab({ storeId }) {
                     const r = await fetch('/v1/vendor', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                     if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
                     else {
+                        const e409 = await r.json();
+                        console.error('[step3 409] body:', JSON.stringify(e409));
                         // Creation failed (duplicate) — retry lookups
                         if (vatNo && companyName) {
                             const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
-                            if (r2.ok) { const d2 = await r2.json(); if (d2.result?.id) vendorObj = d2.result; }
+                            const d2 = await r2.json();
+                            console.error('[step3 retry1] status:', r2.status, 'body:', JSON.stringify(d2));
+                            if (r2.ok && d2.result?.id) vendorObj = d2.result;
                         }
                         if (!vendorObj && companyName) {
                             const r2 = await fetch(`/v1/vendor?search[query]=${encodeURIComponent(companyName)}&store_id=${stId}&limit=5`, { headers: { Authorization: at } });
-                            if (r2.ok) { const d2 = await r2.json(); vendorObj = (d2.result || [])[0] || null; }
+                            const d2 = await r2.json();
+                            console.error('[step3 retry2] status:', r2.status, 'count:', (d2.result||[]).length, 'names:', JSON.stringify((d2.result||[]).map(v=>v.name)));
+                            if (r2.ok) vendorObj = (d2.result || [])[0] || null;
                         }
                     }
                 }

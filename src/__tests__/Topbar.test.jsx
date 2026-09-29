@@ -619,8 +619,8 @@ describe('Topbar notification history — source-level contracts', () => {
         expect(TOPBAR_SRC_NOTIF).toMatch(/\[\.\.\. ?waHistory\]/);
     });
 
-    test('32. Topbar.js renders emailHistory (not emailUnreadItems) in the email dropdown', () => {
-        expect(TOPBAR_SRC_NOTIF).toMatch(/emailHistory\.map\(/);
+    test('32. Topbar.js renders emailHistory sorted unread-first in the email dropdown', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/\[\.\.\.emailHistory\]\.sort\(/);
     });
 
     test('33. Email click still decrements count only when isUnread', () => {

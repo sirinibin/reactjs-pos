@@ -821,7 +821,12 @@ function Topbar(props) {
                                                 No notifications
                                             </div>
                                         )}
-                                        {emailHistory.map((item, idx) => {
+                                        {[...emailHistory].sort((a, b) => {
+                                            const aU = emailUnreadItems.some(u => u.id === a.id);
+                                            const bU = emailUnreadItems.some(u => u.id === b.id);
+                                            if (aU !== bU) return bU ? 1 : -1;
+                                            return new Date(b.message_date || 0) - new Date(a.message_date || 0);
+                                        }).map((item, idx) => {
                                             const isUnread = emailUnreadItems.some(u => u.id === item.id);
                                             const handleEmailClick = () => {
                                                 const storeId = localStorage.getItem('store_id');
