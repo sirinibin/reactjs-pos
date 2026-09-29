@@ -82,7 +82,6 @@ function Topbar(props) {
         try { dismissedPrIds.current = new Set(JSON.parse(localStorage.getItem('dismissed_pr_ids') || '[]')); }
         catch (_) { dismissedPrIds.current = new Set(); }
     }
-    const [waUnreadItems, setWaUnreadItems] = useState([]);
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
     const [waHistory, setWaHistory] = useState(loadWaHistory);
     const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone }
@@ -185,7 +184,6 @@ function Topbar(props) {
                 const freshItems = (data.items || []).slice().sort((a, b) =>
                     new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0)
                 );
-                setWaUnreadItems(freshItems);
                 setWaUnreadTotal(data.total_unread || 0);
                 // Merge into history: keep last 100, update unread_count for existing entries
                 setWaHistory(prev => {
@@ -722,7 +720,6 @@ function Topbar(props) {
                                             const hasUnread = item.unread_count > 0;
                                             const handleClick = () => {
                                                 if (hasUnread) {
-                                                    setWaUnreadItems(prev => prev.filter(u => u.phone !== item.phone));
                                                     setWaUnreadTotal(prev => Math.max(0, prev - item.unread_count));
                                                     setWaHistory(prev => {
                                                         const updated = prev.map(h => h.phone === item.phone ? { ...h, unread_count: 0 } : h);
