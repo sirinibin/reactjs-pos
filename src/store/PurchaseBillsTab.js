@@ -542,9 +542,9 @@ export default function PurchaseBillsTab({ storeId }) {
             const vatNo = (extractedData.vendor_vat_no || '').trim();
 
             if (companyName || vatNo) {
-                // 1. Direct VAT lookup
-                if (vatNo) {
-                    const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&store_id=${stId}`, { headers: { Authorization: at } });
+                // 1. Direct VAT+name lookup (backend requires both fields)
+                if (vatNo && companyName) {
+                    const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
                     if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
                 }
                 // 2. Name search
@@ -567,8 +567,8 @@ export default function PurchaseBillsTab({ storeId }) {
                     if (r.ok) { const d = await r.json(); if (d.result?.id) vendorObj = d.result; }
                     else {
                         // Creation failed (duplicate) — retry lookups
-                        if (vatNo) {
-                            const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&store_id=${stId}`, { headers: { Authorization: at } });
+                        if (vatNo && companyName) {
+                            const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
                             if (r2.ok) { const d2 = await r2.json(); if (d2.result?.id) vendorObj = d2.result; }
                         }
                         if (!vendorObj && companyName) {

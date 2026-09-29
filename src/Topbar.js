@@ -721,6 +721,15 @@ function Topbar(props) {
                                         }).map((item, idx) => {
                                             const hasUnread = item.unread_count > 0;
                                             const handleClick = () => {
+                                                if (hasUnread) {
+                                                    setWaUnreadItems(prev => prev.filter(u => u.phone !== item.phone));
+                                                    setWaUnreadTotal(prev => Math.max(0, prev - item.unread_count));
+                                                    setWaHistory(prev => {
+                                                        const updated = prev.map(h => h.phone === item.phone ? { ...h, unread_count: 0 } : h);
+                                                        saveWaHistory(updated);
+                                                        return updated;
+                                                    });
+                                                }
                                                 setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone });
                                             };
                                             return (
