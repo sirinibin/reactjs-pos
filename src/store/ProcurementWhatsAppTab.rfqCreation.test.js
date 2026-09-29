@@ -109,3 +109,36 @@ describe('ProcurementWhatsAppTab — Delete All button (admin-only)', () => {
         expect(SRC).toMatch(/deletingAll/);
     });
 });
+
+// ── 8. Extract Quotation Prices — auto-load RFQs after extraction ─────────────
+
+describe('ExtractModal — auto-load RFQ list after quotation extraction', () => {
+    test('8.1  useEffect watches result._quotation and auto-fetches supplier RFQs', () => {
+        expect(SRC).toMatch(/result\._quotation[\s\S]{0,200}rfq-received/);
+    });
+
+    test('8.2  auto-fetch uses supplier_phone from msg.from', () => {
+        expect(SRC).toMatch(/supplier_phone.*msg\.from/);
+    });
+
+    test('8.3  RFQ list renders immediately after extraction (addPhase null)', () => {
+        expect(SRC).toMatch(/addPhase === null \|\| addPhase === 'picking'/);
+    });
+
+    test('8.4  each RFQ row has a "View" button calling onViewRFQ(rfq.id)', () => {
+        expect(SRC).toMatch(/onViewRFQ.*rfq\.id/);
+    });
+
+    test('8.5  "Add Prices" button only shows when extracted prices exist', () => {
+        expect(SRC).toMatch(/result\.prices.*\|\|.*\[\].*\.length > 0/);
+        expect(SRC).toMatch(/Add Prices/);
+    });
+
+    test('8.6  RFQ code is a clickable link calling onViewRFQ', () => {
+        expect(SRC).toMatch(/rfq\.code[\s\S]{0,100}onViewRFQ.*rfq\.id|onViewRFQ.*rfq\.id[\s\S]{0,100}rfq\.code/s);
+    });
+
+    test('8.7  handleAddPriceToRFQ is removed (no longer needed)', () => {
+        expect(SRC).not.toMatch(/handleAddPriceToRFQ/);
+    });
+});

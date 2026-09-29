@@ -182,6 +182,21 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
             .finally(() => setLoadingAutoMatch(false));
     }, [result, msg.from, storeId, token]);
 
+    // Auto-load supplier RFQs immediately after quotation extraction completes
+    useEffect(() => {
+        if (!result || !result._quotation) return;
+        const phone = (msg.from || '').replace(/^\+/, '');
+        if (!phone) return;
+        setRfqList([]);
+        setRfqListError('');
+        setLoadingRFQs(true);
+        fetch(`/v1/rfq-received?store_id=${storeId}&supplier_phone=${encodeURIComponent(phone)}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(d => { if (d.error) { setRfqListError(d.error); } else { setRfqList(d.items || []); } })
+            .catch(e => setRfqListError(e.message))
+            .finally(() => setLoadingRFQs(false));
+    }, [result, msg.from, storeId, token]);
+
     const matchExtractedPrice = (rfqProduct, rfqIndex, extractedPrices) => {
         if (rfqProduct.part_no) {
             const m = extractedPrices.find(p => (p.part_no || '').toLowerCase() === rfqProduct.part_no.toLowerCase());
@@ -190,25 +205,6 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
         const byIdx = extractedPrices.find(p => p.product_index === rfqIndex);
         if (byIdx) return byIdx;
         return extractedPrices.length === 1 ? extractedPrices[0] : null;
-    };
-
-    const handleAddPriceToRFQ = async () => {
-        setAddPhase('picking');
-        setRfqListError('');
-        setRfqList([]);
-        setSelectedRFQ(null);
-        setSaveError('');
-        setLoadingRFQs(true);
-        try {
-            const phone = (msg.from || '').replace(/^\+/, '');
-            const res = await fetch(`/v1/rfq-received?store_id=${storeId}&supplier_phone=${encodeURIComponent(phone)}`, {
-                headers: { Authorization: token },
-            });
-            const data = await res.json();
-            if (data.error) { setRfqListError(data.error); return; }
-            setRfqList(data.items || []);
-        } catch (e) { setRfqListError(e.message); }
-        finally { setLoadingRFQs(false); }
     };
 
     const handleSelectRFQ = (rfq) => {
@@ -547,21 +543,12 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
                                             </div>
                                         )}
 
-                                        {/* ── Add Price to RFQ ── */}
-                                        {(result.prices || []).length > 0 && addPhase === null && (
-                                            <div className="mt-3">
-                                                <button className="btn btn-sm btn-success" style={{ fontSize: '12px' }} onClick={handleAddPriceToRFQ}>
-                                                    <i className="bi bi-plus-circle me-1"></i>{t('Add Price to RFQ')}
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Step 1: Pick RFQ */}
-                                        {addPhase === 'picking' && (
+                                        {/* ── RFQ list: shown automatically after extraction & when picking ── */}
+                                        {(addPhase === null || addPhase === 'picking') && (
                                             <div className="mt-3 p-3" style={{ border: '1px solid #dee2e6', borderRadius: '8px', fontSize: '12px', background: '#fff' }}>
                                                 <div className="fw-semibold mb-2" style={{ fontSize: '13px' }}>
-                                                    <i className="bi bi-search me-1 text-primary"></i>{t('Select RFQ to add pricing to')}
-                                                    <span className="text-muted fw-normal ms-2" style={{ fontSize: '11px' }}>({t('RFQs sent to')} {msg.from})</span>
+                                                    <i className="bi bi-file-earmark-text me-1 text-primary"></i>{t('RFQs for this supplier')}
+                                                    <span className="text-muted fw-normal ms-2" style={{ fontSize: '11px' }}>({msg.from})</span>
                                                 </div>
                                                 {loadingRFQs && <div className="text-muted"><span className="spinner-border spinner-border-sm me-1"></span>{t('Loading…')}</div>}
                                                 {rfqListError && <div className="alert alert-danger py-1 px-2 mb-2">{rfqListError}</div>}
@@ -572,18 +559,31 @@ function ExtractModal({ msg, storeId, token, onClose, onCreateRFQ, onViewRFQ }) 
                                                     {rfqList.map(rfq => (
                                                         <div key={rfq.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', border: '1px solid #e9ecef', borderRadius: '6px', background: '#fafafa' }}>
                                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                                <strong>{rfq.code}</strong>
+                                                                <span
+                                                                    role="button"
+                                                                    tabIndex={0}
+                                                                    style={{ fontWeight: 600, color: '#0d6efd', cursor: 'pointer', textDecoration: 'underline' }}
+                                                                    onClick={() => onViewRFQ && onViewRFQ(rfq.id)}
+                                                                    onKeyDown={e => { if (e.key === 'Enter') onViewRFQ && onViewRFQ(rfq.id); }}
+                                                                    title={t('View RFQ details')}
+                                                                >{rfq.code}</span>
                                                                 {rfq.customer_name && <span className="text-muted ms-2">{rfq.customer_name}</span>}
                                                                 <span className="badge bg-secondary ms-2" style={{ fontSize: '10px' }}>{(rfq.products || []).length} {t('products')}</span>
                                                                 {rfq.status && <span className="badge ms-1" style={{ fontSize: '10px', background: '#e8f4fd', color: '#0a58ca' }}>{rfq.status}</span>}
                                                             </div>
-                                                            <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSelectRFQ(rfq)}>
-                                                                {t('Select')}
-                                                            </button>
+                                                            <div className="d-flex gap-1 flex-shrink-0">
+                                                                {(result.prices || []).length > 0 && (
+                                                                    <button className="btn btn-sm btn-success" style={{ fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSelectRFQ(rfq)}>
+                                                                        <i className="bi bi-plus-circle me-1"></i>{t('Add Prices')}
+                                                                    </button>
+                                                                )}
+                                                                <button className="btn btn-sm btn-outline-primary" style={{ fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => onViewRFQ && onViewRFQ(rfq.id)}>
+                                                                    <i className="bi bi-file-earmark-text me-1"></i>{t('View')}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <button className="btn btn-sm btn-outline-secondary mt-2" style={{ fontSize: '11px' }} onClick={() => setAddPhase(null)}>{t('Cancel')}</button>
                                             </div>
                                         )}
 
