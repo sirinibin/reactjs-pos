@@ -3685,7 +3685,7 @@ async function checkWarning(i) {
         show={!!rfqDetailModal}
         storeId={localStorage.getItem('store_id')}
         onHide={() => setRfqDetailModal(null)}
-        zIndex={1500}
+        zIndex={(props.zIndex || 1500) + 100}
       />
 
       <TableSettingsModal
@@ -3696,7 +3696,7 @@ async function checkWarning(i) {
           onToggleColumn={handleToggleColumn}
           onDragEnd={onDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
-          zIndex={10500}
+          zIndex={(props.zIndex || 1500) + 200}
       />
       <TableSettingsModal
           show={showCustomerSearchSettings}
@@ -3706,7 +3706,7 @@ async function checkWarning(i) {
           onToggleColumn={handleToggleCustomerCol}
           onDragEnd={handleCustomerColDragEnd}
           onRestoreDefaults={restoreCustomerColDefaults}
-          zIndex={10500}
+          zIndex={(props.zIndex || 1500) + 200}
       />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
@@ -9186,7 +9186,7 @@ async function checkWarning(i) {
         </Modal.Body>
       </Modal >
       {/* Quotation SP Table Settings Modal */}
-      <Modal show={showQuotationSPSettings} onHide={() => setShowQuotationSPSettings(false)} size="md">
+      <Modal show={showQuotationSPSettings} onHide={() => setShowQuotationSPSettings(false)} size="md" style={{ zIndex: (props.zIndex || 1500) + 200 }}>
         <Modal.Header closeButton>
           <Modal.Title>{t('Table Settings')}</Modal.Title>
         </Modal.Header>

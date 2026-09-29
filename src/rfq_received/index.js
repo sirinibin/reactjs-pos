@@ -2041,14 +2041,32 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
         try {
             let mediaId = null;
             let mediaType = templateWantsDoc ? 'document' : 'image';
-            try {
+            const hasMediaHeader = templateWantsDoc ||
+                (preview?.template_components || []).some(
+                    c => (c.type || '').toLowerCase() === 'header' && (c.format || '').toUpperCase() === 'IMAGE'
+                );
+            if (hasMediaHeader) {
                 const endpoint = templateWantsDoc
                     ? `/v1/rfq-received/${rfq.id}/generate-pdf?store_id=${storeId}`
                     : `/v1/rfq-received/${rfq.id}/generate-image?store_id=${storeId}`;
-                const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: token } });
-                const data = await res.json();
-                if (data.media_id) mediaId = data.media_id;
-            } catch (_) { /* attachment optional */ }
+                let genData = null;
+                try {
+                    const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: token } });
+                    genData = await res.json();
+                } catch (e) {
+                    setTestResult('err: Attachment generation failed: ' + e.message);
+                    setTestSending(false);
+                    return;
+                }
+                if (genData?.media_id) {
+                    mediaId = genData.media_id;
+                } else {
+                    // Required header could not be generated — surface the real error
+                    setTestResult('err: ' + (genData?.error || 'Attachment generation failed'));
+                    setTestSending(false);
+                    return;
+                }
+            }
 
             const components = buildRFQComponents({ mediaId, mediaType });
             const res = await fetch('/v1/rfq-bot/waba-test-message', {

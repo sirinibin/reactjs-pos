@@ -341,6 +341,49 @@ describe('WABATemplateTesterWidget', () => {
         await waitFor(() => expect(screen.getByTestId('alert-danger')).toBeTruthy());
     });
 
+    it('14. DOCUMENT template without uploaded file shows validation error and does not call send API', async () => {
+        const DOC_TEMPLATE = [{
+            name: 'rfq_pdf_to_supplier',
+            language: 'en_US',
+            category: 'UTILITY',
+            components: [
+                { type: 'HEADER', format: 'DOCUMENT' },
+                { type: 'BODY', text: 'Dear {{supplier_name}}, please see the attached RFQ {{rfq_reference}}.' },
+            ],
+        }];
+        let sendCalled = false;
+        global.fetch = jest.fn().mockImplementation((url) => {
+            if (url.includes('waba-templates')) {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ templates: DOC_TEMPLATE }) });
+            }
+            if (url.includes('waba-test-message')) {
+                sendCalled = true;
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ sent: true }) });
+            }
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        });
+        await act(async () => {
+            renderWidget({ storeId: 'store-abc', settings: { bot_waba_business_account_id: 'waba-123' } });
+        });
+        await act(async () => { screen.getByText(/Fetch Approved Templates/).closest('button').click(); });
+        await waitFor(() => screen.getAllByRole('option'));
+        await act(async () => {
+            fireEvent.change(screen.getByRole('combobox'), { target: { value: 'rfq_pdf_to_supplier' } });
+        });
+        await waitFor(() => screen.getByText(/Header Document/));
+        await waitFor(() => screen.getByPlaceholderText('966501234567'));
+        await act(async () => {
+            fireEvent.change(screen.getByPlaceholderText('966501234567'), { target: { value: '966501971075' } });
+        });
+        // Click Send Test WITHOUT uploading a PDF
+        await act(async () => { screen.getByText(/Send Test/).closest('button').click(); });
+        await waitFor(() => {
+            const danger = screen.getByTestId('alert-danger');
+            expect(danger.textContent).toMatch(/upload a PDF/i);
+        });
+        expect(sendCalled).toBe(false);
+    });
+
     it('13. network error on send shows error result', async () => {
         let fetchCallCount = 0;
         global.fetch = jest.fn().mockImplementation((url) => {

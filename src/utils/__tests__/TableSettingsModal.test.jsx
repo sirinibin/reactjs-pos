@@ -4,9 +4,11 @@ import TableSettingsModal from "../TableSettingsModal";
 
 // Mock react-bootstrap — always render children so the component's own
 // {show && ...} guard inside Modal.Body remains the visibility control.
+// The Modal mock also exposes the `style` prop via data-modal-zindex so
+// z-index tests can inspect it without full Bootstrap rendering.
 jest.mock("react-bootstrap", () => {
-    const Modal = ({ children }) => (
-        <div data-testid="modal">{children}</div>
+    const Modal = ({ children, style }) => (
+        <div data-testid="modal" data-modal-zindex={style?.zIndex ?? ''}>{children}</div>
     );
     Modal.Header = ({ children }) => (
         <div data-testid="modal-header">{children}</div>
@@ -165,5 +167,29 @@ describe("TableSettingsModal", () => {
     test("13. Select column is shown when enableSelection=true", () => {
         render(<TableSettingsModal {...defaultProps} enableSelection={true} />);
         expect(screen.getByText("Select")).toBeInTheDocument();
+    });
+
+    test("14. zIndex prop is applied to the modal style", () => {
+        const { container } = render(
+            <TableSettingsModal {...defaultProps} zIndex={10500} />
+        );
+        const modal = container.querySelector('[data-testid="modal"]');
+        expect(modal.getAttribute('data-modal-zindex')).toBe('10500');
+    });
+
+    test("15. when zIndex is not provided, no zIndex style is applied", () => {
+        const { container } = render(
+            <TableSettingsModal {...defaultProps} />
+        );
+        const modal = container.querySelector('[data-testid="modal"]');
+        expect(modal.getAttribute('data-modal-zindex')).toBe('');
+    });
+
+    test("16. large zIndex value (e.g. 12200) is applied when parent form has high zIndex", () => {
+        const { container } = render(
+            <TableSettingsModal {...defaultProps} zIndex={12200} />
+        );
+        const modal = container.querySelector('[data-testid="modal"]');
+        expect(Number(modal.getAttribute('data-modal-zindex'))).toBe(12200);
     });
 });

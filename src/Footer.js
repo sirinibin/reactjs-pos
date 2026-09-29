@@ -8,7 +8,7 @@ class Footer extends React.Component {
                         <p className="mb-0">
                             <a
                                 className="text-muted"
-                                href="https://www.startuptech.uk/"
+                                href="https://www.gulfunionozone.com/"
                                 target="_blank"
                                 rel="noreferrer"
                             ><strong>&copy; Startup Tech Consultancy LTD, UK</strong></a

@@ -756,7 +756,7 @@ export default function AdminSettingsModal({ show, onHide }) {
                         <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '20px', lineHeight: 1.6 }}>
                             When enabled, all new email and WhatsApp attachment files across all stores are saved to S3.
                             Files are served through <code>/cdn/</code> on whichever domain the user is on —
-                            so <strong>startpos.startuptech.uk/cdn/…</strong> and <strong>startpos-test.startuptech.uk/cdn/…</strong> and
+                            so <strong>startpos.gulfunionozone.com/cdn/…</strong> and <strong>test.gulfunionozone.com/cdn/…</strong> and
                             <strong> workshop.gulfunionozone.com/cdn/…</strong> all work automatically.
                             No extra configuration needed.
                         </p>

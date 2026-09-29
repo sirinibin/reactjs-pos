@@ -544,7 +544,7 @@ export default function PurchaseBillsTab({ storeId }) {
             if (companyName || vatNo) {
                 // 1. Direct VAT+name lookup (backend requires both fields)
                 if (vatNo && companyName) {
-                    const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
+                    const r = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&search[store_id]=${stId}`, { headers: { Authorization: at } });
                     const d = await r.json();
                     console.error('[step1] status:', r.status, 'body:', JSON.stringify(d));
                     if (r.ok && d.result?.id) vendorObj = d.result;
@@ -571,7 +571,7 @@ export default function PurchaseBillsTab({ storeId }) {
                         console.error('[step3 409] body:', JSON.stringify(e409));
                         // Creation failed (duplicate) — retry lookups
                         if (vatNo && companyName) {
-                            const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`, { headers: { Authorization: at } });
+                            const r2 = await fetch(`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&search[store_id]=${stId}`, { headers: { Authorization: at } });
                             const d2 = await r2.json();
                             console.error('[step3 retry1] status:', r2.status, 'body:', JSON.stringify(d2));
                             if (r2.ok && d2.result?.id) vendorObj = d2.result;
@@ -622,12 +622,12 @@ export default function PurchaseBillsTab({ storeId }) {
                     let dbProduct = null;
                     // Find by part_no
                     if (ep.part_no) {
-                        const r = await fetch(`/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                        const r = await fetch(`/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&search[store_id]=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
                         if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
                     }
                     // Find by name
                     if (!dbProduct && ep.name) {
-                        const r = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                        const r = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&search[store_id]=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
                         if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
                     }
                     // Create if not found
@@ -639,12 +639,12 @@ export default function PurchaseBillsTab({ storeId }) {
                         if (cr.ok) {
                             const cd = await cr.json();
                             if (cd.result?.id) {
-                                const pr = await fetch(`/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`, { headers: { Authorization: at } });
+                                const pr = await fetch(`/v1/product/${cd.result.id}?search[store_id]=${stId}&select=${selectFields}`, { headers: { Authorization: at } });
                                 dbProduct = pr.ok ? (await pr.json()).result || cd.result : cd.result;
                             }
                         } else if (ep.name) {
                             // Retry by name after failed creation (duplicate)
-                            const r2 = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                            const r2 = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&search[store_id]=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
                             if (r2.ok) { const d2 = await r2.json(); if ((d2.result || []).length > 0) dbProduct = d2.result[0]; }
                         }
                     }

@@ -706,6 +706,29 @@ export function SalesType1Body({
                                                 </div>
                                             )}
 
+                                            {/* Custom Invoice ID */}
+                                            {store?.settings?.enable_custom_sales_invoice_id && (
+                                                <div>
+                                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>
+                                                        {t('Invoice ID')}
+                                                        {isUpdateForm && <span style={{ color: '#dc3545', marginLeft: '2px' }}>*</span>}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        id="custom_invoice_id"
+                                                        name="custom_invoice_id"
+                                                        value={formData.code || ''}
+                                                        onChange={(e) => {
+                                                            formData.code = e.target.value;
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                        className={`form-control${errors?.code ? ' is-invalid' : ''}`}
+                                                        placeholder={isUpdateForm ? t('Invoice ID (required)') : t('Leave empty to auto-generate')}
+                                                    />
+                                                    {errors?.code && <div className="invalid-feedback">{errors.code}</div>}
+                                                </div>
+                                            )}
+
                                         </div>
                                     </div>{/* end LEFT */}
 

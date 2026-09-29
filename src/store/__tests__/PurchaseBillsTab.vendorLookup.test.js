@@ -50,12 +50,12 @@ const src = fs.readFileSync(
 
 // ── URL construction tests (static analysis on source) ────────────────────────
 
-describe('PurchaseBillsTab — vendor VAT lookup URL includes name parameter', () => {
-    test('initial VAT lookup URL includes &name= parameter', () => {
+describe('PurchaseBillsTab — vendor VAT lookup and product search use search[store_id]', () => {
+    test('initial VAT lookup URL includes &name= and search[store_id] parameters', () => {
         // The endpoint requires both vat_no AND name (MongoDB query uses both fields).
-        // Verify the source passes name in the initial lookup.
+        // ParseStore reads search[store_id], not plain store_id.
         expect(src).toContain(
-            '`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&store_id=${stId}`'
+            '`/v1/vendor/vat_no/name?vat_no=${encodeURIComponent(vatNo)}&name=${encodeURIComponent(companyName)}&search[store_id]=${stId}`'
         );
     });
 
@@ -66,21 +66,24 @@ describe('PurchaseBillsTab — vendor VAT lookup URL includes name parameter', (
         expect(occurrences).toBeGreaterThanOrEqual(2);
     });
 
-    test('old URL pattern (vat_no only, no name) is gone', () => {
-        // The old broken pattern ended with: &store_id= immediately after vat_no (no &name= between them).
-        // Specifically: vat_no=${...}&store_id= with nothing in between
-        expect(src).not.toMatch(/vat_no\/name\?vat_no=\$\{encodeURIComponent\(vatNo\)\}&store_id=/);
+    test('old URL patterns (no name, or plain store_id) are gone', () => {
+        // Must not use plain store_id= (ParseStore requires search[store_id])
+        expect(src).not.toMatch(/vat_no\/name\?vat_no=\$\{encodeURIComponent\(vatNo\)\}&name=[^`]*&store_id=\$\{stId\}`/);
+        // Must not omit name entirely
+        expect(src).not.toMatch(/vat_no\/name\?vat_no=\$\{encodeURIComponent\(vatNo\)\}&search\[store_id\]=/);
     });
 
     test('both lookups guard on vatNo && companyName (not vatNo alone)', () => {
-        // Since the backend needs both fields, the condition must also require both.
-        // Count occurrences of the guard `if (vatNo && companyName)` near the endpoint.
         const lines = src.split('\n');
-        const guardLines = lines.filter(l =>
-            l.includes('vat_no/name') || (l.includes('vatNo &&') && l.includes('companyName'))
-        );
-        // Should have at least 2 guarded calls (initial + retry)
         const guarded = lines.filter(l => l.includes('vatNo && companyName'));
         expect(guarded.length).toBeGreaterThanOrEqual(2);
+    });
+
+    test('product part_number search uses search[store_id]', () => {
+        expect(src).toContain('search[part_number]=');
+        expect(src).toContain('search[store_id]=');
+        // Must not use plain store_id= for product searches
+        expect(src).not.toMatch(/v1\/product\?search\[part_number\]=[^`]*&store_id=\$\{stId\}/);
+        expect(src).not.toMatch(/v1\/product\?search\[query\]=[^`]*&store_id=\$\{stId\}/);
     });
 });

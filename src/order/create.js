@@ -2249,6 +2249,12 @@ const OrderCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
+        if (store?.settings?.enable_custom_sales_invoice_id && isUpdateForm && !formData.code?.trim()) {
+            errors["code"] = t("Invoice ID is required");
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
         if (haveErrors) {
             //console.log("Errors: ", errors);
             return;
@@ -7050,6 +7056,20 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     className="form-control"
                                                     placeholder={t('Customer P.O No.')}
                                                     style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0', height: '32px' }}
+                                                />
+                                            )}
+                                            {store?.settings?.enable_custom_sales_invoice_id && (
+                                                <input
+                                                    type="text"
+                                                    id="custom_invoice_id"
+                                                    name="custom_invoice_id"
+                                                    value={formData.code || ''}
+                                                    onChange={(e) => { delete errors["code"]; setErrors({ ...errors }); formData.code = e.target.value; setFormData({ ...formData }); }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                    className={`form-control${errors["code"] ? ' is-invalid' : ''}`}
+                                                    placeholder={isUpdateForm ? t('Invoice ID (required)') : t('Invoice ID (auto-generate if empty)')}
+                                                    style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0', height: '32px' }}
+                                                    title={t('Invoice ID')}
                                                 />
                                             )}
                                         </div>

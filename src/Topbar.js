@@ -84,11 +84,12 @@ function Topbar(props) {
     }
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
     const [waHistory, setWaHistory] = useState(loadWaHistory);
-    const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone }
+    const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone, pendingUnread }
     const [emailUnreadItems, setEmailUnreadItems] = useState([]);
     const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
     const [emailHistory, setEmailHistory] = useState(loadEmailHistory);
     const emailUnreadCountRef = useRef(null);
+    const [pendingEmailUnreadId, setPendingEmailUnreadId] = useState(null);
     const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
     const [topbarEmailShow, setTopbarEmailShow] = useState(false);
     const [topbarExtractMsg, setTopbarExtractMsg] = useState(null);
@@ -719,15 +720,7 @@ function Topbar(props) {
                                         }).map((item, idx) => {
                                             const hasUnread = item.unread_count > 0;
                                             const handleClick = () => {
-                                                if (hasUnread) {
-                                                    setWaUnreadTotal(prev => Math.max(0, prev - item.unread_count));
-                                                    setWaHistory(prev => {
-                                                        const updated = prev.map(h => h.phone === item.phone ? { ...h, unread_count: 0 } : h);
-                                                        saveWaHistory(updated);
-                                                        return updated;
-                                                    });
-                                                }
-                                                setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone });
+                                                setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone, pendingUnread: hasUnread ? item.unread_count : 0 });
                                             };
                                             return (
                                             <div
@@ -831,20 +824,16 @@ function Topbar(props) {
                                             const handleEmailClick = () => {
                                                 const storeId = localStorage.getItem('store_id');
                                                 const token = localStorage.getItem('access_token');
-                                                if (isUnread) {
-                                                    setEmailUnreadItems(prev => prev.filter(e => e.id !== item.id));
-                                                    setEmailUnreadTotal(prev => Math.max(0, prev - 1));
-                                                }
                                                 fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
                                                     .then(r => r.json())
                                                     .then(msg => {
                                                         if (msg?.id) {
                                                             setTopbarEmailMsg(msg);
                                                             setTopbarEmailShow(true);
+                                                            if (isUnread) setPendingEmailUnreadId(item.id);
                                                         }
-                                                        fetchEmailUnread();
                                                     })
-                                                    .catch(() => { fetchEmailUnread(); });
+                                                    .catch(() => {});
                                             };
                                             return (
                                                 <div
@@ -1116,7 +1105,16 @@ function Topbar(props) {
                 <EmailDetailModal
                     msg={topbarEmailMsg}
                     show={topbarEmailShow}
-                    onClose={() => { setTopbarEmailShow(false); setTopbarEmailMsg(null); }}
+                    onClose={() => {
+                        if (pendingEmailUnreadId) {
+                            setEmailUnreadItems(prev => prev.filter(e => e.id !== pendingEmailUnreadId));
+                            setEmailUnreadTotal(prev => Math.max(0, prev - 1));
+                            setPendingEmailUnreadId(null);
+                        }
+                        fetchEmailUnread();
+                        setTopbarEmailShow(false);
+                        setTopbarEmailMsg(null);
+                    }}
                     storeId={localStorage.getItem('store_id')}
                     token={localStorage.getItem('access_token')}
                     onExtract={msg => { setTopbarEmailShow(false); setTopbarEmailMsg(null); setTopbarExtractMsg(msg); }}
@@ -1157,7 +1155,17 @@ function Topbar(props) {
                     show={!!waNotifModal}
                     storeId={waNotifModal.storeId}
                     phone={waNotifModal.phone}
-                    onHide={() => setWaNotifModal(null)}
+                    onHide={() => {
+                        if (waNotifModal?.pendingUnread > 0) {
+                            setWaUnreadTotal(prev => Math.max(0, prev - waNotifModal.pendingUnread));
+                            setWaHistory(prev => {
+                                const updated = prev.map(h => h.phone === waNotifModal.phone ? { ...h, unread_count: 0 } : h);
+                                saveWaHistory(updated);
+                                return updated;
+                            });
+                        }
+                        setWaNotifModal(null);
+                    }}
                 />
             )}
         </>

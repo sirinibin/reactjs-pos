@@ -2149,6 +2149,7 @@ function CustomerIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
                                                         {(col.key === "deleted") && <th>

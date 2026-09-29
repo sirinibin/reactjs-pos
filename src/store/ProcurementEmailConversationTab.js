@@ -744,32 +744,37 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                                                 minWidth: '220px',
                                             }}>
                                                 {/* Bubble header: subject + date */}
-                                                <div style={{ background: isOut ? '#c8f0ae' : '#f0f4ff', padding: '8px 14px', borderBottom: isOut ? '1px solid #b2dfa0' : '1px solid #d8e4ff' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0, flex: 1 }}>
+                                                <div style={{ background: isOut ? '#b9f0a0' : '#e8f0fe', padding: '10px 16px', borderBottom: isOut ? '1px solid #a8e890' : '1px solid #c5d8fb', borderLeft: `3px solid ${isOut ? '#0f9d58' : '#1a73e8'}` }}>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
                                                             {msg.code && (
-                                                                <span style={{ fontFamily: 'monospace', fontSize: '10px', fontWeight: 700, color: '#1a73e8', background: '#e8f0fe', border: '1px solid #c8d8f5', borderRadius: '4px', padding: '0 5px', flexShrink: 0 }}>
+                                                                <span style={{ fontFamily: 'monospace', fontSize: '11px', fontWeight: 700, color: '#1a73e8', background: '#fff', border: '1px solid #c8d8f5', borderRadius: '4px', padding: '1px 6px', flexShrink: 0 }}>
                                                                     {msg.code}
                                                                 </span>
                                                             )}
-                                                            <span style={{ fontWeight: 600, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#202124' }} title={msg.subject}>
+                                                            <span style={{ fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#202124' }} title={msg.subject}>
                                                                 {msg.subject || t('(no subject)')}
                                                             </span>
                                                         </div>
-                                                        <span style={{ fontSize: '11px', color: '#5f6368', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                        <span style={{ fontSize: '12px', color: '#5f6368', whiteSpace: 'nowrap', flexShrink: 0, marginTop: '1px' }}>
                                                             {msg.message_date ? new Date(msg.message_date).toLocaleString() : ''}
                                                         </span>
                                                     </div>
                                                     {/* To field for sent messages */}
                                                     {isOut && (msg.to || []).length > 0 && (
-                                                        <div style={{ fontSize: '11px', color: '#5f6368', marginTop: '4px' }}>
+                                                        <div style={{ fontSize: '12px', color: '#3c4043', marginTop: '4px' }}>
                                                             <span style={{ fontWeight: 600 }}>{t('To')}: </span>{(msg.to || []).join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {!isOut && msg.from && (
+                                                        <div style={{ fontSize: '12px', color: '#3c4043', marginTop: '3px' }}>
+                                                            <span style={{ fontWeight: 600 }}>{t('From')}: </span>{msg.from}
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {/* Email body */}
-                                                <div style={{ padding: '12px 16px', fontSize: '14px', lineHeight: '1.6', color: '#202124', maxHeight: '500px', overflowY: 'auto' }}>
+                                                <div style={{ padding: '16px 18px', fontSize: '14px', lineHeight: '1.75', color: '#202124', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif', wordBreak: 'break-word' }}>
                                                     {msg.body_html ? (
                                                         <div dangerouslySetInnerHTML={{ __html: fixEmailHtml(msg.body_html) }} />
                                                     ) : (
@@ -884,8 +889,8 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
                                                             <i className="bi bi-link me-1"></i>{msg.rfq_received_code}
                                                         </button>
                                                     )}
-                                                    <button onClick={e => { e.stopPropagation(); openDetail(msg.id); }} className="btn btn-sm btn-outline-primary" style={{ fontSize: '11px', padding: '2px 6px' }} title={t('View full email')}>
-                                                        <i className="bi bi-eye me-1"></i>{t('View')}
+                                                    <button onClick={e => { e.stopPropagation(); openDetail(msg.id); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 3px rgba(26,115,232,0.3)' }} title={t('View full email')}>
+                                                        <i className="bi bi-envelope-open"></i>{t('Open Email')}
                                                     </button>
                                                     {bodyText && (
                                                         <button onClick={e => { e.stopPropagation(); copyMsg(msg.id, bodyText); }} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '11px', padding: '2px 6px' }} title={t('Copy')}>

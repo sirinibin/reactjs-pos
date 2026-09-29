@@ -134,6 +134,26 @@ function WABATemplateTesterWidget({ storeId, settings }) {
 
     const handleSend = async () => {
         if (!toPhone || !selectedTemplate) return;
+
+        // Validate required media headers before sending
+        for (const comp of selectedTemplate.components) {
+            const type = (comp.type || '').toLowerCase();
+            const fmt = (comp.format || '').toUpperCase();
+            if (type === 'header' && fmt === 'DOCUMENT') {
+                const doc = docFiles['header_doc'];
+                if (!doc || !doc.mediaId) {
+                    setSendResult({ success: false, message: t('Please upload a PDF document for the template header before sending.') });
+                    return;
+                }
+            } else if (type === 'header' && fmt === 'IMAGE') {
+                const img = docFiles['header_img'];
+                if (!img || !img.mediaId) {
+                    setSendResult({ success: false, message: t('Please upload an image for the template header before sending.') });
+                    return;
+                }
+            }
+        }
+
         setSending(true);
         setSendResult(null);
         try {

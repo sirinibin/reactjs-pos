@@ -755,7 +755,6 @@ const StoreCreate = forwardRef((props, ref) => {
         }
     });
 
-
     function fetchCustomerPackages() {
         fetch('/v1/customer-package?limit=500', {
             headers: { Authorization: localStorage.getItem('access_token') },
@@ -5578,6 +5577,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
                                                 <span>{t('Enable Warehouse Module')}</span>
                                             </label>
+                                            <label className="pw-check" htmlFor="enable_custom_sales_invoice_id">
+                                                <input type="checkbox" id="enable_custom_sales_invoice_id" checked={!!formData.settings.enable_custom_sales_invoice_id} value={formData.settings.enable_custom_sales_invoice_id} onChange={() => { formData.settings.enable_custom_sales_invoice_id = !formData.settings.enable_custom_sales_invoice_id; setFormData({ ...formData }); }} />
+                                                <span>{t('Enable Custom Sales Invoice ID')}</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="enable_purchase_order_module">
                                                 <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
                                                 <span>{t('Enable Purchase Order Module')}</span>
@@ -6983,6 +6986,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                         <a href="https://business.facebook.com/latest/billing_hub/accounts/details/?asset_id=28106721685688550&business_id=1442312137713796&payment_account_id=2075149283102188&placement=whatsapp_ads&payment_method_id=" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
                                             <i className="bi bi-credit-card me-1"></i>{t('Billing')}
                                         </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/?business_id=1442312137713796&asset_id=28106721685688550&placement=BILLING_HUB&payment_account_id=2075149283102188" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-wallet2 me-1"></i>{t('Payments')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/details/?asset_id=28106721685688550&business_id=1442312137713796&payment_account_id=2075149283102188&placement=BILLING_HUB&payment_method_id=" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-receipt me-1"></i>{t('Payment Details')}
+                                        </a>
                                     </div>
 
                                     {/* Feature toggle */}
@@ -7048,21 +7057,23 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 <p style={{ marginBottom: '8px', color: '#555' }}>
                                                     {t('After publishing, configure the webhook so Meta knows where to send messages:')}
                                                 </p>
+                                                <div style={{ marginBottom: '10px' }}>
+                                                    <a
+                                                        href="https://developers.facebook.com/apps/1435954091720046/use_cases/customize/wa-configurations-v2/?business_id=1442312137713796&use_case_enum=WHATSAPP_BUSINESS_MESSAGING&selected_tab=wa-configurations-v2&product_route=whatsapp-business#auto_subscribe"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="btn btn-sm btn-primary"
+                                                        style={{ fontSize: '12px' }}
+                                                    >
+                                                        <i className="bi bi-box-arrow-up-right me-1"></i>
+                                                        {t('Open Meta WhatsApp Webhook Settings')}
+                                                    </a>
+                                                    <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
+                                                        {t('(opens Meta dashboard to change webhook URL)')}
+                                                    </span>
+                                                </div>
                                                 <ol style={{ paddingLeft: '18px', marginBottom: '10px', color: '#333', lineHeight: '1.8' }}>
-                                                    <li>
-                                                        {t('Go to')}{' '}
-                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
-                                                            developers.facebook.com/apps
-                                                        </a>{' '}
-                                                        → {t('select your app')}
-                                                    </li>
-                                                    <li>
-                                                        {t('Left menu')} →{' '}
-                                                        <strong>WhatsApp</strong> →{' '}
-                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
-                                                            <strong>Configuration</strong>
-                                                        </a>
-                                                    </li>
+                                                    <li>{t('Click the link above → go to')} <strong>Webhook</strong> {t('section')}</li>
                                                     <li>{t('Under "Webhook", click')} <strong>{t('Edit')}</strong></li>
                                                     <li>
                                                         {t('Set')} <strong>{t('Callback URL')}</strong> {t('to:')}<br />
