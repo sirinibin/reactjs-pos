@@ -92,7 +92,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload, in
 
     // Per-product: selected supplier and margin %
     const products = rfq.products || [];
-    const replies  = (rfq.supplier_replies || []).filter(r => r.is_quotation && r.prices?.length > 0);
+    const replies  = (rfq.supplier_replies || []).filter(r => r.is_quotation);
 
     // Load default margin from store settings cache
     const defaultMarginPct = (() => {
