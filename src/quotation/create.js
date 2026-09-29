@@ -285,21 +285,20 @@ const QuotationCreate = forwardRef((props, ref) => {
               const _sid = localStorage.getItem('store_id');
               const _token = localStorage.getItem('access_token');
               const _storeSelect = `select=id,item_code,prefix_part_number,part_number,name,unit,is_service,allow_duplicates,product_stores.${_sid}.retail_unit_price,product_stores.${_sid}.retail_unit_price_with_vat,product_stores.${_sid}.purchase_unit_price,product_stores.${_sid}.purchase_unit_price_with_vat,product_stores.${_sid}.stock,product_stores.${_sid}.warehouse_stocks`;
-              setTimeout(async () => {
-                for (let _i = 0; _i < prefill.items.length; _i++) {
-                  const _item = prefill.items[_i];
-                  if (!_item.product_id) continue;
+              setTimeout(() => {
+                const _vatPctUpgrade = formData.vat_percent || 15;
+                Promise.all(prefill.items.map(async (_item, _i) => {
+                  if (!_item.product_id) return;
                   try {
                     const _res = await fetch(`/v1/product/${_item.product_id}?search[store_id]=${_sid}&${_storeSelect}`, { headers: { Authorization: _token } });
                     const _data = await _res.json();
                     const _p = _data.result;
-                    if (!_p) continue;
+                    if (!_p) return;
                     const _ps = _p.product_stores?.[_sid] || {};
                     const _upQty = _item.quantity || 1;
                     const _upPrice = _item.unit_price || _ps.retail_unit_price || 0;
-                    const _vatPctUpgrade = formData.vat_percent || 15;
                     const _cpUpgrade = _item.cost_price || _ps.purchase_unit_price || 0;
-                    const _upgraded = {
+                    selectedProducts[_i] = {
                       product_id: _p.id,
                       code: _p.item_code || '',
                       prefix_part_number: _p.prefix_part_number || '',
@@ -321,10 +320,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                       is_service: _p.is_service || false,
                       _rfq_prefill: true,
                     };
-                    selectedProducts[_i] = _upgraded;
-                    setSelectedProducts([...selectedProducts]);
                   } catch (_e) {}
-                }
+                })).then(() => setSelectedProducts([...selectedProducts]));
               }, 0);
             }
             setFormData({ ...formData });

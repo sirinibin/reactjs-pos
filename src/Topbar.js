@@ -50,6 +50,26 @@ function saveDismissedMap(map) {
     localStorage.setItem('dn_dismissed', JSON.stringify(map));
 }
 
+const MAX_NOTIF_HISTORY = 100;
+
+function loadEmailHistory() {
+    try { return JSON.parse(localStorage.getItem('_email_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveEmailHistory(items) {
+    try { localStorage.setItem('_email_notif_history', JSON.stringify(items)); }
+    catch (_) {}
+}
+
+function loadWaHistory() {
+    try { return JSON.parse(localStorage.getItem('_wa_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveWaHistory(items) {
+    try { localStorage.setItem('_wa_notif_history', JSON.stringify(items)); }
+    catch (_) {}
+}
+
 function Topbar(props) {
     const { t, i18n } = useTranslation('common');
     const [notifications, setNotifications] = useState([]);
@@ -64,9 +84,11 @@ function Topbar(props) {
     }
     const [waUnreadItems, setWaUnreadItems] = useState([]);
     const [waUnreadTotal, setWaUnreadTotal] = useState(0);
+    const [waHistory, setWaHistory] = useState(loadWaHistory);
     const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone }
     const [emailUnreadItems, setEmailUnreadItems] = useState([]);
     const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
+    const [emailHistory, setEmailHistory] = useState(loadEmailHistory);
     const emailUnreadCountRef = useRef(null);
     const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
     const [topbarEmailShow, setTopbarEmailShow] = useState(false);
@@ -152,7 +174,7 @@ function Topbar(props) {
             .catch(() => { });
     }, []);
 
-    // Fetch WhatsApp unread summary (event-driven via WebSocket + 5-min fallback poll)
+    // Fetch WhatsApp unread summary (event-driven via WebSocket + 30s fallback poll)
     const fetchWaUnread = useCallback(() => {
         const storeId = localStorage.getItem('store_id');
         const token = localStorage.getItem('access_token');
@@ -160,11 +182,27 @@ function Topbar(props) {
         fetch(`/v1/rfq-whatsapp-unread?store_id=${storeId}`, { headers: { Authorization: token } })
             .then(r => r.json())
             .then(data => {
-                const items = (data.items || []).slice().sort((a, b) =>
+                const freshItems = (data.items || []).slice().sort((a, b) =>
                     new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0)
                 );
-                setWaUnreadItems(items);
+                setWaUnreadItems(freshItems);
                 setWaUnreadTotal(data.total_unread || 0);
+                // Merge into history: keep last 100, update unread_count for existing entries
+                setWaHistory(prev => {
+                    const freshByPhone = Object.fromEntries(freshItems.map(i => [i.phone, i]));
+                    const merged = prev.map(h =>
+                        freshByPhone[h.phone]
+                            ? { ...h, ...freshByPhone[h.phone] }
+                            : { ...h, unread_count: 0 }
+                    );
+                    const existingPhones = new Set(merged.map(h => h.phone));
+                    for (const item of freshItems) {
+                        if (!existingPhones.has(item.phone)) merged.unshift(item);
+                    }
+                    const trimmed = merged.slice(0, MAX_NOTIF_HISTORY);
+                    saveWaHistory(trimmed);
+                    return trimmed;
+                });
             })
             .catch(() => {});
     }, []);
@@ -217,8 +255,23 @@ function Topbar(props) {
                     playNewEmailSound();
                 }
                 emailUnreadCountRef.current = newTotal;
-                setEmailUnreadItems(data.items || []);
+                const freshItems = data.items || [];
+                setEmailUnreadItems(freshItems);
                 setEmailUnreadTotal(newTotal);
+                // Merge into history: add new items at top, update existing, keep last 100
+                setEmailHistory(prev => {
+                    const freshById = Object.fromEntries(freshItems.map(i => [i.id, i]));
+                    const merged = prev.map(h =>
+                        freshById[h.id] ? { ...h, ...freshById[h.id] } : h
+                    );
+                    const existingIds = new Set(merged.map(h => h.id));
+                    for (const item of freshItems) {
+                        if (!existingIds.has(item.id)) merged.unshift(item);
+                    }
+                    const trimmed = merged.slice(0, MAX_NOTIF_HISTORY);
+                    saveEmailHistory(trimmed);
+                    return trimmed;
+                });
             })
             .catch(() => {});
     }, [playNewEmailSound]);
@@ -375,33 +428,21 @@ function Topbar(props) {
             if (!storeId || !token || !userId) return;
             const base = `/v1/purchase-request?search[store_id]=${storeId}&search[limit]=20`;
             try {
-                // PRs assigned to me that are still pending (P.R Received)
-                const r1 = await fetch(`${base}&search[assigned_to]=${userId}&search[status]=pending`, { headers: { Authorization: token } });
-                const d1 = await r1.json();
-                if (d1.status && Array.isArray(d1.result)) {
-                    d1.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Received: ${pr.code}`, code: pr.code });
-                    });
-                }
-                // PRs I created that were accepted (P.R Status: accepted)
-                const r2 = await fetch(`${base}&search[created_by]=${userId}&search[status]=accepted`, { headers: { Authorization: token } });
-                const d2 = await r2.json();
-                if (d2.status && Array.isArray(d2.result)) {
-                    d2.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Accepted: ${pr.code}`, code: pr.code });
-                    });
-                }
-                // PRs I created that were rejected (P.R Status: rejected)
-                const r3 = await fetch(`${base}&search[created_by]=${userId}&search[status]=rejected`, { headers: { Authorization: token } });
-                const d3 = await r3.json();
-                if (d3.status && Array.isArray(d3.result)) {
-                    d3.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Rejected: ${pr.code}`, code: pr.code });
-                    });
-                }
+                const h = { headers: { Authorization: token } };
+                const [d1, d2, d3] = await Promise.all([
+                    fetch(`${base}&search[assigned_to]=${userId}&search[status]=pending`, h).then(r => r.json()),
+                    fetch(`${base}&search[created_by]=${userId}&search[status]=accepted`, h).then(r => r.json()),
+                    fetch(`${base}&search[created_by]=${userId}&search[status]=rejected`, h).then(r => r.json()),
+                ]);
+                const labels = ['P.R Received', 'P.R Accepted', 'P.R Rejected'];
+                [d1, d2, d3].forEach((d, idx) => {
+                    if (d.status && Array.isArray(d.result)) {
+                        d.result.forEach(pr => {
+                            if (dismissedPrIds.current.has(pr.id)) return;
+                            addPrNotification({ id: pr.id, message: `${labels[idx]}: ${pr.code}`, code: pr.code });
+                        });
+                    }
+                });
             } catch (_) {}
         };
         fetchPRNotifications();
@@ -662,18 +703,30 @@ function Topbar(props) {
                                         }}>{waUnreadTotal}</span>
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu style={{ minWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
-                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
-                                            <i className="bi bi-whatsapp text-success me-1"></i>
-                                            Unread WhatsApp Messages
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-whatsapp text-success me-1"></i>WhatsApp Notifications</span>
+                                            {waHistory.length > 0 && (
+                                                <span
+                                                    style={{ fontSize: 10, color: '#adb5bd', cursor: 'pointer', fontWeight: 400 }}
+                                                    onClick={() => { setWaHistory([]); saveWaHistory([]); }}
+                                                >Clear all</span>
+                                            )}
                                         </Dropdown.ItemText>
-                                        {waUnreadItems.map((item, idx) => {
+                                        {waHistory.length === 0 && (
+                                            <div style={{ padding: '16px 14px', color: '#6c757d', fontSize: 12, textAlign: 'center' }}>No notifications</div>
+                                        )}
+                                        {[...waHistory].sort((a, b) => {
+                                            if ((a.unread_count > 0) !== (b.unread_count > 0)) return b.unread_count > 0 ? 1 : -1;
+                                            return new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0);
+                                        }).map((item, idx) => {
+                                            const hasUnread = item.unread_count > 0;
                                             const handleClick = () => {
                                                 setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone });
                                             };
                                             return (
                                             <div
-                                                key={idx}
-                                                style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                                                key={item.phone || idx}
+                                                style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', opacity: hasUnread ? 1 : 0.6 }}
                                                 onClick={handleClick}
                                                 onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -688,14 +741,14 @@ function Topbar(props) {
                                                         <i className={`bi ${item.phone_type === 'customer' ? 'bi-person-fill' : 'bi-whatsapp'}`}></i>
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+                                                        <div style={{ fontSize: 13, fontWeight: hasUnread ? 600 : 400, lineHeight: 1.3 }}>
                                                             {item.contact_name || item.phone}
                                                             <span style={{ fontSize: 10, fontWeight: 400, color: '#6c757d', marginLeft: 6 }}>
                                                                 {item.phone_type === 'customer' ? 'Customer' : 'Supplier'}
                                                             </span>
                                                         </div>
-                                                        <div style={{ fontSize: 11, color: '#198754', fontWeight: 500 }}>
-                                                            {item.unread_count} new message{item.unread_count !== 1 ? 's' : ''} for {item.rfq_code || 'RFQ'}
+                                                        <div style={{ fontSize: 11, color: hasUnread ? '#198754' : '#adb5bd', fontWeight: hasUnread ? 500 : 400 }}>
+                                                            {hasUnread ? `${item.unread_count} new message${item.unread_count !== 1 ? 's' : ''}` : 'No new messages'} for {item.rfq_code || 'RFQ'}
                                                         </div>
                                                         {item.last_message_text && (
                                                             <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240, marginTop: 1 }}>
@@ -704,9 +757,11 @@ function Topbar(props) {
                                                         )}
                                                     </div>
                                                     <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                                                        <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700 }}>
-                                                            {item.unread_count}
-                                                        </span>
+                                                        {hasUnread && (
+                                                            <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700 }}>
+                                                                {item.unread_count}
+                                                            </span>
+                                                        )}
                                                         {item.last_message_date && (
                                                             <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
                                                                 {formatTimeAgo(item.last_message_date)}
@@ -746,26 +801,33 @@ function Topbar(props) {
                                         }}>{emailUnreadTotal}</span>
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu style={{ minWidth: 340, maxWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
-                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6 }}>
-                                            <i className="bi bi-envelope-fill text-primary me-1"></i>
-                                            Unread Emails
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-envelope-fill text-primary me-1"></i>Email Notifications</span>
+                                            {emailHistory.length > 0 && (
+                                                <span
+                                                    style={{ fontSize: 10, color: '#adb5bd', cursor: 'pointer', fontWeight: 400 }}
+                                                    onClick={() => { setEmailHistory([]); saveEmailHistory([]); }}
+                                                >Clear all</span>
+                                            )}
                                         </Dropdown.ItemText>
-                                        {emailUnreadItems.length === 0 && (
+                                        {emailHistory.length === 0 && (
                                             <div style={{ padding: '16px 14px', color: '#6c757d', fontSize: 12, textAlign: 'center' }}>
-                                                No unread emails
+                                                No notifications
                                             </div>
                                         )}
-                                        {emailUnreadItems.map((item, idx) => {
+                                        {emailHistory.map((item, idx) => {
+                                            const isUnread = emailUnreadItems.some(u => u.id === item.id);
                                             const handleEmailClick = () => {
                                                 const storeId = localStorage.getItem('store_id');
                                                 const token = localStorage.getItem('access_token');
+                                                if (isUnread) {
+                                                    setEmailUnreadItems(prev => prev.filter(e => e.id !== item.id));
+                                                    setEmailUnreadTotal(prev => Math.max(0, prev - 1));
+                                                }
                                                 fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
                                                     .then(r => r.json())
                                                     .then(msg => {
                                                         if (msg?.id) {
-                                                            // Remove from list only after modal is ready to open
-                                                            setEmailUnreadItems(prev => prev.filter((_, i) => i !== idx));
-                                                            setEmailUnreadTotal(prev => Math.max(0, prev - 1));
                                                             setTopbarEmailMsg(msg);
                                                             setTopbarEmailShow(true);
                                                         }
@@ -775,8 +837,8 @@ function Topbar(props) {
                                             };
                                             return (
                                                 <div
-                                                    key={idx}
-                                                    style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                                                    key={item.id || idx}
+                                                    style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', opacity: isUnread ? 1 : 0.6 }}
                                                     onClick={handleEmailClick}
                                                     onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -791,7 +853,7 @@ function Topbar(props) {
                                                             <i className="bi bi-envelope-fill"></i>
                                                         </div>
                                                         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                                            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <div style={{ fontSize: 13, fontWeight: isUnread ? 600 : 400, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {item.subject || '(No Subject)'}
                                                             </div>
                                                             <div style={{ fontSize: 11, color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -804,7 +866,9 @@ function Topbar(props) {
                                                             )}
                                                         </div>
                                                         <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                                                            <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
+                                                            {isUnread && (
+                                                                <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
+                                                            )}
                                                             {item.message_date && (
                                                                 <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
                                                                     {formatTimeAgo(item.message_date)}

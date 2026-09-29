@@ -776,7 +776,10 @@ const StoreCreate = forwardRef((props, ref) => {
                     'Authorization': localStorage.getItem('access_token'),
                 },
             };
-            const response = await fetch(`/v1/store/${id}`, requestOptions);
+            const [response, locksRes] = await Promise.all([
+                fetch(`/v1/store/${id}`, requestOptions),
+                fetch(`/v1/store/${id}/serial-locks`, { headers: { Authorization: localStorage.getItem('access_token') } }).catch(() => null),
+            ]);
             const isJson = response.headers.get('content-type')?.includes('application/json');
             const data = isJson && await response.json();
             if (!response.ok) return;
@@ -793,12 +796,9 @@ const StoreCreate = forwardRef((props, ref) => {
             } else {
                 setSelectedCountries([]);
             }
-            // Load serial locks to disable "Counting start from" once records exist
+            // Apply serial locks to disable "Counting start from" once records exist
             try {
-                const locksRes = await fetch(`/v1/store/${id}/serial-locks`, {
-                    headers: { Authorization: localStorage.getItem('access_token') },
-                });
-                const locksData = locksRes.ok ? await locksRes.json() : null;
+                const locksData = locksRes?.ok ? await locksRes.json() : null;
                 if (locksData?.result) setSerialLocks(locksData.result);
             } catch (_) {}
         } catch (error) { }

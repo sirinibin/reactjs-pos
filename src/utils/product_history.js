@@ -41,7 +41,7 @@ const ProductHistory = forwardRef((props, ref) => {
                     model={product}
                     selectedCustomers={selectedCustomers}
                     selectedVendors={selectedVendors}
-                    subFormModalClass={props.extraClass === "order-inner-history-modal" ? "above-inner-history-form" : ""}
+                    subFormModalClass="above-inner-history-form"
                 />
             )}
         </DraggableHistoryModal>

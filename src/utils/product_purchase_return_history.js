@@ -29,7 +29,7 @@ const ProductPurchaseReturnHistory = forwardRef((props, ref) => {
             title={`Purchase Return History of ${product?.name}${product?.name_in_arabic ? " / " + product?.name_in_arabic : ""}`}
             extraClass={props.extraClass}
         >
-            {show && <ProductPurchaseReturnHistoryTable ref={tableRef} model={product} selectedVendors={selectedVendors} subFormModalClass={props.extraClass === "order-inner-history-modal" ? "above-inner-history-form" : ""} />}
+            {show && <ProductPurchaseReturnHistoryTable ref={tableRef} model={product} selectedVendors={selectedVendors} subFormModalClass="above-inner-history-form" />}
         </DraggableHistoryModal>
     );
 });

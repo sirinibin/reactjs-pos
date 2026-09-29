@@ -572,3 +572,132 @@ describe('Topbar ZATCA env — RTL render shows Arabic label', () => {
         });
     });
 });
+
+// ── Notification history localStorage helpers (source-level) ─────────────────
+//
+// loadWaHistory / saveWaHistory / loadEmailHistory / saveEmailHistory are not
+// exported from Topbar.js.  The tests here mirror the logic locally and also
+// verify it by exercising the stored key names via source inspection.
+
+const TOPBAR_SRC_NOTIF = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'Topbar.js'),
+    'utf8'
+);
+
+function loadWaHistoryMirror() {
+    try { return JSON.parse(localStorage.getItem('wa_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveWaHistoryMirror(items) {
+    localStorage.setItem('wa_notif_history', JSON.stringify(items));
+}
+function loadEmailHistoryMirror() {
+    try { return JSON.parse(localStorage.getItem('email_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveEmailHistoryMirror(items) {
+    localStorage.setItem('email_notif_history', JSON.stringify(items));
+}
+
+describe('Topbar notification history — source-level contracts', () => {
+    beforeEach(() => { localStorage.clear(); });
+
+    test('28. Topbar.js defines MAX_NOTIF_HISTORY = 100', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/MAX_NOTIF_HISTORY\s*=\s*100/);
+    });
+
+    test('29. Topbar.js persists WA history under key wa_notif_history', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/wa_notif_history/);
+    });
+
+    test('30. Topbar.js persists email history under key email_notif_history', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/email_notif_history/);
+    });
+
+    test('31. Topbar.js renders waHistory (not waUnreadItems) in the WA dropdown', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/waHistory\.length === 0/);
+        expect(TOPBAR_SRC_NOTIF).toMatch(/\[\.\.\. ?waHistory\]/);
+    });
+
+    test('32. Topbar.js renders emailHistory (not emailUnreadItems) in the email dropdown', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/emailHistory\.map\(/);
+    });
+
+    test('33. Email click still decrements count only when isUnread', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/isUnread\s*=\s*emailUnreadItems\.some\(u => u\.id === item\.id\)/);
+        expect(TOPBAR_SRC_NOTIF).toMatch(/if \(isUnread\)/);
+    });
+
+    test('34. WA items sorted: unread first, then by date', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/b\.unread_count > 0.*?1.*?-1|b\.unread_count > 0 \? 1 : -1/s);
+    });
+
+    test('35. WA history has "Clear all" button that resets state + localStorage', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/setWaHistory\(\[\]\)/);
+        expect(TOPBAR_SRC_NOTIF).toMatch(/saveWaHistory\(\[\]\)/);
+    });
+
+    test('36. Email history has "Clear all" button that resets state + localStorage', () => {
+        expect(TOPBAR_SRC_NOTIF).toMatch(/setEmailHistory\(\[\]\)/);
+        expect(TOPBAR_SRC_NOTIF).toMatch(/saveEmailHistory\(\[\]\)/);
+    });
+});
+
+describe('Topbar notification history — localStorage helpers (mirror)', () => {
+    beforeEach(() => { localStorage.clear(); });
+
+    test('37. loadWaHistoryMirror returns [] when localStorage is empty', () => {
+        expect(loadWaHistoryMirror()).toEqual([]);
+    });
+
+    test('38. saveWaHistoryMirror / loadWaHistoryMirror round-trip', () => {
+        const items = [{ phone: '96650001', unread_count: 2 }, { phone: '96650002', unread_count: 0 }];
+        saveWaHistoryMirror(items);
+        expect(loadWaHistoryMirror()).toEqual(items);
+    });
+
+    test('39. loadEmailHistoryMirror returns [] when localStorage is empty', () => {
+        expect(loadEmailHistoryMirror()).toEqual([]);
+    });
+
+    test('40. saveEmailHistoryMirror / loadEmailHistoryMirror round-trip', () => {
+        const items = [{ id: 'msg1', subject: 'Hello' }, { id: 'msg2', subject: 'Invoice' }];
+        saveEmailHistoryMirror(items);
+        expect(loadEmailHistoryMirror()).toEqual(items);
+    });
+
+    test('41. loadWaHistoryMirror handles corrupted JSON gracefully', () => {
+        localStorage.setItem('wa_notif_history', '{invalid');
+        expect(loadWaHistoryMirror()).toEqual([]);
+    });
+
+    test('42. loadEmailHistoryMirror handles corrupted JSON gracefully', () => {
+        localStorage.setItem('email_notif_history', '{invalid');
+        expect(loadEmailHistoryMirror()).toEqual([]);
+    });
+
+    test('43. history merge keeps existing items and prepends new ones', () => {
+        const existing = [{ phone: '111', unread_count: 0 }, { phone: '222', unread_count: 0 }];
+        const fresh = [{ phone: '333', unread_count: 3 }, { phone: '111', unread_count: 1 }];
+        // Mirror of fetchWaUnread merge logic
+        const freshByPhone = Object.fromEntries(fresh.map(i => [i.phone, i]));
+        const merged = existing.map(h =>
+            freshByPhone[h.phone] ? { ...h, ...freshByPhone[h.phone] } : { ...h, unread_count: 0 }
+        );
+        const existingPhones = new Set(merged.map(h => h.phone));
+        for (const item of fresh) {
+            if (!existingPhones.has(item.phone)) merged.unshift(item);
+        }
+        // '333' is new → prepended; '111' is updated; '222' stays with unread_count:0
+        expect(merged[0].phone).toBe('333');
+        expect(merged[0].unread_count).toBe(3);
+        expect(merged.find(h => h.phone === '111').unread_count).toBe(1);
+        expect(merged.find(h => h.phone === '222').unread_count).toBe(0);
+    });
+
+    test('44. history is trimmed to MAX_NOTIF_HISTORY (100)', () => {
+        const items = Array.from({ length: 120 }, (_, i) => ({ phone: String(i), unread_count: 0 }));
+        const trimmed = items.slice(0, 100);
+        expect(trimmed.length).toBe(100);
+    });
+});

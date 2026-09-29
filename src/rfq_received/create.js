@@ -543,86 +543,100 @@ const RFQCreate = forwardRef(function RFQCreate({ showToastMessage, onCreated },
     // Caches part_no lookups to avoid redundant API calls for duplicate part_nos.
     const syncProductListToDB = async (productList, storeId, token, showErr, onProgress) => {
         const headers = { Authorization: token };
-        // Cache: part_no → found DB product (or null if not found/created with that part_no)
-        const partNoCache = new Map();
-        const result = [];
+        // Cache: part_no → Promise<found product | null>
+        // Storing promises (not results) prevents duplicate concurrent lookups for the same part_no
+        const partNoPromiseCache = new Map();
         const total = productList.length;
         let done = 0;
-        for (const ep of productList) {
+
+        // Semaphore: max 5 concurrent products processed at once
+        let active = 0;
+        const waiters = [];
+        const acquire = () => new Promise(res => {
+            if (active < 5) { active++; res(); } else waiters.push(res);
+        });
+        const release = () => {
+            if (waiters.length) { waiters.shift()(); } else active--;
+        };
+
+        return Promise.all(productList.map(async (ep) => {
             const base = { part_no: ep.part_no || "", name: ep.name || "", quantity: ep.quantity || 1, unit: ep.unit || "", notes: ep.notes || "" };
-            // Already has a product_id — keep it as-is
             if (ep.product_id) {
-                result.push({ ...base, product_id: ep.product_id });
-                continue;
+                done++; onProgress && onProgress(done, total);
+                return { ...base, product_id: ep.product_id };
             }
             if (!ep.name || !ep.name.trim()) {
-                result.push({ ...base, product_id: "" });
-                continue;
+                done++; onProgress && onProgress(done, total);
+                return { ...base, product_id: "" };
             }
-            let found = null;
-            const partNoKey = ep.part_no?.trim() || "";
-            // 1. Search by part_no (use cache to avoid redundant lookups for duplicate part_nos)
-            if (partNoKey) {
-                if (partNoCache.has(partNoKey)) {
-                    found = partNoCache.get(partNoKey);
-                } else {
-                    try {
-                        const qs = new URLSearchParams({ 'search[part_number]': partNoKey, 'search[store_id]': storeId, limit: 1 });
-                        const res = await fetch(`/v1/product?${qs}`, { headers });
-                        const d = await res.json();
-                        if (d.result && d.result.length > 0) found = d.result[0];
-                    } catch (_) {}
-                    partNoCache.set(partNoKey, found);
-                }
-            }
-            // 2. Search by name only when no part_no was supplied.
-            // If a part_no was given but not found, skip name search to avoid matching
-            // a different product that happens to share the same generic name.
-            if (!found && !partNoKey) {
-                try {
-                    const qs = new URLSearchParams({ 'search[name]': ep.name.trim(), 'search[store_id]': storeId, limit: 5 });
-                    const res = await fetch(`/v1/product?${qs}`, { headers });
-                    const d = await res.json();
-                    if (d.result && d.result.length > 0)
-                        found = d.result.find(p => p.name && p.name.trim().toLowerCase() === ep.name.trim().toLowerCase()) || null;
-                } catch (_) {}
-            }
-            // 3. Create new product
-            if (!found) {
-                try {
-                    const body = { name: ep.name.trim() };
-                    if (partNoKey) body.part_number = partNoKey;
-                    if (ep.unit && ep.unit.trim()) body.unit = ep.unit.trim();
-                    const res = await fetch(`/v1/product?search[store_id]=${storeId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', Authorization: token },
-                        body: JSON.stringify(body),
-                    });
-                    const d = await res.json();
-                    if (res.ok && d.result && d.result.id) {
-                        found = d.result;
-                        if (partNoKey) partNoCache.set(partNoKey, found);
-                    } else {
-                        const errMsg = Object.values(d.errors || {}).join('; ') || JSON.stringify(d);
-                        console.error('Product create failed:', d.errors || d);
-                        showErr && showErr(`Failed to create product "${ep.name}": ${errMsg}`);
+
+            await acquire();
+            try {
+                let found = null;
+                const partNoKey = ep.part_no?.trim() || "";
+                // 1. Search by part_no (cache promise to avoid concurrent duplicate lookups)
+                if (partNoKey) {
+                    if (!partNoPromiseCache.has(partNoKey)) {
+                        partNoPromiseCache.set(partNoKey, (async () => {
+                            try {
+                                const qs = new URLSearchParams({ 'search[part_number]': partNoKey, 'search[store_id]': storeId, limit: 1 });
+                                const r = await fetch(`/v1/product?${qs}`, { headers });
+                                const d = await r.json();
+                                return (d.result && d.result.length > 0) ? d.result[0] : null;
+                            } catch (_) { return null; }
+                        })());
                     }
-                } catch (e) {
-                    console.error('Product create exception:', e);
-                    showErr && showErr(`Error creating product "${ep.name}": ${e.message}`);
+                    found = await partNoPromiseCache.get(partNoKey);
                 }
+                // 2. Search by name only when no part_no was supplied.
+                // If a part_no was given but not found, skip to avoid matching a different product.
+                if (!found && !partNoKey) {
+                    try {
+                        const qs = new URLSearchParams({ 'search[name]': ep.name.trim(), 'search[store_id]': storeId, limit: 5 });
+                        const r = await fetch(`/v1/product?${qs}`, { headers });
+                        const d = await r.json();
+                        if (d.result && d.result.length > 0)
+                            found = d.result.find(p => p.name && p.name.trim().toLowerCase() === ep.name.trim().toLowerCase()) || null;
+                    } catch (_) {}
+                }
+                // 3. Create new product
+                if (!found) {
+                    try {
+                        const body = { name: ep.name.trim() };
+                        if (partNoKey) body.part_number = partNoKey;
+                        if (ep.unit && ep.unit.trim()) body.unit = ep.unit.trim();
+                        const r = await fetch(`/v1/product?search[store_id]=${storeId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', Authorization: token },
+                            body: JSON.stringify(body),
+                        });
+                        const d = await r.json();
+                        if (r.ok && d.result && d.result.id) {
+                            found = d.result;
+                            if (partNoKey) partNoPromiseCache.set(partNoKey, Promise.resolve(found));
+                        } else {
+                            const errMsg = Object.values(d.errors || {}).join('; ') || JSON.stringify(d);
+                            console.error('Product create failed:', d.errors || d);
+                            showErr && showErr(`Failed to create product "${ep.name}": ${errMsg}`);
+                        }
+                    } catch (e) {
+                        console.error('Product create exception:', e);
+                        showErr && showErr(`Error creating product "${ep.name}": ${e.message}`);
+                    }
+                }
+
+                done++; onProgress && onProgress(done, total);
+                return {
+                    ...base,
+                    product_id: found?.id || "",
+                    name:    found?.name        || base.name,
+                    part_no: found?.part_number || found?.part_no || base.part_no,
+                    unit:    found ? resolveUnit(found.unit) : (base.unit || "PCE"),
+                };
+            } finally {
+                release();
             }
-            result.push({
-                ...base,
-                product_id: found?.id || "",
-                name:    found?.name        || base.name,
-                part_no: found?.part_number || found?.part_no || base.part_no,
-                unit:    found ? resolveUnit(found.unit) : (base.unit || "PCE"),
-            });
-            done++;
-            onProgress && onProgress(done, total);
-        }
-        return result;
+        }));
     };
 
     // ── Auto-create or find customer from extracted data ─────────────────────

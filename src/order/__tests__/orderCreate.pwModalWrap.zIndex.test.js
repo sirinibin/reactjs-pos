@@ -73,11 +73,17 @@ describe('OrderCreate inline style — products-modal-wrap rule removed', () => 
 
 // ─── 4. Conditional for order-create-wrap preserved ──────────────────────────
 
-describe('OrderCreate inline style — order-create-wrap conditional unchanged', () => {
-    test('conditional still evaluates 1095 for above-pending-modal, 1080 otherwise', () => {
-        expect(STYLE_LINE).toContain(
-            "props.modalClass === 'above-pending-modal' ? 1095 : 1080"
-        );
+describe('OrderCreate inline style — order-create-wrap conditional', () => {
+    test('includes above-pending-modal → 1095 branch', () => {
+        expect(STYLE_LINE).toContain("props.modalClass === 'above-pending-modal' ? 1095");
+    });
+
+    test('includes above-inner-history-form → 1200 branch (form must be above history modal z-index 1150)', () => {
+        expect(STYLE_LINE).toContain("props.modalClass === 'above-inner-history-form' ? 1200");
+    });
+
+    test('falls back to 1080 for unknown modalClass', () => {
+        expect(STYLE_LINE).toMatch(/above-inner-history-form'\s*\?\s*1200\s*:\s*1080/);
     });
 });
 
@@ -97,10 +103,12 @@ describe('OrderCreate inline style — other z-index values unchanged', () => {
         );
     });
 
-    test('.above-sales-modal z-index is conditional: 1096 in pending mode, 1082 in normal mode', () => {
-        expect(STYLE_LINE).toContain(
-            "props.modalClass === 'above-pending-modal' ? 1096 : 1082"
-        );
+    test('.above-sales-modal z-index includes 1096 in pending mode', () => {
+        expect(STYLE_LINE).toContain("props.modalClass === 'above-pending-modal' ? 1096");
+    });
+
+    test('.above-sales-modal z-index is 1202 for above-inner-history-form (above history modal)', () => {
+        expect(STYLE_LINE).toContain("props.modalClass === 'above-inner-history-form' ? 1202");
     });
 
     test('.above-preview-modal z-index is still 1310', () => {

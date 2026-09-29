@@ -154,9 +154,9 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload, in
         if (!productIDs.length) return;
         let cancelled = false;
         (async () => {
-            for (let i = 0; i < products.length; i++) {
-                const pid = products[i].product_id;
-                if (!pid) continue;
+            await Promise.all(products.map(async (prod, i) => {
+                const pid = prod.product_id;
+                if (!pid) return;
                 try {
                     const res = await fetch(
                         `/v1/product/${pid}?search[store_id]=${storeId}&select=product_stores.${storeId}.retail_margin_percent`,
@@ -169,7 +169,7 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload, in
                         setMargins(prev => ({ ...prev, [i]: String(m) }));
                     }
                 } catch (_) {}
-            }
+            }));
         })();
         return () => { cancelled = true; };
     }, [rfq.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -196,11 +196,13 @@ function PriceComparisonTable({ rfq, storeId, onCreateQuotation, onRfqReload, in
             let supplierPhone = '';
             let generalNotes = '';
             const url = `/v1/rfq-received/${rfq.id}/supplier-replies/parse-file?store_id=${storeId}&llm_provider=${encodeURIComponent(addProvider)}&llm_model=${encodeURIComponent(addModel)}`;
-            for (const file of addFiles) {
+            const fileResults = await Promise.all(addFiles.map(async file => {
                 const fd = new FormData();
                 fd.append('file', file);
                 const res = await fetch(url, { method: 'POST', headers: { Authorization: token }, body: fd });
-                const data = await res.json();
+                return res.json();
+            }));
+            for (const data of fileResults) {
                 if (data.error) { setAddError(data.error); return; }
                 if (!supplierName && data.supplier_name) supplierName = data.supplier_name;
                 if (!supplierPhone && data.supplier_phone) supplierPhone = data.supplier_phone;

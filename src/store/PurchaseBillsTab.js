@@ -380,10 +380,21 @@ function ManualUploadModal({ storeId, token, onClose, onUploaded }) {
         setError('');
         setProgress({ done: 0, total: files.length });
         let successCount = 0;
-        for (let i = 0; i < files.length; i++) {
+        let uploadDone = 0;
+
+        // Limit to 3 concurrent file uploads
+        let active = 0;
+        const waiters = [];
+        const acquire = () => new Promise(res => {
+            if (active < 3) { active++; res(); } else waiters.push(res);
+        });
+        const release = () => { if (waiters.length) { waiters.shift()(); } else active--; };
+
+        await Promise.all(files.map(async file => {
+            await acquire();
             try {
                 // prepareFileForUpload returns an array: PDFs → one File per page; images → [compressed file]
-                const prepared = await prepareFileForUpload(files[i]);
+                const prepared = await prepareFileForUpload(file);
                 for (const uploadFile of prepared) {
                     const fd = new FormData();
                     fd.append('files', uploadFile, uploadFile.name);
@@ -395,8 +406,10 @@ function ManualUploadModal({ storeId, token, onClose, onUploaded }) {
                     if (res.ok) successCount++;
                 }
             } catch (_) {}
-            setProgress({ done: i + 1, total: files.length });
-        }
+            uploadDone++;
+            setProgress({ done: uploadDone, total: files.length });
+            release();
+        }));
         setUploading(false);
         if (successCount > 0) { onUploaded(); onClose(); }
         else setError(t('Upload failed — please try again.'));
@@ -590,45 +603,50 @@ export default function PurchaseBillsTab({ storeId }) {
                 `product_stores.${stId}.stock`,
             ].join(',');
 
-            for (const ep of products) {
-                let dbProduct = null;
-                // Find by part_no
-                if (ep.part_no) {
-                    const r = await fetch(`/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
-                    if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
-                }
-                // Find by name
-                if (!dbProduct && ep.name) {
-                    const r = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
-                    if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
-                }
-                // Create if not found
-                if (!dbProduct) {
-                    const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
-                    if (ep.part_no) body.part_number = ep.part_no;
-                    if (ep.unit) body.unit = ep.unit;
-                    const cr = await fetch('/v1/product', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                    if (cr.ok) {
-                        const cd = await cr.json();
-                        if (cd.result?.id) {
-                            const pr = await fetch(`/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`, { headers: { Authorization: at } });
-                            dbProduct = pr.ok ? (await pr.json()).result || cd.result : cd.result;
-                        }
-                    } else if (ep.name) {
-                        // Retry by name after failed creation (duplicate)
-                        const r2 = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
-                        if (r2.ok) { const d2 = await r2.json(); if ((d2.result || []).length > 0) dbProduct = d2.result[0]; }
+            // Limit to 5 concurrent product resolutions
+            let pActive = 0;
+            const pWaiters = [];
+            const pAcquire = () => new Promise(res => { if (pActive < 5) { pActive++; res(); } else pWaiters.push(res); });
+            const pRelease = () => { if (pWaiters.length) { pWaiters.shift()(); } else pActive--; };
+
+            const resolved = await Promise.all(products.map(async ep => {
+                await pAcquire();
+                try {
+                    let dbProduct = null;
+                    // Find by part_no
+                    if (ep.part_no) {
+                        const r = await fetch(`/v1/product?search[part_number]=${encodeURIComponent(ep.part_no)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                        if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
                     }
-                }
-                if (dbProduct?.id) {
+                    // Find by name
+                    if (!dbProduct && ep.name) {
+                        const r = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                        if (r.ok) { const d = await r.json(); if ((d.result || []).length > 0) dbProduct = d.result[0]; }
+                    }
+                    // Create if not found
+                    if (!dbProduct) {
+                        const body = { store_id: stId, name: ep.name || ep.part_no || 'Unknown' };
+                        if (ep.part_no) body.part_number = ep.part_no;
+                        if (ep.unit) body.unit = ep.unit;
+                        const cr = await fetch('/v1/product', { method: 'POST', headers: { Authorization: at, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                        if (cr.ok) {
+                            const cd = await cr.json();
+                            if (cd.result?.id) {
+                                const pr = await fetch(`/v1/product/${cd.result.id}?store_id=${stId}&select=${selectFields}`, { headers: { Authorization: at } });
+                                dbProduct = pr.ok ? (await pr.json()).result || cd.result : cd.result;
+                            }
+                        } else if (ep.name) {
+                            // Retry by name after failed creation (duplicate)
+                            const r2 = await fetch(`/v1/product?search[query]=${encodeURIComponent(ep.name)}&store_id=${stId}&limit=1&select=${selectFields}`, { headers: { Authorization: at } });
+                            if (r2.ok) { const d2 = await r2.json(); if ((d2.result || []).length > 0) dbProduct = d2.result[0]; }
+                        }
+                    }
+                    if (!dbProduct?.id) return null;
                     if (!dbProduct.product_stores) dbProduct.product_stores = {};
-                    resolvedProducts.push({
-                        dbProduct,
-                        quantity: parseFloat(ep.quantity) || 1,
-                        unit_price: parseFloat(ep.unit_price) || 0,
-                    });
-                }
-            }
+                    return { dbProduct, quantity: parseFloat(ep.quantity) || 1, unit_price: parseFloat(ep.unit_price) || 0 };
+                } finally { pRelease(); }
+            }));
+            resolvedProducts.push(...resolved.filter(Boolean));
         } catch (e) { console.error('[handleCreatePurchase] vendor lookup error:', e); }
 
         console.error('[handleCreatePurchase] vendorObj after lookup:', JSON.stringify(vendorObj ? {id: vendorObj.id, name: vendorObj.name, vat_no: vendorObj.vat_no} : null));
