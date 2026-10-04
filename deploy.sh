@@ -14,8 +14,8 @@ SSH_KEY="${SSH_KEY:-$HOME/Downloads/startuptech-v2.pem}"
 SERVER_USER="ubuntu"
 SERVER_HOST="ec2-13-42-39-69.eu-west-2.compute.amazonaws.com"
 
-TEST_API_URL="https://startpos-api-test.startuptech.uk"
-PROD_API_URL="https://startpos-api.startuptech.uk"
+TEST_API_URL="https://startpos-api-test.gulfunionozone.com"
+PROD_API_URL="https://startpos-api.gulfunionozone.com"
 
 TEST_DEST="/home/ubuntu/reactjs-pos-test/build/"
 PROD_DEST="/home/ubuntu/reactjs-pos/build/"
@@ -191,13 +191,13 @@ case "$TARGET" in
         check_eslint
         run_tests
         build "$TEST_API_URL"
-        deploy_to "$FRONTEND_DIR/build" "$TEST_DEST" "test (https://startpos-test.startuptech.uk)"
+        deploy_to "$FRONTEND_DIR/build" "$TEST_DEST" "test (https://startpos-test.gulfunionozone.com)"
         ;;
     production|prod)
         check_eslint
         run_tests
         build "$PROD_API_URL"
-        deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.startuptech.uk)"
+        deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.gulfunionozone.com)"
         ;;
     both)
         check_eslint
@@ -214,9 +214,9 @@ case "$TARGET" in
             echo "==> Test build done."
             wait $PID_PROD || { echo "==> Production build FAILED:"; cat /tmp/build_prod.log; exit 1; }
             echo "==> Production build done."
-            deploy_to "$FRONTEND_DIR/build_test" "$TEST_DEST" "test (https://startpos-test.startuptech.uk)" &
+            deploy_to "$FRONTEND_DIR/build_test" "$TEST_DEST" "test (https://startpos-test.gulfunionozone.com)" &
             PID_RSYNC_TEST=$!
-            deploy_to "$FRONTEND_DIR/build_prod" "$PROD_DEST" "production (https://startpos.startuptech.uk)" &
+            deploy_to "$FRONTEND_DIR/build_prod" "$PROD_DEST" "production (https://startpos.gulfunionozone.com)" &
             PID_RSYNC_PROD=$!
             wait $PID_RSYNC_TEST || { echo "==> Test deploy FAILED"; exit 1; }
             wait $PID_RSYNC_PROD || { echo "==> Production deploy FAILED"; exit 1; }
@@ -226,7 +226,7 @@ case "$TARGET" in
             echo "==> Note: test deploy skipped (outside 10 pm–6 am Saudi window; current: $sa_time). Use --force to override."
             echo "==> Building production only..."
             build "$PROD_API_URL"
-            deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.startuptech.uk)"
+            deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.gulfunionozone.com)"
         fi
         ;;
     *)

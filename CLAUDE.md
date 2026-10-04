@@ -31,6 +31,23 @@ frontend/deploy.sh production  # production only
 3. Commit all changed files (including App.css, translations, etc. — tests depend on them).
 4. Run `frontend/deploy.sh both`.
 
+## Branch isolation rule (NON-NEGOTIABLE)
+
+The `v2` branch is a **completely separate product line** from `master`/`test`.
+
+1. **Never merge, cherry-pick, or rebase between `v2` and `master`/`test` in either direction.**
+   Features for v2 stay on v2. Features for master/test stay there. No exceptions.
+
+2. **The one allowed exception — GitHub Actions workflow files only:**
+   GitHub only reads `.github/workflows/` from the default branch (`master`).
+   When adding a new workflow file to `v2`, copy that file to `master` using:
+   `git checkout v2 -- .github/workflows/<file>.yml`
+   This is a file copy only — NOT a merge. No other files cross the v2 boundary.
+
+3. **`master` and `test` may share changes freely.** This rule only applies to the v2 boundary.
+
+4. **Always run `deploy_v2.sh` from the `v2` branch.** It enforces the branch check and aborts otherwise.
+
 ## Important rules
 - Never use `React.lazy(() => import('../order/create.js'))` inside quotation/create.js —
   creates an infinite render loop (order/create.js unconditionally renders Quotation).
