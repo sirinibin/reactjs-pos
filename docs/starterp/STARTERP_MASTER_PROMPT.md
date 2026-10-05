@@ -64,6 +64,39 @@ Deliver StartERP so that:
   working. New capabilities go under new routes or as additive fields. Use `/v2/` routes only
   when a breaking shape is unavoidable.
 
+### 2.1c Old data must work as-is in StartERP (owner decision)
+The new system adapts to the old data, never the other way round.
+
+- **Read every legacy shape.**
+  - Missing fields, nulls, old enum values, numbers stored as strings or ints (`FlexInt`), empty
+    arrays.
+  - Legacy top-level store flags that are duplicated under `settings`: read `settings.x`, fall back
+    to top-level `x`.
+  - Old embedded structures and legacy collections (`order_item`, `sales_return_item`).
+  - Documents created by older app versions without `uuid`, `hash`, `zatca`, `payments[]`,
+    `product_stores` or `stores{}` maps.
+- **Defaults reproduce old behaviour.** Every new setting or field, when absent, behaves exactly
+  as the current app does.
+- **Old documents are fully usable:**
+  - viewable and printable with the same numbers, totals, VAT, rounding and QR as originally
+    issued; never recalculated on read
+  - payable, returnable within remaining quantity, and reportable
+  - visible in every list, filter, report, statement, ledger and BI view
+- **Old and new documents interleave.** They share the same serial counters (Redis keys
+  unchanged), the same ledger/postings, the same product and customer/vendor stats maps, and the
+  same ZATCA chain for already-onboarded stores.
+- **Both apps can run side by side.** The old React app and StartERP can run against the same
+  database during the transition, so every write StartERP makes is something the old app can still
+  read and display.
+- **Compatibility test suite** (blocking in CI):
+  - An anonymised snapshot of real production-shaped data: main `pos` DB plus several
+    `store_<id>` DBs from different store types, including the oldest stores.
+  - Golden tests: open, print and recompute totals for N historical invoices of every type, and
+    the totals must equal the stored values.
+  - Every list endpoint returns all historical documents.
+  - Ledger and trial balance match the old app's figures.
+  - A write made by StartERP is readable by the old app's API code paths.
+
 ### 2.1a UI naming of legacy entities (owner decision)
 | DB collection / model | UI name (EN) | UI name (AR) | ZATCA type |
 |---|---|---|---|
@@ -99,14 +132,12 @@ and can affect counters, stock, ledger, reports and ZATCA. StartERP must not do 
 - **Never mix the two.** All list, report, BI, MCP and ZATCA queries on real collections must stay
   free of draft data. Add a regression test that creating, updating and deleting drafts changes no
   count, stock or counter.
-- **Legacy cleanup.** Existing `status: "draft"` documents in `order`, `quotation` and `purchase`
-  need a migration:
-  1. Dry-run report.
-  2. Copy each into its `*_draft` collection.
-  3. Verify, then remove it from the real collection, or mark it excluded where it already
-     consumed a code or changed stock; the dry run lists these for owner review.
-
-  Until the migration runs, real-collection queries keep excluding `status: "draft"`.
+- **Legacy drafts stay where they are.** Existing `status: "draft"` documents in `order`,
+  `quotation` and `purchase` are **not moved, copied out or deleted**.
+  - The draft list shows them alongside new drafts, through a read adapter, labelled "Legacy draft".
+  - Finalizing a legacy draft uses the same path the old app uses today.
+  - Real-collection queries keep excluding `status: "draft"` exactly as today.
+  - Only **new** drafts go to `*_draft` collections.
 - **General rule:** the same separation applies to any future work-in-progress feature, such as
   POS parked orders, import staging rows, quotation revisions and approval requests. They get their
   own collections and never get a status flag on a posted-document collection.
@@ -200,11 +231,13 @@ New main-DB collections:
 
 Rules:
 - `store.workspace_id` links stores to a workspace. `user.workspace_ids[]` links users.
-- **Legacy migration:**
-  - Every existing store without `workspace_id` gets a workspace created per owner group, with
-    status `active` and plan `legacy-grandfathered` (all features, no expiry) until the owner
-    reassigns it.
-  - Existing users keep logging in exactly as today.
+- **Legacy stores need zero data rewrite.**
+  - A store without `workspace_id` resolves at runtime to a virtual "Legacy" workspace: status
+    `active`, plan `legacy-grandfathered`, all features, no expiry.
+  - Nothing is written to legacy documents until the owner explicitly links the store to a
+    workspace in Platform Admin. That link only **adds** `workspace_id`.
+  - Existing users keep logging in exactly as today, with the same credentials, roles,
+    `store_ids` and RBAC.
 - Entitlement checks are one middleware: `RequireFeature("purchase_order")`, `RequireLimit("users")`.
   - They are mirrored in the frontend via `/v1/me/entitlements`.
   - The current `customer_package.tab_ids` mechanism maps into plan features. Keep it working.
