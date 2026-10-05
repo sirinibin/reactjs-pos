@@ -100,14 +100,14 @@ The new system adapts to the old data, never the other way round.
 ### 2.1a UI naming of legacy entities (owner decision)
 | DB collection / model | UI name (EN) | UI name (AR) | ZATCA type |
 |---|---|---|---|
-| `customerdeposit` (CustomerDeposit, old UI "Receivables") | **Debit Note** | إشعار مدين | 381 |
-| `customerwithdrawal` (CustomerWithdrawal, old UI "Payables") | **Credit Note** | إشعار دائن | 383 |
+| `customerdeposit` (CustomerDeposit, old UI "Receivables") | **Debit Note** | إشعار مدين | 383 (see §8.5) |
+| `customerwithdrawal` (CustomerWithdrawal, old UI "Payables") | **Credit Note** | إشعار دائن | 381 (see §8.5) |
 
 Only labels change: nav, page titles, forms, lists, print templates, emails and reports. Collection
 names, API routes (`/v1/customer-deposit…`, `/v1/customer-withdrawal…`), Redis counters and
 existing serial-number prefixes stay unchanged. Store invoice-title settings (`receivabale_title`,
 `payable_title`) default to "Debit Note" / "Credit Note" when empty. Sales returns stay labelled
-"Sales Return" but are typed as credit notes (383) in ZATCA views.
+"Sales Return" but are typed as credit notes (381) in ZATCA views.
 
 ### 2.1b Drafts and work-in-progress data live in SEPARATE collections (owner decision)
 Today `src/utils/useDraft.js` POSTs/PUTs drafts into the **real** collections (`order`,
@@ -400,7 +400,7 @@ Admin. Nothing is hard-coded.
 
 ### 8.1 Coverage
 - **Documents:** standard (B2B, clearance) and simplified (B2C, reporting within 24h):
-  - invoice 388, credit note 383 (sales return, payables), debit note 381 (receivables)
+  - invoice 388, **credit note 381** (sales return, Credit Note), **debit note 383** (Debit Note)
   - prepayment handling (386)
 - **Invoice type codes:** `0100000` / `0200000` with sub-flags as applicable.
 - **Mandatory fields:**
@@ -455,6 +455,24 @@ secrets.
   - Add a chain-integrity checker job and UI.
 - Write explicit tests for chain continuity across doc types, concurrency (two terminals), and
   retries.
+
+### 8.5 Compliance finding: credit/debit note type codes are swapped in the current backend
+ZATCA (UN/CEFACT 1001) defines **381 = Credit Note** and **383 = Debit Note**. The current backend
+does it the other way round:
+
+| File | Line | Current code | Should be |
+|---|---|---|---|
+| `models/customer_deposit_zatca.go` | 170 | `381` ("Debit Note") | `383` |
+| `models/customer_withdrawal_zatca.go` | 150 | `383` ("Credit Note") | `381` |
+| `models/sales_return_zatca.go` | 134 | `383` | `381` |
+
+Required handling:
+- Fix this in StartERP for **new** documents only: the code change plus golden-file tests, and a
+  developer-portal compliance run using the test taxpayer.
+- **Never** rewrite already-reported documents or their stored XML (§2.1c).
+- Produce a report of historical documents reported with the swapped code, so the owner can
+  decide with their tax advisor whether corrective notes are needed.
+- Get owner sign-off before deploying the fix to production stores.
 
 ## 9. POS terminals (touch, ERP-grade)
 
