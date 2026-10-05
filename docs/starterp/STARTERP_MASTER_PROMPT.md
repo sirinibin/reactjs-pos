@@ -70,6 +70,41 @@ existing serial-number prefixes stay unchanged. Store invoice-title settings (`r
 `payable_title`) default to "Debit Note" / "Credit Note" when empty. Sales returns stay labelled
 "Sales Return" but are typed as credit notes (383) in ZATCA views.
 
+### 2.1b Drafts and work-in-progress data live in SEPARATE collections (owner decision)
+Today `src/utils/useDraft.js` POSTs/PUTs drafts into the **real** collections (`order`,
+`quotation`, `purchase`) with `status: "draft"`. That mixes unfinished data with posted documents
+and can affect counters, stock, ledger, reports and ZATCA. StartERP must not do this.
+
+- **One draft collection per document type**, in the store DB: `order_draft`, `quotation_draft`,
+  `purchase_draft`, `salesreturn_draft`, `purchasereturn_draft`, `delivery_note_draft`,
+  `purchase_order_draft`, `quotation_sales_return_draft`, `customerdeposit_draft`,
+  `customerwithdrawal_draft`, `stocktransfer_draft`, and `pos_cart_draft` for POS held carts.
+- **A draft document holds:** `_id`, `store_id`, `doc_type`, `payload` (the full form state as the
+  create API expects it), `title` or summary (customer, net total, line count), `created_by`,
+  `updated_by`, `created_at`, `updated_at`, `expires_at` (optional TTL index), and `device_id`.
+- **Dedicated routes:** `GET/POST /v1/drafts/{doc_type}`, `GET/PUT/DELETE /v1/drafts/{doc_type}/{id}`.
+  - These routes **never** call the real create path.
+  - They never allocate serial numbers, ICV or UUID.
+  - They never touch stock, postings/ledger, customer/vendor/product stats, dashboards or ZATCA.
+- **Finalize.** Validate the payload, then run the normal create endpoint (same validation, same
+  side effects). On success, delete the draft in the same request; use a transaction when the
+  replica set allows it, otherwise delete after the create commits. If the create fails, the draft
+  stays untouched.
+- **Never mix the two.** All list, report, BI, MCP and ZATCA queries on real collections must stay
+  free of draft data. Add a regression test that creating, updating and deleting drafts changes no
+  count, stock or counter.
+- **Legacy cleanup.** Existing `status: "draft"` documents in `order`, `quotation` and `purchase`
+  need a migration:
+  1. Dry-run report.
+  2. Copy each into its `*_draft` collection.
+  3. Verify, then remove it from the real collection, or mark it excluded where it already
+     consumed a code or changed stock; the dry run lists these for owner review.
+
+  Until the migration runs, real-collection queries keep excluding `status: "draft"`.
+- **General rule:** the same separation applies to any future work-in-progress feature, such as
+  POS parked orders, import staging rows, quotation revisions and approval requests. They get their
+  own collections and never get a status flag on a posted-document collection.
+
 ### 2.2 Branches and deploy
 - Development branch for StartERP is `v3`. Create it from `v2` in both repos.
   - `v3` is a new product line. Follow the CLAUDE.md branch isolation rule: no merge, cherry-pick or
@@ -201,7 +236,8 @@ Everything in `FRONTEND_INVENTORY.md §2` and `BACKEND_INVENTORY.md §1` must ex
 - **Repair jobs** (Kanban) and **vehicles** (automobile module); sales from repair jobs.
 - **Roles (RBAC)**: resource × read/create/update/delete.
 - **Sales** (5 form layouts become one adaptive form with layout presets: Classic, Compact,
-  Workshop, Van/mobile) with payments, cash discount, commission, drafts, custom invoice ID,
+  Workshop, Van/mobile) with payments, cash discount, commission, drafts (separate `*_draft`
+  collections, §2.1b), custom invoice ID,
   customer P.O., warehouse stock source, imports (quotation, delivery note, P.O., repair jobs),
   credit-limit and pending-invoice blocking, and purchase-price validation.
 - **Sales returns** (limited to sold quantity) with payments.
@@ -245,7 +281,8 @@ New in StartERP:
   - Drawer, Modal, Stepper, Toast, EmptyState, Skeleton, ErrorBoundary.
   - FileDrop (image/PDF), PrintPreview, KeyboardHint.
 - **Forms:** label-above, sectioned, sticky action bar, error summary that jumps to fields, unsaved
-  changes guard, autosave drafts where the store enables drafts, and full keyboard flow (Enter
+  changes guard, autosave drafts where the store enables drafts (to `*_draft` collections only,
+  §2.1b), and full keyboard flow (Enter
   moves next).
 - **Tables:** right-aligned tabular numbers, totals row, and colour plus shape for state (never
   colour alone).
