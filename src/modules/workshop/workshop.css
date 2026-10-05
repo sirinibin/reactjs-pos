@@ -15,6 +15,7 @@
 /* Board */
 .ws-board-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 24px 4px}
 .ws-board-bar .ta{width:240px;max-width:100%}
+.ws-tg{display:contents}
 .ws-toggle[aria-pressed="true"]{background:var(--warn-bg);color:var(--warn);border-color:transparent}
 .ws-toggle.crit[aria-pressed="true"]{background:var(--crit-bg);color:var(--crit)}
 .ws-toggle .c{font-size:11px;background:var(--surface-3);border-radius:9px;padding:0 6px;margin-inline-start:2px}
@@ -109,5 +110,13 @@
   .kc.ws-card .ws-card-menu{opacity:1}
 }
 @media (max-width:420px){.ws-kpis{grid-template-columns:1fr}}
+/* Small phones: pickers side by side, toggles in one swipeable row, columns tall enough for real cards. */
+@media (max-width:480px){
+  .ws-board-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .ws-board-bar .ta{width:auto;min-width:0}
+  .ws-tg{display:flex;grid-column:1/-1;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .ws-tg>*{flex:none}
+  .kcol.ws-col{max-height:max(380px,calc(100dvh - 300px))}
+}
 .ws-charts3 .ws-assets{grid-column:span 2}
 @media (max-width:760px){.ws-charts3 .ws-assets{grid-column:auto}}

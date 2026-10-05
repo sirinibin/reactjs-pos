@@ -86,9 +86,19 @@ test.describe('Workshop', () => {
       await fire('pointerdown', x0, y0, `[data-card="${id}"]`);
       await page.waitForTimeout(300);
       await expect(page.locator('.ws-ghost')).toBeVisible();
-      await fire('pointermove', (x0 + x1) / 2, (y0 + y1) / 2);
-      await fire('pointermove', x1, y1);
-      await fire('pointerup', x1, y1);
+      const vw = page.viewportSize()!.width;
+      if (x1 > vw - 20) {
+        // Target list is off-screen (small phones): hold the card at the right edge until it scrolls in.
+        await fire('pointermove', vw - 10, y1);
+        await expect.poll(async () => (await target.boundingBox())!.x, { timeout: 5000 }).toBeLessThan(vw - 80);
+        const nb = (await target.boundingBox())!;
+        await fire('pointermove', nb.x + 12, nb.y + 20);
+        await fire('pointerup', nb.x + 12, nb.y + 20);
+      } else {
+        await fire('pointermove', (x0 + x1) / 2, (y0 + y1) / 2);
+        await fire('pointermove', x1, y1);
+        await fire('pointerup', x1, y1);
+      }
     } else {
       await card.dragTo(target);
     }

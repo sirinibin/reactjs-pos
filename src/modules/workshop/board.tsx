@@ -158,8 +158,11 @@ export function BoardPage() {
   // ---- touch: long-press 150 ms then drag with a tilted ghost -------------
   const touch = useRef<{ id: string; x: number; y: number; timer: number; active: boolean } | null>(null);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
+  const edgeDir = useRef(0);
+  const edgeTimer = useRef(0);
   const endTouch = useCallback(() => {
     if (touch.current) clearTimeout(touch.current.timer);
+    clearInterval(edgeTimer.current); edgeTimer.current = 0; edgeDir.current = 0;
     touch.current = null;
     setGhost(null); setDragId(null); setDrop(null);
   }, []);
@@ -193,11 +196,23 @@ export function BoardPage() {
       setGhost({ id: st.id, x: e.clientX, y: e.clientY });
       const hit = locate(e.clientX, e.clientY);
       setDrop(hit ? { list: hit.list, before: hit.before } : null);
+      // Holding the card near the board edge keeps scrolling (lists beyond a phone's width).
       const kb = kbRef.current;
+      edgeDir.current = 0;
       if (kb) {
         const r = kb.getBoundingClientRect();
-        if (e.clientX < r.left + 60) kb.scrollLeft -= 12;
-        else if (e.clientX > r.right - 60) kb.scrollLeft += 12;
+        if (e.clientX < r.left + 60) edgeDir.current = -1;
+        else if (e.clientX > r.right - 60) edgeDir.current = 1;
+      }
+      if (edgeDir.current && !edgeTimer.current) {
+        edgeTimer.current = window.setInterval(() => {
+          const t = touch.current;
+          const k = kbRef.current;
+          if (!t?.active || !k || !edgeDir.current) { clearInterval(edgeTimer.current); edgeTimer.current = 0; return; }
+          k.scrollLeft += edgeDir.current * 12;
+          const h = locate(t.x, t.y);
+          setDrop(h ? { list: h.list, before: h.before } : null);
+        }, 16);
       }
       if (hit) {
         const r = hit.body.getBoundingClientRect();
@@ -322,10 +337,12 @@ export function BoardPage() {
             setFilters(v?.customer_id ? { id: v.customer_id, label: v.customer_name || '', data: { name: v.customer_name } } : customer, o);
           }}
           load={async (s, sig) => (await searchVehicles(storeId, s, sig, customer?.id, 15)).map(vehicleToOption)} />
+        <div className="ws-tg">
         <button type="button" className="btn sm ws-toggle crit" aria-pressed={onlyOverdue} onClick={() => setOnlyOverdue((x) => !x)}><Icon name="alert" size="s" />{t('Overdue')}<span className="c num">{overdueCount}</span></button>
         <button type="button" className="btn sm ws-toggle" aria-pressed={onlyToday} onClick={() => setOnlyToday((x) => !x)}><Icon name="clock" size="s" />{t('Due Today')}<span className="c num">{todayCount}</span></button>
         <button type="button" className="btn sm ws-toggle" aria-pressed={archived} onClick={() => setArchived((x) => !x)}><Icon name="inbox" size="s" />{t(archived ? 'Hide Archived' : 'Show Archived')}</button>
         <IconButton icon="refresh" label={t('Refresh')} onClick={() => q.refetch()} />
+        </div>
       </div>
       {q.isError ? <div className="pad"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : (
         <div className="kb ws-kb" ref={kbRef} aria-busy={q.isLoading || undefined}>
