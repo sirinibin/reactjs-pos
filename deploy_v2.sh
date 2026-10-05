@@ -50,32 +50,31 @@ check_uncommitted() {
     echo "==> Working tree is clean."
 }
 
-# ─── eslint error check ───────────────────────────────────────────────────────
+# ─── lint / typecheck ─────────────────────────────────────────────────────────
 
 check_eslint() {
     echo ""
-    echo "==> Checking for ESLint errors (src, excluding __tests__)..."
+    echo "==> Type-checking and linting (zero warnings allowed)..."
     cd "$FRONTEND_DIR"
-    if ! npx eslint src --ext .js,.jsx --quiet \
-        --ignore-pattern 'src/**/__tests__/**' \
-        --ignore-pattern 'src/**/*.test.js' \
-        --ignore-pattern 'src/**/*.test.jsx' 2>&1; then
-        echo ""
-        echo "==> ABORTED: ESLint errors found. Fix all errors before deploying."
+    if ! npm run typecheck; then
+        echo "==> ABORTED: TypeScript errors found."
         exit 1
     fi
-    echo "==> No ESLint errors."
+    if ! npm run lint; then
+        echo ""
+        echo "==> ABORTED: ESLint errors/warnings found. Fix them before deploying."
+        exit 1
+    fi
+    echo "==> Types and lint clean."
 }
 
 # ─── tests ────────────────────────────────────────────────────────────────────
 
 run_tests() {
     echo ""
-    echo "==> Running tests..."
+    echo "==> Running unit + functional tests..."
     cd "$FRONTEND_DIR"
-    NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
-        --watchAll=false --runInBand \
-        --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus"
+    CI=true npm test
     echo "==> All tests passed."
 }
 
@@ -83,21 +82,17 @@ run_tests() {
 
 build_v2() {
     echo ""
-    echo "==> Building v2 (API: $V2_API_URL) ..."
+    echo "==> Building v2 (same-origin API, served by nginx / Go STATIC_DIR) ..."
     cd "$FRONTEND_DIR"
 
     local tmp_log
     tmp_log=$(mktemp)
     trap 'rm -f "$tmp_log"' RETURN
 
-    NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
-    DANGEROUSLY_DISABLE_HOST_CHECK=true \
-    REACT_APP_API_URL="$V2_API_URL" \
-    GENERATE_SOURCEMAP=false \
-    DISABLE_ESLINT_PLUGIN=true \
     npm run build 2>&1 | tee "$tmp_log"
 
-    if grep -qi "compiled with warnings" "$tmp_log"; then
+    # Vite prints "(!)" for warnings (e.g. oversized chunks, unresolved imports).
+    if grep -qiE "\(!\)|warning" "$tmp_log"; then
         echo ""
         echo "==> ABORTED: build produced warnings. Fix all warnings before deploying."
         exit 1

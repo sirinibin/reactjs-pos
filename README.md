@@ -1,70 +1,41 @@
-# Getting Started with Create React App
+# StartERP v2 — frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 18 + Vite + TypeScript rebuild of the StartPOS / StartERP frontend ("Horizon" design).
+It talks to the unchanged Go API (`pos-rest`) on the same origin (`/v1/...`).
 
-## Available Scripts
+## Run locally
 
-In the project directory, you can run:
+Requirements: Node 20+, the Go API on `http://127.0.0.1:2000` (MongoDB + Redis running).
 
-### `npm start`
+```bash
+npm ci
+npm run dev            # http://localhost:3004 — proxies /v1, /zatca, /pdfs, /images… to :2000
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Point the proxy elsewhere with `VITE_PROXY_HOST=http://host:port` in `.env.local`.
+Sign in with an existing user (dev seed: `sirinibin2006@gmail.com` / `123456`).
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Tests
 
-### `npm test`
+| Command | What |
+|---|---|
+| `npm test` | Unit + functional tests (Vitest + Testing Library, mocked API) |
+| `npm run seed` | Seed demo customers/vendors/products into the store used by the live tests (`tests/.seed.json`) |
+| `npm run test:integration` | Integration tests against the live API on :2000 (needs seed) |
+| `npm run test:e2e` | Playwright E2E on 10 device profiles (desktop 1920/1366/1280, iPad landscape/portrait, Galaxy Tab, iPhone 14/SE, Pixel 7, Galaxy S9+) |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+E2E uses `npm run dev` by default; set `E2E_BASE_URL=http://localhost:4173` to run against `npm run build && npx vite preview`.
+The API rate-limits sign-in (10 / 15 min / IP), so E2E signs in once (`tests/e2e/auth.setup.ts`) and reuses the session.
 
-### `npm run build`
+## Quality gates
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+`npm run typecheck`, `npm run lint` (zero warnings), `npm test`, `npm run build` (no warnings).
+`deploy_v2.sh` and `.github/workflows/deploy_v2.yml` enforce all of them.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- `src/app`, `src/shell` — routing, guards, app shell (rail + panel, workspace tabs, Ctrl+K palette, notifications)
+- `src/api`, `src/auth`, `src/realtime` — API client, session, WebSocket bridge
+- `src/ui`, `src/framework` — design-system components, list pages, entity forms, document editor/view/print
+- `src/modules/*` — feature modules, auto-discovered (`index.ts` exports `routes` + `setup()`); see `docs/BUILDING_MODULES.md`
+- `src/i18n` — en, ar, ur, hn, ml, bn, ru (Arabic/Urdu are right-to-left)

@@ -1,0 +1,51 @@
+export const ar: Record<string, string> = {
+  // navigation & titles
+  'Finance': 'المالية', 'Accounts': 'الحسابات', 'Accounts & trial balance': 'الحسابات وميزان المراجعة', 'Trial balance': 'ميزان المراجعة', 'Ledger': 'دفتر الأستاذ', 'Postings': 'الترحيلات',
+  'Expenses': 'المصروفات', 'Expense categories': 'فئات المصروفات', 'Capital': 'رأس المال', 'Capital withdrawals': 'مسحوبات رأس المال', 'Drawings': 'المسحوبات الشخصية', 'Statement': 'كشف حساب', 'Account statement': 'كشف الحساب',
+  'Operating costs paid from cash, bank or the purchase fund': 'تكاليف تشغيلية مدفوعة نقداً أو من البنك أو صندوق المشتريات',
+  'Group expenses for reporting; each category gets its own expense account': 'جمّع المصروفات للتقارير؛ لكل فئة حساب مصروفات خاص بها',
+  'Money invested into the business by owners and partners': 'أموال استثمرها الملاك والشركاء في النشاط',
+  'Money withdrawn by owners for personal use': 'أموال سحبها الملاك للاستخدام الشخصي',
+  'Legacy capital withdrawals (not posted to the ledger — use Drawings for new entries)': 'مسحوبات رأس مال قديمة (لا تُرحّل إلى الدفتر — استخدم المسحوبات الشخصية للقيود الجديدة)',
+  'Journal entries posted by every financial document': 'قيود اليومية المرحّلة من كل مستند مالي',
+  'Closing balance of every account, grouped by type': 'الرصيد الختامي لكل حساب مجمّعاً حسب النوع',
+  // actions
+  'New': 'جديد', 'New expense': 'مصروف جديد', 'New expense category': 'فئة مصروفات جديدة', 'New category': 'فئة جديدة', 'Edit category': 'تعديل الفئة', 'New capital entry': 'قيد رأس مال جديد', 'New drawing': 'مسحوبات جديدة', 'New withdrawal': 'سحب جديد',
+  'Expense report': 'تقرير المصروفات', 'Export': 'تصدير', 'Print': 'طباعة', 'Refresh': 'تحديث', 'Delete': 'حذف', 'Restore': 'استعادة', 'Remove': 'إزالة', 'Save': 'حفظ', 'Save & new': 'حفظ وجديد', 'Edit': 'تعديل',
+  'Collapse': 'طي', 'Expand': 'توسيع', 'Collapse all': 'طي الكل', 'Expand all': 'توسيع الكل', 'All accounts': 'كل الحسابات', 'Choose file': 'اختر ملفاً', 'Create category': 'إنشاء فئة', 'Use as a new vendor': 'استخدمه كمورد جديد', 'View': 'العرض',
+  // fields & columns
+  'Date': 'التاريخ', 'Amount': 'المبلغ', 'Description': 'الوصف', 'Payment method': 'طريقة الدفع', 'Excl. payment method': 'استثناء طريقة الدفع', 'Category': 'الفئة', 'Categories': 'الفئات', 'Excl. category': 'استثناء فئة',
+  'Vendor': 'المورد', 'Vendors': 'الموردون', 'Vendor invoice no.': 'رقم فاتورة المورد', 'VAT': 'الضريبة', 'VAT %': 'نسبة الضريبة', 'VAT no.': 'الرقم الضريبي', 'VAT paid': 'الضريبة المدفوعة', 'Created by': 'أنشأه', 'Created at': 'تاريخ الإنشاء',
+  'Updated by': 'عدّله', 'Updated at': 'تاريخ التحديث', 'Last updated': 'آخر تحديث', 'Expense #': 'رقم المصروف', 'ID': 'الرقم', 'No.': 'م', 'Name': 'الاسم', 'Parent': 'الأصل', 'Parent category (optional)': 'الفئة الأصل (اختياري)',
+  'Acc. no.': 'رقم الحساب', 'Account': 'الحساب', 'Debit': 'مدين', 'Credit': 'دائن', 'Balance': 'الرصيد', 'Debit balance': 'رصيد مدين', 'Credit balance': 'رصيد دائن', 'Type': 'النوع', 'Status': 'الحالة', 'Phone': 'الهاتف', 'Reference': 'المرجع',
+  'Invested by': 'المستثمر', 'Withdrawn by': 'المسحوب بواسطة', 'Image': 'الصورة', 'Image (optional)': 'صورة (اختياري)', 'Entries': 'القيود', 'Record': 'السجل', 'Details': 'التفاصيل', 'Summary': 'الملخص', 'Attachments': 'المرفقات',
+  'Amount (incl. VAT)': 'المبلغ (شامل الضريبة)', 'Before VAT': 'قبل الضريبة', 'Including VAT': 'شامل الضريبة', 'Selected categories': 'الفئات المختارة', 'Total': 'الإجمالي', 'Total amount': 'المبلغ الإجمالي', 'Due amount': 'المبلغ المستحق',
+  // payment methods
+  'Cash': 'نقدي', 'Bank': 'بنك', 'Debit card': 'بطاقة مدى', 'Credit card': 'بطاقة ائتمان', 'Bank card': 'بطاقة بنكية', 'Bank transfer': 'تحويل بنكي', 'Bank cheque': 'شيك بنكي', 'Purchase fund': 'صندوق المشتريات', 'Purchase fund A/c': 'حساب صندوق المشتريات',
+  // views, filters, summaries
+  'All expenses': 'كل المصروفات', 'With VAT': 'بضريبة', 'Salary paid': 'الرواتب المدفوعة', 'Open': 'مفتوح', 'Closed': 'مغلق', 'Deleted': 'محذوف', 'Customers': 'العملاء', 'System': 'النظام', 'Other': 'أخرى',
+  'Debit balance total': 'إجمالي الأرصدة المدينة', 'Credit balance total': 'إجمالي الأرصدة الدائنة', 'Difference': 'الفرق', 'Debit total': 'إجمالي المدين', 'Credit total': 'إجمالي الدائن', 'Closing balance': 'الرصيد الختامي',
+  'Debits equal credits': 'المدين يساوي الدائن', 'Out of balance by {{n}}': 'غير متوازن بفارق {{n}}', 'As of {{d}}': 'حتى {{d}}', 'All dates': 'كل التواريخ',
+  'Assets': 'الأصول', 'Liabilities': 'الخصوم', 'Equity': 'حقوق الملكية', 'Income': 'الإيرادات', 'Owners’ capital': 'رأس مال الملاك', 'Employees': 'الموظفون',
+  'Asset': 'أصل', 'Liability': 'خصم', 'Drawing': 'مسحوبات', 'Customer': 'عميل', 'Investor': 'مستثمر', 'Withdrawer': 'ساحب', 'Expense Category': 'فئة مصروفات', 'Employee': 'موظف',
+  'Sales Return': 'مرتجع مبيعات', 'Quotation Sales': 'مبيعات عرض سعر', 'Quotation Sales Return': 'مرتجع مبيعات عرض سعر', 'Purchase Return': 'مرتجع مشتريات',
+  'Customer Deposit': 'إيداع عميل', 'Vendor Deposit': 'إيداع مورد', 'Customer Withdrawal': 'سحب عميل', 'Vendor Withdrawal': 'سحب مورد', 'Employee Deposit': 'إيداع موظف', 'Employee Withdrawal': 'سحب موظف', 'Non Vat Sales': 'مبيعات بدون ضريبة', 'Non Vat Sales Return': 'مرتجع مبيعات بدون ضريبة',
+  'To opening balance': 'إلى الرصيد الافتتاحي', 'By opening balance': 'من الرصيد الافتتاحي', 'To closing balance': 'إلى الرصيد الختامي', 'By closing balance': 'من الرصيد الختامي',
+  'Ignore opening balance': 'تجاهل الرصيد الافتتاحي', 'Ignore discount allowed A/c': 'تجاهل حساب الخصم المسموح به',
+  'e.g. >=1000': 'مثال: >=1000', 'e.g. >0': 'مثال: >0',
+  // placeholders & hints
+  'Search expense # or description…': 'ابحث برقم المصروف أو الوصف…', 'Search categories…': 'ابحث في الفئات…', 'Search # or description…': 'ابحث بالرقم أو الوصف…', 'Search account name or number…': 'ابحث باسم الحساب أو رقمه…',
+  'Search document # (e.g. S-INV-000001)…': 'ابحث برقم المستند (مثل S-INV-000001)…', 'Filter accounts…': 'تصفية الحسابات…', 'Filter accounts': 'تصفية الحسابات', 'Name / mobile / account no.': 'الاسم / الجوال / رقم الحساب', 'Vendor name / mobile / VAT no.': 'اسم المورد / الجوال / الرقم الضريبي',
+  'Add a category…': 'أضف فئة…', 'Drop files here or': 'أسقط الملفات هنا أو', 'Optional — type a new name to create the vendor on save': 'اختياري — اكتب اسماً جديداً لإنشاء المورد عند الحفظ',
+  'VAT is only claimed when the expense is linked to a registered vendor.': 'لا تُحتسب الضريبة إلا عند ربط المصروف بمورد مسجّل.', 'New files are uploaded when you save.': 'تُرفع الملفات الجديدة عند الحفظ.',
+  'Pick an account to see its statement': 'اختر حساباً لعرض كشفه', 'Search by name, mobile or account number above.': 'ابحث بالاسم أو الجوال أو رقم الحساب في الأعلى.', 'Choose an account': 'اختر حساباً',
+  // states & messages
+  'Draft': 'مسودة', 'Unsaved': 'غير محفوظ', 'Couldn’t save.': 'تعذّر الحفظ.', 'Please fix the highlighted fields.': 'يرجى تصحيح الحقول المحددة.', 'No attachments': 'لا توجد مرفقات', 'No balances yet': 'لا توجد أرصدة بعد',
+  'Accounts appear here once sales, purchases or expenses are posted.': 'تظهر الحسابات هنا بعد ترحيل المبيعات أو المشتريات أو المصروفات.', 'No postings for this account': 'لا توجد ترحيلات لهذا الحساب',
+  'Try another date range or clear the filters.': 'جرّب نطاق تاريخ آخر أو امسح عوامل التصفية.', 'This account has a zero balance.': 'رصيد هذا الحساب صفر.', 'No expenses match these filters.': 'لا توجد مصروفات تطابق عوامل التصفية.',
+  'Exported {{n}} rows': 'تم تصدير {{n}} صفاً', '{{code}} created': 'تم إنشاء {{code}}', '{{code}} saved': 'تم حفظ {{code}}', 'Category “{{n}}” created': 'تم إنشاء الفئة «{{n}}»',
+  'Delete account {{n}}?': 'حذف الحساب {{n}}؟', 'Restore account {{n}}?': 'استعادة الحساب {{n}}؟', 'Account deleted': 'تم حذف الحساب', 'Account restored': 'تمت استعادة الحساب',
+  'The account is hidden from lists and pickers. You can restore it from the Deleted view.': 'سيُخفى الحساب من القوائم وأدوات الاختيار. يمكنك استعادته من عرض المحذوفات.',
+  'No capital yet': 'لا يوجد رأس مال بعد', 'No drawings yet': 'لا توجد مسحوبات بعد', 'No capital withdrawals yet': 'لا توجد مسحوبات رأس مال بعد',
+  'Amount is required': 'المبلغ مطلوب', 'Description is required': 'الوصف مطلوب', 'Payment method is required': 'طريقة الدفع مطلوبة', 'At least 1 category is required': 'فئة واحدة على الأقل مطلوبة', 'Date is required': 'التاريخ مطلوب',
+};

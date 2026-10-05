@@ -1,35 +1,30 @@
-# Frontend Instructions
+# Frontend Instructions (v2 — React 18 + Vite + TypeScript)
 
 ## Environment
-- Dev server: http://localhost:3004 (PORT=3004 in .env — never restart it, it hot-reloads automatically)
-- React 17 / CRA
+- Dev server: `npm run dev` → http://localhost:3004 (proxies /v1 etc. to the Go API on :2000)
+- React 18 / Vite 5 / TypeScript, TanStack Query, react-router v6, i18next
 - Test credentials: sirinibin2006@gmail.com / 123456
 
-## Deploy rules (frontend/deploy.sh)
-deploy.sh enforces three gates before every deploy — all three must pass:
+## Deploy rules (deploy_v2.sh)
+deploy_v2.sh enforces these gates before every deploy — all must pass:
 
-1. **No uncommitted changes** — `git status --porcelain` must be empty.
-   Commit or stash everything before running deploy.sh.
-
-2. **All tests pass** — `npm test` with CI=true must exit 0.
-   Fix failing tests before deploying. Skipped tests:
-   RFQReceived.smoke | importHandlers | QuotationCreate.productEditFocus
-
-3. **No build warnings** — CRA must output "Compiled successfully." not "Compiled with warnings."
-   Fix all ESLint / webpack warnings before deploying.
-
-## Usage
-```
-frontend/deploy.sh both        # test + production (default)
-frontend/deploy.sh test        # test only
-frontend/deploy.sh production  # production only
-```
+1. **Branch is `v2`** (bypass only with `--force`).
+2. **No uncommitted changes** — `git status --porcelain` must be empty.
+3. **Types + lint clean** — `npm run typecheck` and `npm run lint` (zero warnings).
+4. **All tests pass** — `CI=true npm test` (Vitest) must exit 0.
+5. **No build warnings** — `npm run build` must not print any warning.
 
 ## After every frontend change
-1. Write unit tests for changed logic.
-2. `npm test -- --watchAll=false --runInBand --testPathPattern=<changed-module>` to verify.
-3. Commit all changed files (including App.css, translations, etc. — tests depend on them).
-4. Run `frontend/deploy.sh both`.
+1. Write unit/functional tests for changed logic (next to the module: `*.test.ts(x)`).
+2. `npx vitest run <path>` to verify; `npm test` for everything.
+3. For API-facing changes also run `npm run test:integration` (live API) and the relevant
+   Playwright spec (`npx playwright test tests/e2e/<spec> --project=desktop-1920 --project=iphone-se`).
+4. Commit all changed files, then run `./deploy_v2.sh` from the `v2` branch.
+
+## Conventions
+- Every API call carries `search[store_id]` (the client adds it via `useStoreId()` / hooks).
+- New features go in `src/modules/<name>/index.ts` (auto-discovered) — see `docs/BUILDING_MODULES.md`.
+- UI text uses English strings as i18n keys; add Arabic in the module's `ar.ts`.
 
 ## Branch isolation rule (NON-NEGOTIABLE)
 
@@ -49,9 +44,5 @@ The `v2` branch is a **completely separate product line** from `master`/`test`.
 4. **Always run `deploy_v2.sh` from the `v2` branch.** It enforces the branch check and aborts otherwise.
 
 ## Important rules
-- Never use `React.lazy(() => import('../order/create.js'))` inside quotation/create.js —
-  creates an infinite render loop (order/create.js unconditionally renders Quotation).
-- For "Import from Sales" in Quotation: use a dedicated `<Sales ref={SalesImportRef}>` instance,
-  not a mode-flag hack on the shared SalesRef.
-- The working directory must match what's committed before deploying (deploy.sh checks this).
-  If many files are uncommitted, commit them all — they're interdependent.
+- The working directory must match what's committed before deploying (deploy_v2.sh checks this).
+- The legacy CRA app (src/quotation/create.js etc.) lives on `master`/`test` only; its rules do not apply here.

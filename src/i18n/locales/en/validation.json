@@ -1,5 +1,0 @@
-{
-  "required": "{{field}} is required",
-  "invalid": "Invalid {{field}}",
-  "looks_good": "Looks good!"
-}

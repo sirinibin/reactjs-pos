@@ -1,0 +1,33 @@
+export const ar: Record<string, string> = {
+  'Statistics': 'الإحصائيات', 'Analytics': 'التحليلات', 'Totals across sales, purchases, expenses and payments for the active store': 'إجماليات المبيعات والمشتريات والمصروفات والمدفوعات للفرع الحالي',
+  'Trends from every sale, purchase, return and expense — compare up to three series': 'اتجاهات كل عملية بيع وشراء ومرتجع ومصروف — قارن حتى ثلاث سلاسل',
+  'Refresh': 'تحديث', 'Customize': 'تخصيص', 'Showing all time': 'عرض كل الفترات', 'All time': 'كل الفترات', 'Date': 'التاريخ', 'Some totals could not be loaded': 'تعذّر تحميل بعض الإجماليات', 'Breakdown': 'التفاصيل',
+  'Statistics sections': 'أقسام الإحصائيات', 'Restore defaults': 'استعادة الافتراضي', 'Done': 'تم', 'Move up': 'تحريك لأعلى', 'Move down': 'تحريك لأسفل',
+  'The profit / loss statement is hidden by a store setting.': 'قائمة الأرباح والخسائر مخفية بإعداد الفرع.',
+  // sections
+  'Profit / loss statement': 'قائمة الأرباح والخسائر', 'Overall summary': 'الملخص العام', 'Sales': 'المبيعات', 'Sales returns': 'مرتجعات المبيعات', 'Purchases': 'المشتريات', 'Purchase returns': 'مرتجعات المشتريات',
+  'Expenses': 'المصروفات', 'Quotations': 'عروض الأسعار', 'Qtn. sales': 'مبيعات عروض الأسعار', 'Qtn. sales returns': 'مرتجعات مبيعات عروض الأسعار', 'Receivables': 'الذمم المدينة', 'Payables': 'الذمم الدائنة',
+  'Revenue forecast (next 6 months)': 'توقع الإيرادات (6 أشهر قادمة)', 'Expense forecast (next 6 months)': 'توقع المصروفات (6 أشهر قادمة)', 'Profit forecast (next 6 months)': 'توقع الأرباح (6 أشهر قادمة)',
+  'No forecast yet': 'لا توجد توقعات بعد', 'Forecasts appear after the nightly BI job has run for this store.': 'تظهر التوقعات بعد تشغيل مهمة ذكاء الأعمال الليلية لهذا الفرع.',
+  // stats
+  'Revenue': 'الإيرادات', 'Expense': 'المصروفات', 'Profit': 'الربح', 'Loss': 'الخسارة', 'w/o VAT': 'بدون ضريبة', 'VAT': 'الضريبة', 'Total': 'الإجمالي', 'Cash': 'نقدي', 'Bank': 'بنك',
+  'Sales (with VAT)': 'المبيعات (مع الضريبة)', 'Purchase (with VAT)': 'المشتريات (مع الضريبة)', 'Difference (with VAT)': 'الفرق (مع الضريبة)', 'Sales (without VAT)': 'المبيعات (بدون ضريبة)', 'Purchase (without VAT)': 'المشتريات (بدون ضريبة)', 'Difference (without VAT)': 'الفرق (بدون ضريبة)',
+  'Paid sales': 'المبيعات المدفوعة', 'Credit sales': 'المبيعات الآجلة', 'Cash sales': 'المبيعات النقدية', 'Bank account sales': 'مبيعات الحساب البنكي', 'Sales paid by sales return': 'مبيعات مدفوعة بمرتجع مبيعات', 'Sales paid by purchase': 'مبيعات مدفوعة بمشتريات',
+  'Cash discount': 'الخصم النقدي', 'Sales discount': 'خصم المبيعات', 'VAT collected': 'الضريبة المحصلة', 'Shipping / handling fees': 'رسوم الشحن والمناولة', 'Net profit': 'صافي الربح', 'Net profit %': 'نسبة صافي الربح', 'Net loss': 'صافي الخسارة',
+  'Sales return': 'مرتجع المبيعات', 'Paid sales return': 'مرتجع مبيعات مدفوع', 'Credit sales return': 'مرتجع مبيعات آجل', 'Cash sales return': 'مرتجع مبيعات نقدي', 'Bank account sales return': 'مرتجع مبيعات بنكي', 'Sales return paid by sales': 'مرتجع مدفوع بمبيعات',
+  'Purchase': 'المشتريات', 'Paid purchase': 'المشتريات المدفوعة', 'Credit purchase': 'المشتريات الآجلة', 'Cash purchase': 'المشتريات النقدية', 'Bank account purchase': 'مشتريات الحساب البنكي', 'Purchases paid by sales': 'مشتريات مدفوعة بمبيعات',
+  'Purchases paid by purchase return': 'مشتريات مدفوعة بمرتجع مشتريات', 'Purchase discount': 'خصم المشتريات', 'VAT paid': 'الضريبة المدفوعة', 'Purchase return': 'مرتجع المشتريات', 'Paid purchase return': 'مرتجع مشتريات مدفوع',
+  'Credit purchase return': 'مرتجع مشتريات آجل', 'Cash purchase return': 'مرتجع مشتريات نقدي', 'Bank account purchase return': 'مرتجع مشتريات بنكي', 'Purchase return paid by purchase': 'مرتجع مدفوع بمشتريات',
+  'Total expense': 'إجمالي المصروفات', 'Cash expense': 'مصروفات نقدية', 'Bank expense': 'مصروفات بنكية', 'Purchase fund': 'صندوق المشتريات', 'Salaries paid': 'الرواتب المدفوعة', 'Quotation': 'عروض الأسعار', 'Profit %': 'نسبة الربح',
+  'Receivable from customers (unpaid sales)': 'مستحق من العملاء (مبيعات غير مدفوعة)', 'Receivable from vendors (purchase return)': 'مستحق من الموردين (مرتجع مشتريات)', 'Net receivables': 'صافي الذمم المدينة',
+  'Payable to vendors (unpaid purchases)': 'مستحق للموردين (مشتريات غير مدفوعة)', 'Payable to customers (sales return)': 'مستحق للعملاء (مرتجع مبيعات)', 'Net payables': 'صافي الذمم الدائنة',
+  'Qtn. invoice sales': 'مبيعات فواتير عروض الأسعار', 'Non-VAT sales': 'مبيعات بدون ضريبة', 'Non-VAT sales returns': 'مرتجعات بدون ضريبة',
+  'Purchase fund deposits': 'إيداعات صندوق المشتريات', 'Accounted purchases': 'المشتريات المحاسبية', 'Accounted purchase returns': 'مرتجعات المشتريات المحاسبية', 'Sales cash discount': 'الخصم النقدي للمبيعات', 'Sales return cash discount': 'الخصم النقدي لمرتجع المبيعات',
+  'Purchase return cash discount': 'الخصم النقدي لمرتجع المشتريات', 'Purchase cash discount': 'الخصم النقدي للمشتريات', 'Qtn. invoice cash discount': 'الخصم النقدي لفواتير العروض', 'Qtn. return cash discount': 'الخصم النقدي لمرتجع العروض',
+  'Sales commission': 'عمولة المبيعات', 'Sales return commission': 'عمولة مرتجع المبيعات', 'Gross sales': 'إجمالي المبيعات', 
+  // analytics
+  'Chart': 'رسم بياني', 'Table': 'جدول', 'View': 'العرض', 'Group by': 'التجميع حسب', 'Hourly': 'بالساعة', 'Daily': 'يومي', 'Monthly': 'شهري', 'Yearly': 'سنوي', 'hourly': 'بالساعة', 'daily': 'يومي', 'monthly': 'شهري', 'yearly': 'سنوي',
+  'Year': 'السنة', 'Month': 'الشهر', 'Series': 'السلاسل', 'Period': 'الفترة', 'Analytics table': 'جدول التحليلات', 'Pick a series to plot': 'اختر سلسلة للرسم', 'No data for this period': 'لا توجد بيانات لهذه الفترة', 'Try another period or series.': 'جرّب فترة أو سلسلة أخرى.',
+  'Up to three series at a time': 'حتى ثلاث سلاسل في المرة الواحدة', 'Sales profit': 'ربح المبيعات', 'Sales loss': 'خسارة المبيعات', 'Sales return profit': 'ربح مرتجع المبيعات', 'Sales return loss': 'خسارة مرتجع المبيعات',
+  'January': 'يناير', 'February': 'فبراير', 'March': 'مارس', 'April': 'أبريل', 'May': 'مايو', 'June': 'يونيو', 'July': 'يوليو', 'August': 'أغسطس', 'September': 'سبتمبر', 'October': 'أكتوبر', 'November': 'نوفمبر', 'December': 'ديسمبر',
+};
