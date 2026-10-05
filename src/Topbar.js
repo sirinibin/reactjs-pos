@@ -564,6 +564,8 @@ function Topbar(props) {
                         </Dropdown.Menu>
                     </Dropdown>
 
+                    {props.centerSlot && <div className="erp-header__slot">{props.centerSlot}</div>}
+
                     {/* Mobile menu button — inside collapse so ms-auto works in the flex row */}
                     <button
                         className="d-flex d-sm-none align-items-center ms-auto"

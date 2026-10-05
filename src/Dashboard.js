@@ -34,11 +34,7 @@ import StoreIndex from './store/index.js';
 import WarehouseIndex from './warehouse/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
-import ProductCategoryIndex from './product_category/index.js';
-import ProductBrandIndex from './product_brand/index.js';
 import ServiceIndex from './service/index.js';
-import ServiceCategoryIndex from './service_category/index.js';
-import ExpenseCategoryIndex from './expense_category/index.js';
 import ExpenseIndex from './expense/index.js';
 
 import CustomerDepositIndex from './customer_deposit/index.js';
@@ -55,9 +51,9 @@ import UserRoleIndex from './role/index.js';
 // eslint-disable-next-line no-unused-vars
 import CustomerPackageIndex from './customer_package/index.js';
 import SignatureIndex from './signature/index.js';
-import Footer from './Footer';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import AppShell from './erp/shell/AppShell';
+import CrudPage from './erp/crud/CrudPage';
+import { productBrandConfig, productCategoryConfig, expenseCategoryConfig, serviceCategoryConfig } from './erp/modules/masters/configs';
 import Login from './user/login.js';
 import { Redirect } from 'react-router-dom'
 import Toast from 'react-bootstrap/Toast'
@@ -160,7 +156,6 @@ function RouteGuard() {
 
 function Dashboard() {
 
-    const [isSidebarOpen, SetSidebarOpen] = useState("");
 
 
     let at = localStorage.getItem("access_token")
@@ -201,13 +196,6 @@ function Dashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function handleToggle() {
-        if (isSidebarOpen === "collapsed") {
-            SetSidebarOpen("");
-        } else {
-            SetSidebarOpen("collapsed");
-        }
-    };
 
 
 
@@ -381,705 +369,313 @@ function Dashboard() {
         <Switch>
 
             <Route path="/dashboard/sidebar-settings">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SidebarSettings />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SidebarSettings />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/business-dashboard">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <BusinessDashboard showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <BusinessDashboard showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/analytics">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <Analytics />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <Analytics />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/sales">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <OrderIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <OrderIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/stock-transfers">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <StockTransferIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <StockTransferIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/sales-cash-discounts">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SalesCashDiscountIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SalesCashDiscountIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/sales-payments">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SalesPaymentIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SalesPaymentIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/salesreturn">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SalesReturnIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SalesReturnIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/sales-return-payments">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SalesReturnPaymentIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SalesReturnPaymentIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchases">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchase-orders">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseOrderIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseOrderIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchase-requests">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseRequestIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseRequestIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/rfq-received">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <RFQReceivedIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <RFQReceivedIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/rfq-suppliers">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <RFQSuppliersIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <RFQSuppliersIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/procurement-emails">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ProcurementEmailsIndex />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <ProcurementEmailsIndex />
+                </AppShell>
             </Route>
             <Route path="/dashboard/procurement-whatsapp">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ProcurementWhatsAppIndex />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <ProcurementWhatsAppIndex />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchase-bill-images">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseBillImagesIndex />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseBillImagesIndex />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchase-cash-discounts">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseCashDiscountIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseCashDiscountIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchase-payments">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchasePaymentIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchasePaymentIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/purchasereturn">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseReturnIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseReturnIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/purchase-return-payments">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PurchaseReturnPaymentIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PurchaseReturnPaymentIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/delivery-notes">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <DeliveryNoteIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <DeliveryNoteIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
 
             <Route path="/dashboard/quotations">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <QuotationIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <QuotationIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/quotation_sales_returns">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <QuotationSalesReturnIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <QuotationSalesReturnIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/non-vat-sales">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <NonVATSalesIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <NonVATSalesIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/non-vat-sales-returns">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <NonVATSalesReturnIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <NonVATSalesReturnIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/stats">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <StatsIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <StatsIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/vendors">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <VendorIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <VendorIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/stores">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <StoreIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <StoreIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/warehouses">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <WarehouseIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <WarehouseIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/customers">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CustomerIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CustomerIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/products">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ProductIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <ProductIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/product_category">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ProductCategoryIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CrudPage config={productCategoryConfig} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/services">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ServiceIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <ServiceIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/service_category">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ServiceCategoryIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CrudPage config={serviceCategoryConfig} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/product_brand">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ProductBrandIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CrudPage config={productBrandConfig} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/customer-packages">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CustomerPackageIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CustomerPackageIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/expense_category">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ExpenseCategoryIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CrudPage config={expenseCategoryConfig} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/expenses">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <ExpenseIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <ExpenseIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/receivables">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CustomerDepositIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CustomerDepositIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/payables">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CustomerWithdrawalIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CustomerWithdrawalIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/capitals">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CapitalIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CapitalIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/capital_withdrawals">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <CapitalWithdrawalIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <CapitalWithdrawalIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/dividents">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <DividentIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <DividentIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/users">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <UserIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <UserIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/user-roles">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <UserRoleIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <UserRoleIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/signatures">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SignatureIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SignatureIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/ledger">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <LedgerIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <LedgerIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/accounts">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <AccountIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <AccountIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
             <Route path="/dashboard/postings">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <PostingIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <PostingIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/automobile-dashboard">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <AutoMobileDashboard showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <AutoMobileDashboard showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/employees">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <EmployeeIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <EmployeeIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/salaries">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <SalaryIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <SalaryIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/vehicles">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <VehicleIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <VehicleIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/dashboard/repair-jobs-board">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content" style={{ padding: 0 }}>
-                            <RepairJobIndex showToastMessage={showToastMessage} defaultMode="board" />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage} flush>
+                    <RepairJobIndex showToastMessage={showToastMessage} defaultMode="board" />
+                </AppShell>
             </Route>
             <Route path="/dashboard/repair-jobs">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <RepairJobIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
+                <AppShell showToastMessage={showToastMessage}>
+                    <RepairJobIndex showToastMessage={showToastMessage} />
+                </AppShell>
             </Route>
 
             <Route path="/">

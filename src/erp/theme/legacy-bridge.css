@@ -1,0 +1,102 @@
+/*
+ * Legacy bridge.
+ *
+ * Screens that have not been rebuilt yet still render their original
+ * Bootstrap markup. These rules only change colour, type and borders (never
+ * sizes or layout) so those screens sit comfortably inside the new shell
+ * until each one is replaced.
+ */
+.erp-shell .content h1.h3,
+.erp-shell .content .h3 {
+    font-size: var(--erp-fs-xl);
+    font-weight: 600;
+    color: var(--erp-text);
+}
+
+.erp-shell .content .card,
+.modal .card {
+    border: 1px solid var(--erp-border);
+    border-radius: var(--erp-radius-lg);
+    box-shadow: var(--erp-shadow-sm);
+}
+
+.erp-shell .content .btn,
+.modal .btn {
+    border-radius: var(--erp-radius);
+    font-weight: 500;
+}
+
+.erp-shell .content .btn-primary,
+.modal .btn-primary {
+    background-color: var(--erp-primary);
+    border-color: var(--erp-primary);
+}
+
+.erp-shell .content .btn-primary:hover,
+.erp-shell .content .btn-primary:focus,
+.modal .btn-primary:hover,
+.modal .btn-primary:focus {
+    background-color: var(--erp-primary-hover);
+    border-color: var(--erp-primary-hover);
+}
+
+.erp-shell .content .btn-outline-primary,
+.modal .btn-outline-primary {
+    color: var(--erp-primary);
+    border-color: var(--erp-primary-border);
+}
+
+.erp-shell .content .btn-outline-primary:hover,
+.modal .btn-outline-primary:hover {
+    color: #fff;
+    background-color: var(--erp-primary);
+    border-color: var(--erp-primary);
+}
+
+.erp-shell .content .table > thead th,
+.modal .table > thead th {
+    background: var(--erp-surface-2);
+    color: var(--erp-text-2);
+    font-weight: 600;
+    border-bottom-color: var(--erp-border);
+}
+
+.erp-shell .content .table td,
+.erp-shell .content .table th {
+    border-color: #e8ecf1;
+}
+
+.erp-shell .content .form-control,
+.erp-shell .content .form-select,
+.modal .form-control,
+.modal .form-select {
+    border-color: var(--erp-border-strong);
+    border-radius: var(--erp-radius);
+}
+
+.erp-shell .content .form-control:focus,
+.erp-shell .content .form-select:focus,
+.modal .form-control:focus,
+.modal .form-select:focus {
+    border-color: var(--erp-primary);
+    box-shadow: 0 0 0 3px var(--erp-focus);
+}
+
+.modal .modal-content {
+    border: 0;
+    border-radius: var(--erp-radius-lg);
+    box-shadow: var(--erp-shadow-lg);
+}
+
+.modal .modal-header {
+    border-bottom-color: var(--erp-border);
+}
+
+.modal .modal-footer {
+    border-top-color: var(--erp-border);
+    background: var(--erp-surface-2);
+}
+
+.erp-shell .content a:not(.btn):not(.erp-btn) {
+    color: var(--erp-primary);
+}

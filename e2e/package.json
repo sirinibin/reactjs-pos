@@ -1,0 +1,13 @@
+{
+  "name": "starterp-e2e",
+  "private": true,
+  "description": "End-to-end UI tests and API-compatibility tests for the StartERP frontend. Runs against a live pos-rest API and the React dev server.",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:ui": "playwright test --project=ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
