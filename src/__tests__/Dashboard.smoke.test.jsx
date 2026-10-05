@@ -15,7 +15,6 @@ jest.mock('../utils/eventEmitter', () => ({
 jest.mock('../sidebar_menu_config', () => ({
   DEFAULT_MENU: [],
   getLandingPath: jest.fn(() => '/'),
-  loadSidebarConfig: jest.fn(() => []),
 }));
 
 // ── react-router-dom ───────────────────────────────────────────────────────
@@ -61,8 +60,6 @@ jest.mock('react-bootstrap/ToastContainer', () => ({ children }) => children);
 jest.mock('../Footer', () => () => null);
 jest.mock('../Sidebar', () => () => null);
 jest.mock('../Topbar', () => () => null);
-jest.mock('../erp/shell/AppShell', () => ({ children }) => children);
-jest.mock('../erp/crud/CrudPage', () => () => null);
 jest.mock('../user/login.js', () => () => null);
 jest.mock('../quotation/create.js', () => {
   const React = require('react');

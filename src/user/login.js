@@ -1,6 +1,7 @@
 
+import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
-import '../erp/theme/erp.css';
+import Footer from './../Footer.js';
 import { getLandingPath } from './../sidebar_menu_config';
 import { fetchStore } from '../utils/storeUtils.js';
 
@@ -344,78 +345,111 @@ function Login() {
             });
     }
 
-    const locked = lockoutUntil > 0;
+    return (<>
+        <div className="main">
+            <main className="d-flex w-100" >
 
-    return (
-        <div className="erp-login">
-            <aside className="erp-login__brand" aria-hidden="true">
-                <div className="erp-login__brand-top">
-                    <span className="erp-nav__logo">S</span>
-                    <span className="erp-login__brand-name">StartERP</span>
-                </div>
-                <div className="erp-login__pitch">
-                    <h2>Sales, purchasing, inventory and accounts in one place.</h2>
-                    <p>ZATCA-ready invoicing, multi-store operations and real-time stock for growing businesses.</p>
-                </div>
-                <div className="erp-login__brand-foot">An AI &amp; Software Wing of Gulf Union Ozone</div>
-            </aside>
-            <main className="erp-login__main">
-                <div className="erp-login__card">
-                    <h1 className="erp-login__title">Sign in</h1>
-                    <p className="erp-login__subtitle">Sign in to your account to continue</p>
-                    {locked && (
-                        <div className="erp-alert erp-alert--danger" role="alert" style={{ marginBottom: 16 }}>
-                            <div>Too many failed attempts. Try again in <strong>{countdown}</strong>.</div>
+                <div className="container d-flex flex-column">
+                    <div className="row vh-100">
+                        <div className="col-sm-10 col-md-8 col-lg-6 mx-auto d-table h-100">
+                            <div className="d-table-cell align-middle">
+                                <div className="text-center mt-4">
+                                    <h1 className="h2">Start POS</h1>
+                                    <p className="lead">Sign in to your account to continue</p>
+                                </div>
+
+                                <div className="card">
+                                    <div className="card-body">
+                                        <div className="m-sm-4">
+                                            <div className="text-center">
+                                                <img
+                                                    src={avatar}
+                                                    alt="Charles Hall"
+                                                    className="img-fluid rounded-circle"
+                                                    width="132"
+                                                    height="132"
+                                                />
+                                            </div>
+                                            {lockoutUntil > 0 && (
+                                                <div className="alert alert-danger" role="alert">
+                                                    Too many failed attempts. Try again in <strong>{countdown}</strong>.
+                                                </div>
+                                            )}
+                                            <form onSubmit={handleSubmit}>
+                                                <div className="mb-3">
+                                                    <label className="form-label">Email</label>
+                                                    <input
+                                                        className="form-control form-control-lg"
+                                                        type="email"
+                                                        name="email"
+                                                        placeholder="Enter your email"
+                                                        disabled={lockoutUntil > 0}
+                                                    />
+                                                    <span style={{ color: "red" }} >{errors.email}</span>
+                                                </div>
+                                                <div className="mb-3">
+                                                    <label className="form-label">Password</label>
+                                                    <input
+                                                        className="form-control form-control-lg"
+                                                        type="password"
+                                                        name="password"
+                                                        placeholder="Enter your password"
+                                                        disabled={lockoutUntil > 0}
+                                                    />
+                                                    <span style={{ color: "red" }} >{errors.password}</span>
+                                                    {/*
+                                                <small>
+                                                    <a href="/"
+                                                    >Forgot password?</a
+                                                    >
+                                                </small>
+                                                */}
+                                                </div>
+                                                <div>
+                                                    <label className="form-check">
+                                                        {/*
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        value="remember-me"
+                                                        name="remember-me"
+                                                        checked
+                                                        readOnly
+                                                    />
+                                                    <span className="form-check-label">
+                                                        Remember me next time
+                                                    </span> */}
+                                                    </label>
+                                                </div>
+                                                <div className="text-center mt-3">
+
+                                                    {isProcessing ?
+                                                        <button className="btn btn-lg btn-primary" type="button" disabled>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden={true}></span>
+                                                            Logging In...
+                                                        </button> : null}
+
+                                                    {!isProcessing ?
+                                                        <button className="btn btn-lg btn-primary" type="submit" disabled={lockoutUntil > 0}>Login</button>
+                                                        : null}
+
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <Footer />
+                            </div>
+
                         </div>
-                    )}
-                    <form onSubmit={handleSubmit} noValidate>
-                        <div className="erp-field" style={{ marginBottom: 14 }}>
-                            <label className="erp-field__label" htmlFor="login-email">Email</label>
-                            <input
-                                id="login-email"
-                                className={"erp-input erp-input--lg" + (errors.email ? " is-invalid" : "")}
-                                type="email"
-                                name="email"
-                                autoComplete="username"
-                                placeholder="Enter your email"
-                                disabled={locked}
-                                aria-invalid={errors.email ? "true" : undefined}
-                                aria-describedby={errors.email ? "login-email-err" : undefined}
-                            />
-                            {errors.email && <span className="erp-field__error" id="login-email-err">{errors.email}</span>}
-                        </div>
-                        <div className="erp-field" style={{ marginBottom: 20 }}>
-                            <label className="erp-field__label" htmlFor="login-password">Password</label>
-                            <input
-                                id="login-password"
-                                className={"erp-input erp-input--lg" + (errors.password ? " is-invalid" : "")}
-                                type="password"
-                                name="password"
-                                autoComplete="current-password"
-                                placeholder="Enter your password"
-                                disabled={locked}
-                                aria-invalid={errors.password ? "true" : undefined}
-                                aria-describedby={errors.password ? "login-password-err" : undefined}
-                            />
-                            {errors.password && <span className="erp-field__error" id="login-password-err">{errors.password}</span>}
-                        </div>
-                        {isProcessing ? (
-                            <button className="erp-btn erp-btn--primary erp-btn--block erp-login__submit" type="button" disabled>
-                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden={true}></span>
-                                Logging In...
-                            </button>
-                        ) : (
-                            <button className="erp-btn erp-btn--primary erp-btn--block erp-login__submit" type="submit" disabled={locked}>Login</button>
-                        )}
-                    </form>
+
+                    </div>
+
                 </div>
-                <footer className="erp-login__foot">
-                    © {new Date().getFullYear()} StartERP · A product of{" "}
-                    <a href="https://ai.gulfunionozone.com/" target="_blank" rel="noreferrer">ai.gulfunionozone.com</a>
-                </footer>
-            </main>
-        </div>
-    );
+
+            </main >  </div>   </>);
 }
 
 export default Login;
