@@ -39,6 +39,12 @@ Deliver StartERP so that:
 ## 2. Non-negotiable rules
 
 ### 2.1 Data compatibility (highest priority)
+- **Golden rule (owner decision):** never rename, remove or retype any existing database, collection
+  or field name. This covers the main DB, `store_<id>` DBs, bson keys, embedded-document keys,
+  index names that code depends on, and Redis key patterns.
+  - You may **add** new collections, fields, indexes and Redis keys.
+  - Any change that seems to need a rename is done as **add a new field, dual-write, keep reading
+    the old one**. The old field stays forever.
 - **Main DB.** It is named by `MONGO_DB` (`pos` in production) and holds `store`, `user`,
   `customer_package`, `admin_settings`, the RFQ/procurement collections and the BI settings.
 - **Per-store DBs.** Each is named `store_<storeHex>` and holds every transactional and master
@@ -384,8 +390,8 @@ Admin. Nothing is hard-coded.
 4. Generate keys and CSR (secp256k1).
 5. Compliance CSID.
 6. Compliance checks: the 6 sample documents.
-7. Production CSID, stored encrypted (KMS or envelope encryption; never plain in Mongo for new
-   records, migrate existing).
+7. Production CSID. New onboardings store secrets encrypted (KMS/envelope) in **new** fields. The
+   existing `store.zatca.*` fields keep their names and are still read for legacy stores.
 8. Certificate expiry monitoring and a renewal flow.
 
 **Test taxpayer for non-production:** VAT `399999999900003`, CRN `4030360927`. Use it in automated
