@@ -65,6 +65,19 @@ beforeAll(async () => {
   await authenticate();
 });
 
+/** Wait until the order document stops changing (CreateOrder's background post-processing has finished). */
+async function orderSettled(id: string, quietMs = 1500, maxMs = 20000) {
+  const t0 = Date.now();
+  let last = '';
+  let since = Date.now();
+  while (Date.now() - t0 < maxMs) {
+    const o = (await api.get<any>(`/v1/order/${id}`, S(storeId))).result;
+    const sig = String(o.updated_at);
+    if (sig !== last) { last = sig; since = Date.now(); } else if (Date.now() - since >= quietMs) return;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+
 describe('sales returns — live API', () => {
   it('calculate-net-total agrees with the client engine (selected lines only)', async () => {
     const order = await createOrder();
@@ -75,6 +88,9 @@ describe('sales returns — live API', () => {
 
   it('creates a partial return with a refund; order returned qty, return_amount and list filters update', async () => {
     const order = await createOrder();
+    // API quirk: CreateOrder keeps saving the order from a background goroutine after it responds; a return
+    // posted inside that window loses its quantity_returned (lost update). Wait until the sale settles.
+    await orderSettled(order.id);
     const { body, t } = returnBody(order, { 0: 1 }, null);
     body.payments_input = [{ date_str: iso(), amount: refundCap(order, t.net_total, 0, false), method: 'cash' }];
     body.total_payment_paid = body.payments_input[0].amount;

@@ -36,7 +36,7 @@ describe('customers — live API', () => {
 
   it('search[query] finds by name words and search[code] by partial code', async () => {
     const c = await createCustomer({ name: `Zephyr Query ${RUN}` });
-    const byName = await api.get<any[]>('/v1/customer', { search: { store_id: seed.storeId, query: `zephyr query` }, limit: 5, select: 'id' });
+    const byName = await api.get<any[]>('/v1/customer', { search: { store_id: seed.storeId, query: `zephyr query ${RUN.toLowerCase()}` }, limit: 5, select: 'id' });
     expect(byName.result!.map((x) => x.id)).toContain(c.id);
     const byCode = await api.get<any[]>('/v1/customer', { search: { store_id: seed.storeId, code: c.code.slice(0, 5) }, limit: 50, select: 'id,code' });
     expect(byCode.result!.every((x) => x.code.toUpperCase().includes(c.code.slice(0, 5).toUpperCase()))).toBe(true);
