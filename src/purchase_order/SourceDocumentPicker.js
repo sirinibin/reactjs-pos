@@ -222,7 +222,7 @@ const SourceDocumentPicker = forwardRef((props, ref) => {
 
     return (
         <>
-        <Modal show={show} onHide={() => setShow(false)} size="xl" animation={false}>
+        <Modal show={show} onHide={() => setShow(false)} size="xl" animation={false} className={props.modalClassName}>
             <Modal.Header style={{ backgroundColor: "#fff", borderBottom: "1px solid #c3c6d7", padding: "12px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
                     <i className="bi bi-file-earmark-arrow-down" style={{ color: "#004ac6", fontSize: "18px" }}></i>

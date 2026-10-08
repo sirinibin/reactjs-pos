@@ -60,6 +60,8 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import QuotationImportPicker from './QuotationImportPicker.js';
+import { mergeImportedQuotationProducts } from './quotationImport.js';
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -1391,6 +1393,33 @@ const QuotationCreate = forwardRef((props, ref) => {
     fetchAllProductStocks([...selectedProducts]);
   }
 
+  function handleImportFromQuotation(products) {
+    if (!products || products.length === 0) return;
+    const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
+    selectedProducts = mergeImportedQuotationProducts(selectedProducts, products, { noTax });
+    setSelectedProducts([...selectedProducts]);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      for (let i = 0; i < selectedProducts.length; i++) {
+        CalCulateLineTotals(i);
+        checkWarnings(i);
+        checkErrors(i);
+      }
+      reCalculate();
+    }, 100);
+    fetchAllProductStocks([...selectedProducts]);
+    if (props.showToastMessage) props.showToastMessage(`Imported ${products.length} product${products.length !== 1 ? "s" : ""}`, "success");
+  }
+
+  function openImportFromQuotation() {
+    QuotationImportPickerRef.current?.open({
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      defaultCustomers: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
+      excludeId: formData.id,
+    });
+  }
+
   function addProduct(product) {
     if (!product.id && product.product_id) {
       product.id = product.product_id
@@ -1820,6 +1849,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
+  const QuotationImportPickerRef = useRef();
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
     const hasProducts = store?.settings?.enable_products;
@@ -3381,6 +3411,7 @@ async function checkWarning(i) {
         showToastMessage={props.showToastMessage}
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+      <QuotationImportPicker ref={QuotationImportPickerRef} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
       <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
@@ -4189,6 +4220,7 @@ async function checkWarning(i) {
                 )}
                 </div>
                 {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
+                <button type="button" onClick={openImportFromQuotation} data-testid="import-from-quotation-btn" title="Import products from another quotation" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}><i className="bi bi-file-earmark-arrow-down" />From Quotation</button>
                 </div>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
