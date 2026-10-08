@@ -65,8 +65,7 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from './QuotationImportPicker.js';
-import { mergeImportedQuotationProducts } from './quotationImport.js';
-import Purchases from '../utils/purchases.js';
+import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines } from './quotationImport.js';
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -1642,51 +1641,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
   }
 
-  async function handleImportFromPurchases(purchase) {
-    if (!purchase || !purchase.id) return;
-    try {
-      const storeId = localStorage.getItem('store_id');
-      const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
-
-      const res = await fetch('/v1/purchase/' + purchase.id + '?search[store_id]=' + storeId, { headers });
-      const data = res.ok ? await res.json() : null;
-      if (!res.ok || !data) {
-        if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
-        return;
-      }
-      const products = data?.result?.products;
-      if (!products || products.length === 0) {
-        if (props.showToastMessage) props.showToastMessage('No products found in the selected purchase', 'warning');
-        return;
-      }
-
-      // Enrich each product with current retail price from the product master.
-      // PurchaseProduct.retail_unit_price is omitempty and usually absent —
-      // the purchase form does not capture retail price.
-      const enriched = await Promise.all(products.map(async p => {
-        try {
-          const pr = await fetch('/v1/product/' + p.product_id + '?search[store_id]=' + storeId, { headers });
-          const pd = pr.ok ? await pr.json() : null;
-          const ps = pd?.result?.product_stores?.[storeId];
-          return {
-            ...p,
-            retail_unit_price: ps?.retail_unit_price ?? 0,
-            retail_unit_price_with_vat: ps?.retail_unit_price_with_vat ?? 0,
-          };
-        } catch (_) {
-          return { ...p, retail_unit_price: 0, retail_unit_price_with_vat: 0 };
-        }
-      }));
-
-      const initSel = {};
-      enriched.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
-      setImportPickerSelected(initSel);
-      setImportPickerData({ source: 'purchase', code: data.result.code || purchase.code, products: enriched });
-    } catch (e) {
-      if (props.showToastMessage) props.showToastMessage('Failed to load purchase details', 'danger');
-    }
-  }
-
   function confirmImportPicker() {
     const src = importPickerData;
     if (!src) return;
@@ -1758,6 +1712,24 @@ const QuotationCreate = forwardRef((props, ref) => {
       existingProductIds: selectedProducts.map(p => p.product_id),
       defaultCustomers: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
       excludeId: formData.id,
+    });
+  }
+
+  function openImportFromPurchase() {
+    QuotationImportPickerRef.current?.open({
+      docType: 'purchase',
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      // Purchases only hold cost prices, so selling prices come from the product master.
+      prepareProducts: async (products) => {
+        let prices = {};
+        try {
+          prices = await fetchRetailPrices(products.map(p => p.product_id), localStorage.getItem('store_id'));
+        } catch (e) {
+          if (props.showToastMessage) props.showToastMessage('Could not load current selling prices; they will be 0.', 'warning');
+        }
+        return purchaseLinesToQuotationLines(products, prices);
+      },
     });
   }
 
@@ -2191,7 +2163,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
   const QuotationImportPickerRef = useRef();
-  const PurchasesRef = useRef();
   const SalesImportRef = useRef();
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
@@ -3790,7 +3761,6 @@ async function checkWarning(i) {
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
       <QuotationImportPicker ref={QuotationImportPickerRef} showToastMessage={props.showToastMessage} />
-      <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
 
       {/* Product picker modal for Import from Sales / Import from Purchases */}
       {importPickerData && (() => {
@@ -4776,7 +4746,7 @@ async function checkWarning(i) {
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
                     <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
-                    <Dropdown.Item onClick={() => PurchasesRef?.current?.open(true)}><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
+                    <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
                     <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text me-1"></i>{t('From Quotations')}</Dropdown.Item>
                     {store?.settings?.enable_purchase_order_module && (
                       <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From P.O.')}</Dropdown.Item>

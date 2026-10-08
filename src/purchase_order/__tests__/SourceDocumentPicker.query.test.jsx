@@ -186,3 +186,35 @@ describe('SourceDocumentPicker (quotation mode)', () => {
         expect(await screen.findByText('No documents found.')).toBeInTheDocument();
     });
 });
+
+describe('SourceDocumentPicker (purchase mode)', () => {
+    function lastPurchaseUrl() {
+        const calls = global.fetch.mock.calls.filter(c => String(c[0]).startsWith('/v1/purchase?'));
+        return decodeURIComponent(String(calls[calls.length - 1][0]));
+    }
+
+    it('searches purchases newest first with products, filtered by vendor', async () => {
+        const ref = createRef();
+        render(<SourceDocumentPicker ref={ref} />);
+        act(() => { ref.current.open(jest.fn(), 'purchase', [{ id: 'v1' }]); });
+        await waitFor(() => expect(global.fetch.mock.calls.some(c => String(c[0]).startsWith('/v1/purchase?'))).toBe(true));
+        const url = lastPurchaseUrl();
+        expect(url).toContain('search[store_id]=store123');
+        expect(url).toContain('search[vendor_id]=v1');
+        expect(url).not.toContain('search[customer_id]');
+        expect(url).toContain('sort=-created_at');
+        expect(url).toMatch(/select=[^&]*products/);
+        expect(screen.getByText('Import from Purchase')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('PI-...')).toBeInTheDocument();
+    });
+
+    it('calls back with the purchase and its type', async () => {
+        const ref = createRef();
+        const cb = jest.fn();
+        render(<SourceDocumentPicker ref={ref} />);
+        act(() => { ref.current.open(cb, 'purchase'); });
+        fireEvent.click(await screen.findByText('QT-001'));
+        expect(cb).toHaveBeenCalledWith(QUOTATIONS[0], 'purchase');
+    });
+});
+
