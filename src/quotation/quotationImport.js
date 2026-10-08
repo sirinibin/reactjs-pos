@@ -1,4 +1,4 @@
-// Helpers for "Import > From Quotations / From Purchases" in the quotation form.
+// Helpers for "Import > From Quotations / From Purchases / From Sales" in the quotation forms.
 
 const num = (v) => {
   const n = parseFloat(v);
@@ -36,19 +36,26 @@ export function mapQuotationProductForImport(p, { noTax = false } = {}) {
 }
 
 // Returns a new product list with the picked quotation products merged in.
-// A product already in the list gets its quantity increased instead of a duplicate line.
+// A product already in the list gets its quantity increased instead of a duplicate line
+// (lines marked deleted are ignored when looking for it).
+// opts.noTax: no-tax invoice, VAT-inclusive values equal the VAT-exclusive ones.
+// opts.vatExcluded(line): same as noTax, decided per line (e.g. services on a non-VAT form).
+// opts.prepend: new lines go to the top of the list instead of the bottom.
 export function mergeImportedQuotationProducts(existing, picked, opts = {}) {
   const result = (existing || []).map((p) => ({ ...p }));
+  const added = [];
   (picked || []).forEach((p) => {
     if (!p || !p.product_id) return;
-    const idx = result.findIndex((s) => s.product_id === p.product_id);
-    if (idx >= 0) {
-      result[idx].quantity = num(result[idx].quantity) + (num(p.quantity) || 1);
+    const match = (s) => !s.deleted && s.product_id === p.product_id;
+    const prev = result.find(match) || added.find(match);
+    if (prev) {
+      prev.quantity = num(prev.quantity) + (num(p.quantity) || 1);
     } else {
-      result.push(mapQuotationProductForImport(p, opts));
+      const noTax = !!opts.noTax || !!(opts.vatExcluded && opts.vatExcluded(p));
+      added.push(mapQuotationProductForImport(p, { noTax }));
     }
   });
-  return result;
+  return opts.prepend ? [...added, ...result] : [...result, ...added];
 }
 
 // --- Import from Purchases ---
