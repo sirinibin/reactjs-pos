@@ -253,6 +253,7 @@ export function SalesType1Body({
     openQuotations,
     openDeliveryNotes,
     openImportFromPurchase,
+    openImportFromSales,
     openReferenceUpdateForm,
     addNewPayment,
     removePayment,
@@ -1159,6 +1160,11 @@ export function SalesType1Body({
                                         <Dropdown.Item onClick={() => { openDeliveryNotes(); }}>
                                             <i className="bi bi-file-earmark-text"></i>&nbsp;{t('From Delivery Notes')}
                                         </Dropdown.Item>
+                                        {openImportFromSales && (
+                                            <Dropdown.Item onClick={() => { openImportFromSales(); }} data-testid="import-from-sales-btn">
+                                                <i className="bi bi-receipt"></i>&nbsp;{t('From Sales')}
+                                            </Dropdown.Item>
+                                        )}
                                         {openImportFromPurchase && (
                                             <Dropdown.Item onClick={() => { openImportFromPurchase(); }} data-testid="import-from-purchase-btn">
                                                 <i className="bi bi-bag"></i>&nbsp;{t('From Purchase')}

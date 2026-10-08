@@ -373,3 +373,80 @@ describe('QuotationImportPicker', () => {
   });
 });
 
+
+describe('QuotationImportPicker — sales mode (sales form "From Sales")', () => {
+  const sale = {
+    id: 's1', code: 'SI-001', customer_name: 'Walk-in Co', date: '2026-10-02T00:00:00Z',
+    products: [
+      { product_id: 'p1', part_number: 'A1', name: 'Oil Filter', quantity: 2, unit_price: 10, unit_price_with_vat: 11.5, unit_discount: 1, purchase_unit_price: 6 },
+      { product_id: 'p2', part_number: 'B2', name: 'Air Filter', quantity: 1, unit_price: 20, unit_price_with_vat: 23 },
+    ],
+  };
+
+  function openSale(ref, opts) {
+    act(() => { ref.current.open({ docType: 'sales', ...opts }); });
+    const [callback, type] = mockDocPickerOpen.mock.calls[mockDocPickerOpen.mock.calls.length - 1];
+    expect(type).toBe('sales');
+    act(() => { callback(sale); });
+  }
+
+  it('searches sales, pre-filtered by the given customers', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    act(() => { ref.current.open({ docType: 'sales', defaultParties: [{ id: 'c1' }], onImport: jest.fn() }); });
+    expect(mockDocPickerOpen.mock.calls[0][1]).toBe('sales');
+    expect(mockDocPickerOpen.mock.calls[0][2]).toEqual([{ id: 'c1' }]);
+  });
+
+  it('lists the sale with its customer and selling prices, without a purchase price column', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openSale(ref, { onImport: jest.fn() });
+    expect(screen.getByText('SI-001')).toBeInTheDocument();
+    expect(screen.getByText(/Walk-in Co/)).toBeInTheDocument();
+    expect(screen.getByText('Unit Price(with VAT)')).toBeInTheDocument();
+    expect(screen.queryByText('Purchase Price')).toBeNull();
+    expect(screen.getByText(/Choose another sale$/)).toBeInTheDocument();
+  });
+
+  it('imports the chosen lines with the sale prices and edited quantities', () => {
+    const ref = createRef();
+    const onImport = jest.fn();
+    render(<QuotationImportPicker ref={ref} />);
+    openSale(ref, { onImport });
+    fireEvent.click(screen.getByTestId('qip-row-1'));
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '7' } });
+    fireEvent.click(screen.getByTestId('qip-import'));
+    const [products, doc] = onImport.mock.calls[0];
+    expect(doc.id).toBe('s1');
+    expect(products).toEqual([expect.objectContaining({ product_id: 'p1', quantity: 7, unit_price: 10, unit_discount: 1 })]);
+  });
+
+  it('refuses the sale being edited with a sale-specific message and reopens the search', () => {
+    const ref = createRef();
+    const toast = jest.fn();
+    render(<QuotationImportPicker ref={ref} showToastMessage={toast} />);
+    openSale(ref, { onImport: jest.fn(), excludeId: 's1' });
+    expect(toast).toHaveBeenCalledWith('This is the sale you are editing. Choose another one.', 'warning');
+    expect(screen.queryByTestId('modal')).toBeNull();
+    expect(mockDocPickerOpen).toHaveBeenCalledTimes(2);
+    expect(mockDocPickerOpen.mock.calls[1][1]).toBe('sales');
+  });
+
+  it('back button returns to the sales search', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openSale(ref, { onImport: jest.fn() });
+    fireEvent.click(screen.getByText(/Choose another sale$/));
+    expect(mockDocPickerOpen.mock.calls[1][1]).toBe('sales');
+  });
+
+  it('quotation mode still names quotations in its messages', () => {
+    const ref = createRef();
+    const toast = jest.fn();
+    render(<QuotationImportPicker ref={ref} showToastMessage={toast} />);
+    act(() => { ref.current.open({ onImport: jest.fn(), excludeId: 'q1' }); });
+    act(() => { mockDocPickerOpen.mock.calls[0][0](quotation); });
+    expect(toast).toHaveBeenCalledWith('This is the quotation you are editing. Choose another one.', 'warning');
+  });
+});

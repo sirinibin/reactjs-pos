@@ -632,3 +632,19 @@ describe("SalesType1Body — Import dropdown: From Purchase", () => {
         expect(screen.queryByTestId("import-from-purchase-btn")).toBeNull();
     });
 });
+
+describe("SalesType1Body — Import dropdown: From Sales", () => {
+    it("lists From Sales and opens the sales import when clicked", () => {
+        const openImportFromSales = jest.fn();
+        render(<MemoryRouter><SalesType1Body {...bodyProps} openImportFromSales={openImportFromSales} openImportFromPurchase={jest.fn()} /></MemoryRouter>);
+        expect(screen.getByTestId("import-from-sales-btn")).toHaveTextContent("From Sales");
+        expect(screen.getByTestId("import-from-purchase-btn")).toBeInTheDocument();
+        fireEvent.click(screen.getByTestId("import-from-sales-btn"));
+        expect(openImportFromSales).toHaveBeenCalledTimes(1);
+    });
+
+    it("hides From Sales when the form does not provide the handler", () => {
+        render(<MemoryRouter><SalesType1Body {...bodyProps} /></MemoryRouter>);
+        expect(screen.queryByTestId("import-from-sales-btn")).toBeNull();
+    });
+});

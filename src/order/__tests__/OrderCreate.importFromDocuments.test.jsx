@@ -1,5 +1,5 @@
 /**
- * Integration test: sales form type 1 -> Import -> From Purchase.
+ * Integration test: sales form type 1 -> Import -> From Purchase / From Sales.
  * The real order/create.js wiring is exercised: the "From Purchase" handler it hands to
  * SalesType1Body opens the shared two-step picker (QuotationImportPicker) in purchase mode,
  * its prepareProducts step prices purchase lines at the store's retail price (from
@@ -38,6 +38,7 @@ jest.mock('../SalesType1Form', () => {
             mockBodyProps.current = props;
             return React.createElement('div', null,
                 React.createElement('button', { type: 'button', 'data-testid': 'from-purchase', onClick: () => props.openImportFromPurchase() }, 'From Purchase'),
+                React.createElement('button', { type: 'button', 'data-testid': 'from-sales', onClick: () => props.openImportFromSales() }, 'From Sales'),
                 React.createElement('ul', { 'data-testid': 'lines' },
                     (props.selectedProducts || []).map(p => React.createElement('li', { key: p.product_id }, `${p.product_id}|${p.quantity}|${p.unit_price}|${p.unit_price_with_vat}|${p.purchase_unit_price}`))));
         },
@@ -266,5 +267,53 @@ describe('Sales form type 1: Import from Purchase', () => {
         await act(async () => { onImport([]); });
         expect(screen.queryAllByRole('listitem')).toHaveLength(0);
         expect(toast).not.toHaveBeenCalled();
+    });
+});
+
+describe('Sales form type 1: Import from Sales', () => {
+    beforeEach(() => toast.mockReset());
+
+    function clickFromSales() {
+        fireEvent.click(screen.getByTestId('from-sales'));
+        return mockPickerOpen.mock.calls[mockPickerOpen.mock.calls.length - 1][0];
+    }
+
+    test('From Sales opens the shared picker in sales mode', async () => {
+        await openSalesForm();
+        const opts = clickFromSales();
+        expect(opts.docType).toBe('sales');
+        expect(opts.existingProductIds).toEqual([]);
+        expect(opts.defaultParties).toEqual([]);
+        expect(opts.prepareProducts).toBeUndefined();
+        expect(opts.excludeId).toBeUndefined();
+    });
+
+    test('picked sale lines keep their prices and discounts and merge with existing lines', async () => {
+        await openSalesForm();
+        const first = clickFromSales();
+        await act(async () => {
+            first.onImport([
+                { product_id: 'p1', quantity: 2, unit_price: 10, unit_price_with_vat: 11.5, unit_discount: 1, unit_discount_with_vat: 1.15, purchase_unit_price: 6 },
+                { product_id: 'p3', quantity: 1, unit_price: 50, unit_price_with_vat: 57.5 },
+            ]);
+        });
+        await waitFor(() => {
+            expect(screen.getByText('p1|2|10|11.5|6')).toBeInTheDocument();
+            expect(screen.getByText('p3|1|50|57.5|0')).toBeInTheDocument();
+        });
+        expect(toast).toHaveBeenCalledWith('Imported 2 products', 'success');
+
+        const second = clickFromSales();
+        expect(second.existingProductIds).toEqual(['p1', 'p3']);
+        await act(async () => { second.onImport([{ product_id: 'p1', quantity: 4, unit_price: 99 }]); });
+        await waitFor(() => expect(screen.getByText('p1|6|10|11.5|6')).toBeInTheDocument());
+        expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    });
+
+    test('both import sources share one picker', async () => {
+        await openSalesForm();
+        clickFromSales();
+        clickFromPurchase();
+        expect(mockPickerOpen.mock.calls.map(c => c[0].docType)).toEqual(['sales', 'purchase']);
     });
 });
