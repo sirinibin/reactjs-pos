@@ -18,7 +18,7 @@ const SALE = {
   ],
 };
 
-async function setup(page, context, { sales = [SALE], storeSettings = {} } = {}) {
+async function setup(page, context, { sales = [SALE], storeSettings = {}, allowDuplicateIds = [] } = {}) {
   const api = { calcBodies: [], pickerUrls: [] };
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 24.7, longitude: 46.7 });
@@ -35,6 +35,10 @@ async function setup(page, context, { sales = [SALE], storeSettings = {} } = {})
     if (/\/v1\/order\?/.test(url) && decoded.includes("select=id,code,date,net_total") && decoded.includes("products")) {
       api.pickerUrls.push(decoded);
       return json({ status: true, result: sales, total_count: sales.length });
+    }
+    if (/\/v1\/product\?/.test(url) && decoded.includes("allow_duplicates")) {
+      const ids = new URL(url).searchParams.get("search[ids]").split(",");
+      return json({ status: true, result: ids.map((id) => ({ id, allow_duplicates: allowDuplicateIds.includes(id) })) });
     }
     if (url.includes(`/v1/store/${STORE_ID}`)) {
       return json({ status: true, result: { id: STORE_ID, name: "E2E Store", code: "E2E", vat_percent: 15, country_code: "SA", zatca: { phase: "1" }, settings: storeSettings } });
@@ -155,4 +159,18 @@ test("all import sources are grouped under the single Import dropdown", async ({
   await expect(menu).toHaveCount(1);
   await expect(menu.locator(".dropdown-item")).toHaveText(["From Quotations", "From Delivery Notes", "From Sales", "From Purchase", "From P.O."].map((l) => new RegExp(l.replace(/\./g, "\\."))));
   await page.screenshot({ path: "test-results/sales-import-dropdown.png" });
+});
+
+test("a product with Allow duplicates is added as a separate line on repeat import", async ({ page, context }) => {
+  const api = await setup(page, context, { allowDuplicateIds: ["p-oil"] });
+  for (let i = 0; i < 2; i++) {
+    await openProductPicker(page);
+    await page.getByTestId("qip-select-all").uncheck();
+    await page.getByTestId("qip-row-0").check();
+    await page.getByTestId("qip-row-1").check();
+    await page.getByTestId("qip-import").click();
+    await expect(page.getByText("Select Products to Import")).toBeHidden();
+  }
+  await expect.poll(() => lastCalcProducts(api).filter((p) => p.product_id === "p-oil").map((p) => p.quantity)).toEqual([2, 2]);
+  expect(lastCalcProducts(api).filter((p) => p.product_id === "p-air").map((p) => p.quantity)).toEqual([2]);
 });
