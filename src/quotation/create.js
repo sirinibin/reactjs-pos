@@ -8,6 +8,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { useTranslation } from "react-i18next";
 import { useDraft } from '../utils/useDraft';
 import Preview from "./../order/preview.js";
@@ -331,11 +332,20 @@ const QuotationCreate = forwardRef((props, ref) => {
         } catch (_) {}
 
         // Apply Sales→Quotation switch prefill if present
-        try {
-          const rawSwitch = sessionStorage.getItem('sales_to_quotation_switch');
-          if (rawSwitch) {
-            sessionStorage.removeItem('sales_to_quotation_switch');
-            const switchData = JSON.parse(rawSwitch);
+        const switchData = takeSwitchPayload(SALES_TO_QUOTATION_KEY);
+        if (switchData) {
+          try {
+            const fields = switchFields(switchData);
+            Object.assign(formData, fields);
+            if (fields.phone) formData.customer_phone_number = fields.phone;
+            if (fields.discount !== undefined) { discount = fields.discount; setDiscount(discount); }
+            if (fields.discount_with_vat !== undefined) { discountWithVAT = fields.discount_with_vat; setDiscountWithVAT(discountWithVAT); }
+            if (fields.discount_percent !== undefined) { discountPercent = fields.discount_percent; setDiscountPercent(discountPercent); }
+            if (fields.discount_percent_with_vat !== undefined) { discountPercentWithVAT = fields.discount_percent_with_vat; setDiscountPercentWithVAT(discountPercentWithVAT); }
+            if (fields.shipping_handling_fees !== undefined) { shipping = fields.shipping_handling_fees; setShipping(shipping); }
+            if (fields.cash_discount !== undefined) { cashDiscount = fields.cash_discount; setCashDiscount(cashDiscount); }
+            if (fields.commission !== undefined) { commission = fields.commission; setCommission(commission); }
+            if (fields.rounding_amount !== undefined) { roundingAmount = fields.rounding_amount; setRoundingAmount(roundingAmount); }
             if (switchData.products?.length) {
               selectedProducts = [...switchData.products];
               setSelectedProducts([...switchData.products]);
@@ -344,20 +354,18 @@ const QuotationCreate = forwardRef((props, ref) => {
             if (switchData.customer_id) {
               formData.customer_id = switchData.customer_id;
               formData.customer_name = switchData.customer_name || '';
-              formData.customer_phone_number = switchData.customer_phone || '';
               fetchAndSetCustomer(switchData.customer_id, {
                 id: switchData.customer_id,
                 name: switchData.customer_name || '',
-                phone: switchData.customer_phone || '',
+                phone: fields.phone || '',
               });
             } else if (switchData.customers?.length) {
               setSelectedCustomers([...switchData.customers]);
             }
-            if (switchData.remarks) formData.remarks = switchData.remarks;
             setFormData({ ...formData });
             setTimeout(() => reCalculate(), 300);
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
       }
 
       getStore(localStorage.getItem("store_id"));
@@ -544,16 +552,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   function handleSwitchToSales() {
     if (formData.id) return;
-    try {
-      sessionStorage.setItem('quotation_to_sales_switch', JSON.stringify({
-        products: selectedProducts,
-        customers: selectedCustomers,
-        customer_id: formData.customer_id || '',
-        customer_name: formData.customer_name || '',
-        customer_phone: formData.phone || formData.customer_phone_number || '',
-        remarks: formData.remarks || '',
-      }));
-    } catch (_) {}
+    saveSwitchPayload(QUOTATION_TO_SALES_KEY, buildSwitchPayload({
+      formData,
+      products: selectedProducts,
+      customers: selectedCustomers,
+      amounts: { discount, discount_with_vat: discountWithVAT, discount_percent: discountPercent, discount_percent_with_vat: discountPercentWithVAT, shipping_handling_fees: shipping, cash_discount: cashDiscount, commission, rounding_amount: roundingAmount },
+    }));
     SetShow(false);
     props.onSwitchToSales?.();
   }

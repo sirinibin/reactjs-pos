@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
+import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { useDraft } from '../utils/useDraft';
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
@@ -301,23 +302,28 @@ const OrderCreate = forwardRef((props, ref) => {
 
             // Apply Quotation→Sales switch prefill if present (new forms only)
             if (!id) {
-                try {
-                    const rawSwitch = sessionStorage.getItem('quotation_to_sales_switch');
-                    if (rawSwitch) {
-                        sessionStorage.removeItem('quotation_to_sales_switch');
-                        const switchData = JSON.parse(rawSwitch);
-                        setTimeout(() => {
+                const switchData = takeSwitchPayload(QUOTATION_TO_SALES_KEY);
+                if (switchData) {
+                    setTimeout(() => {
+                        try {
+                            const fields = switchFields(switchData);
+                            Object.assign(formData, fields);
+                            if (fields.discount !== undefined) { discount = fields.discount; setDiscount(discount); }
+                            if (fields.discount_with_vat !== undefined) { discountWithVAT = fields.discount_with_vat; setDiscountWithVAT(discountWithVAT); }
+                            if (fields.discount_percent !== undefined) { discountPercent = fields.discount_percent; setDiscountPercent(discountPercent); }
+                            if (fields.discount_percent_with_vat !== undefined) { discountPercentWithVAT = fields.discount_percent_with_vat; setDiscountPercentWithVAT(discountPercentWithVAT); }
+                            if (fields.shipping_handling_fees !== undefined) { shipping = fields.shipping_handling_fees; setShipping(shipping); }
+                            if (fields.cash_discount !== undefined) { cashDiscount = fields.cash_discount; setCashDiscount(cashDiscount); }
+                            if (fields.commission !== undefined) { commission = fields.commission; setCommission(commission); }
+                            if (fields.rounding_amount !== undefined) { roundingAmount = fields.rounding_amount; setRoundingAmount(roundingAmount); }
                             if (switchData.products?.length) {
                                 selectedProducts = [...switchData.products];
                                 setSelectedProducts([...switchData.products]);
                                 formData.products = [...switchData.products];
-                                reCalculate();
                             }
                             if (switchData.customer_id) {
                                 formData.customer_id = switchData.customer_id;
                                 formData.customer_name = switchData.customer_name || '';
-                                formData.phone = switchData.customer_phone || '';
-                                setFormData({ ...formData });
                                 const custSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
                                 const authHeaders = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
                                 const storeId = localStorage.getItem('store_id') || '';
@@ -334,13 +340,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                 selectedCustomers = [...switchData.customers];
                                 setSelectedCustomers([...switchData.customers]);
                             }
-                            if (switchData.remarks) {
-                                formData.remarks = switchData.remarks;
-                                setFormData({ ...formData });
-                            }
-                        }, 100);
-                    }
-                } catch (_) {}
+                            setFormData({ ...formData });
+                            reCalculate();
+                        } catch (_) {}
+                    }, 100);
+                }
             }
 
             setShow(true);
@@ -1504,16 +1508,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function handleSwitchToQuotation() {
         if (isUpdateForm) return;
-        try {
-            sessionStorage.setItem('sales_to_quotation_switch', JSON.stringify({
-                products: selectedProducts,
-                customers: selectedCustomers,
-                customer_id: formData.customer_id || '',
-                customer_name: formData.customer_name || '',
-                customer_phone: formData.phone || formData.customer_phone_number || '',
-                remarks: formData.remarks || '',
-            }));
-        } catch (_) {}
+        saveSwitchPayload(SALES_TO_QUOTATION_KEY, buildSwitchPayload({
+            formData,
+            products: selectedProducts,
+            customers: selectedCustomers,
+            amounts: { discount, discount_with_vat: discountWithVAT, discount_percent: discountPercent, discount_percent_with_vat: discountPercentWithVAT, shipping_handling_fees: shipping, cash_discount: cashDiscount, commission, rounding_amount: roundingAmount },
+        }));
         setShow(false);
         props.onSwitchToQuotation?.();
     }

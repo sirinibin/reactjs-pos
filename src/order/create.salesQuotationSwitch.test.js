@@ -24,12 +24,12 @@ describe('order/create.js — handleSwitchToQuotation', () => {
         expect(ORDER_CREATE).toMatch(/function\s+handleSwitchToQuotation/);
     });
 
-    test('1.2  writes sales_to_quotation_switch to sessionStorage', () => {
-        expect(ORDER_CREATE).toMatch(/sessionStorage\.setItem\s*\(\s*['"]sales_to_quotation_switch['"]/);
+    test('1.2  saves the switch payload under the sales-to-quotation key', () => {
+        expect(ORDER_CREATE).toMatch(/saveSwitchPayload\(\s*SALES_TO_QUOTATION_KEY\s*,\s*buildSwitchPayload\(/);
     });
 
-    test('1.3  serializes products in the switch payload', () => {
-        expect(ORDER_CREATE).toMatch(/sales_to_quotation_switch[\s\S]{0,500}products\s*:/);
+    test('1.3  passes form data, products, customers and live amounts to the payload', () => {
+        expect(ORDER_CREATE).toMatch(/buildSwitchPayload\(\{\s*formData,\s*products:\s*selectedProducts,\s*customers:\s*selectedCustomers,\s*amounts:/);
     });
 
     test('1.4  calls props.onSwitchToQuotation after closing', () => {
@@ -69,21 +69,21 @@ describe('order/create.js — handleSwitchToQuotation', () => {
 // ── 2. order/create.js — open() prefill from quotation_to_sales_switch ────────
 
 describe('order/create.js — open() reads quotation_to_sales_switch', () => {
-    test('2.1  reads quotation_to_sales_switch from sessionStorage', () => {
-        expect(ORDER_CREATE).toMatch(/sessionStorage\.getItem\s*\(\s*['"]quotation_to_sales_switch['"]/);
+    test('2.1  takes (reads and removes) the quotation-to-sales payload', () => {
+        expect(ORDER_CREATE).toMatch(/takeSwitchPayload\(\s*QUOTATION_TO_SALES_KEY\s*\)/);
     });
 
-    test('2.2  removes the key after reading it', () => {
-        expect(ORDER_CREATE).toMatch(/sessionStorage\.removeItem\s*\(\s*['"]quotation_to_sales_switch['"]/);
+    test('2.2  applies the carried form fields', () => {
+        expect(ORDER_CREATE).toMatch(/switchFields\(switchData\)[\s\S]{0,100}Object\.assign\(formData,\s*fields\)/);
     });
 
     test('2.3  only applied when !id (new form)', () => {
-        // The block is inside `if (!id)` branch
-        expect(ORDER_CREATE).toMatch(/if\s*\(!\s*id\s*\)[\s\S]{0,1000}quotation_to_sales_switch/);
+        expect(ORDER_CREATE).toMatch(/if\s*\(!\s*id\s*\)\s*\{\s*const switchData = takeSwitchPayload\(QUOTATION_TO_SALES_KEY\)/);
     });
 
-    test('2.4  applies products from switch data', () => {
-        expect(ORDER_CREATE).toMatch(/quotation_to_sales_switch[\s\S]{0,500}switchData\.products/);
+    test('2.4  applies products and the amount inputs from switch data', () => {
+        expect(ORDER_CREATE).toMatch(/takeSwitchPayload\(QUOTATION_TO_SALES_KEY\)[\s\S]{0,3000}switchData\.products/);
+        expect(ORDER_CREATE).toMatch(/takeSwitchPayload\(QUOTATION_TO_SALES_KEY\)[\s\S]{0,2000}setShipping\(shipping\)/);
     });
 });
 
@@ -114,8 +114,8 @@ describe('quotation/create.js — handleSwitchToSales', () => {
         expect(QUOT_CREATE).toMatch(/function\s+handleSwitchToSales/);
     });
 
-    test('4.2  writes quotation_to_sales_switch to sessionStorage', () => {
-        expect(QUOT_CREATE).toMatch(/sessionStorage\.setItem\s*\(\s*['"]quotation_to_sales_switch['"]/);
+    test('4.2  saves the switch payload under the quotation-to-sales key', () => {
+        expect(QUOT_CREATE).toMatch(/saveSwitchPayload\(\s*QUOTATION_TO_SALES_KEY\s*,\s*buildSwitchPayload\(/);
     });
 
     test('4.3  calls props.onSwitchToSales after closing', () => {
@@ -134,16 +134,17 @@ describe('quotation/create.js — handleSwitchToSales', () => {
 // ── 5. quotation/create.js — open() prefill from sales_to_quotation_switch ───
 
 describe('quotation/create.js — open() reads sales_to_quotation_switch', () => {
-    test('5.1  reads sales_to_quotation_switch from sessionStorage', () => {
-        expect(QUOT_CREATE).toMatch(/sessionStorage\.getItem\s*\(\s*['"]sales_to_quotation_switch['"]/);
+    test('5.1  takes (reads and removes) the sales-to-quotation payload', () => {
+        expect(QUOT_CREATE).toMatch(/takeSwitchPayload\(\s*SALES_TO_QUOTATION_KEY\s*\)/);
     });
 
-    test('5.2  removes the key after reading it', () => {
-        expect(QUOT_CREATE).toMatch(/sessionStorage\.removeItem\s*\(\s*['"]sales_to_quotation_switch['"]/);
+    test('5.2  applies the carried form fields and shows the phone', () => {
+        expect(QUOT_CREATE).toMatch(/Object\.assign\(formData,\s*fields\)/);
+        expect(QUOT_CREATE).toMatch(/formData\.customer_phone_number = fields\.phone/);
     });
 
     test('5.3  applies products from switch data', () => {
-        expect(QUOT_CREATE).toMatch(/sales_to_quotation_switch[\s\S]{0,800}switchData\.products/);
+        expect(QUOT_CREATE).toMatch(/takeSwitchPayload\(SALES_TO_QUOTATION_KEY\)[\s\S]{0,2500}switchData\.products/);
     });
 });
 
@@ -178,16 +179,21 @@ describe('quotation/index.js — switch navigation', () => {
 // ── 7. quotation/QuotationType3Form.js — open() prefill ──────────────────────
 
 describe('quotation/QuotationType3Form.js — open() reads sales_to_quotation_switch', () => {
-    test('7.1  reads sales_to_quotation_switch from sessionStorage', () => {
-        expect(QUOT_TYPE3).toMatch(/sessionStorage\.getItem\s*\(\s*['"]sales_to_quotation_switch['"]/);
+    test('7.1  takes (reads and removes) the sales-to-quotation payload', () => {
+        expect(QUOT_TYPE3).toMatch(/takeSwitchPayload\(\s*SALES_TO_QUOTATION_KEY\s*\)/);
     });
 
-    test('7.2  removes the key after reading it', () => {
-        expect(QUOT_TYPE3).toMatch(/sessionStorage\.removeItem\s*\(\s*['"]sales_to_quotation_switch['"]/);
+    test('7.2  applies the carried discount and shipping', () => {
+        expect(QUOT_TYPE3).toMatch(/setDiscount\(fields\.discount\)/);
+        expect(QUOT_TYPE3).toMatch(/setShipping\(fields\.shipping_handling_fees\)/);
     });
 
     test('7.3  applies products from switch data', () => {
-        expect(QUOT_TYPE3).toMatch(/sales_to_quotation_switch[\s\S]{0,800}setSelectedProducts/);
+        expect(QUOT_TYPE3).toMatch(/takeSwitchPayload\(SALES_TO_QUOTATION_KEY\)[\s\S]{0,1200}setSelectedProducts/);
+    });
+
+    test('7.6  saves the quotation-to-sales payload when switching', () => {
+        expect(QUOT_TYPE3).toMatch(/saveSwitchPayload\(\s*QUOTATION_TO_SALES_KEY\s*,\s*buildSwitchPayload\(/);
     });
 
     test('7.4  Switch to Sales button is in QuotationType3Form modal header', () => {

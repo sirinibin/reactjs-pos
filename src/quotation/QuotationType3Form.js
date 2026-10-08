@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { createPortal } from "react-dom";
 import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -260,20 +261,22 @@ const QuotationType3Form = forwardRef((props, ref) => {
                     setVehicleReloadKey(k => k + 1);
                 }
                 // Apply Sales→Quotation switch prefill if present
-                try {
-                    const rawSwitch = sessionStorage.getItem('sales_to_quotation_switch');
-                    if (rawSwitch) {
-                        sessionStorage.removeItem('sales_to_quotation_switch');
-                        const switchData = JSON.parse(rawSwitch);
+                const switchData = takeSwitchPayload(SALES_TO_QUOTATION_KEY);
+                if (switchData) {
+                    try {
+                        const fields = switchFields(switchData);
+                        const fd = { ...fields };
+                        if (fields.vehicle_id) setVehicleReloadKey(k => k + 1);
+                        if (fields.discount !== undefined) setDiscount(fields.discount);
+                        if (fields.discount_with_vat !== undefined) setDiscountWithVAT(fields.discount_with_vat);
+                        if (fields.shipping_handling_fees !== undefined) setShipping(fields.shipping_handling_fees);
                         if (switchData.products?.length) {
                             setSelectedProducts([...switchData.products]);
                             setTimeout(() => reCalculateRef.current?.(switchData.products), 300);
                         }
-                        const fd = { ...makeFormData(), store_id: storeId };
                         if (switchData.customer_id) {
                             fd.customer_id = switchData.customer_id;
                             fd.customer_name = switchData.customer_name || '';
-                            setFormData(fd);
                             const customerSelect2 = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
                             fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${customerSelect2}`, { headers })
                                 .then(cr => cr.json())
@@ -282,9 +285,9 @@ const QuotationType3Form = forwardRef((props, ref) => {
                         } else if (switchData.customers?.length) {
                             setSelectedCustomers([...switchData.customers]);
                         }
-                        if (switchData.remarks) setFormData(prev => ({ ...prev, remarks: switchData.remarks }));
-                    }
-                } catch (_) {}
+                        setFormData(prev => ({ ...prev, ...fd }));
+                    } catch (_) {}
+                }
             }
             setShow(true);
             fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
@@ -909,16 +912,12 @@ const QuotationType3Form = forwardRef((props, ref) => {
                         ) : null)}
                         {!isUpdateForm && props.onSwitchToSales && apiBase === '/v1/quotation' && (
                             <button type="button" onClick={() => {
-                                try {
-                                    sessionStorage.setItem('quotation_to_sales_switch', JSON.stringify({
-                                        products: selectedProducts,
-                                        customers: selectedCustomers,
-                                        customer_id: formData.customer_id || '',
-                                        customer_name: formData.customer_name || '',
-                                        customer_phone: formData.phone || '',
-                                        remarks: formData.remarks || '',
-                                    }));
-                                } catch (_) {}
+                                saveSwitchPayload(QUOTATION_TO_SALES_KEY, buildSwitchPayload({
+                                    formData,
+                                    products: selectedProducts,
+                                    customers: selectedCustomers,
+                                    amounts: { discount, discount_with_vat: discountWithVAT, shipping_handling_fees: shipping },
+                                }));
                                 setShow(false);
                                 props.onSwitchToSales();
                             }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer" }}>
