@@ -1,16 +1,18 @@
 // QuotationImportPicker: quotation picked in step 1 -> products listed -> chosen products imported.
 jest.mock('react-bootstrap', () => {
   const React = require('react');
-  const Modal = ({ show, children }) => (show ? React.createElement('div', { 'data-testid': 'modal' }, children) : null);
+  const Modal = ({ show, children, className }) => (show ? React.createElement('div', { 'data-testid': 'modal', 'data-class': className }, children) : null);
   Modal.Header = ({ children }) => React.createElement('div', null, children);
   Modal.Body = ({ children }) => React.createElement('div', null, children);
   return { Modal };
 });
 
 const mockDocPickerOpen = jest.fn();
+const mockDocPickerProps = {};
 jest.mock('../../purchase_order/SourceDocumentPicker.js', () => {
   const React = require('react');
   return React.forwardRef((props, ref) => {
+    Object.assign(mockDocPickerProps, props);
     React.useImperativeHandle(ref, () => ({ open: (...args) => mockDocPickerOpen(...args) }));
     return null;
   });
@@ -369,6 +371,23 @@ describe('QuotationImportPicker', () => {
         ['p1', 3, 9, 1],
         ['p9', 1, 4, 0],
       ]);
+    });
+  });
+  describe('modal stacking class', () => {
+    it('uses above-sales-modal for both modals by default', () => {
+      const ref = createRef();
+      render(<QuotationImportPicker ref={ref} />);
+      expect(mockDocPickerProps.modalClassName).toBe('above-sales-modal');
+      openWith(ref, { onImport: jest.fn() });
+      expect(screen.getByTestId('modal').getAttribute('data-class')).toBe('above-sales-modal');
+    });
+
+    it('passes a custom modalClassName to both modals (used by quotation form type 3)', () => {
+      const ref = createRef();
+      render(<QuotationImportPicker ref={ref} modalClassName="above-sales-modal qt3-import-modal" />);
+      expect(mockDocPickerProps.modalClassName).toBe('above-sales-modal qt3-import-modal');
+      openWith(ref, { onImport: jest.fn() });
+      expect(screen.getByTestId('modal').getAttribute('data-class')).toBe('above-sales-modal qt3-import-modal');
     });
   });
 });

@@ -128,3 +128,46 @@ describe('edge cases', () => {
     expect(out[1].unit_price_with_vat).toBe(20);
   });
 });
+
+describe('mergeImportedQuotationProducts options used by quotation form type 3', () => {
+  it('prepend puts new lines on top, in picked order, and still merges duplicates', () => {
+    const existing = [{ product_id: 'old', quantity: 1 }, { product_id: 'p1', quantity: 2 }];
+    const result = mergeImportedQuotationProducts(existing, [
+      { product_id: 'n1', quantity: 1 },
+      { product_id: 'p1', quantity: 3 },
+      { product_id: 'n2', quantity: 4 },
+    ], { prepend: true });
+    expect(result.map(p => p.product_id)).toEqual(['n1', 'n2', 'old', 'p1']);
+    expect(result.find(p => p.product_id === 'p1').quantity).toBe(5);
+  });
+
+  it('prepend merges a product that appears twice in the picked list into one new line', () => {
+    const result = mergeImportedQuotationProducts([], [{ product_id: 'a', quantity: 1 }, { product_id: 'a', quantity: 2 }], { prepend: true });
+    expect(result).toHaveLength(1);
+    expect(result[0].quantity).toBe(3);
+  });
+
+  it('vatExcluded copies VAT-exclusive prices for the lines it selects only', () => {
+    const result = mergeImportedQuotationProducts([], [
+      { product_id: 'svc', is_service: true, unit_price: 50, unit_price_with_vat: 57.5, unit_discount: 5, unit_discount_with_vat: 5.75 },
+      { product_id: 'prd', is_service: false, unit_price: 10, unit_price_with_vat: 11.5 },
+    ], { vatExcluded: (p) => p.is_service });
+    const svc = result.find(p => p.product_id === 'svc');
+    const prd = result.find(p => p.product_id === 'prd');
+    expect([svc.unit_price, svc.unit_price_with_vat, svc.unit_discount_with_vat]).toEqual([50, 50, 5]);
+    expect([prd.unit_price, prd.unit_price_with_vat]).toEqual([10, 11.5]);
+  });
+
+  it('noTax wins over a vatExcluded that returns false', () => {
+    const [line] = mergeImportedQuotationProducts([], [{ product_id: 'x', unit_price: 10, unit_price_with_vat: 11.5 }], { noTax: true, vatExcluded: () => false });
+    expect(line.unit_price_with_vat).toBe(10);
+  });
+
+  it('ignores deleted lines when looking for a product already in the list', () => {
+    const existing = [{ product_id: 'p1', quantity: 2, deleted: true }];
+    const result = mergeImportedQuotationProducts(existing, [{ product_id: 'p1', quantity: 1 }], { prepend: true });
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ product_id: 'p1', quantity: 1 });
+    expect(result[1]).toMatchObject({ product_id: 'p1', quantity: 2, deleted: true });
+  });
+});

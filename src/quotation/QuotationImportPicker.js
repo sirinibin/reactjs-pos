@@ -5,21 +5,24 @@ import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import SourceDocumentPicker from "../purchase_order/SourceDocumentPicker.js";
 
-// Two-step import into the quotation form ("From Quotations", "From Purchases"):
-//   1. pick a document (SourceDocumentPicker in quotation or purchase mode)
+// Two-step import into a quotation form ("From Quotations", "From Purchases", "From Sales"):
+//   1. pick a document (SourceDocumentPicker in quotation, purchase or sales mode)
 //   2. pick which of its products to import
 // open({ docType, onImport, existingProductIds, defaultParties, excludeId, prepareProducts })
 //   docType: "quotation" (default), "purchase" or "sales"
-//   defaultParties: customers (quotation) / vendors (purchase) to pre-filter the search
+//   defaultParties: customers (quotation, sales) / vendors (purchase) to pre-filter the search
 //   prepareProducts(products, doc): optional async step that turns the document's lines into
 //     quotation lines (e.g. looks up selling prices for purchase lines) before they are listed
 // onImport(products, doc) receives the chosen lines (with edited quantities).
+// Prop modalClassName (default "above-sales-modal") sets the class of both modals so a host
+// form can stack them above itself.
 // Fixed size: index.css gives every `.table thead input` min-width: 120px, which stretched the select-all box.
 const DOC_LABELS = { quotation: "quotation", purchase: "purchase", sales: "sale" };
 
 const CHECKBOX_STYLE = { width: "16px", minWidth: "16px", maxWidth: "16px", height: "16px", padding: 0, margin: 0, float: "none", display: "inline-block", verticalAlign: "middle" };
 
 const QuotationImportPicker = forwardRef((props, ref) => {
+    const modalClassName = props.modalClassName || "above-sales-modal";
     const [show, setShow] = useState(false);
     const [doc, setDoc] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -128,8 +131,8 @@ const QuotationImportPicker = forwardRef((props, ref) => {
 
     return (
         <>
-            <SourceDocumentPicker ref={docPickerRef} modalClassName="above-sales-modal" />
-            <Modal show={show} onHide={() => setShow(false)} size="xl" animation={false} className="above-sales-modal">
+            <SourceDocumentPicker ref={docPickerRef} modalClassName={modalClassName} />
+            <Modal show={show} onHide={() => setShow(false)} size="xl" animation={false} className={modalClassName}>
                 <Modal.Header style={{ backgroundColor: "#fff", borderBottom: "1px solid #c3c6d7", padding: "12px 20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, flexWrap: "wrap" }}>
                         <i className="bi bi-box-seam" style={{ color: "#004ac6", fontSize: "18px" }}></i>

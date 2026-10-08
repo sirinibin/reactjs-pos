@@ -23,6 +23,9 @@ import DeliveryNoteHistory from "../utils/product_delivery_note_history.js";
 import ProductNonVATSalesHistory from "../utils/product_non_vat_sales_history.js";
 import ProductNonVATSalesReturnHistory from "../utils/product_non_vat_sales_return_history.js";
 import CustomerPending from "../utils/customer_pending.js";
+import PurchaseOrderPicker from "../purchase_order/PurchaseOrderPicker.js";
+import QuotationImportPicker from "./QuotationImportPicker.js";
+import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines } from "./quotationImport.js";
 
 const pageBg = "#f8fafc";
 const borderColor = "#c3c6d7";
@@ -122,6 +125,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
     const productSearchRef = useRef();
     const vehicleCreateRef = useRef();
     const productsRef = useRef();
+    const PurchaseOrderPickerRef = useRef();
+    const QuotationImportPickerRef = useRef();
     const paymentRowsRef = useRef();
     const timerRef = useRef();
     const reCalculateRef = useRef(null);
@@ -515,6 +520,76 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     function openProductsModal() { productsRef.current?.open(true); }
     function openServicesModal() { productsRef.current?.open(true, null, null, true); }
+
+    function handleImportFromPO(po) {
+        if (!po || !po.products || po.products.length === 0) return;
+        const newProds = [];
+        po.products.forEach(p => {
+            const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+            if (already >= 0) {
+                selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+            } else {
+                newProds.push({ product_id: p.product_id, part_number: p.part_number || "", name: p.name || "", name_in_arabic: p.name_in_arabic || "", quantity: parseFloat(p.quantity) || 1, unit: p.unit || "", unit_price: parseFloat(p.unit_price) || 0, unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, purchase_unit_price: parseFloat(p.unit_price) || 0, purchase_unit_price_with_vat: parseFloat(p.unit_price_with_vat) || 0, unit_discount: 0, unit_discount_with_vat: 0, unit_discount_percent: 0, unit_discount_percent_with_vat: 0, stock: 0 });
+            }
+        });
+        const updated = [...newProds, ...selectedProducts];
+        setSelectedProducts(updated);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(updated), 150);
+    }
+
+    // Import > From Quotations / From Purchases / From Sales (two-step picker, same as form type 1).
+    function handleImportProducts(products) {
+        if (!products || products.length === 0) return;
+        const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
+        const updated = mergeImportedQuotationProducts(selectedProducts, products, {
+            noTax,
+            prepend: true,
+            vatExcluded: (p) => (excludeServiceVat && p.is_service) || (excludeProductVat && !p.is_service),
+        });
+        setSelectedProducts(updated);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(updated), 150);
+        if (props.showToastMessage) props.showToastMessage(`Imported ${products.length} product${products.length !== 1 ? "s" : ""}`, "success");
+    }
+
+    function importPickerBaseOptions() {
+        return {
+            onImport: handleImportProducts,
+            existingProductIds: selectedProducts.filter(p => !p.deleted).map(p => p.product_id),
+            defaultParties: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
+        };
+    }
+
+    function openImportFromQuotation() {
+        QuotationImportPickerRef.current?.open({
+            ...importPickerBaseOptions(),
+            excludeId: apiBase === '/v1/quotation' ? formData.id : undefined,
+        });
+    }
+
+    function openImportFromSales() {
+        QuotationImportPickerRef.current?.open({ ...importPickerBaseOptions(), docType: 'sales' });
+    }
+
+    function openImportFromPurchase() {
+        QuotationImportPickerRef.current?.open({
+            ...importPickerBaseOptions(),
+            docType: 'purchase',
+            defaultParties: [],
+            // Purchases only hold cost prices, so selling prices come from the product master.
+            prepareProducts: async (products) => {
+                let prices = {};
+                try {
+                    prices = await fetchRetailPrices(products.map(p => p.product_id), storeId);
+                } catch (e) {
+                    if (props.showToastMessage) props.showToastMessage('Could not load current selling prices; they will be 0.', 'warning');
+                }
+                return purchaseLinesToQuotationLines(products, prices);
+            },
+        });
+    }
+
     function handleSelectedProductsFromModal(selected) {
         const isNoTaxInvoice = store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice';
         const newProds = selected.map(option => {
@@ -731,7 +806,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
 
     return (
         <>
-            <style>{`.qt3-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .order-preview-wrap { z-index: 1300 !important; }`}</style>
+            <style>{`.qt3-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: 1085 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .products-modal-wrap { z-index: 1095 !important; } .order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .order-preview-wrap { z-index: 1300 !important; } body.quotation-form-open .modal.qt3-import-modal { z-index: 1096 !important; }`}</style>
             <style>{`
           .qt3-main-layout { flex: 1; display: flex; flex-direction: row; gap: 12px; padding: 12px; overflow: hidden; }
           .qt3-left-panel { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; padding-top: 10px; }
@@ -979,6 +1054,21 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         <Button variant="light" size="sm" className="border" type="button" onClick={openServicesModal}>
                                             <i className="bi bi-list me-1"></i>{t("Services")}
                                         </Button>
+                                        {apiBase === '/v1/quotation' && (
+                                        <Dropdown>
+                                            <Dropdown.Toggle bsPrefix="btn" data-testid="import-dropdown-btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                <i className="bi bi-file-earmark-arrow-down" />{t('Import')}
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu style={{ zIndex: 9999 }}>
+                                                <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text me-1"></i>{t('From Quotations')}</Dropdown.Item>
+                                                <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
+                                                <Dropdown.Item onClick={openImportFromSales} data-testid="import-from-sales-btn"><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
+                                                {store?.settings?.enable_purchase_order_module && (
+                                                    <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} data-testid="import-from-po-btn"><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From Purchase Order')}</Dropdown.Item>
+                                                )}
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                        )}
                                         {apiBase !== '/v1/quotation' && (
                                             <div className="qt3-tax-flags" style={{ display: "flex", gap: "20px", marginLeft: "auto" }}>
                                                 <div className="form-check mb-0">
@@ -1617,6 +1707,8 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
             <OrderPreview ref={previewRef} />
+            <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+            <QuotationImportPicker ref={QuotationImportPickerRef} modalClassName="above-sales-modal qt3-import-modal" showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
