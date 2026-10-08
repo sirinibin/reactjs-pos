@@ -40,7 +40,7 @@ jest.mock('../SalesType1Form', () => {
                 React.createElement('button', { type: 'button', 'data-testid': 'from-purchase', onClick: () => props.openImportFromPurchase() }, 'From Purchase'),
                 React.createElement('button', { type: 'button', 'data-testid': 'from-sales', onClick: () => props.openImportFromSales() }, 'From Sales'),
                 React.createElement('ul', { 'data-testid': 'lines' },
-                    (props.selectedProducts || []).map(p => React.createElement('li', { key: p.product_id }, `${p.product_id}|${p.quantity}|${p.unit_price}|${p.unit_price_with_vat}|${p.purchase_unit_price}`))));
+                    (props.selectedProducts || []).map((p, i) => React.createElement('li', { key: i }, `${p.product_id}|${p.quantity}|${p.unit_price}|${p.unit_price_with_vat}|${p.purchase_unit_price}`))));
         },
     };
 });
@@ -151,6 +151,9 @@ beforeEach(() => {
     priceFails = false;
     mockPickerOpen.mockReset();
     global.fetch = jest.fn((url) => {
+        if (String(url).includes('allow_duplicates')) {
+            return Promise.resolve({ ok: true, headers: { get: () => 'application/json' }, json: () => Promise.resolve({ result: [{ id: 'pdup', allow_duplicates: true }] }) });
+        }
         if (String(url).includes('retail_unit_price')) {
             priceCalls.push(String(url));
             if (priceFails) return Promise.resolve({ ok: false, headers: { get: () => 'application/json' }, json: () => Promise.resolve({ errors: {} }) });
@@ -178,6 +181,11 @@ async function openSalesForm() {
     await act(async () => { await ref.current.open(); });
     await act(async () => { await new Promise(r => setTimeout(r, 80)); });
     return ref;
+}
+
+function clickFromSales() {
+    fireEvent.click(screen.getByTestId('from-sales'));
+    return mockPickerOpen.mock.calls[mockPickerOpen.mock.calls.length - 1][0];
 }
 
 function clickFromPurchase() {
@@ -273,11 +281,6 @@ describe('Sales form type 1: Import from Purchase', () => {
 describe('Sales form type 1: Import from Sales', () => {
     beforeEach(() => toast.mockReset());
 
-    function clickFromSales() {
-        fireEvent.click(screen.getByTestId('from-sales'));
-        return mockPickerOpen.mock.calls[mockPickerOpen.mock.calls.length - 1][0];
-    }
-
     test('From Sales opens the shared picker in sales mode', async () => {
         await openSalesForm();
         const opts = clickFromSales();
@@ -315,5 +318,21 @@ describe('Sales form type 1: Import from Sales', () => {
         clickFromSales();
         clickFromPurchase();
         expect(mockPickerOpen.mock.calls.map(c => c[0].docType)).toEqual(['sales', 'purchase']);
+    });
+});
+
+describe('Sales form type 1: "Allow duplicates" products on import', () => {
+    test('are added as a separate line from both From Sales and From Purchase', async () => {
+        await openSalesForm();
+        const fromSales = clickFromSales();
+        await act(async () => { await fromSales.onImport([{ product_id: 'pdup', quantity: 1, unit_price: 5 }, { product_id: 'p1', quantity: 1, unit_price: 10 }]); });
+        await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(2));
+
+        const fromPurchase = clickFromPurchase();
+        await act(async () => { await fromPurchase.onImport([{ product_id: 'pdup', quantity: 2, unit_price: 5 }, { product_id: 'p1', quantity: 3, unit_price: 10 }]); });
+        await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(3));
+        const lines = screen.getAllByRole('listitem').map(li => li.textContent);
+        expect(lines.filter(l => l.startsWith('pdup|'))).toEqual(['pdup|1|5|0|0', 'pdup|2|5|0|0']);
+        expect(lines.filter(l => l.startsWith('p1|'))).toEqual(['p1|4|10|0|0']);
     });
 });

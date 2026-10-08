@@ -1,5 +1,6 @@
 import React, { useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
+import SalesImportDropdown from "./SalesImportDropdown.js";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -179,6 +180,11 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
     openCustomerPending,
     openCustomers,
     openProducts,
+    openQuotations,
+    openDeliveryNotes,
+    openImportFromSales,
+    openImportFromPurchase,
+    openImportFromPO,
     openServices,
     openProductCreateForm,
     openServiceCreateForm,
@@ -654,6 +660,16 @@ export const SalesType5Body = forwardRef(function SalesType5Body({
                                 <Button variant="outline-secondary" className="btn btn-outline-secondary btn-sm" type="button" onClick={openServiceCreateForm}><i className="bi bi-tools me-1"></i>{t("New Service")}</Button>
                                 <Button variant="primary" className="btn btn-primary btn-sm" type="button" onClick={openProducts}><i className="bi bi-list me-1"></i>{t("Products")}</Button>
                                 <Button variant="light" className="btn btn-light btn-sm border" type="button" onClick={openServices}><i className="bi bi-list me-1"></i>{t("Services")}</Button>
+                                <SalesImportDropdown
+                                    testIdPrefix="t5-"
+                                    toggleClassName="btn-success btn-sm"
+                                    store={store}
+                                    openQuotations={openQuotations}
+                                    openDeliveryNotes={openDeliveryNotes}
+                                    openImportFromSales={openImportFromSales}
+                                    openImportFromPurchase={openImportFromPurchase}
+                                    openImportFromPO={openImportFromPO}
+                                />
                             </div>
 
                             <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>

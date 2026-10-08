@@ -71,7 +71,7 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from '../quotation/QuotationImportPicker.js';
-import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts } from '../quotation/quotationImport.js';
+import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts, fetchAllowDuplicateIds } from '../quotation/quotationImport.js';
 import ZatcaConnect from '../store/zatca_connect.js';
 
 function _dnFormatTimeAgo(isoString) {
@@ -2932,9 +2932,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
     //Import products from a purchase or another sale, using the two-step picker shared with the quotation form
     const DocumentImportPickerRef = useRef();
-    function handleImportFromDocument(products) {
+    async function handleImportFromDocument(products) {
         if (!products || products.length === 0) return;
-        selectedProducts = mergeImportedQuotationProducts(selectedProducts, products);
+        // Products with "Allow duplicates" set are added as separate lines instead of merged.
+        const allowDuplicateIds = await fetchAllowDuplicateIds(products.map(p => p.product_id), localStorage.getItem('store_id'));
+        selectedProducts = mergeImportedQuotationProducts(selectedProducts, products, { allowDuplicateIds });
         setSelectedProducts([...selectedProducts]);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
@@ -7035,7 +7037,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         </button>
                                                     )}
                                                     <Dropdown style={{ flexShrink: 0 }}>
-                                                        <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
+                                                        <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" data-testid="t3-import-dropdown-btn" title={t('Import')} style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                                                             <i className="bi bi-download" />
                                                         </Dropdown.Toggle>
                                                         <Dropdown.Menu style={{ zIndex: 9999 }}>
@@ -7044,6 +7046,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => openDeliveryNotes()}>
                                                                 <i className="bi bi-file-earmark-text" /> {t('From Delivery Notes')}
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={openImportFromSales} data-testid="t3-import-from-sales-btn">
+                                                                <i className="bi bi-receipt" /> {t('From Sales')}
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={openImportFromPurchase} data-testid="t3-import-from-purchase-btn">
+                                                                <i className="bi bi-bag" /> {t('From Purchase')}
                                                             </Dropdown.Item>
                                                             {store?.settings?.enable_purchase_order_module && (
                                                                 <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}>
@@ -9095,6 +9103,9 @@ const OrderCreate = forwardRef((props, ref) => {
                     />}
 
                     {formType === "type5" && <SalesType5Body
+                        openImportFromSales={openImportFromSales}
+                        openImportFromPurchase={openImportFromPurchase}
+                        openImportFromPO={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}
                         ref={type5BodyRef}
                         formData={formData} setFormData={setFormData}
                         errors={errors} setErrors={setErrors}
@@ -9211,6 +9222,11 @@ const OrderCreate = forwardRef((props, ref) => {
                     />}
 
                     {formType === "type4" && <SalesVanStoreBody
+                        openQuotations={openQuotations}
+                        openDeliveryNotes={openDeliveryNotes}
+                        openImportFromSales={openImportFromSales}
+                        openImportFromPurchase={openImportFromPurchase}
+                        openImportFromPO={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}
                         formData={formData} setFormData={setFormData}
                         errors={errors} setErrors={setErrors}
                         warnings={warnings}
@@ -9611,7 +9627,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Compact Green Import Dropdown */}
                                             <div style={{ height: '34px' }}>
                                                 <Dropdown>
-                                                    <Dropdown.Toggle variant="success" id="dropdown-import" className="px-3 rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px', backgroundColor: '#10b981' }}>
+                                                    <Dropdown.Toggle variant="success" id="dropdown-import" data-testid="t2-import-dropdown-btn" className="px-3 rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px', backgroundColor: '#10b981' }}>
                                                         <i className="bi bi-download text-[16px]"></i> {t('Import')}
                                                     </Dropdown.Toggle>
                                                     <Dropdown.Menu align="end" style={{ zIndex: 9999 }}>
@@ -9620,6 +9636,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         </Dropdown.Item>
                                                         <Dropdown.Item onClick={openDeliveryNotes}>
                                                             <i className="bi bi-file-earmark-text mr-1"></i> {t('From Delivery Notes')}
+                                                        </Dropdown.Item>
+                                                        <Dropdown.Item onClick={openImportFromSales} data-testid="t2-import-from-sales-btn">
+                                                            <i className="bi bi-receipt mr-1"></i> {t('From Sales')}
+                                                        </Dropdown.Item>
+                                                        <Dropdown.Item onClick={openImportFromPurchase} data-testid="t2-import-from-purchase-btn">
+                                                            <i className="bi bi-bag mr-1"></i> {t('From Purchase')}
                                                         </Dropdown.Item>
                                                         {store?.settings?.enable_purchase_order_module && (
                                                             <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}>

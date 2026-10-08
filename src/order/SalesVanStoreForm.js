@@ -12,6 +12,7 @@ import { DebounceInput } from "react-debounce-input";
 import { useTranslation } from "react-i18next";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
+import SalesImportDropdown from "./SalesImportDropdown.js";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -207,6 +208,7 @@ export function SalesVanStoreBody({
     getProductByBarCode,
     addProduct, removeProduct, isProductAdded,
     openCustomerCreateForm, openCustomerUpdateForm, openCustomers,
+    openQuotations, openDeliveryNotes, openImportFromSales, openImportFromPurchase, openImportFromPO,
     addNewPayment, removePayment, validatePaymentAmounts,
     discount, setDiscount,
     discountWithVAT, setDiscountWithVAT,
@@ -616,6 +618,18 @@ export function SalesVanStoreBody({
                                 inputProps={{ style: { height: 44, fontSize: 14, borderRadius: 8, border: `1px solid ${C.borderN}` } }}
                             />
                         </div>
+                        <SalesImportDropdown
+                            testIdPrefix="t4-"
+                            align="end"
+                            toggleStyle={{ height: 44, width: 44, background: "#198754", color: "#fff", border: "none", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                            toggleContent={<i className="bi bi-download" style={{ fontSize: 16 }} />}
+                            store={store}
+                            openQuotations={openQuotations}
+                            openDeliveryNotes={openDeliveryNotes}
+                            openImportFromSales={openImportFromSales}
+                            openImportFromPurchase={openImportFromPurchase}
+                            openImportFromPO={openImportFromPO}
+                        />
                     </div>
 
                     {/* ── PRODUCT CARDS ── */}

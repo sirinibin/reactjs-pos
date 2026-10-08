@@ -37,17 +37,19 @@ export function mapQuotationProductForImport(p, { noTax = false } = {}) {
 
 // Returns a new product list with the picked quotation products merged in.
 // A product already in the list gets its quantity increased instead of a duplicate line
-// (lines marked deleted are ignored when looking for it).
+// (lines marked deleted are ignored when looking for it), unless its id is in
+// opts.allowDuplicateIds ("Allow duplicates" set on the product): then it is added as a separate line.
 // opts.noTax: no-tax invoice, VAT-inclusive values equal the VAT-exclusive ones.
 // opts.vatExcluded(line): same as noTax, decided per line (e.g. services on a non-VAT form).
 // opts.prepend: new lines go to the top of the list instead of the bottom.
 export function mergeImportedQuotationProducts(existing, picked, opts = {}) {
   const result = (existing || []).map((p) => ({ ...p }));
   const added = [];
+  const allowDup = new Set(opts.allowDuplicateIds || []);
   (picked || []).forEach((p) => {
     if (!p || !p.product_id) return;
     const match = (s) => !s.deleted && s.product_id === p.product_id;
-    const prev = result.find(match) || added.find(match);
+    const prev = allowDup.has(p.product_id) ? null : (result.find(match) || added.find(match));
     if (prev) {
       prev.quantity = num(prev.quantity) + (num(p.quantity) || 1);
     } else {
@@ -115,4 +117,27 @@ export function purchaseLinesToQuotationLines(products, retailById = {}) {
       is_service: p.is_service || false,
     };
   });
+}
+
+// Returns the ids (of those given) whose product has "Allow duplicates" set, so an import
+// can add them as separate lines. A failed lookup returns what was found so far; those
+// products then fall back to merging into the existing line.
+export async function fetchAllowDuplicateIds(productIds, storeId, fetchFn = fetch) {
+  const ids = [...new Set((productIds || []).filter(Boolean))];
+  const found = [];
+  if (ids.length === 0) return found;
+  const CHUNK = 100;
+  const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunk = ids.slice(i, i + CHUNK);
+    try {
+      const res = await fetchFn(`/v1/product?search[ids]=${chunk.join(",")}&search[store_id]=${storeId}&limit=${chunk.length}&select=id,allow_duplicates`, { method: "GET", headers });
+      if (!res.ok) continue;
+      const data = await res.json();
+      (data?.result || []).forEach((prod) => {
+        if (prod && prod.id && prod.allow_duplicates) found.push(prod.id);
+      });
+    } catch (e) { }
+  }
+  return found;
 }
