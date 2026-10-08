@@ -20,8 +20,8 @@ const SALE = {
 };
 const RETAIL = { "p-belt": [15, 17.25] };
 
-async function setup(page, context, design, { poModule = true } = {}) {
-  const api = { calcBodies: [] };
+async function setup(page, context, design, { poModule = true, allowDup = [] } = {}) {
+  const api = { calcBodies: [], allowDupUrls: [] };
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 24.7, longitude: 46.7 });
   await page.route("**/v1/**", async (route) => {
@@ -36,6 +36,11 @@ async function setup(page, context, design, { poModule = true } = {}) {
     if (/\/v1\/quotation\?/.test(url)) return json({ status: true, result: [QUOTATION], total_count: 1 });
     if (/\/v1\/purchase\?/.test(url)) return json({ status: true, result: [PURCHASE], total_count: 1 });
     if (/\/v1\/order\?/.test(url)) return json({ status: true, result: [SALE], total_count: 1 });
+    if (/\/v1\/product\?/.test(url) && url.includes("select=id,allow_duplicates")) {
+      api.allowDupUrls.push(url);
+      const ids = url.match(/search\[ids\]=([^&]*)/)[1].split(",");
+      return json({ status: true, result: ids.map((id) => ({ id, allow_duplicates: allowDup.includes(id) })) });
+    }
     if (/\/v1\/product\?/.test(url) && url.includes("search[ids]=") && url.includes("retail_unit_price")) {
       const ids = url.match(/search\[ids\]=([^&]*)/)[1].split(",");
       return json({ status: true, result: ids.filter((id) => RETAIL[id]).map((id) => ({ id, product_stores: { [STORE_ID]: { retail_unit_price: RETAIL[id][0], retail_unit_price_with_vat: RETAIL[id][1] } } })) });
@@ -118,5 +123,19 @@ for (const design of ["type2", "type3"]) {
       await page.getByText("Choose another sale", { exact: false }).click();
       await expect(page.getByText("Import from Sales")).toBeVisible();
     });
+  });
+}
+
+for (const design of ["type1", "type2", "type3"]) {
+  test(`quotation form ${design}: "Allow duplicates" products are imported as a separate line`, async ({ page, context }) => {
+    const api = await setup(page, context, design, { allowDup: ["p-oil"] });
+    await importAll(page, "import-from-quotation-btn", "QT-SRC-001");
+    await expect.poll(() => lastCalcProducts(api).length).toBe(2);
+    await importAll(page, "import-from-quotation-btn", "QT-SRC-001");
+    await expect.poll(() => lastCalcProducts(api).length).toBe(3);
+    const lines = lastCalcProducts(api);
+    expect(lines.filter((p) => p.product_id === "p-oil").map((p) => p.quantity)).toEqual([2, 2]);
+    expect(lines.find((p) => p.product_id === "p-air").quantity).toBe(2);
+    expect(api.allowDupUrls[0]).toContain(`search[store_id]=${STORE_ID}`);
   });
 }

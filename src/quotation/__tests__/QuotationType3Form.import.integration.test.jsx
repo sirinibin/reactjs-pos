@@ -60,7 +60,7 @@ const SALE = {
 };
 const RETAIL = { 'p-oil': [10, 11.5], 'p-belt': [15, 17.25] };
 
-let calcBodies, listUrls, failPrices, storeSettings;
+let calcBodies, listUrls, failPrices, storeSettings, allowDupUrls, failAllowDup, allowDup;
 
 function jsonResponse(body, ok = true) {
   return Promise.resolve({ ok, status: ok ? 200 : 500, headers: { get: () => 'application/json' }, json: () => Promise.resolve(body) });
@@ -76,6 +76,12 @@ function mockFetch(url, options = {}) {
   if (/\/v1\/quotation\?/.test(u)) { listUrls.push(u); return jsonResponse({ status: true, result: [QUOTATION], total_count: 1 }); }
   if (/\/v1\/purchase\?/.test(u)) { listUrls.push(u); return jsonResponse({ status: true, result: [PURCHASE], total_count: 1 }); }
   if (/\/v1\/order\?/.test(u)) { listUrls.push(u); return jsonResponse({ status: true, result: [SALE], total_count: 1 }); }
+  if (u.startsWith('/v1/product?') && u.includes('select=id,allow_duplicates')) {
+    allowDupUrls.push(u);
+    if (failAllowDup) return jsonResponse({}, false);
+    const ids = u.match(/search\[ids\]=([^&]*)/)[1].split(',');
+    return jsonResponse({ status: true, result: ids.map(id => ({ id, allow_duplicates: allowDup.has(id) })) });
+  }
   if (u.startsWith('/v1/product?') && u.includes('search[ids]=')) {
     if (failPrices) return jsonResponse({}, false);
     const ids = u.match(/search\[ids\]=([^&]*)/)[1].split(',');
@@ -91,6 +97,9 @@ beforeEach(() => {
   calcBodies = [];
   listUrls = [];
   failPrices = false;
+  allowDupUrls = [];
+  failAllowDup = false;
+  allowDup = new Set();
   storeSettings = { enable_products: true, enable_purchase_order_module: true, quotation_create_form_design: 'type3' };
   global.__poPickerOpen = jest.fn();
   localStorage.setItem('store_id', STORE_ID);
@@ -209,5 +218,32 @@ describe('Quotation form type 3: Import dropdown (integration)', () => {
     await act(async () => { ref.current.open(); });
     await screen.findByText('Services');
     expect(screen.queryByTestId('import-dropdown-btn')).toBeNull();
+  });
+  test('"Allow duplicates" products get a separate line on top when imported again', async () => {
+    allowDup = new Set(['p-oil']);
+    await openForm();
+    await importFrom('import-from-quotation-btn', 'QT-SRC-001');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(2), { timeout: 3000 });
+    expect(allowDupUrls).toHaveLength(0);
+    await importFrom('import-from-purchase-btn', 'PI-SRC-001');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(4), { timeout: 3000 });
+    expect(allowDupUrls[0]).toContain('search[ids]=p-oil&');
+    expect(lastCalcProducts().map(p => [p.product_id, p.quantity])).toEqual([['p-oil', 6], ['p-belt', 2], ['p-oil', 2], ['p-air', 1]]);
+  });
+
+  test('adds quantities as before when the "Allow duplicates" check fails', async () => {
+    allowDup = new Set(['p-oil']);
+    failAllowDup = true;
+    await openForm();
+    await importFrom('import-from-quotation-btn', 'QT-SRC-001');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(2), { timeout: 3000 });
+    await importFrom('import-from-purchase-btn', 'PI-SRC-001');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(3), { timeout: 3000 });
+    expect(lastCalcProducts().find(p => p.product_id === 'p-oil').quantity).toBe(8);
+    expect(allowDupUrls).toHaveLength(1);
   });
 });

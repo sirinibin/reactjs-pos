@@ -61,7 +61,7 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from './QuotationImportPicker.js';
-import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines } from './quotationImport.js';
+import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines, fetchAllowDuplicateIds, productIdsToCheckForDuplicates } from './quotationImport.js';
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -1393,10 +1393,12 @@ const QuotationCreate = forwardRef((props, ref) => {
     fetchAllProductStocks([...selectedProducts]);
   }
 
-  function handleImportFromQuotation(products) {
+  async function handleImportFromQuotation(products) {
     if (!products || products.length === 0) return;
     const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
-    selectedProducts = mergeImportedQuotationProducts(selectedProducts, products, { noTax });
+    // Products marked "Allow duplicates" get their own line instead of adding to an existing one.
+    const allowDuplicateIds = await fetchAllowDuplicateIds(productIdsToCheckForDuplicates(selectedProducts, products), localStorage.getItem('store_id'));
+    selectedProducts = mergeImportedQuotationProducts(selectedProducts, products, { noTax, allowDuplicateIds });
     setSelectedProducts([...selectedProducts]);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {

@@ -71,6 +71,9 @@ const SOURCE_SALE = {
   ],
 };
 let salesListUrls;
+let allowDupUrls;
+let failAllowDup;
+let ALLOW_DUP;
 const RETAIL = { 'p-oil': [10, 11.5], 'p-belt': [15, 17.25] };
 
 let calcBodies;
@@ -100,6 +103,12 @@ function mockFetch(url, options = {}) {
   if (/\/v1\/purchase\?/.test(u)) {
     return jsonResponse({ status: true, result: [SOURCE_PURCHASE], total_count: 1 });
   }
+  if (u.startsWith('/v1/product?') && decodeURIComponent(u).includes('select=id,allow_duplicates')) {
+    allowDupUrls.push(decodeURIComponent(u));
+    if (failAllowDup) return Promise.resolve({ ok: false, status: 500, headers: { get: () => 'application/json' }, json: () => Promise.resolve({}) });
+    const ids = decodeURIComponent(u).match(/search\[ids\]=([^&]*)/)[1].split(',');
+    return jsonResponse({ status: true, result: ids.map(id => ({ id, allow_duplicates: ALLOW_DUP.has(id) })) });
+  }
   if (u.startsWith('/v1/product?') && decodeURIComponent(u).includes('search[ids]=')) {
     priceUrls.push(u);
     if (failPrices) return Promise.resolve({ ok: false, status: 500, headers: { get: () => 'application/json' }, json: () => Promise.resolve({}) });
@@ -119,6 +128,9 @@ beforeEach(() => {
   failPrices = false;
   quotationListUrls = [];
   salesListUrls = [];
+  allowDupUrls = [];
+  failAllowDup = false;
+  ALLOW_DUP = new Set();
   localStorage.setItem('store_id', STORE_ID);
   localStorage.setItem('access_token', 'test-token');
   localStorage.setItem('quotation_form_type', 'type1');
@@ -318,6 +330,36 @@ describe('Quotation form: Import > From Quotations (integration)', () => {
       expect(oil.quantity).toBe(7);
       expect(oil.unit_price).toBe(10);
     }, { timeout: 3000 });
+  });
+  test('"Allow duplicates" products get a separate line when imported again', async () => {
+    ALLOW_DUP = new Set(['p-oil']);
+    await openForm();
+    await importFromQuotationDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(3), { timeout: 3000 });
+    // Nothing was on the form yet, so no lookup was needed.
+    expect(allowDupUrls).toHaveLength(0);
+    await importFromQuotationDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(4), { timeout: 3000 });
+    expect(allowDupUrls[0]).toContain(`search[store_id]=${STORE_ID}`);
+    const products = lastCalcProducts();
+    expect(products.filter(p => p.product_id === 'p-oil').map(p => p.quantity)).toEqual([2, 2]);
+    expect(products.find(p => p.product_id === 'p-air').quantity).toBe(2);
+  });
+
+  test('adds quantities as before when the "Allow duplicates" check fails', async () => {
+    ALLOW_DUP = new Set(['p-oil']);
+    failAllowDup = true;
+    await openForm();
+    await importFromQuotationDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(3), { timeout: 3000 });
+    await importFromQuotationDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts().find(p => p.product_id === 'p-oil').quantity).toBe(4), { timeout: 3000 });
+    expect(lastCalcProducts()).toHaveLength(3);
+    expect(allowDupUrls).toHaveLength(1);
   });
 });
 
