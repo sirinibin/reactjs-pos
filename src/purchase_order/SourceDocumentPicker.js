@@ -152,8 +152,8 @@ const SourceDocumentPicker = forwardRef((props, ref) => {
             `select=id,code,date,net_total,vendor_name,vendor_id,customer_name,customer_id,products`,
             `limit=${PAGE_SIZE}`,
             `page=${pageNum}`,
-            `sort=created_at`,
-            `sort_by=desc`,
+            // The API reads only "sort"; a leading "-" means newest first.
+            `sort=-created_at`,
         ];
         if (code) parts.push(`search[code]=${encodeURIComponent(code)}`);
         if (parties.length > 0) {
