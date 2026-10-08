@@ -45,6 +45,9 @@ const customPartyFilter = (option, props) => {
     return qWords.every((word) => searchable.includes(word));
 };
 
+// Above every modal the picker can be opened from (see .quotation-import-picker-modal in App.css).
+export const PARTY_SETTINGS_Z_INDEX = 2100;
+
 const SourceDocumentPicker = forwardRef((props, ref) => {
     const { t } = useTranslation("common");
     const [show, setShow] = useState(false);
@@ -302,6 +305,7 @@ const SourceDocumentPicker = forwardRef((props, ref) => {
                                                     </div>
                                                 ))}
                                                 <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                                                    data-testid="party-search-settings-btn"
                                                     onClick={e => { e.stopPropagation(); setShowPartySearchSettings(true); }}>
                                                     <i className="bi bi-gear-fill" style={{ fontSize: '13px', color: '#6b7280' }} />
                                                 </div>
@@ -429,6 +433,10 @@ const SourceDocumentPicker = forwardRef((props, ref) => {
             show={showPartySearchSettings}
             onHide={() => setShowPartySearchSettings(false)}
             title={t('Party Search Settings')}
+            // Opens from inside this picker, which itself sits above the sales / quotation
+            // forms (up to z-index 2000), so it must stack above all of them.
+            className="party-search-settings-modal"
+            zIndex={PARTY_SETTINGS_Z_INDEX}
             columns={partySearchColumns}
             onToggleColumn={handleTogglePartyCol}
             onDragEnd={handlePartyColDragEnd}
