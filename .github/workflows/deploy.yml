@@ -4,51 +4,34 @@ on:
   push:
     branches:
       - test
+  workflow_dispatch:
+
+# One deploy at a time per environment; a newer push waits instead of racing.
+concurrency:
+  group: deploy-frontend-test
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # ESLint, Jest, build (no warnings), mocked-API browser e2e and full-stack
+  # browser e2e against the test API branch. Nothing is deployed unless
+  # every one of them passes.
+  tests:
+    uses: ./.github/workflows/tests.yml
+    with:
+      api_url: https://startpos-api-test.gulfunionozone.com
+      backend_ref: test
+
+  deploy:
+    needs: tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      # The exact build the tests ran against.
+      - name: Download tested build
+        uses: actions/download-artifact@v4
         with:
-          node-version: 17.9.0
-
-      - name: Install dependencies
-        run: npm install
-
-      # ── ESLint — errors only (matches deploy.sh check_eslint) ─────────────────
-      - name: ESLint check
-        run: |
-          npx eslint src --ext .js,.jsx --quiet \
-            --ignore-pattern 'src/**/__tests__/**' \
-            --ignore-pattern 'src/**/*.test.js' \
-            --ignore-pattern 'src/**/*.test.jsx'
-
-      # ── Tests (matches deploy.sh run_tests) ───────────────────────────────────
-      - name: Run tests
-        run: |
-          NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
-            --watchAll=false --runInBand \
-            --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|workshopI18n|PdfPriceExtraction"
-
-      # ── Build — abort on "Compiled with warnings" (matches deploy.sh gate) ────
-      - name: Build
-        run: |
-          NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
-          DANGEROUSLY_DISABLE_HOST_CHECK=true \
-          REACT_APP_API_URL=https://startpos-api-test.gulfunionozone.com \
-          GENERATE_SOURCEMAP=false \
-          DISABLE_ESLINT_PLUGIN=true \
-          npm run build 2>&1 | tee /tmp/build.log
-          if grep -qi "compiled with warnings" /tmp/build.log; then
-            echo "Build produced warnings — aborting (matches deploy.sh gate)."
-            exit 1
-          fi
+          name: frontend-build
+          path: build/
 
       # ── Deploy: rsync to staging dir, then atomic swap (near-zero downtime) ───
       - name: Deploy to AWS (atomic swap)

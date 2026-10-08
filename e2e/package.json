@@ -3,7 +3,8 @@
   "private": true,
   "description": "Browser end-to-end tests for the StartPOS frontend. Kept separate from the app's package.json so the app's install and CI (Node 17) are unaffected.",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:fullstack": "playwright test -c playwright.fullstack.config.js"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1"

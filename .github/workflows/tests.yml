@@ -1,0 +1,226 @@
+name: Tests
+
+# Every test suite for the frontend. deploy.yml and deploy_production.yml call
+# this workflow and only deploy when all of its jobs pass; the build the tests
+# ran against is the one that gets deployed. It can also be run by hand from
+# the Actions tab against any branch.
+on:
+  workflow_call:
+    inputs:
+      api_url:
+        description: "REACT_APP_API_URL baked into the build"
+        required: true
+        type: string
+      backend_ref:
+        description: "sirinibin/pos-rest branch the full-stack e2e suite runs against"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "REACT_APP_API_URL baked into the build"
+        required: true
+        default: https://startpos-api-test.gulfunionozone.com
+        type: string
+      backend_ref:
+        description: "sirinibin/pos-rest branch the full-stack e2e suite runs against"
+        required: true
+        default: master
+        type: string
+
+jobs:
+  # ── ESLint + Jest (unit, component, functional and integration tests) ────
+  lint-and-unit:
+    name: Lint, unit and functional tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 17.9.0
+
+      - name: Install dependencies
+        run: npm install
+
+      # Errors only (matches deploy.sh check_eslint).
+      - name: ESLint
+        run: |
+          npx eslint src --ext .js,.jsx --quiet \
+            --ignore-pattern 'src/**/__tests__/**' \
+            --ignore-pattern 'src/**/*.test.js' \
+            --ignore-pattern 'src/**/*.test.jsx'
+
+      # Every suite except the ones that are currently broken or need files
+      # outside this repo (e.g. PdfPriceExtraction reads the backend's source).
+      - name: Jest
+        run: |
+          NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
+            --watchAll=false --runInBand \
+            --testPathIgnorePatterns="RFQReceived.smoke|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|workshopI18n|PdfPriceExtraction"
+
+  # ── Production build; abort on "Compiled with warnings" ──────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 17.9.0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: |
+          NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
+          DANGEROUSLY_DISABLE_HOST_CHECK=true \
+          REACT_APP_API_URL=${{ inputs.api_url }} \
+          GENERATE_SOURCEMAP=false \
+          DISABLE_ESLINT_PLUGIN=true \
+          npm run build 2>&1 | tee /tmp/build.log
+          if grep -qi "compiled with warnings" /tmp/build.log; then
+            echo "Build produced warnings — aborting (matches deploy.sh gate)."
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
+          retention-days: 7
+
+  # ── Browser e2e with a mocked API (e2e/tests) ─────────────────────────────
+  e2e-mocked:
+    name: UI e2e tests (mocked API)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run mocked-API e2e tests
+        working-directory: e2e
+        env:
+          CI: "true"
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mocked
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 14
+
+  # ── Full-stack e2e: this build served by the real API on MongoDB + Redis ──
+  e2e-fullstack:
+    name: UI e2e tests (real API, MongoDB, Redis)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      E2E_EMAIL: e2e-admin@startpos.test
+      E2E_PASSWORD: E2e-Passw0rd!
+      MONGO_DB: pos_e2e
+      REDIS_DSN: localhost:6379
+    services:
+      mongo:
+        image: mongo:7
+        ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the API
+        uses: actions/checkout@v4
+        with:
+          repository: sirinibin/pos-rest
+          ref: ${{ inputs.backend_ref }}
+          path: backend
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Build API and seed e2e user
+        working-directory: backend
+        run: |
+          go mod tidy
+          go build -o pos-rest .
+          go run ./e2e/seed
+
+      - name: Start API (serving this build)
+        working-directory: backend
+        run: |
+          API_PORT=2000 STATIC_DIR="$GITHUB_WORKSPACE/build" nohup ./pos-rest > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://localhost:2000/v1/me && exit 0
+            sleep 1
+          done
+          echo "API did not start:"; cat server.log; exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run full-stack e2e tests
+        working-directory: e2e
+        env:
+          CI: "true"
+        run: npx playwright test -c playwright.fullstack.config.js
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-fullstack
+          path: |
+            e2e/playwright-report-fullstack
+            e2e/test-results-fullstack
+          retention-days: 14
+
+      - name: API log
+        if: failure()
+        run: tail -n 300 backend/server.log

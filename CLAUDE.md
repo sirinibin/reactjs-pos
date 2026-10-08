@@ -18,6 +18,12 @@ deploy.sh enforces three gates before every deploy — all three must pass:
 3. **No build warnings** — CRA must output "Compiled successfully." not "Compiled with warnings."
    Fix all ESLint / webpack warnings before deploying.
 
+## GitHub Actions
+`deploy.yml` (test) / `deploy_production.yml` call `tests.yml` and deploy only if all of it passes:
+ESLint + Jest, build (no warnings), Playwright with a mocked API (`e2e/tests`) and Playwright
+full-stack against the real pos-rest API on MongoDB + Redis (`e2e/fullstack`, see `e2e/README.md`).
+The build the tests ran against is the one deployed.
+
 ## Usage
 ```
 frontend/deploy.sh both        # test + production (default)
