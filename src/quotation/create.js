@@ -64,6 +64,8 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import QuotationImportPicker from './QuotationImportPicker.js';
+import { mergeImportedQuotationProducts } from './quotationImport.js';
 import Purchases from '../utils/purchases.js';
 
 function getProductLabel(settings) {
@@ -1732,6 +1734,33 @@ const QuotationCreate = forwardRef((props, ref) => {
     setImportPickerSelected({});
   }
 
+  function handleImportFromQuotation(products) {
+    if (!products || products.length === 0) return;
+    const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
+    selectedProducts = mergeImportedQuotationProducts(selectedProducts, products, { noTax });
+    setSelectedProducts([...selectedProducts]);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      for (let i = 0; i < selectedProducts.length; i++) {
+        CalCulateLineTotals(i);
+        checkWarnings(i);
+        checkErrors(i);
+      }
+      reCalculate();
+    }, 100);
+    fetchAllProductStocks([...selectedProducts]);
+    if (props.showToastMessage) props.showToastMessage(`Imported ${products.length} product${products.length !== 1 ? "s" : ""}`, "success");
+  }
+
+  function openImportFromQuotation() {
+    QuotationImportPickerRef.current?.open({
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      defaultCustomers: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
+      excludeId: formData.id,
+    });
+  }
+
   function addProduct(product) {
     if (!product.id && product.product_id) {
       product.id = product.product_id
@@ -2161,6 +2190,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
+  const QuotationImportPickerRef = useRef();
   const PurchasesRef = useRef();
   const SalesImportRef = useRef();
   function openProductCreateForm() {
@@ -3759,6 +3789,7 @@ async function checkWarning(i) {
         modalClass="above-import-picker"
       />
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+      <QuotationImportPicker ref={QuotationImportPickerRef} showToastMessage={props.showToastMessage} />
       <Purchases ref={PurchasesRef} onSelectPurchase={handleImportFromPurchases} />
 
       {/* Product picker modal for Import from Sales / Import from Purchases */}
@@ -4746,6 +4777,7 @@ async function checkWarning(i) {
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
                     <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
                     <Dropdown.Item onClick={() => PurchasesRef?.current?.open(true)}><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
+                    <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text me-1"></i>{t('From Quotations')}</Dropdown.Item>
                     {store?.settings?.enable_purchase_order_module && (
                       <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From P.O.')}</Dropdown.Item>
                     )}
