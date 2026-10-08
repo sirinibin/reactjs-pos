@@ -73,6 +73,12 @@ import EmployeeIndex from './employee/index.js';
 import SalaryIndex from './employee/salaryIndex.js';
 import VehicleIndex from './vehicle/index.js';
 import RepairJobIndex from './repair_job/index.js';
+import RFQReceivedIndex from './rfq_received/index.js';
+import RFQSuppliersIndex from './rfq_suppliers/index.js';
+import ProcurementEmailsIndex from './procurement_emails/index.js';
+import ProcurementWhatsAppIndex from './procurement_whatsapp/index.js';
+// eslint-disable-next-line no-unused-vars
+import PurchaseBillImagesIndex from './purchase_bill_images/index.js';
 
 // Checks RBAC READ permission for every route change.
 // Only runs when the store has enable_rbac_module = true.
@@ -95,16 +101,19 @@ function RouteGuard() {
         if (!permsRaw) { setBlocked(false); return; }
 
         const perms = (() => { try { return JSON.parse(permsRaw); } catch (_) { return []; } })();
+        if (perms.length === 0) { setBlocked(false); return; }
+
         const permMap = {};
         perms.forEach(p => { permMap[p.resource] = p; });
 
         const menuItem = DEFAULT_MENU.find(m => pathname === m.path || pathname.startsWith(m.path + "/"));
         if (!menuItem || !menuItem.resource) { setBlocked(false); return; }
 
-        const rbacGrantsRead = !!permMap[menuItem.resource]?.read;
-
-        if (menuItem.adminOnly && !rbacGrantsRead) { setBlocked(true); return; }
-        if (!rbacGrantsRead) { setBlocked(true); return; }
+        const perm = permMap[menuItem.resource];
+        // Only block when this resource is explicitly in the user's permission set and read is denied.
+        // If the resource has no entry in the map, allow through (no explicit restriction).
+        if (perm && !perm.read) { setBlocked(true); return; }
+        if (menuItem.adminOnly && (!perm || !perm.read)) { setBlocked(true); return; }
 
         setBlocked(false);
     }, [pathname]);
@@ -515,6 +524,66 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseRequestIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/rfq-received">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RFQReceivedIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/rfq-suppliers">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <RFQSuppliersIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/procurement-emails">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProcurementEmailsIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/procurement-whatsapp">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProcurementWhatsAppIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/purchase-bill-images">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseBillImagesIndex />
                         </main>
                         <Footer />
                     </div>

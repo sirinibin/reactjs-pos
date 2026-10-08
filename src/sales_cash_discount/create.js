@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -38,6 +39,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
     let [order, setOrder] = useState({});
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -140,14 +142,14 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         }
 
         if (formData.amount <= 0) {
-            errors["amount"] = "Amount should be > 0:";
+            errors["amount"] = t("amount_greater_than_zero");
             setErrors({ ...errors });
             return;
         }
 
 
         if (formData.amount >= order.total_payment_received) {
-            errors["amount"] = "Amount should be less than total paid amount:" + order.total_payment_received;
+            errors["amount"] = t("amount_should_be_less_than_total_paid") + order.total_payment_received;
             setErrors({ ...errors });
             return;
         }
@@ -191,7 +193,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Product Category Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("cash_discount_created_successfully"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -205,10 +207,9 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating SalesCashDiscount!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("error_creating_sales_cash_discount"), "danger");
             });
     }
-
 
 
 
@@ -218,7 +219,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Cash Discount for sales order#" + formData.order_code : "Add Cash Discount for sales order #" + formData.order_code}
+                        {formData.id ? t('update_cash_discount_for_sales_order') + formData.order_code : t('add_cash_discount_for_sales_order') + formData.order_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -227,7 +228,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t('view_detail')}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -242,13 +243,13 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t('update') : !isProcessing ? t('create') : ""}
                         </Button>
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t('close')}
                         ></button>
                     </div>
                 </Modal.Header>
@@ -256,7 +257,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-6">
-                            <label className="form-label">Amount*</label>
+                            <label className="form-label">{t('amount')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -266,14 +267,14 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                         console.log("Inside onchange vat discount");
                                         if (!e.target.value) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Invalid amount";
+                                            errors["amount"] = t("invalid_amount");
                                             setErrors({ ...errors });
                                             return;
                                         }
 
                                         if (parseFloat(e.target.value) <= 0) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Amount should be > 0";
+                                            errors["amount"] = t("amount_greater_than_zero");
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -284,7 +285,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
                                         console.log("order.total_payment_received:", order.total_payment_received);
                                         if (formData.amount >= order.total_payment_received) {
-                                            errors["amount"] = "Cash discount amount should be less than total paid amount:" + order.total_payment_received;
+                                            errors["amount"] = t("cash_discount_amount_should_be_less") + order.total_payment_received;
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -294,7 +295,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Amount"
+                                    placeholder={t('amount')}
                                 />
                             </div>
                             {errors.amount && (
@@ -305,12 +306,12 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                             {formData.amount && !errors.amount && (
                                 <div style={{ color: "green" }}>
                                     <i className="bi bi-check-lg"> </i>
-                                    Looks good!
+                                    {t('looks_good')}
                                 </div>
                             )}
                         </div>
                         <div className="col-md-6">
-                            <label className="form-label">Date*</label>
+                            <label className="form-label">{t('date')}*</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
@@ -344,7 +345,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
                         <div className="row">
                             <div className="col-md-3">
-                                <label className="form-label">Payment method*</label>
+                                <label className="form-label">{t('payment_method')}*</label>
 
                                 <div className="input-group mb-3">
                                     <select
@@ -352,7 +353,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                         onChange={(e) => {
                                             console.log("Inside onchange payment method");
                                             if (!e.target.value) {
-                                                errors["method"] = "Invalid Payment Method";
+                                                errors["method"] = t("invalid_payment_method");
                                                 setErrors({ ...errors });
                                                 formData.method = "";
                                                 setFormData({ ...formData });
@@ -368,14 +369,14 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                         }}
                                         className="form-control"
                                     >
-                                        <option value="">Select</option>
-                                        <option value="cash">Cash</option>
-                                        <option value="debit_card">Debit Card</option>
-                                        <option value="credit_card">Credit Card</option>
-                                        <option value="bank_card">Bank Card</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="bank_cheque">Bank Cheque</option>
-                                        <option value="customer_account">Customer Account</option>
+                                        <option value="">{t('select')}</option>
+                                        <option value="cash">{t('cash')}</option>
+                                        <option value="debit_card">{t('debit_card')}</option>
+                                        <option value="credit_card">{t('credit_card')}</option>
+                                        <option value="bank_card">{t('bank_card')}</option>
+                                        <option value="bank_transfer">{t('bank_transfer')}</option>
+                                        <option value="bank_cheque">{t('bank_cheque')}</option>
+                                        <option value="customer_account">{t('customer_account')}</option>
                                     </select>
 
                                 </div>
@@ -387,7 +388,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                 {formData.method && !errors.method && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('looks_good')}
                                     </div>
                                 )}
                             </div>
@@ -396,7 +397,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('close')}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -406,9 +407,9 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
+                                    /> + " " + t('processing')
 
-                                    : formData.id ? "Update" : "Create"
+                                    : formData.id ? t('update') : t('create')
                                 }
                             </Button>
                         </Modal.Footer>

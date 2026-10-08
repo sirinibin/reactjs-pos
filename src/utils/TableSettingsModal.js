@@ -15,11 +15,12 @@ function TableSettingsModal({
     onCheckAll,
     onUncheckAll,
     className,
+    zIndex,
 }) {
     const { t } = useTranslation('common');
 
     return (
-        <Modal show={show} onHide={onHide} centered size="lg" className={className}>
+        <Modal show={show} onHide={onHide} centered size="lg" className={className} style={zIndex ? { zIndex } : undefined}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i

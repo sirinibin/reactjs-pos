@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import DividentCreate from "./create.js";
 import DividentView from "./view.js";
 
@@ -17,7 +18,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 
 function DividentIndex(props) {
 
-
+    const { t } = useTranslation('common');
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
@@ -370,7 +371,7 @@ function DividentIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            {t('Total')}: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDividents}
                                     displayType={"text"}
@@ -388,7 +389,7 @@ function DividentIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Drawings</h1>
+                        <h1 className="h3">{t('Drawings')}</h1>
                     </div>
 
 
@@ -400,7 +401,7 @@ function DividentIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -420,7 +421,7 @@ function DividentIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Divident to display</p>
+                                            <p className="text-start">{t('No Divident to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -445,7 +446,7 @@ function DividentIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -456,7 +457,7 @@ function DividentIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -516,7 +517,7 @@ function DividentIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        ID
+                                                        {t('ID')}
                                                         {sortField === "code" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -536,7 +537,7 @@ function DividentIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('Date')}
                                                         {sortField === "date" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -556,7 +557,7 @@ function DividentIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('Amount')}
                                                         {sortField === "amount" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -575,7 +576,7 @@ function DividentIndex(props) {
                                                             sort("payment_method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t('Payment Method')}
                                                         {sortField === "payment_method" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -594,7 +595,7 @@ function DividentIndex(props) {
                                                             sort("description");
                                                         }}
                                                     >
-                                                        Description
+                                                        {t('Description')}
                                                         {sortField === "description" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -613,7 +614,7 @@ function DividentIndex(props) {
                                                             sort("withdrawn_by_user_name");
                                                         }}
                                                     >
-                                                        WithdrawnByUser
+                                                        {t('WithdrawnByUser')}
                                                         {sortField === "withdrawn_by_user_name" &&
                                                             sortDivident === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
@@ -634,7 +635,7 @@ function DividentIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('Created By')}
                                                         {sortField === "created_by_name" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -653,7 +654,7 @@ function DividentIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('Created At')}
                                                         {sortField === "created_at" && sortDivident === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -662,7 +663,7 @@ function DividentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -702,13 +703,13 @@ function DividentIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From')}:{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -724,7 +725,7 @@ function DividentIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To')}:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -785,7 +786,7 @@ function DividentIndex(props) {
                                                             );
                                                         }}
                                                         options={withdrawnbyuserOptions}
-                                                        placeholder="Select withdrawnbyusers"
+                                                        placeholder={t('Select withdrawnbyusers')}
                                                         selected={selectedWithdrawnByUsers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -806,7 +807,7 @@ function DividentIndex(props) {
                                                             );
                                                         }}
                                                         options={dividentOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('Select Users')}
                                                         selected={selectedCreatedByDividents}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -841,13 +842,13 @@ function DividentIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('From')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -863,7 +864,7 @@ function DividentIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('To')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

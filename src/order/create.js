@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
+import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { useDraft } from '../utils/useDraft';
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
@@ -72,6 +73,7 @@ import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from '../quotation/QuotationImportPicker.js';
 import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts, fetchAllowDuplicateIds } from '../quotation/quotationImport.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -140,6 +142,7 @@ const OrderCreate = forwardRef((props, ref) => {
             isUpdateForm = true;
             setIsUpdateForm(true);
             setIsZatcaLocked(false);
+            setOrderZatcaReported(false);
             errors = {};
             setErrors({ ...errors });
             warnings = {};
@@ -174,8 +177,14 @@ const OrderCreate = forwardRef((props, ref) => {
             reCalculate();
             setShow(true);
         },
-        async open(id) {
+        async open(id, operationType) {
             draftFlashShownRef.current = false;
+            setSelectedIds([]);
+            if (operationType === "product_selection") {
+                setEnableProductSelection(true);
+            } else {
+                setEnableProductSelection(false);
+            }
             if (id) {
                 isUpdateForm = true;
             } else {
@@ -190,6 +199,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setIsResumingDraft(false);
             setIsUpdateForm(isUpdateForm)
             setIsZatcaLocked(false);
+            setOrderZatcaReported(false);
             //ResetFormData();
             errors = {};
             setErrors({ ...errors });
@@ -274,6 +284,12 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             ];
 
+            // Clear quotation links so they don't carry over from the previous sale
+            formData.quotation_id = "";
+            formData.quotation_code = "";
+            formData.quotation_ids = [];
+            formData.quotation_codes = [];
+
             ResetForm();
 
             pendingOrderIdRef.current = id || null;
@@ -283,6 +299,54 @@ const OrderCreate = forwardRef((props, ref) => {
 
             setFormData({ ...formData });
             reCalculate();
+
+            // Apply Quotation→Sales switch prefill if present (new forms only)
+            if (!id) {
+                const switchData = takeSwitchPayload(QUOTATION_TO_SALES_KEY);
+                if (switchData) {
+                    setTimeout(() => {
+                        try {
+                            const fields = switchFields(switchData);
+                            Object.assign(formData, fields);
+                            if (fields.discount !== undefined) { discount = fields.discount; setDiscount(discount); }
+                            if (fields.discount_with_vat !== undefined) { discountWithVAT = fields.discount_with_vat; setDiscountWithVAT(discountWithVAT); }
+                            if (fields.discount_percent !== undefined) { discountPercent = fields.discount_percent; setDiscountPercent(discountPercent); }
+                            if (fields.discount_percent_with_vat !== undefined) { discountPercentWithVAT = fields.discount_percent_with_vat; setDiscountPercentWithVAT(discountPercentWithVAT); }
+                            if (fields.shipping_handling_fees !== undefined) { shipping = fields.shipping_handling_fees; setShipping(shipping); }
+                            if (fields.cash_discount !== undefined) { cashDiscount = fields.cash_discount; setCashDiscount(cashDiscount); }
+                            if (fields.commission !== undefined) { commission = fields.commission; setCommission(commission); }
+                            if (fields.rounding_amount !== undefined) { roundingAmount = fields.rounding_amount; setRoundingAmount(roundingAmount); }
+                            if (switchData.products?.length) {
+                                selectedProducts = [...switchData.products];
+                                setSelectedProducts([...switchData.products]);
+                                formData.products = [...switchData.products];
+                            }
+                            if (switchData.customer_id) {
+                                formData.customer_id = switchData.customer_id;
+                                formData.customer_name = switchData.customer_name || '';
+                                const custSelect = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                                const authHeaders = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+                                const storeId = localStorage.getItem('store_id') || '';
+                                fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${custSelect}`, { headers: authHeaders })
+                                    .then(cr => cr.json())
+                                    .then(data => {
+                                        if (data?.result) {
+                                            selectedCustomers = [data.result];
+                                            setSelectedCustomers([data.result]);
+                                        }
+                                    })
+                                    .catch(() => {});
+                            } else if (switchData.customers?.length) {
+                                selectedCustomers = [...switchData.customers];
+                                setSelectedCustomers([...switchData.customers]);
+                            }
+                            setFormData({ ...formData });
+                            reCalculate();
+                        } catch (_) {}
+                    }, 100);
+                }
+            }
+
             setShow(true);
         },
         async openAsType5(id) {
@@ -366,6 +430,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setIsUpdateForm(isUpdateForm)
         setIsZatcaLocked(false);
+        setOrderZatcaReported(false);
         //ResetFormData();
         errors = {};
         setErrors({ ...errors });
@@ -376,6 +441,12 @@ const OrderCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         formData.products = [];
+
+        // Clear quotation links so they don't carry over from the previous sale
+        formData.quotation_id = "";
+        formData.quotation_code = "";
+        formData.quotation_ids = [];
+        formData.quotation_codes = [];
 
         selectedCustomers = [];
         setSelectedCustomers([]);
@@ -470,8 +541,10 @@ const OrderCreate = forwardRef((props, ref) => {
     // eslint-disable-next-line no-unused-vars
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
+    const [orderZatcaReported, setOrderZatcaReported] = useState(false);
     const prevIsUpdateFormRef = useRef(false);
     const pendingOrderIdRef = useRef(null);
+
     useEffect(() => {
         if (prevIsUpdateFormRef.current === true && isUpdateForm === false) {
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -512,6 +585,13 @@ const OrderCreate = forwardRef((props, ref) => {
     let [oldProducts, setOldProducts] = useState([]);
 
     let [store, setStore] = useState({});
+
+    // Re-evaluate ZATCA edit lock when store settings finish loading (store may load after the order).
+    useEffect(() => {
+        if (!orderZatcaReported) return;
+        const shouldLock = store.settings?.disable_sales_edit_once_reported_to_zatca !== false;
+        setIsZatcaLocked(shouldLock);
+    }, [store.settings?.disable_sales_edit_once_reported_to_zatca, orderZatcaReported]); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function getStore(id) {
         try {
@@ -668,7 +748,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
                 if (data.result?.zatca?.reporting_passed) {
-                    setIsZatcaLocked(true);
+                    setOrderZatcaReported(true);
+                    if (store.settings?.disable_sales_edit_once_reported_to_zatca !== false) {
+                        setIsZatcaLocked(true);
+                    }
                 }
 
                 checkWarnings();
@@ -1406,6 +1489,8 @@ const OrderCreate = forwardRef((props, ref) => {
     //Delivered By Signature Auto Suggestion
 
     const [show, setShow] = useState(false);
+    const [enableProductSelection, setEnableProductSelection] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
     const fromJobCardRef = useRef(false);
     const forcedFormTypeRef = useRef(null);
     const repairJobIdsRef = useRef(null);
@@ -1415,9 +1500,41 @@ const OrderCreate = forwardRef((props, ref) => {
         selectedProducts = [];
         setSelectedProducts([]);
         draftFlashShownRef.current = false;
+        setEnableProductSelection(false);
+        setSelectedIds([]);
         setShow(false);
         props.onClose?.();
     }
+
+    function handleSwitchToQuotation() {
+        if (isUpdateForm) return;
+        saveSwitchPayload(SALES_TO_QUOTATION_KEY, buildSwitchPayload({
+            formData,
+            products: selectedProducts,
+            customers: selectedCustomers,
+            amounts: { discount, discount_with_vat: discountWithVAT, discount_percent: discountPercent, discount_percent_with_vat: discountPercentWithVAT, shipping_handling_fees: shipping, cash_discount: cashDiscount, commission, rounding_amount: roundingAmount },
+        }));
+        setShow(false);
+        props.onSwitchToQuotation?.();
+    }
+
+    const handleProductSelectionSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(selectedProducts.map(p => p.product_id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+    const handleProductSelectionToggle = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+    const handleSendSelectedFromSale = () => {
+        const chosen = selectedProducts.filter(p => selectedIds.includes(p.product_id));
+        if (props.onSelectProducts) {
+            props.onSelectProducts(chosen, selectedCustomers, "sale", formData.id, formData.code, formData.remarks, formData);
+        }
+        handleClose();
+    };
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");
@@ -2134,6 +2251,12 @@ const OrderCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
+        if (store?.settings?.enable_custom_sales_invoice_id && isUpdateForm && !formData.code?.trim()) {
+            errors["code"] = t("Invoice ID is required");
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
         if (haveErrors) {
             //console.log("Errors: ", errors);
             return;
@@ -2323,10 +2446,11 @@ const OrderCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setIsSubmitting(false);
-                //console.log("Inside catch");
-                //console.log(error);
+                if (error?.zatca_reconnect) {
+                    zatcaConnectRef.current?.open(store.id, true);
+                    return;
+                }
                 setErrors({ ...error });
-                //console.error("There was an error!", error);
                 if (props.showToastMessage) {
                     if (props.showToastMessage) props.showToastMessage("Failed to process sale!", "danger");
                 }
@@ -2356,11 +2480,34 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function removeWarningAndError(i) {
-        delete warnings["quantity_" + i];
-        delete errors["quantity_" + i];
-        delete errors["purchase_unit_price_" + i];
-        delete warnings["purchase_unit_price_" + i];
-        delete warnings["unit_price_" + i];
+        const totalBefore = selectedProducts.length + 1;
+        const errorKeys = ["quantity_", "unit_price_", "purchase_unit_price_", "name_", "part_number_", "product_"];
+        const warningKeys = ["quantity_", "unit_price_", "purchase_unit_price_"];
+
+        // Remove the deleted row's keys and shift subsequent rows down
+        errorKeys.forEach(prefix => {
+            delete errors[prefix + i];
+            for (let j = i + 1; j < totalBefore; j++) {
+                if (errors[prefix + j] !== undefined) {
+                    errors[prefix + (j - 1)] = errors[prefix + j];
+                } else {
+                    delete errors[prefix + (j - 1)];
+                }
+            }
+            delete errors[prefix + (totalBefore - 1)];
+        });
+        warningKeys.forEach(prefix => {
+            delete warnings[prefix + i];
+            for (let j = i + 1; j < totalBefore; j++) {
+                if (warnings[prefix + j] !== undefined) {
+                    warnings[prefix + (j - 1)] = warnings[prefix + j];
+                } else {
+                    delete warnings[prefix + (j - 1)];
+                }
+            }
+            delete warnings[prefix + (totalBefore - 1)];
+        });
+
         setErrors({ ...errors });
         setWarnings({ ...warnings });
     }
@@ -2368,7 +2515,7 @@ const OrderCreate = forwardRef((props, ref) => {
     async function checkErrors(index) {
         if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
         priceValidationTimer.current = setTimeout(() => {
-            if (index) {
+            if (index !== undefined && index !== null) {
                 checkError(index);
             } else {
                 for (let i = 0; i < selectedProducts.length; i++) {
@@ -2482,6 +2629,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         const newWarnings = { ...warnings };
         snap.forEach((sp, i) => {
+            if (sp.is_service) return;
             const product = productMap[sp.product_id];
             if (!product || !product.product_stores || !product.product_stores[storeId]) return;
             const storeData = product.product_stores[storeId];
@@ -2500,7 +2648,7 @@ const OrderCreate = forwardRef((props, ref) => {
         const capturedFormVersion = formVersionRef.current;
         warningValidationTimer.current = setTimeout(async () => {
             if (formVersionRef.current !== capturedFormVersion) return;
-            if (index) {
+            if (index !== undefined && index !== null) {
                 checkWarning(index);
             } else {
                 fetchAllProductStocks();
@@ -2512,6 +2660,7 @@ const OrderCreate = forwardRef((props, ref) => {
     async function checkWarning(i, selectedProduct, skipUpdate) {
         const productId = selectedProducts[i]?.product_id;
         if (!productId) return;
+        if (selectedProducts[i]?.is_service) return;
         let product = null;
         // if (selectedProduct) {
         // product = selectedProduct;
@@ -2553,13 +2702,21 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-            warnings["quantity_" + i] = t("Warning: Available stock is") + " " + (selectedProducts[i].stock);
-        } else {
-            delete warnings["quantity_" + i];
-        }
+        const qty = selectedProducts[i]?.quantity ?? 0;
+        const stockVal2 = stock;
+        const shouldWarn = !formData.id && qty > stockVal2;
 
-        if (!skipUpdate) setWarnings({ ...warnings });
+        if (!skipUpdate) {
+            setWarnings(prev => {
+                const updated = { ...prev };
+                if (shouldWarn) {
+                    updated["quantity_" + i] = t("Warning: Available stock is") + " " + stockVal2;
+                } else {
+                    delete updated["quantity_" + i];
+                }
+                return updated;
+            });
+        }
 
         /*
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
@@ -2670,12 +2827,16 @@ const OrderCreate = forwardRef((props, ref) => {
             quantity: product.quantity,
             //  product_stores: product.product_stores,
             unit_price: product.unit_price ? product.unit_price : 0,
-            unit_price_with_vat: product.unit_price_with_vat ? product.unit_price_with_vat : 0,
+            unit_price_with_vat: product.unit_price
+                ? parseFloat(trimTo2Decimals(product.unit_price * (1 + ((formData.vat_percent || 0) / 100))))
+                : 0,
             unit: product.unit ? product.unit : "",
             purchase_unit_price: product.purchase_unit_price ? product.purchase_unit_price : 0,
             purchase_unit_price_with_vat: product.purchase_unit_price_with_vat ? product.purchase_unit_price_with_vat : 0,
             unit_discount: product.unit_discount ? product.unit_discount : 0,
-            unit_discount_with_vat: product.unit_discount_with_vat ? product.unit_discount_with_vat : 0,
+            unit_discount_with_vat: product.unit_discount
+                ? parseFloat(trimTo2Decimals(product.unit_discount * (1 + ((formData.vat_percent || 0) / 100))))
+                : 0,
             unit_discount_percent: product.unit_discount_percent ? product.unit_discount_percent : 0,
             unit_discount_percent_vat: product.unit_discount_percent_with_vat ? product.unit_discount_percent_with_vat : 0,
         });
@@ -2876,7 +3037,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
 
             CalCulateLineTotals(index);
-            checkWarnings(index);
+            checkWarning(index);
             checkErrors(index);
             reCalculate(index);
         }, 100);
@@ -3964,6 +4125,10 @@ const OrderCreate = forwardRef((props, ref) => {
             if (modelName === "quotation") {
                 formData.quotation_id = modelID;
                 formData.quotation_code = modelCode;
+                if (!formData.quotation_ids) formData.quotation_ids = [];
+                if (!formData.quotation_ids.includes(modelID)) formData.quotation_ids.push(modelID);
+                if (!formData.quotation_codes) formData.quotation_codes = [];
+                if (!formData.quotation_codes.includes(modelCode)) formData.quotation_codes.push(modelCode);
             } else if (modelName === "delivery_note") {
                 formData.delivery_note_id = modelID;
             }
@@ -5534,6 +5699,7 @@ const OrderCreate = forwardRef((props, ref) => {
     let [showCustomerPending, setShowCustomerPending] = useState(false);
 
     const CustomerPendingRef = useRef();
+    const zatcaConnectRef = useRef();
     function openCustomerPending(customer) {
         setShowCustomerPending(true);
 
@@ -5606,9 +5772,17 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     }, [loadWarehouses, show]);
 
+    useEffect(() => {
+        if (!show || props.modalClass !== 'above-pending-modal') return;
+        document.body.classList.add('order-form-pending-open');
+        return () => {
+            document.body.classList.remove('order-form-pending-open');
+        };
+    }, [show, props.modalClass]);
+
     return (
         <>
-            <style>{`.order-create-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1095 : 1080} !important; } .pw-modal-wrap { z-index: 1096 !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: 1082 !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
+            <style>{`.order-create-wrap { z-index: ${enableProductSelection ? 1092 : props.modalClass === 'above-pending-modal' ? 1095 : props.modalClass === 'above-inner-history-form' ? 1200 : 1080} !important; } .pw-modal-wrap { z-index: ${props.modalClass === 'above-pending-modal' ? 1097 : 1096} !important; } .vehicle-list-modal-wrap { z-index: 1086 !important; } .order-preview-wrap { z-index: 1300 !important; } .above-sales-modal { z-index: ${props.modalClass === 'above-pending-modal' ? 1096 : props.modalClass === 'above-inner-history-form' ? 1202 : 1082} !important; } .above-preview-modal { z-index: 1310 !important; } .advance-payment-modal-wrap { z-index: 1200 !important; } .advance-payment-backdrop { z-index: 1199 !important; }`}</style>
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -5863,7 +6037,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <DeliveryNote ref={DeliveryNoteRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
-            <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
@@ -5878,10 +6052,10 @@ const OrderCreate = forwardRef((props, ref) => {
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
             <QuotationImportPicker ref={DocumentImportPickerRef} showToastMessage={props.showToastMessage} />
-            <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -5910,6 +6084,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     dismissDnNotification={dismissDnNotification}
                     openJobCard={props.openJobCard}
                     repairJobInfos={repairJobInfos}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {formType === "type5" && <SalesType5Header
                     formData={formData} setFormData={setFormData}
@@ -5932,6 +6107,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     dismissDnNotification={dismissDnNotification}
                     openJobCard={props.openJobCard}
                     repairJobInfos={repairJobInfos}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
@@ -5942,13 +6118,18 @@ const OrderCreate = forwardRef((props, ref) => {
                             </h1>
                             {(!isUpdateForm || isResumingDraft) && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#434655', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                    <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
+                                    <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
                                     {t("Report to Zatca")}
                                 </label>
                             )}
                         </div>
                         {/* Right: action buttons */}
                         <div className="sc-header-actions">
+                            {!isUpdateForm && props.onSwitchToQuotation && (
+                                <button type="button" onClick={handleSwitchToQuotation} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                                </button>
+                            )}
                             <button type="button" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: disablePreviousButton ? 0.5 : 1 }}>
                                 <i className="bi-chevron-double-left" style={{ fontSize: '13px' }}></i> {t('Previous')}
                             </button>
@@ -5964,9 +6145,15 @@ const OrderCreate = forwardRef((props, ref) => {
                             <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
                                 <i className="bi bi-file-earmark-pdf" style={{ fontSize: '14px' }}></i> {t('Print A4')}
                             </button>
+                            {enableProductSelection ? (
+                                <button type="button" onClick={handleSendSelectedFromSale} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                    <i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {t('Select')} {selectedIds.length} {t('Products')}
+                                </button>
+                            ) : (
                             <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                 {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {(isUpdateForm && !isResumingDraft) ? t('Update') : t('Create')}</>}
                             </button>
+                            )}
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
                                     {store?.settings?.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
@@ -6058,6 +6245,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     handleClose={handleClose}
                     openSalesFromDnInForm={openSalesFromDnInForm}
                     dismissDnNotification={dismissDnNotification}
+                    onSwitchToQuotation={props.onSwitchToQuotation ? handleSwitchToQuotation : undefined}
                 />}
                 {/* ==================== 💻 STITCH COMPACT HEADER (56px) ==================== */}
                 {formType === "type2" && <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-md py-xs h-[56px] sticky top-0 z-50">
@@ -6076,6 +6264,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     name="report_to_zatca"
                                     checked={formData.enable_report_to_zatca}
                                     onChange={(e) => {
+                                        if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                         formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                         setFormData({ ...formData });
                                     }}
@@ -6086,6 +6275,11 @@ const OrderCreate = forwardRef((props, ref) => {
                         )}
                     </div>
                     <div className="flex items-center gap-xs">
+                        {!isUpdateForm && props.onSwitchToQuotation && (
+                            <button type="button" onClick={handleSwitchToQuotation} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                            </button>
+                        )}
                         <Button
                             variant="secondary"
                             className="flex items-center gap-xs px-sm py-1 bg-secondary-container text-on-secondary-container rounded hover:bg-surface-variant transition-colors font-label-md border-0"
@@ -6846,7 +7040,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" data-testid="t3-import-dropdown-btn" title={t('Import')} style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                                                             <i className="bi bi-download" />
                                                         </Dropdown.Toggle>
-                                                        <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                        <Dropdown.Menu style={{ zIndex: 9999 }}>
                                                             <Dropdown.Item onClick={() => openQuotations()}>
                                                                 <i className="bi bi-file-earmark-text" /> {t('From Quotations')}
                                                             </Dropdown.Item>
@@ -6923,6 +7117,20 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0', height: '32px' }}
                                                 />
                                             )}
+                                            {store?.settings?.enable_custom_sales_invoice_id && (
+                                                <input
+                                                    type="text"
+                                                    id="custom_invoice_id"
+                                                    name="custom_invoice_id"
+                                                    value={formData.code || ''}
+                                                    onChange={(e) => { delete errors["code"]; setErrors({ ...errors }); formData.code = e.target.value; setFormData({ ...formData }); }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                    className={`form-control${errors["code"] ? ' is-invalid' : ''}`}
+                                                    placeholder={isUpdateForm ? t('Invoice ID (required)') : t('Invoice ID (auto-generate if empty)')}
+                                                    style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0', height: '32px' }}
+                                                    title={t('Invoice ID')}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                     {/* Right 40% — selected customer details */}
@@ -6983,8 +7191,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 );
                                                 return (
                                                     <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
+                                                        {enableProductSelection && <th key="sel-all" style={{ ...thStyle, width: '32px' }}><input type="checkbox" checked={selectedIds.length === selectedProducts.length && selectedProducts.length > 0} onChange={handleProductSelectionSelectAll} /></th>}
                                                         {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                            if (col.key === 'delete') return <th key={col.key} style={{ ...thStyle, padding: 0 }}><button type="button" title={t("Table Settings")} onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color = '#191c1e'} onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
+                                                            if (col.key === 'delete') return enableProductSelection ? null : <th key={col.key} style={{ ...thStyle, padding: 0 }}><button type="button" title={t("Table Settings")} onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color = '#191c1e'} onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
                                                             if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
                                                             if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
                                                             if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
@@ -7019,8 +7228,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
                                                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                                        {enableProductSelection && <td style={{ verticalAlign: 'middle', padding: '4px 8px', width: '32px' }}><input type="checkbox" checked={selectedIds.includes(product.product_id)} onChange={() => handleProductSelectionToggle(product.product_id)} /></td>}
                                                         {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                            if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }} >
+                                                            if (col.key === 'delete') return enableProductSelection ? null : (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }} >
                                                                 <div
                                                                     style={{ color: "red", cursor: isZatcaReported ? "not-allowed" : "pointer", opacity: isZatcaReported ? 0.4 : 1, pointerEvents: isZatcaReported ? "none" : undefined }}
                                                                     onClick={() => {
@@ -7152,7 +7362,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
                                                                         <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
                                                                     </Dropdown.Toggle>
-                                                                    <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                    <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }}>
                                                                         <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
                                                                             <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t("Linked Products")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
                                                                         </Dropdown.Item>
@@ -9420,7 +9630,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     <Dropdown.Toggle variant="success" id="dropdown-import" data-testid="t2-import-dropdown-btn" className="px-3 rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px', backgroundColor: '#10b981' }}>
                                                         <i className="bi bi-download text-[16px]"></i> {t('Import')}
                                                     </Dropdown.Toggle>
-                                                    <Dropdown.Menu align="end" style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                    <Dropdown.Menu align="end" style={{ zIndex: 9999 }}>
                                                         <Dropdown.Item onClick={openQuotations}>
                                                             <i className="bi bi-file-earmark-text mr-1"></i> {t('From Quotations')}
                                                         </Dropdown.Item>
@@ -9657,7 +9867,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
                                                                             <i className="bi bi-info"></i>
                                                                         </Dropdown.Toggle>
-                                                                        <Dropdown.Menu style={{ zIndex: 9999 }} popperConfig={{ strategy: 'fixed', modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                        <Dropdown.Menu style={{ zIndex: 9999 }}>
                                                                             <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                                 <i className="bi bi-link"></i>&nbsp;
                                                                                 {t("Linked Products")} ({getShortcut('linkedProducts')})
@@ -11397,6 +11607,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 );
             })()}
 
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem('store_id'))} />
         </>
     );
 });

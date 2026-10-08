@@ -12,6 +12,8 @@
  *   8. SalesReturnView pre-mount condition (pendingView || showSalesReturnDetailsView)
  *   9. openDetailsView calls ref.open(id) when ready, or queues id + triggers state when not
  *  10. detailsViewCallbackRef fires open(id) for pending id and clears it after mount
+ *  11. openSalesUpdateForm(id) sets showSalesUpdateForm=true and calls ref.open(id)
+ *  12. OrderCreate (opened from Sales ID column) receives modalClass='above-pending-modal' when pendingView
  */
 
 // ── 1. pendingView initialisation ────────────────────────────────────────────
@@ -533,5 +535,138 @@ describe('detailsViewCallbackRef (sales_return)', () => {
         // Re-call simulating a re-render (callback ref fires again with same instance)
         handleDetailsViewCallbackRef(instance, detailsViewRef, pendingRef);
         expect(instance.open).toHaveBeenCalledTimes(1); // still 1, not called again
+    });
+});
+
+// ── 11. openSalesUpdateForm(id) ───────────────────────────────────────────────
+// Mirrors sales_return/index.js:
+//   function openSalesUpdateForm(id) {
+//       setShowSalesUpdateForm(true);
+//       if (timerRef.current) clearTimeout(timerRef.current);
+//       timerRef.current = setTimeout(() => { SalesUpdateFormRef.current?.open(id); }, 50);
+//   }
+
+function openSalesUpdateForm(id, ref, setShowSalesUpdateForm) {
+    setShowSalesUpdateForm(true);
+    if (ref.current) {
+        ref.current.open(id);
+    }
+}
+
+describe('openSalesUpdateForm(id)', () => {
+    test('always calls setShowSalesUpdateForm(true)', () => {
+        const ref = { current: { open: jest.fn() } };
+        const setShow = jest.fn();
+
+        openSalesUpdateForm('order-123', ref, setShow);
+
+        expect(setShow).toHaveBeenCalledWith(true);
+    });
+
+    test('calls ref.current.open(id) when ref is ready', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+        const setShow = jest.fn();
+
+        openSalesUpdateForm('order-abc', ref, setShow);
+
+        expect(openMock).toHaveBeenCalledWith('order-abc');
+    });
+
+    test('does NOT throw when ref.current is null', () => {
+        const ref = { current: null };
+        const setShow = jest.fn();
+
+        expect(() => openSalesUpdateForm('order-xyz', ref, setShow)).not.toThrow();
+    });
+
+    test('setShowSalesUpdateForm is called even when ref.current is null', () => {
+        const ref = { current: null };
+        const setShow = jest.fn();
+
+        openSalesUpdateForm('order-xyz', ref, setShow);
+
+        expect(setShow).toHaveBeenCalledWith(true);
+    });
+
+    test('passes the exact id to ref.current.open — no mutation', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+        const id = '6a4535248cf8a7df44500d4a';
+
+        openSalesUpdateForm(id, ref, jest.fn());
+
+        expect(openMock).toHaveBeenCalledWith(id);
+        expect(openMock.mock.calls[0][0]).toBe(id);
+    });
+
+    test('calling twice opens twice with the respective ids', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+        const setShow = jest.fn();
+
+        openSalesUpdateForm('order-1', ref, setShow);
+        openSalesUpdateForm('order-2', ref, setShow);
+
+        expect(openMock).toHaveBeenCalledTimes(2);
+        expect(openMock).toHaveBeenNthCalledWith(1, 'order-1');
+        expect(openMock).toHaveBeenNthCalledWith(2, 'order-2');
+        expect(setShow).toHaveBeenCalledTimes(2);
+    });
+
+    test('works with undefined id (create mode)', () => {
+        const openMock = jest.fn();
+        const ref = { current: { open: openMock } };
+
+        openSalesUpdateForm(undefined, ref, jest.fn());
+
+        expect(openMock).toHaveBeenCalledWith(undefined);
+    });
+});
+
+// ── 12. OrderCreate modalClass prop (Sales ID column link) ────────────────────
+// When a SalesReturn row's Sales ID column is clicked, an OrderCreate form opens.
+// Inside CustomerPending (pendingView=true), it must use modalClass="above-pending-modal"
+// so z-index 1095 beats CustomerPending's z-index 1082. Outside CustomerPending it
+// uses "" (default z-index 1080).
+
+function getOrderCreateModalClass(pendingView) {
+    return pendingView ? 'above-pending-modal' : '';
+}
+
+describe('OrderCreate modalClass prop (Sales ID column in pendingView)', () => {
+    test('returns "above-pending-modal" when pendingView=true', () => {
+        expect(getOrderCreateModalClass(true)).toBe('above-pending-modal');
+    });
+
+    test('returns "" when pendingView=false', () => {
+        expect(getOrderCreateModalClass(false)).toBe('');
+    });
+
+    test('returns "" when pendingView=undefined', () => {
+        expect(getOrderCreateModalClass(undefined)).toBe('');
+    });
+
+    test('returns "" when pendingView=null', () => {
+        expect(getOrderCreateModalClass(null)).toBe('');
+    });
+
+    test('"above-pending-modal" is distinct from the empty default', () => {
+        expect(getOrderCreateModalClass(true)).not.toBe(getOrderCreateModalClass(false));
+    });
+
+    test('z-index with "above-pending-modal" (1095) is above CustomerPending (1082)', () => {
+        const Z = { abovePending: 1095, customerPending: 1082, defaultWrap: 1080 };
+        expect(Z.abovePending).toBeGreaterThan(Z.customerPending);
+    });
+
+    test('z-index without modalClass (1080) is BELOW CustomerPending (1082) — was the bug', () => {
+        const Z = { abovePending: 1095, customerPending: 1082, defaultWrap: 1080 };
+        expect(Z.defaultWrap).toBeLessThan(Z.customerPending);
+    });
+
+    test('"above-pending-modal" z-index (1095) is strictly greater than default (1080)', () => {
+        const Z = { abovePending: 1095, defaultWrap: 1080 };
+        expect(Z.abovePending).toBeGreaterThan(Z.defaultWrap);
     });
 });

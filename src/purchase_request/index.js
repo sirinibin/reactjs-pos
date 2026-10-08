@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import PurchaseRequestCreate from "./create.js";
 import PurchaseRequestView from "./view.js";
 import PurchaseOrderCreate from "../purchase_order/create.js";
@@ -15,6 +16,7 @@ const STATUS_LABELS = {
 };
 
 function PurchaseRequestIndex(props) {
+    const { t } = useTranslation('common');
     const createRef = useRef();
     const viewRef = useRef();
     const poCreateRef = useRef();
@@ -164,7 +166,7 @@ function PurchaseRequestIndex(props) {
         <div className="container-fluid px-2 px-md-3">
             {/* Header */}
             <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <h4 className="mb-0 fw-bold">Purchase Requests</h4>
+                <h4 className="mb-0 fw-bold">{t("Purchase Requests")}</h4>
                 <Button
                     variant="primary"
                     size="sm"
@@ -172,7 +174,7 @@ function PurchaseRequestIndex(props) {
                     className="d-flex align-items-center gap-1"
                 >
                     <i className="bi bi-plus-lg"></i>
-                    <span>New P.R</span>
+                    <span>{t("New P.R")}</span>
                 </Button>
             </div>
 
@@ -183,7 +185,7 @@ function PurchaseRequestIndex(props) {
                         className={`nav-link ${activeTab === "sent" ? "active fw-semibold" : ""}`}
                         onClick={() => handleTabChange("sent")}
                     >
-                        <i className="bi bi-send me-1"></i>Sent
+                        <i className="bi bi-send me-1"></i>{t("Sent")}
                     </button>
                 </li>
                 <li className="nav-item">
@@ -191,7 +193,7 @@ function PurchaseRequestIndex(props) {
                         className={`nav-link ${activeTab === "received" ? "active fw-semibold" : ""}`}
                         onClick={() => handleTabChange("received")}
                     >
-                        <i className="bi bi-inbox me-1"></i>Received
+                        <i className="bi bi-inbox me-1"></i>{t("Received")}
                     </button>
                 </li>
             </ul>
@@ -205,7 +207,7 @@ function PurchaseRequestIndex(props) {
                         style={{ cursor: "pointer", fontSize: "0.8rem", padding: "6px 10px" }}
                         onClick={() => handleStatusFilter(key)}
                     >
-                        {label}
+                        {t(label)}
                         {statusFilter === key && <i className="bi bi-x ms-1"></i>}
                     </Badge>
                 ))}
@@ -216,21 +218,21 @@ function PurchaseRequestIndex(props) {
                         style={{ cursor: "pointer", fontSize: "0.8rem", padding: "6px 10px", border: "1px solid #dee2e6" }}
                         onClick={() => setStatusFilter("")}
                     >
-                        Clear filter
+                        {t("Clear filter")}
                     </Badge>
                 )}
             </div>
 
             {/* Count */}
             <div className="text-muted small mb-2">
-                {totalItems} record{totalItems !== 1 ? "s" : ""}
+                {totalItems} {totalItems !== 1 ? t("records") : t("record")}
                 {isLoading && <Spinner size="sm" animation="border" className="ms-2" />}
             </div>
 
             {/* Mobile Card List (visible on xs/sm) */}
             <div className="d-md-none">
                 {list.length === 0 && !isLoading && (
-                    <div className="text-center text-muted py-4">No purchase requests found.</div>
+                    <div className="text-center text-muted py-4">{t("No purchase requests found.")}</div>
                 )}
                 {list.map((pr) => {
                     const s = STATUS_LABELS[pr.status] || { label: pr.status, variant: "secondary" };
@@ -247,12 +249,12 @@ function PurchaseRequestIndex(props) {
                             <div className="card-body py-2 px-3">
                                 <div className="d-flex justify-content-between align-items-start mb-1">
                                     <span className="fw-semibold text-primary">{pr.code}</span>
-                                    <Badge bg={s.variant}>{s.label}</Badge>
+                                    <Badge bg={s.variant}>{t(s.label)}</Badge>
                                 </div>
                                 <div className="small text-muted">
                                     {activeTab === "sent"
-                                        ? <span><i className="bi bi-person me-1"></i>To: {pr.assigned_to_name}</span>
-                                        : <span><i className="bi bi-person me-1"></i>From: {pr.created_by_name}</span>
+                                        ? <span><i className="bi bi-person me-1"></i>{t("To:")} {pr.assigned_to_name}</span>
+                                        : <span><i className="bi bi-person me-1"></i>{t("From:")} {pr.created_by_name}</span>
                                     }
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center mt-1">
@@ -261,7 +263,7 @@ function PurchaseRequestIndex(props) {
                                 </div>
                                 {pr.purchase_order_code && (
                                     <div className="small text-success mt-1">
-                                        <i className="bi bi-check-circle me-1"></i>P.O: {pr.purchase_order_code}
+                                        <i className="bi bi-check-circle me-1"></i>{t("P.O:")} {pr.purchase_order_code}
                                     </div>
                                 )}
                                 <div className="mt-2 d-flex flex-wrap gap-2" onClick={e => e.stopPropagation()}>
@@ -273,16 +275,16 @@ function PurchaseRequestIndex(props) {
                                     {canAct && (
                                         <>
                                             <Button size="sm" variant="success" disabled={isActing} onClick={() => doAction(pr, "accept", { partial: false })} title="Accept">
-                                                {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-check-circle me-1"></i>Accept</>}
+                                                {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-check-circle me-1"></i>{t("Accept")}</>}
                                             </Button>
                                             <Button size="sm" variant="danger" disabled={isActing} onClick={() => doAction(pr, "reject")} title="Reject">
-                                                {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-x-circle me-1"></i>Reject</>}
+                                                {isActing ? <Spinner size="sm" animation="border" /> : <><i className="bi bi-x-circle me-1"></i>{t("Reject")}</>}
                                             </Button>
                                         </>
                                     )}
                                     {canCreatePO && (
                                         <Button size="sm" variant="primary" onClick={() => poCreateRef.current?.openFromPR(pr)} title="Create Purchase Order">
-                                            <i className="bi bi-cart-plus me-1"></i>Create P.O
+                                            <i className="bi bi-cart-plus me-1"></i>{t("Create P.O")}
                                         </Button>
                                     )}
                                     <Button size="sm" variant="outline-primary" onClick={() => openPreview(pr)} title="Print / Preview">
@@ -304,21 +306,21 @@ function PurchaseRequestIndex(props) {
                     <table className="table table-hover table-sm align-middle">
                         <thead className="table-light">
                             <tr>
-                                <th>Code</th>
-                                <th>{activeTab === "sent" ? "Assigned To" : "Created By"}</th>
-                                <th>Products</th>
-                                <th>Net Total</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>P.O</th>
-                                <th>Actions</th>
+                                <th>{t("Code")}</th>
+                                <th>{activeTab === "sent" ? t("Assigned To") : t("Created By")}</th>
+                                <th>{t("Products")}</th>
+                                <th>{t("Net Total")}</th>
+                                <th>{t("Date")}</th>
+                                <th>{t("Status")}</th>
+                                <th>{t("P.O")}</th>
+                                <th>{t("Actions")}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {list.length === 0 && !isLoading && (
                                 <tr>
                                     <td colSpan={8} className="text-center text-muted py-4">
-                                        No purchase requests found.
+                                        {t("No purchase requests found.")}
                                     </td>
                                 </tr>
                             )}
@@ -334,7 +336,7 @@ function PurchaseRequestIndex(props) {
                                         <td>{pr.products?.length || 0}</td>
                                         <td>{pr.net_total?.toFixed(2)}</td>
                                         <td className="text-nowrap">{formatDate(pr.created_at)}</td>
-                                        <td><Badge bg={s.variant}>{s.label}</Badge></td>
+                                        <td><Badge bg={s.variant}>{t(s.label)}</Badge></td>
                                         <td className="text-success small">
                                             {pr.purchase_order_code || "—"}
                                         </td>

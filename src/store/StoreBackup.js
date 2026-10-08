@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, ProgressBar, Table } from "react-bootstrap";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const STEP_ICON = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const StoreBackup = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [store, setStore] = useState(null);
 
@@ -256,7 +258,7 @@ const StoreBackup = forwardRef((props, ref) => {
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i className="bi bi-archive me-2"></i>
-                    Backup Store — {store?.name}
+                    {t('Backup Store')} — {store?.name}
                 </Modal.Title>
             </Modal.Header>
 
@@ -266,7 +268,7 @@ const StoreBackup = forwardRef((props, ref) => {
                 {loadingSize && (
                     <div className="text-center py-3 text-muted">
                         <Spinner animation="border" size="sm" className="me-2" />
-                        Calculating backup size…
+                        {t('Calculating backup size…')}
                     </div>
                 )}
 
@@ -279,7 +281,7 @@ const StoreBackup = forwardRef((props, ref) => {
                 {sizeData && !loadingSize && (
                     <div className="mb-4">
                         <h6 className="fw-semibold mb-2">
-                            <i className="bi bi-pie-chart me-2"></i>Backup Size Breakdown
+                            <i className="bi bi-pie-chart me-2"></i>{t('Backup Size Breakdown')}
                         </h6>
                         <Table size="sm" bordered className="mb-0">
                             <tbody>
@@ -295,7 +297,7 @@ const StoreBackup = forwardRef((props, ref) => {
                                 <tr>
                                     <td>
                                         <i className="bi bi-file-earmark-code me-2 text-primary"></i>
-                                        MongoDB — store document (main DB)
+                                        {t('MongoDB — store document (main DB)')}
                                     </td>
                                     <td className="text-end fw-semibold">
                                         {formatBytes(sizeData.mongodb_store_doc)}
@@ -304,7 +306,7 @@ const StoreBackup = forwardRef((props, ref) => {
                                 <tr>
                                     <td>
                                         <i className="bi bi-people me-2 text-primary"></i>
-                                        MongoDB — users assigned to this store (main DB)
+                                        {t('MongoDB — users assigned to this store (main DB)')}
                                     </td>
                                     <td className="text-end fw-semibold">
                                         {formatBytes(sizeData.mongodb_users)}
@@ -330,7 +332,7 @@ const StoreBackup = forwardRef((props, ref) => {
                                 </tr>
                                 <tr className="table-primary">
                                     <td className="fw-bold">
-                                        <i className="bi bi-hdd me-2"></i>Total Estimated Size
+                                        <i className="bi bi-hdd me-2"></i>{t('Total Estimated Size')}
                                     </td>
                                     <td className="text-end fw-bold">
                                         {formatBytes(sizeData.total_size)}
@@ -345,7 +347,7 @@ const StoreBackup = forwardRef((props, ref) => {
                 {(downloading || backupDone || (steps.length > 0)) && (
                     <div className="mb-3">
                         <h6 className="fw-semibold mb-3">
-                            <i className="bi bi-list-check me-2"></i>Backup Progress
+                            <i className="bi bi-list-check me-2"></i>{t('Backup Progress')}
                         </h6>
 
                         {/* Timer + ETA bar */}
@@ -356,7 +358,7 @@ const StoreBackup = forwardRef((props, ref) => {
                             >
                                 <span style={{ fontSize: "0.9em" }}>
                                     <i className="bi bi-stopwatch me-1 text-secondary"></i>
-                                    <strong>Elapsed:</strong>{" "}
+                                    <strong>{t('Elapsed:')}</strong>{" "}
                                     <span className="font-monospace">
                                         {formatDuration(elapsed)}
                                     </span>
@@ -365,7 +367,7 @@ const StoreBackup = forwardRef((props, ref) => {
                                 {eta != null && !backupDone && (
                                     <span style={{ fontSize: "0.9em" }}>
                                         <i className="bi bi-hourglass-split me-1 text-secondary"></i>
-                                        <strong>ETA:</strong>{" "}
+                                        <strong>{t('ETA:')}</strong>{" "}
                                         <span className="font-monospace">~{formatDuration(eta)}</span>
                                     </span>
                                 )}
@@ -373,7 +375,7 @@ const StoreBackup = forwardRef((props, ref) => {
                                 {backupDone && !backupError && (
                                     <span className="text-success" style={{ fontSize: "0.9em" }}>
                                         <i className="bi bi-check-circle-fill me-1"></i>
-                                        Completed in {formatDuration(elapsed)}
+                                        {t('Completed in')} {formatDuration(elapsed)}
                                     </span>
                                 )}
                             </div>
@@ -476,7 +478,7 @@ const StoreBackup = forwardRef((props, ref) => {
                         <div className="mt-3 pt-2 border-top">
                             <div className="d-flex justify-content-between align-items-center mb-1">
                                 <span className="fw-semibold" style={{ fontSize: "0.85em" }}>
-                                    Overall
+                                    {t('Overall')}
                                 </span>
                                 <span className="text-muted" style={{ fontSize: "0.85em" }}>
                                     {Math.round(overallProgress)}%
@@ -505,7 +507,7 @@ const StoreBackup = forwardRef((props, ref) => {
                 {backupDone && !backupError && (
                     <div className="alert alert-success py-2 mb-0">
                         <i className="bi bi-check-circle-fill me-2"></i>
-                        Backup complete — your download has started automatically.
+                        {t('Backup complete — your download has started automatically.')}
                     </div>
                 )}
 
@@ -513,7 +515,7 @@ const StoreBackup = forwardRef((props, ref) => {
 
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose} disabled={downloading}>
-                    Close
+                    {t('Close')}
                 </Button>
                 <Button
                     variant="primary"
@@ -523,15 +525,15 @@ const StoreBackup = forwardRef((props, ref) => {
                     {downloading ? (
                         <>
                             <Spinner size="sm" animation="border" className="me-2" />
-                            Backing up… {elapsed > 0 && `(${formatDuration(elapsed)})`}
+                            {t('Backing up…')} {elapsed > 0 && `(${formatDuration(elapsed)})`}
                         </>
                     ) : backupDone ? (
                         <>
-                            <i className="bi bi-arrow-clockwise me-2"></i>Backup Again
+                            <i className="bi bi-arrow-clockwise me-2"></i>{t('Backup Again')}
                         </>
                     ) : (
                         <>
-                            <i className="bi bi-download me-2"></i>Download Data
+                            <i className="bi bi-download me-2"></i>{t('Download Data')}
                         </>
                     )}
                 </Button>

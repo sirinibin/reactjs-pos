@@ -142,36 +142,36 @@ const CustomerView = forwardRef((props, ref) => {
                             </Dropdown.Toggle>
                             <Dropdown.Menu style={{ minWidth: 230 }}>
                                 <Dropdown.Item onClick={() => handleTabClick('repairs')}>
-                                    <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                    <i className="bi bi-tools me-2 text-secondary"></i>{t('Repair Jobs')}
                                 </Dropdown.Item>
                                 {automobileEnabled && (
                                     <Dropdown.Item onClick={() => handleTabClick('vehicles')}>
-                                        <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                        <i className="bi bi-car-front me-2 text-secondary"></i>{t('Vehicles')}
                                     </Dropdown.Item>
                                 )}
                                 <Dropdown.Divider />
                                 <Dropdown.Item onClick={() => SalesRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
-                                    <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                    <i className="bi bi-receipt me-2 text-success"></i>{t('Sales History')}
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => SalesReturnsRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
-                                    <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                    <i className="bi bi-receipt-cutoff me-2 text-warning"></i>{t('Sales Return History')}
                                 </Dropdown.Item>
                                 <Dropdown.Divider />
                                 <Dropdown.Item onClick={() => QuotationsRef.current?.open(false, [{ id: model.id, name: model.name }], 'quotation', null)}>
-                                    <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                    <i className="bi bi-clipboard2-check me-2 text-info"></i>{t('Quotation History')}
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => QtnSalesRef.current?.open(false, [{ id: model.id, name: model.name }], 'invoice', null)}>
-                                    <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                    <i className="bi bi-file-earmark-check me-2 text-info"></i>{t('Qtn. Sales History')}
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => QtnSalesReturnsRef.current?.open(false, [{ id: model.id, name: model.name }], null)}>
-                                    <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                    <i className="bi bi-clipboard2-x me-2 text-warning"></i>{t('Qtn. Sales Return History')}
                                 </Dropdown.Item>
                                 <Dropdown.Divider />
                                 <Dropdown.Item onClick={() => handleTabClick('churnHistory')}>
-                                    <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                    <i className="bi bi-exclamation-triangle me-2 text-danger"></i>{t('Churn Risk History')}
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => handleTabClick('clvHistory')}>
-                                    <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                    <i className="bi bi-graph-up-arrow me-2 text-primary"></i>{t('CLV History')}
                                 </Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
@@ -206,10 +206,10 @@ const CustomerView = forwardRef((props, ref) => {
                             {/* Summary Cards */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
                                 {[
-                                    { label: 'Phone', value: model.phone, sub: model.phone_in_arabic },
-                                    { label: 'VAT No.', value: model.vat_no, sub: model.vat_no_in_arabic },
-                                    { label: 'C.R No.', value: model.registration_number },
-                                    { label: 'Email', value: model.email },
+                                    { label: t('Phone'), value: model.phone, sub: model.phone_in_arabic },
+                                    { label: t('VAT No.'), value: model.vat_no, sub: model.vat_no_in_arabic },
+                                    { label: t('C.R No.'), value: model.registration_number },
+                                    { label: t('Email'), value: model.email },
                                 ].map(c => (
                                     <div key={c.label} style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <span style={{ fontSize: '12px', fontWeight: 600, color: '#54647a' }}>{c.label}</span>
@@ -224,17 +224,17 @@ const CustomerView = forwardRef((props, ref) => {
                                     {/* Contact */}
                                     <section style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Contact Details</h3>
+                                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Contact Details')}</h3>
                                         </div>
                                         <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column' }}>
                                             {[
-                                                { label: 'Name', value: model.name },
-                                                { label: 'Name (Arabic)', value: model.name_in_arabic },
-                                                { label: 'Phone', value: model.phone },
-                                                { label: 'Email', value: model.email },
-                                                { label: 'Address', value: model.address },
-                                                { label: 'VAT No.', value: model.vat_no },
-                                                { label: 'C.R No.', value: model.registration_number },
+                                                { label: t('Name'), value: model.name },
+                                                { label: t('Name (Arabic)'), value: model.name_in_arabic },
+                                                { label: t('Phone'), value: model.phone },
+                                                { label: t('Email'), value: model.email },
+                                                { label: t('Address'), value: model.address },
+                                                { label: t('VAT No.'), value: model.vat_no },
+                                                { label: t('C.R No.'), value: model.registration_number },
                                             ].filter(r => r.value).map((r, i, arr) => (
                                                 <div key={r.label} style={{ ...rowStyle, borderBottom: i < arr.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                                                     <span style={labelStyle}>{r.label}</span>
@@ -247,7 +247,7 @@ const CustomerView = forwardRef((props, ref) => {
                                     {/* Photos */}
                                     <section style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Photos</h3>
+                                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Photos')}</h3>
                                         </div>
                                         <div style={{ padding: '24px' }}>
                                             <ImageGallery ref={ImageGalleryRef} id={model.id} storeID={model.store_id} storedImages={model.images} modelName={"customer"} />
@@ -258,14 +258,14 @@ const CustomerView = forwardRef((props, ref) => {
                                 {/* Metadata */}
                                 <section style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', minWidth: '220px' }}>
                                     <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Metadata')}</h3>
                                     </div>
                                     <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         {[
-                                            { label: 'Created By', value: model.created_by_name },
-                                            { label: 'Updated By', value: model.updated_by_name },
-                                            { label: 'Created At', value: model.created_at ? formatInStoreTimezone(model.created_at) : null },
-                                            { label: 'Updated At', value: model.updated_at ? formatInStoreTimezone(model.updated_at) : null },
+                                            { label: t('Created By'), value: model.created_by_name },
+                                            { label: t('Updated By'), value: model.updated_by_name },
+                                            { label: t('Created At'), value: model.created_at ? formatInStoreTimezone(model.created_at) : null },
+                                            { label: t('Updated At'), value: model.updated_at ? formatInStoreTimezone(model.updated_at) : null },
                                         ].filter(r => r.value).map((r, i, arr) => (
                                             <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', paddingBottom: '10px', borderBottom: i < arr.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                                                 <span style={{ fontSize: '13px', color: '#54647a' }}>{r.label}</span>

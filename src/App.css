@@ -12013,9 +12013,13 @@ span.flatpickr-weekday {
 .above-preview-modal { z-index: 1310 !important; }
 /* Update forms opened from within a history modal, and the print preview modal */
 .above-history-modal { z-index: 1090 !important; }
+.table-settings-in-history { z-index: 1160 !important; }
 .order-print-wrap { z-index: 1090 !important; }
 body.balance-sheet-open .modal { z-index: 1070 !important; }
 body.balance-sheet-open .modal-backdrop { z-index: 1069 !important; }
+/* ZATCA reconnect modal must always appear above every other form modal (highest in-app z-index is 1310 for above-preview-modal) */
+.zatca-connect-modal { z-index: 1400 !important; }
+.zatca-connect-backdrop { z-index: 1399 !important; }
 /* Lower history/picker modals when a create-form is opened on top of them */
 body.form-over-history .above-sales-modal { z-index: 1072 !important; }
 /* Inner history modals opened from within an OrderCreate form (which itself is inside a history modal) need z-index above the OrderCreate form (1093) */
@@ -12024,17 +12028,46 @@ body.form-over-history .above-sales-modal.order-inner-history-modal { z-index: 1
 .purchase-create-wrap { z-index: 1088 !important; }
 .purchase-return-create-wrap { z-index: 1088 !important; }
 .vendor-create-wrap { z-index: 1088 !important; }
-/* Tooltips must always appear above all modals (sales form injects z-index 1082 on .above-sales-modal) */
-.tooltip { z-index: 1090 !important; }
+/* Tooltips must always appear above all modals — DraggableHistoryModal uses 1150, inner history 1200 */
+.tooltip { z-index: 1300 !important; }
 
 /* Sub-forms that can be opened from history modals — must appear above history (1072 with form-over-history active) */
 .sales-return-create-wrap { z-index: 1080 !important; }
 .quotation-create-wrap { z-index: 1080 !important; }
+/* RFQ detail modal opened from within any form — must render above the form (quotation/sales/etc at ~1080) */
+.rfq-detail-modal { z-index: 1500 !important; }
+.rfq-detail-modal + .modal-backdrop { z-index: 1495 !important; }
+/* Modals that open on top of the RFQ detail modal (z-index 1500) */
+.rfq-create-form-modal { z-index: 1600 !important; }
+.rfq-create-form-modal + .modal-backdrop { z-index: 1595 !important; }
+.rfq-send-modal-wrap { z-index: 1600 !important; }
+.rfq-send-modal-wrap + .modal-backdrop { z-index: 1595 !important; }
+.order-preview-wrap { z-index: 1600 !important; }
+/* Product import picker — must appear above the quotation form (z-index 1080) and Sales modal (1090) */
+.quotation-import-picker-modal { z-index: 2000 !important; }
+.quotation-import-picker-modal + .modal-backdrop { z-index: 1995 !important; }
+/* Generic class for any modal opened from within the Select Quotation wrapper (z-index 1065) */
+.above-quotations-modal { z-index: 1075 !important; }
+/* Opened from the "Select Quotation" modal (above-sales-modal = 1082 → drops to 1081 when form opens) */
+.quotation-create-wrap.above-quotations-modal { z-index: 1085 !important; }
+.quotation-sales-return-create-wrap.above-quotations-modal { z-index: 1085 !important; }
+/* QuotationView opened from Select Quotation (above-sales-modal = 1082 inside Sales form).
+   Two-class specificity (0,2,0) beats any single-class !important rule (0,1,0). 1096 > 1095 (Sales form). */
+.quotation-view-overlay.above-quotations-modal { z-index: 1096 !important; }
+.quotation-view-overlay.above-quotations-modal + .modal-backdrop { z-index: 1095 !important; }
+/* Print type selection modal opened from Select Quotation — same context, same fix. */
+.quotation-print-type-modal.above-quotations-modal { z-index: 1096 !important; }
+.quotation-print-type-modal.above-quotations-modal + .modal-backdrop { z-index: 1095 !important; }
 .quotation-sales-return-create-wrap { z-index: 1080 !important; }
 /* Delivery Note form modal — one step above above-sales-modal (1065) */
 .delivery-note-create-wrap { z-index: 1066 !important; }
 /* Product Create form — must appear above all parent forms (purchase 1088, quotation/delivery-note ~1066-1080) */
 .pw-modal-wrap { z-index: 1095 !important; }
+/* ProductCreate/ServiceCreate opened from within a pending-mode Sales form (order-create-wrap.above-pending-modal = 1095).
+   Two-class specificity (0,2,0) ensures 1098 > 1095 regardless of single-class injected styles. */
+.pw-modal-wrap.above-pending-modal { z-index: 1098 !important; }
+/* ProductCreate opened from inside the import-picker modal (z-index 2000). Two-class specificity wins over .pw-modal-wrap alone. */
+.pw-modal-wrap.above-import-picker { z-index: 2100 !important; }
 /* Raise history modals above their standalone parent form.
    These rules intentionally win over body.form-over-history (1072) via CSS source-order.
    fromHistory={true} on sub-forms prevents them from adding these body classes, so there is
@@ -12055,8 +12088,7 @@ body.delivery-note-form-open .above-sales-modal { z-index: 1067 !important; }
 body.quotation-form-pending-open .draggable-history-modal { z-index: 1097 !important; }
 body.sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
 body.quotation-sales-return-form-open .draggable-history-modal { z-index: 1097 !important; }
-.order-preview-wrap { z-index: 1300 !important; }
-.modal-backdrop.order-preview-wrap { z-index: 1299 !important; }
+.modal-backdrop.order-preview-wrap { z-index: 1595 !important; }
 /* Combined selectors (specificity 0-3-1) definitively keep history at the right level when both
    a parent-form class AND form-over-history are active simultaneously — beats any (0-2-1) rule. */
 body.purchase-form-open.form-over-history .above-sales-modal { z-index: 1089 !important; }
@@ -12073,6 +12105,14 @@ body.quotation-sales-return-form-open.form-over-history .draggable-history-modal
 body.form-over-history .from-history-form { z-index: 1093 !important; }
 /* Sub-forms (OrderCreate etc.) opened from within an inner history modal (z-index 1200) need to float above it */
 body.form-over-history .above-inner-history-form { z-index: 1250 !important; }
+/* Forms opened from ANY history modal (DraggableHistoryModal = z-index 1150) must always appear above it.
+   These compound selectors (specificity 0,2,0) beat the base single-class rules so they win unconditionally. */
+.purchase-create-wrap.above-inner-history-form,
+.purchase-return-create-wrap.above-inner-history-form,
+.sales-return-create-wrap.above-inner-history-form,
+.quotation-create-wrap.above-inner-history-form,
+.quotation-sales-return-create-wrap.above-inner-history-form,
+.above-sales-modal.above-inner-history-form { z-index: 1200 !important; }
 /* When a form is opened FROM the account balance sheet (balance-sheet-open), the body-class rules
    above would accidentally raise the balance sheet above the form. These higher-specificity rules
    (spec 31 > spec 21) ensure the form stays above the balance sheet in that scenario. */
@@ -12081,6 +12121,18 @@ body.balance-sheet-open.purchase-return-form-open .purchase-return-create-wrap {
 body.balance-sheet-open.sales-return-form-open .sales-return-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-form-open .quotation-create-wrap { z-index: 1082 !important; }
 body.balance-sheet-open.quotation-sales-return-form-open .quotation-sales-return-create-wrap { z-index: 1082 !important; }
+/* DraggableHistoryModal panels opened from the info-menu inside a quotation/sales-return form
+   that was itself opened from the balance sheet: the form sits at 1082 (rules above) while the
+   panels only reach 1081 via body.quotation-form-open .above-sales-modal, making them appear
+   behind the form. These (0,3,1) rules lift the panels one step above the form. */
+body.balance-sheet-open.quotation-form-open .draggable-history-modal { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .draggable-history-modal { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-form-open .image-viewer-modal-wrap { z-index: 1083 !important; }
+body.balance-sheet-open.quotation-sales-return-form-open .image-viewer-modal-wrap { z-index: 1083 !important; }
+/* QuotationType3Form (.qt3-modal-wrap) is overridden to 1070 by body.balance-sheet-open .modal
+   (spec 0,2,1 beats inline .qt3-modal-wrap spec 0,1,0). Lift type-3 above the balance sheet
+   (1081) so it is visible, then the panel rule above (1083) keeps history panels on top of it. */
+body.balance-sheet-open.quotation-form-open .qt3-modal-wrap { z-index: 1082 !important; }
 /* CustomerPending must appear above every form opened from the balance sheet.
    Forms in that context reach at most z-index 1090 (purchase-create-wrap), so 1091 clears them all.
    This rule has the same specificity (0,2,1) as the per-form rules above but appears later in the
@@ -12109,3 +12161,15 @@ body.product-form-open.form-over-history .from-history-form { z-index: 1099 !imp
    1095 > 1093, fixing both customer-pending and vendor-pending flows.
    Specificity (0,4,1) beats all existing rules; placed last wins source-order ties. */
 body.pending-balance-sheet-open.balance-sheet-open .modal:not(.above-sales-modal) { z-index: 1095 !important; }
+
+/* Sub-modals (Products, ImageViewer) opened from edit forms in pendingView context.
+   Forms with above-pending-modal add a *-form-pending-open body class; these rules
+   ensure the sub-modals (1096) appear above the form (1090/1095).
+   Specificity (0,2,1) — same as peer body+class rules; placed last wins source-order. */
+body.sales-return-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }
+body.sales-return-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }
+body.quotation-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }
+body.quotation-form-pending-open .above-pending-form-sub { z-index: 1096 !important; }
+/* Select Quotation / Delivery Notes / ImageViewer opened from within the Sales form in pending context.
+   Sales form (order-create-wrap.above-pending-modal) sits at 1095; sub-modals need 1096 to appear on top. */
+body.order-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }

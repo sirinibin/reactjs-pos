@@ -80,21 +80,26 @@ describe('SidebarSettings smoke test', () => {
     expect(screen.getByText('Menu Settings')).toBeInTheDocument();
   });
 
-  test('Save & Apply button is rendered regardless of role', () => {
+  test('Save & Apply button is NOT rendered (auto-save replaces it)', () => {
     localStorage.setItem('user_role', 'Staff');
     renderComponent();
-    expect(screen.getByRole('button', { name: /save & apply/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save & apply/i })).not.toBeInTheDocument();
   });
 
-  test('Save & Apply button is rendered for Admin role', () => {
+  test('Save & Apply button is NOT rendered for Admin role either', () => {
     localStorage.setItem('user_role', 'Admin');
     renderComponent();
-    expect(screen.getByRole('button', { name: /save & apply/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save & apply/i })).not.toBeInTheDocument();
   });
 
   test('Reset button is rendered', () => {
     renderComponent();
     expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
+  });
+
+  test('auto-save info text is shown (changes saved automatically)', () => {
+    renderComponent();
+    expect(screen.getAllByText(/saved automatically/i).length).toBeGreaterThan(0);
   });
 
   test('renders visible item labels (Dashboard, Sales)', () => {
@@ -181,25 +186,17 @@ describe('SidebarSettings smoke test', () => {
     expect(screen.queryByText('Purchase Requests')).not.toBeInTheDocument();
   });
 
-  test('clicking Save & Apply calls saveSidebarConfig and changes label to Saved!', () => {
+  test('toggling a visibility switch auto-saves (calls saveSidebarConfig)', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
     renderComponent();
-    const saveBtn = screen.getByRole('button', { name: /save & apply/i });
-    act(() => { fireEvent.click(saveBtn); });
+    const switches = screen.getAllByRole('switch');
+    expect(switches.length).toBeGreaterThan(0);
+    act(() => { fireEvent.click(switches[0]); });
     expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: /saved!/i })).toBeInTheDocument();
-  });
-
-  test('clicking Reset calls saveSidebarConfig with all items set to visible', () => {
-    renderComponent();
-    const resetBtn = screen.getByRole('button', { name: /reset/i });
-    act(() => { fireEvent.click(resetBtn); });
-    expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
-    const savedArg = saveSidebarConfig.mock.calls[0][0];
-    expect(Array.isArray(savedArg)).toBe(true);
-    expect(savedArg.every(item => item.visible === true)).toBe(true);
   });
 
   test('toggling a visibility switch flips its checked state', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
     renderComponent();
     const switches = screen.getAllByRole('switch');
     expect(switches.length).toBeGreaterThan(0);
@@ -207,6 +204,17 @@ describe('SidebarSettings smoke test', () => {
     const wasChecked = firstSwitch.checked;
     act(() => { fireEvent.click(firstSwitch); });
     expect(firstSwitch.checked).toBe(!wasChecked);
+  });
+
+  test('clicking Reset calls saveSidebarConfig with all items set to visible', () => {
+    saveSidebarConfig.mockReturnValue(Promise.resolve({ synced: false }));
+    renderComponent();
+    const resetBtn = screen.getByRole('button', { name: /reset/i });
+    act(() => { fireEvent.click(resetBtn); });
+    expect(saveSidebarConfig).toHaveBeenCalledTimes(1);
+    const savedArg = saveSidebarConfig.mock.calls[0][0];
+    expect(Array.isArray(savedArg)).toBe(true);
+    expect(savedArg.every(item => item.visible === true)).toBe(true);
   });
 
   test('at-least-one-visible warning appears when all items are toggled off', () => {
@@ -252,5 +260,173 @@ describe('SidebarSettings smoke test', () => {
     renderComponent();
     expect(screen.getByText('Salaries')).toBeInTheDocument();
     expect(screen.getByText('↳')).toBeInTheDocument();
+  });
+});
+
+// ── Server-sync tests ─────────────────────────────────────────────────────────
+describe('SidebarSettings server sync', () => {
+  const SERVER_CONFIG = [
+    { id: 'sales', visible: true },
+    { id: 'dashboard', visible: false },
+  ];
+
+  beforeEach(() => {
+    localStorage.setItem('store_id', 'store123');
+    localStorage.setItem('access_token', 'tok123');
+  });
+
+  test('does NOT call fetch when save_sidebar_config_to_server flag is absent', async () => {
+    global.fetch.mockClear();
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('does NOT call fetch when save_sidebar_config_to_server is false', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: false }));
+    global.fetch.mockClear();
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('calls fetch with correct URL when save_sidebar_config_to_server is true', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockClear();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    expect(global.fetch).toHaveBeenCalledWith('/v1/store/store123', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'tok123' }),
+    }));
+  });
+
+  test('updates items from server sidebar_config when server has data', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        result: { settings: { sidebar_config: SERVER_CONFIG } },
+      }),
+    });
+    await act(async () => { renderComponent(); });
+    // SERVER_CONFIG orders: sales (visible:true), dashboard (visible:false)
+    // Both items are rendered in DOM; visibility is reflected via the switch checked state.
+    // After server merge, first two switches map to [sales=checked, dashboard=unchecked].
+    const switches = screen.getAllByRole('switch');
+    expect(switches[0].checked).toBe(true);   // sales → visible
+    expect(switches[1].checked).toBe(false);  // dashboard → hidden
+    expect(screen.getByText('Sales')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('keeps localStorage items when server returns empty sidebar_config', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    // Falls back to localStorage which has Dashboard visible
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('keeps localStorage items when fetch fails', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockRejectedValueOnce(new Error('network error'));
+    await act(async () => { renderComponent(); });
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+
+  test('shows server-sync note when flag is enabled', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ result: { settings: { sidebar_config: [] } } }),
+    });
+    await act(async () => { renderComponent(); });
+    expect(screen.getByText(/synced to the server/i)).toBeInTheDocument();
+  });
+
+  test('shows browser-only note when flag is disabled', () => {
+    renderComponent();
+    expect(screen.getByText(/saved automatically in this browser/i)).toBeInTheDocument();
+  });
+
+  test('updates localStorage cache after loading from server', async () => {
+    localStorage.setItem('_store_settings_cache', JSON.stringify({ save_sidebar_config_to_server: true }));
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        result: { settings: { sidebar_config: SERVER_CONFIG } },
+      }),
+    });
+    await act(async () => { renderComponent(); });
+    const cached = JSON.parse(localStorage.getItem('sidebar_config') || '[]');
+    expect(Array.isArray(cached)).toBe(true);
+    expect(cached.length).toBeGreaterThan(0);
+  });
+});
+
+describe('SidebarSettings save error visibility', () => {
+  test('shows sync error alert when saveSidebarConfig resolves with synced:false and error', async () => {
+    saveSidebarConfig.mockResolvedValue({ synced: false, error: 'Unauthorized' });
+    renderComponent();
+    // Trigger auto-save by toggling a switch
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('switch')[0]);
+    });
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/unauthorized/i)).toBeInTheDocument();
+  });
+
+  test('does not show sync error when saveSidebarConfig resolves with synced:true', async () => {
+    saveSidebarConfig.mockResolvedValue({ synced: true });
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('switch')[0]);
+    });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('does not show sync error when saveSidebarConfig returns undefined (no server sync)', async () => {
+    saveSidebarConfig.mockReturnValue(undefined);
+    renderComponent();
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('switch')[0]);
+    });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('sync error clears on next toggle', async () => {
+    // First toggle: fails
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false, error: 'Timeout' });
+    renderComponent();
+    const switches = screen.getAllByRole('switch');
+    await act(async () => { fireEvent.click(switches[0]); });
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+
+    // Second toggle: succeeds — error should disappear
+    saveSidebarConfig.mockResolvedValueOnce({ synced: true });
+    await act(async () => { fireEvent.click(switches[1]); });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
+  });
+
+  test('Reset clears sync error', async () => {
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false, error: 'Timeout' });
+    renderComponent();
+    await act(async () => { fireEvent.click(screen.getAllByRole('switch')[0]); });
+    await act(async () => {});
+    expect(screen.getByText(/server sync failed/i)).toBeInTheDocument();
+
+    saveSidebarConfig.mockResolvedValueOnce({ synced: false });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /reset/i })); });
+    await act(async () => {});
+    expect(screen.queryByText(/server sync failed/i)).not.toBeInTheDocument();
   });
 });

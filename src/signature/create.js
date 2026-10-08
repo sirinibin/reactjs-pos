@@ -6,9 +6,11 @@ import Resizer from "react-image-file-resizer";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 
 const SignatureCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -171,7 +173,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Signature Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t('signature_created_successfully'), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -186,7 +188,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating Signature!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t('error_creating_signature'), "danger");
             });
     }
 
@@ -206,7 +208,7 @@ const SignatureCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Signature #" + formData.name : "Create New Signature"}
+                        {formData.id ? t('update_signature') + ' #' + formData.name : t('create_new_signature')}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -215,7 +217,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t('view_detail')}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -230,14 +232,14 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t('update') : !isProcessing ? t('create') : ""}
 
                         </Button>
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t('close')}
                         ></button>
                     </div >
                 </Modal.Header >
@@ -245,7 +247,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-6">
-                            <label className="form-label">Name*</label>
+                            <label className="form-label">{t('name')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -260,7 +262,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Name"
+                                    placeholder={t('name')}
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
@@ -271,14 +273,14 @@ const SignatureCreate = forwardRef((props, ref) => {
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('looks_good')}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Signature*</label>
+                            <label className="form-label">{t('signature')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -289,7 +291,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         if (!e.target.value) {
-                                            errors["signature_content"] = "Invalid Signature File";
+                                            errors["signature_content"] = t('invalid_signature_file');
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -335,7 +337,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                                 {formData.signature_content && !errors.signature_content && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('looks_good')}
                                     </div>
                                 )}
                             </div>
@@ -343,7 +345,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('close')}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -353,9 +355,9 @@ const SignatureCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
+                                    /> + t('processing')
 
-                                    : formData.id ? "Update" : "Create"
+                                    : formData.id ? t('update') : t('create')
                                 }
                             </Button>
                         </Modal.Footer>

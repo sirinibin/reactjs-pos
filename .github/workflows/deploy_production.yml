@@ -3,35 +3,55 @@ name: Deploy React App to AWS production
 on:
   push:
     branches:
-      - master # Change to your production branch
+      - master
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 17.9.0 # Use your project's Node.js version
+          node-version: 17.9.0
 
-      # Step 3: Install dependencies and build
-      - name: Install dependencies and build
+      - name: Install dependencies
+        run: npm install
+
+      # ── ESLint — errors only (matches deploy.sh check_eslint) ─────────────────
+      - name: ESLint check
         run: |
-          npm install
-          export NODE_OPTIONS=--openssl-legacy-provider
-          export DANGEROUSLY_DISABLE_HOST_CHECK=true
-          export REACT_APP_API_URL=https://startpos-api.gulfunionozone.com
-          export GENERATE_SOURCEMAP=false
-          npm run build
+          npx eslint src --ext .js,.jsx --quiet \
+            --ignore-pattern 'src/**/__tests__/**' \
+            --ignore-pattern 'src/**/*.test.js' \
+            --ignore-pattern 'src/**/*.test.jsx'
 
-      # Step 4: Deploy to AWS
-      - name: Deploy to AWS
+      # ── Tests (matches deploy.sh run_tests) ───────────────────────────────────
+      - name: Run tests
+        run: |
+          NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
+            --watchAll=false --runInBand \
+            --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|workshopI18n|PdfPriceExtraction"
+
+      # ── Build ─────────────────────────────────────────────────────────────────
+      - name: Build
+        run: |
+          NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
+          DANGEROUSLY_DISABLE_HOST_CHECK=true \
+          REACT_APP_API_URL=https://startpos-api.gulfunionozone.com \
+          GENERATE_SOURCEMAP=false \
+          DISABLE_ESLINT_PLUGIN=true \
+          npm run build 2>&1 | tee /tmp/build.log
+          if grep -qi "compiled with warnings" /tmp/build.log; then
+            echo "Build produced warnings — aborting."
+            exit 1
+          fi
+
+      # ── Deploy: rsync to staging dir, then atomic swap (near-zero downtime) ───
+      - name: Deploy to AWS (atomic swap)
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           AWS_HOST: ${{ secrets.AWS_HOST }}
@@ -42,6 +62,23 @@ jobs:
           set -e
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          ssh -o StrictHostKeyChecking=no -i private_key.pem -p $AWS_PORT $AWS_USER@$AWS_HOST "mkdir -p $AWS_DEST_PATH"
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -i private_key.pem -p $AWS_PORT" build/ $AWS_USER@$AWS_HOST:$AWS_DEST_PATH/
+
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -i private_key.pem -p $AWS_PORT"
+          DEST="${AWS_DEST_PATH%/}"   # strip trailing slash
+          TMP="${DEST}_new"
+          OLD="${DEST}_old"
+
+          # Ensure both directories exist on the server
+          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" "mkdir -p $TMP $DEST"
+
+          # Step 1: rsync into staging dir — live site untouched during transfer
+          rsync -az --partial --timeout=60 \
+            -e "ssh $SSH_OPTS" \
+            build/ "$AWS_USER@$AWS_HOST:$TMP/"
+
+          # Step 2: atomic swap — two renames on same filesystem (~1 ms total)
+          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" \
+            "mv $DEST $OLD && mv $TMP $DEST && rm -rf $OLD"
+
           rm -f private_key.pem
+          echo "Production deploy complete."

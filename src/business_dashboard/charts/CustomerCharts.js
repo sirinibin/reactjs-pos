@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
+import { useTranslation } from 'react-i18next';
 import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 function fmtT(n) {
@@ -11,6 +12,7 @@ function fmtT(n) {
 // customerSummaries: array of { customer_name, sales_amount, qtn_amount, total_amount, outstanding }
 // from GET /v1/dashboard/customers. Already sorted by total_amount descending.
 export function TopCustomersChart({ customerSummaries, store, filters }) {
+    const { t } = useTranslation('common');
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
     const vatPercent           = store?.vat_percent || 15;
 
@@ -18,31 +20,31 @@ export function TopCustomersChart({ customerSummaries, store, filters }) {
         const top = (customerSummaries || []).slice(0, 10);
         if (top.length === 0) return null;
 
-        const header = ["Customer", "Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
+        const header = ["Customer", t("Revenue (SAR)"), { role: "tooltip", type: "string", p: { html: true } }];
         const rows = top.map(r => {
             const total           = r.total_amount || 0;
             const revVat          = total * vatPercent / (100 + vatPercent);
             const revWithoutVAT   = total - revVat;
             const lines = [
-                { label: "Formula",      value: "Sum of net_total across all orders" },
-                { label: "Sales Orders", value: `${fmtT(r.sales_amount)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_amount || 0)}` }] : []),
-                { divider: true, label: "Total Revenue (with VAT)",    value: `SAR ${fmtT(total)}`, bold: true, color: "#74c0fc" },
+                { label: t("Formula"),      value: "Sum of net_total across all orders" },
+                { label: t("Sales Orders"), value: `${fmtT(r.sales_amount)}` },
+                ...(qtnInvoiceAccounting ? [{ label: t("Qtn. Invoice Orders"), value: `${fmtT(r.qtn_amount || 0)}` }] : []),
+                { divider: true, label: t("Total Revenue (with VAT)"),    value: `SAR ${fmtT(total)}`, bold: true, color: "#74c0fc" },
                 { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(revVat)}` },
-                { divider: true, label: "Total Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
+                { divider: true, label: t("Total Revenue (without VAT)"), value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
             ];
             return [r.customer_name, parseFloat(total.toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [customerSummaries, qtnInvoiceAccounting, vatPercent, store, filters]);
+    }, [customerSummaries, qtnInvoiceAccounting, vatPercent, store, filters, t]);
 
-    if (!data) return <p className="text-muted small">No customer data</p>;
+    if (!data) return <p className="text-muted small">{t("No customer data")}</p>;
     return (
         <Chart
             chartType="BarChart"
             data={data}
             options={{
-                title: "Top 10 Customers by Revenue",
+                title: t("Top 10 Customers by Revenue"),
                 colors: ["#4e73df"],
                 legend: { position: "none" },
                 hAxis: { title: "SAR" },
@@ -58,31 +60,32 @@ export function TopCustomersChart({ customerSummaries, store, filters }) {
 
 // outstandingSummaries: array of { customer_name, outstanding } from /v1/dashboard/outstanding
 export function OutstandingReceivablesChart({ outstandingSummaries, store, filters }) {
+    const { t } = useTranslation('common');
     const data = useMemo(() => {
         const entries = (outstandingSummaries || []).filter(c => (c.outstanding || 0) > 0).slice(0, 10);
         if (entries.length === 0) return null;
 
-        const header = ["Customer", "Outstanding (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
+        const header = ["Customer", t("Outstanding (SAR)"), { role: "tooltip", type: "string", p: { html: true } }];
         const rows = entries.map(c => {
             const amount = parseFloat((c.outstanding || 0).toFixed(2));
             const lines = [
-                { label: "Outstanding", value: `SAR ${fmtT(amount)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Formula", value: "Total invoiced − Total paid (server-aggregated)" },
-                { label: "Source", value: "customer.credit_balance" },
+                { label: t("Outstanding"), value: `SAR ${fmtT(amount)}`, bold: true, color: "#ffa8a8" },
+                { divider: true, label: t("Formula"), value: "Total invoiced − Total paid (server-aggregated)" },
+                { label: t("Source"), value: "customer.credit_balance" },
             ];
             return [c.customer_name || "Unknown", amount, tooltipHtml(c.customer_name || "Unknown", "#e74a3b", lines, store, filters)];
         });
 
         return [header, ...rows];
-    }, [outstandingSummaries, store, filters]);
+    }, [outstandingSummaries, store, filters, t]);
 
-    if (!data) return <p className="text-muted small">No outstanding balances</p>;
+    if (!data) return <p className="text-muted small">{t("No outstanding balances")}</p>;
     return (
         <Chart
             chartType="BarChart"
             data={data}
             options={{
-                title: "Outstanding Receivables by Customer",
+                title: t("Outstanding Receivables by Customer"),
                 colors: ["#e74a3b"],
                 legend: { position: "none" },
                 hAxis: { title: "SAR" },

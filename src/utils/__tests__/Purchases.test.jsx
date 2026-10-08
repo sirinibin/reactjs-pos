@@ -5,6 +5,13 @@ import Purchases from "../purchases";
 // Mock CSS import so Jest doesn't choke on it
 jest.mock("react-datepicker/dist/react-datepicker.css", () => ({}));
 
+jest.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => key,
+        i18n: { changeLanguage: jest.fn(), language: 'en' },
+    }),
+}));
+
 // Mock react-bootstrap — Modal conditionally renders children based on show prop
 jest.mock("react-bootstrap", () => {
     const Modal = ({ show, children }) =>
@@ -155,5 +162,28 @@ describe("Purchases modal component", () => {
         const purchaseIndex = screen.getByTestId("purchase-index");
         const passedVendors = JSON.parse(purchaseIndex.dataset.vendors);
         expect(passedVendors).toEqual(vendors);
+    });
+});
+
+// ─── i18n source-level tests ─────────────────────────────────────────────────
+
+const fs = require('fs');
+const path = require('path');
+const PURCHASES_SRC = fs.readFileSync(
+    path.join(__dirname, '..', 'purchases.js'),
+    'utf8'
+);
+
+describe('purchases.js — i18n modal title', () => {
+    test('9. imports useTranslation from react-i18next', () => {
+        expect(PURCHASES_SRC).toMatch(/useTranslation.*react-i18next|react-i18next.*useTranslation/);
+    });
+
+    test('10. Modal.Title uses t("Purchases") not hardcoded string', () => {
+        expect(PURCHASES_SRC).toMatch(/t\(["']Purchases["']\)/);
+    });
+
+    test('11. Modal.Title uses t("Select Purchase") not hardcoded string', () => {
+        expect(PURCHASES_SRC).toMatch(/t\(["']Select Purchase["']\)/);
     });
 });

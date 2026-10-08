@@ -108,7 +108,7 @@ describe('SalesPaymentIndex smoke tests', () => {
         <SalesPaymentIndex />
       </MemoryRouter>
     );
-    expect(getByText('Sales Payments')).toBeTruthy();
+    expect(getByText('sales_payments')).toBeTruthy();
   });
 
   it('renders without crashing when an order prop is provided', () => {

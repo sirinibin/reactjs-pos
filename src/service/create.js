@@ -1,4 +1,5 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import ServiceCategoryCreate from "../service_category/create.js";
@@ -83,9 +84,11 @@ const SectionTitle = ({ children, icon }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ServiceCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef(null);
     const ServiceCategoryCreateFormRef = useRef(null);
+    // eslint-disable-next-line no-unused-vars
     const categorySearchRef = useRef(null);
     const SalesHistoryRef = useRef(null);
     const SalesReturnHistoryRef = useRef(null);
@@ -93,6 +96,11 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     let [selectedCategories, setSelectedCategories] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
+    // eslint-disable-next-line no-unused-vars
+    const [categorySearch, setCategorySearch] = useState('');
+    // eslint-disable-next-line no-unused-vars
+    const [categoryOpen, setCategoryOpen] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
 
     let [store, setStore] = useState({});
@@ -174,6 +182,21 @@ const ServiceCreate = forwardRef((props, ref) => {
         } catch (e) {}
     }
 
+    useEffect(() => {
+        if (!show) return;
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem("access_token") };
+        const storeId = localStorage.getItem("store_id") || "";
+        fetch(`/v1/service-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { method: "GET", headers })
+            .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+    }, [show]);
+
+    function refreshServiceCategories() {
+        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem("access_token") };
+        const storeId = localStorage.getItem("store_id") || "";
+        fetch(`/v1/service-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { method: "GET", headers })
+            .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+    }
+
     async function suggestCategories(searchTerm) {
         if (!searchTerm) return;
         setIsCategoriesLoading(true);
@@ -192,10 +215,8 @@ const ServiceCreate = forwardRef((props, ref) => {
 
         // Front-end validation for mandatory fields
         const validationErrors = {};
-        if (!formData.name?.trim())               validationErrors.name               = "Name is required";
-        if (!formData.service_category_id)        validationErrors.service_category_id = "Service Category is required";
-        if (!formData.unit?.trim())               validationErrors.unit               = "Unit is required";
-        if (!formData.part_number?.trim())         validationErrors.part_number        = "Item Code / SKU is required";
+        if (!formData.name?.trim())               validationErrors.name               = t("Name is required");
+        if (!formData.unit?.trim())               validationErrors.unit               = t("Unit is required");
         if (Object.keys(validationErrors).length > 0) {
             setErrors({ ...errors, ...validationErrors });
             return;
@@ -219,12 +240,12 @@ const ServiceCreate = forwardRef((props, ref) => {
             if (!r.ok) { setErrors({ ...(data.errors || {}) }); setProcessing(false); return; }
             setErrors({});
             setProcessing(false);
-            if (props.showToastMessage) props.showToastMessage("Service saved successfully", "success");
+            if (props.showToastMessage) props.showToastMessage(t("Service saved successfully"), "success");
             if (props.refreshList) props.refreshList();
             handleClose();
         } catch (err) {
             setProcessing(false);
-            if (props.showToastMessage) props.showToastMessage("Error saving service", "danger");
+            if (props.showToastMessage) props.showToastMessage(t("Error saving service"), "danger");
         }
     }
 
@@ -333,7 +354,7 @@ const ServiceCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="pw-modal" className="pw-modal-wrap">
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" keyboard={false} dialogClassName="pw-modal" className={`pw-modal-wrap${props.modalClass ? ' ' + props.modalClass : ''}`}>
                 <style>{`
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .svc-body { overflow-y: auto !important; padding: 0 !important; flex: 1; min-height: 0; }
@@ -348,12 +369,12 @@ const ServiceCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '15px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '15px' }}></i> {t('Back')}
                     </button>
 
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 700, color: '#191c1e', flex: 1, letterSpacing: '-0.01em' }}>
                         <i className="bi bi-tools me-2" style={{ color: '#004ac6', fontSize: '15px' }}></i>
-                        {formData.id ? `Edit Service — ${formData.name}` : 'New Service'}
+                        {formData.id ? `${t('Edit Service')} — ${formData.name}` : t('New Service')}
                     </Modal.Title>
 
                     <div className="d-flex align-items-center gap-2">
@@ -361,9 +382,9 @@ const ServiceCreate = forwardRef((props, ref) => {
                             style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '6px', padding: '7px 20px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: isProcessing ? 0.7 : 1 }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Save Changes' : 'Create Service'}
+                            {formData.id ? t('Save Changes') : t('Create Service')}
                         </button>
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
                     </div>
                 </Modal.Header>
 
@@ -399,17 +420,17 @@ const ServiceCreate = forwardRef((props, ref) => {
 
                         {/* ── 1. Service Identity ────────────────────────────────────── */}
                         <div style={CARD}>
-                            <SectionTitle icon="bi-person-badge">Service Identity</SectionTitle>
+                            <SectionTitle icon="bi-person-badge">{t('Service Identity')}</SectionTitle>
                             <div className="row g-3">
                                 <div className="col-md-6">
-                                    <Label required>Name</Label>
+                                    <Label required>{t('Name')}</Label>
                                     <input type="text" value={formData.name || ''}
                                         onChange={(e) => { clearError('name'); formData.name = e.target.value; setFormData({ ...formData }); }}
-                                        style={input(errors.name)} placeholder="Service name" />
+                                        style={input(errors.name)} placeholder={t('Service name')} />
                                     <InlineError msg={errors.name} />
                                 </div>
                                 <div className="col-md-6">
-                                    <Label>Name in Arabic</Label>
+                                    <Label>{t('Name in Arabic')}</Label>
                                     <input type="text" value={formData.name_in_arabic || ''}
                                         onChange={(e) => { formData.name_in_arabic = e.target.value; setFormData({ ...formData }); }}
                                         style={{ ...input(false), direction: 'rtl' }} placeholder="الاسم بالعربية" />
@@ -419,56 +440,67 @@ const ServiceCreate = forwardRef((props, ref) => {
 
                         {/* ── 2. Classification ─────────────────────────────────────── */}
                         <div style={CARD}>
-                            <SectionTitle icon="bi-tags">Classification</SectionTitle>
+                            <SectionTitle icon="bi-tags">{t('Classification')}</SectionTitle>
                             <div className="row g-3">
                                 <div className="col-md-5">
-                                    <Label required>Service Category</Label>
-                                    <div className="d-flex gap-1">
+                                    <Label>{t('Service Category')}</Label>
+                                    <div className="d-flex gap-1 align-items-center">
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <Typeahead ref={categorySearchRef} id="service_category_id" labelKey="name" positionFixed={true}
-                                                isLoading={isCategoriesLoading}
-                                                isInvalid={!!errors.service_category_id}
+                                            <Typeahead
+                                                id="service_category"
+                                                labelKey="name"
+                                                filterBy={() => true}
+                                                positionFixed={true}
+                                                options={categoryOptions}
+                                                selected={selectedCategories}
+                                                placeholder={t('-- Select category --')}
+                                                inputProps={{ style: { borderColor: errors.service_category_id ? '#dc3545' : undefined } }}
+                                                onInputChange={(searchTerm) => {
+                                                    clearError('service_category_id');
+                                                    if (searchTerm) suggestCategories(searchTerm);
+                                                    else setCategoryOptions([]);
+                                                }}
                                                 onChange={(selectedItems) => {
                                                     clearError('service_category_id');
                                                     if (selectedItems.length === 0) {
                                                         formData.service_category_id = ''; formData.service_category_name = '';
-                                                        setFormData({ ...formData }); setSelectedCategories([]); return;
+                                                        setFormData({ ...formData }); setSelectedCategories([]);
+                                                        return;
                                                     }
-                                                    formData.service_category_id = selectedItems[0].id;
-                                                    formData.service_category_name = selectedItems[0].name;
+                                                    const c = selectedItems[0];
+                                                    formData.service_category_id = c.id; formData.service_category_name = c.name;
                                                     setFormData({ ...formData }); setSelectedCategories(selectedItems);
                                                 }}
-                                                options={categoryOptions} placeholder="Select service category"
-                                                selected={selectedCategories} highlightOnlyResult={true}
-                                                onInputChange={(searchTerm) => suggestCategories(searchTerm)}
-                                                onKeyDown={(e) => { if (e.key === 'Escape') { setCategoryOptions([]); categorySearchRef.current?.clear(); } }}
+                                                renderMenuItemChildren={(option) => (
+                                                    <span style={{ fontSize: '13px' }}>{option.name}</span>
+                                                )}
                                             />
                                         </div>
                                         <button type="button"
                                             style={{ background: '#f2f4f6', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '0 10px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}
-                                            onClick={() => ServiceCategoryCreateFormRef.current?.open()} title="New Category">
+                                            onClick={() => ServiceCategoryCreateFormRef.current?.open()} title={t("New Category")}>
                                             <i className="bi bi-plus-lg"></i>
                                         </button>
                                     </div>
                                     <InlineError msg={errors.service_category_id} />
                                 </div>
                                 <div className="col-md-3">
-                                    <Label required>Unit</Label>
+                                    <Label required>{t('Unit')}</Label>
                                     <select style={selectStyle(!!errors.unit)} value={formData.unit || 'C62'}
                                         onChange={(e) => { clearError('unit'); formData.unit = e.target.value; setFormData({ ...formData }); }}>
-                                        <option value="C62">Each / Per Visit (C62)</option>
-                                        <option value="HUR">Hour (HUR)</option>
-                                        <option value="DAY">Day (DAY)</option>
-                                        <option value="WEE">Week (WEE)</option>
-                                        <option value="MON">Month (MON)</option>
-                                        <option value="ANN">Year (ANN)</option>
+                                        <option value="C62">{t('Each / Per Visit (C62)')}</option>
+                                        <option value="HUR">{t('Hour (HUR)')}</option>
+                                        <option value="DAY">{t('Day (DAY)')}</option>
+                                        <option value="WEE">{t('Week (WEE)')}</option>
+                                        <option value="MON">{t('Month (MON)')}</option>
+                                        <option value="ANN">{t('Year (ANN)')}</option>
                                     </select>
                                     {(() => {
-                                        const labels = { C62: 'Each / Per Visit', HUR: 'Hour', DAY: 'Day', WEE: 'Week', MON: 'Month', ANN: 'Year' };
+                                        const labels = { C62: t('Each / Per Visit'), HUR: t('Hour'), DAY: t('Day'), WEE: t('Week'), MON: t('Month'), ANN: t('Year') };
                                         const code = formData.unit || 'C62';
                                         return (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px' }}>
-                                                <span style={{ fontSize: '10px', color: '#737686', fontFamily: '"Inter", sans-serif' }}>ZATCA code:</span>
+                                                <span style={{ fontSize: '10px', color: '#737686', fontFamily: '"Inter", sans-serif' }}>{t('ZATCA code:')}</span>
                                                 <span style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', color: '#004ac6', background: '#eef2ff', padding: '1px 6px', borderRadius: '3px' }}>({code})</span>
                                                 <span style={{ fontSize: '11px', color: '#737686', fontFamily: '"Inter", sans-serif' }}>{labels[code] || code}</span>
                                             </div>
@@ -477,10 +509,10 @@ const ServiceCreate = forwardRef((props, ref) => {
                                     <InlineError msg={errors.unit} />
                                 </div>
                                 <div className="col-md-4">
-                                    <Label required>Item Code / SKU</Label>
+                                    <Label>{t('Item Code / SKU')}</Label>
                                     <input type="text" value={formData.item_code || formData.part_number || ''}
                                         onChange={(e) => { clearError('part_number'); formData.part_number = e.target.value; formData.item_code = e.target.value; setFormData({ ...formData }); }}
-                                        style={input(!!errors.part_number)} placeholder="e.g. SVC-001" />
+                                        style={input(!!errors.part_number)} placeholder={t('Auto-generated if empty')} />
                                     <InlineError msg={errors.part_number} />
                                 </div>
                             </div>
@@ -488,23 +520,23 @@ const ServiceCreate = forwardRef((props, ref) => {
 
                         {/* ── 3. Service Details ────────────────────────────────────── */}
                         <div style={CARD}>
-                            <SectionTitle icon="bi-sliders">Service Details</SectionTitle>
+                            <SectionTitle icon="bi-sliders">{t('Service Details')}</SectionTitle>
                             <div className="row g-3">
                                 <div className="col-md-4">
-                                    <Label>Duration</Label>
+                                    <Label>{t('Duration')}</Label>
                                     <div style={{ display: 'flex', gap: '6px' }}>
                                         <input type="number" min="0"
                                             value={formData.duration_minutes || ''}
                                             onChange={(e) => { formData.duration_minutes = e.target.value ? parseInt(e.target.value) : 0; setFormData({ ...formData }); }}
-                                            style={{ ...input(false), flex: 1 }} placeholder="e.g. 2" />
+                                            style={{ ...input(false), flex: 1 }} placeholder={t('e.g. 2')} />
                                         <select
                                             value={formData.duration_unit || 'minutes'}
                                             onChange={(e) => { formData.duration_unit = e.target.value; setFormData({ ...formData }); }}
                                             style={{ ...selectStyle(false), width: 'auto', minWidth: '88px', flex: '0 0 auto' }}>
-                                            <option value="minutes">Min</option>
-                                            <option value="hours">Hours</option>
-                                            <option value="days">Days</option>
-                                            <option value="weeks">Weeks</option>
+                                            <option value="minutes">{t('Min')}</option>
+                                            <option value="hours">{t('Hours')}</option>
+                                            <option value="days">{t('Days')}</option>
+                                            <option value="weeks">{t('Weeks')}</option>
                                         </select>
                                     </div>
                                     <div style={{ fontSize: '11px', color: '#737686', marginTop: '3px', fontFamily: '"Inter", sans-serif' }}>
@@ -514,13 +546,13 @@ const ServiceCreate = forwardRef((props, ref) => {
                                     </div>
                                 </div>
                                 <div className="col-md-4">
-                                    <Label>Delivery Mode</Label>
+                                    <Label>{t('Delivery Mode')}</Label>
                                     <select style={selectStyle(false)} value={formData.delivery_mode || ''}
                                         onChange={(e) => { formData.delivery_mode = e.target.value; setFormData({ ...formData }); }}>
-                                        <option value="">— Not specified —</option>
-                                        <option value="in_store">In Store</option>
-                                        <option value="remote">Remote / Online</option>
-                                        <option value="at_customer_location">At Customer Location</option>
+                                        <option value="">{t('— Not specified —')}</option>
+                                        <option value="in_store">{t('In Store')}</option>
+                                        <option value="remote">{t('Remote / Online')}</option>
+                                        <option value="at_customer_location">{t('At Customer Location')}</option>
                                     </select>
                                 </div>
                                 <div className="col-md-4 d-flex align-items-center" style={{ paddingTop: '22px' }}>
@@ -531,44 +563,44 @@ const ServiceCreate = forwardRef((props, ref) => {
                                             checked={formData.booking_required || false}
                                             onChange={() => {}} />
                                         <label htmlFor="booking_required" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 500, color: formData.booking_required ? '#004ac6' : '#434655', cursor: 'pointer', marginBottom: 0, lineHeight: 1.3 }}>
-                                            Booking / Appointment Required
+                                            {t('Booking / Appointment Required')}
                                         </label>
                                     </div>
                                 </div>
                             </div>
                             <div className="row g-3 mt-0">
                                 <div className="col-12">
-                                    <Label>Description / Notes</Label>
+                                    <Label>{t('Description / Notes')}</Label>
                                     <textarea rows={3} value={formData.note || ''}
                                         onChange={(e) => { formData.note = e.target.value; setFormData({ ...formData }); }}
                                         style={{ ...input(false), resize: 'vertical', minHeight: '80px' }}
-                                        placeholder="Describe the service, any terms, or additional details..." />
+                                        placeholder={t('Describe the service, any terms, or additional details...')} />
                                 </div>
                             </div>
                         </div>
 
                         {/* ── 4. Pricing ────────────────────────────────────────────── */}
                         <div style={CARD}>
-                            <SectionTitle icon="bi-currency-dollar">Pricing</SectionTitle>
+                            <SectionTitle icon="bi-currency-dollar">{t('Pricing')}</SectionTitle>
                             <div className="row g-4">
                                 {/* Purchase */}
                                 <div className="col-md-4">
                                     <div style={PRICE_CARD}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
-                                            Purchase Unit Price
+                                            {t('Purchase Unit Price')}
                                         </div>
                                         <div style={{ marginBottom: '14px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Excl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Excl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.purchase_unit_price ?? ''}
-                                                style={PRICE_INPUT} placeholder="0.00"
+                                                style={PRICE_INPUT} placeholder={t('0.00')}
                                                 onChange={(e) => updatePurchaseExcl(e.target.value)} />
                                         </div>
                                         <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '12px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Incl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Incl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.purchase_unit_price_with_vat ?? ''}
-                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder="Calculated automatically"
+                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder={t('Calculated automatically')}
                                                 onChange={(e) => updatePurchaseIncl(e.target.value)} />
                                         </div>
                                     </div>
@@ -577,20 +609,20 @@ const ServiceCreate = forwardRef((props, ref) => {
                                 <div className="col-md-4">
                                     <div style={PRICE_CARD}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
-                                            Wholesale Unit Price
+                                            {t('Wholesale Unit Price')}
                                         </div>
                                         <div style={{ marginBottom: '14px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Excl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Excl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.wholesale_unit_price ?? ''}
-                                                style={PRICE_INPUT} placeholder="0.00"
+                                                style={PRICE_INPUT} placeholder={t('0.00')}
                                                 onChange={(e) => updateWholesaleExcl(e.target.value)} />
                                         </div>
                                         <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '12px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Incl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Incl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.wholesale_unit_price_with_vat ?? ''}
-                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder="Calculated automatically"
+                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder={t('Calculated automatically')}
                                                 onChange={(e) => updateWholesaleIncl(e.target.value)} />
                                         </div>
                                     </div>
@@ -599,20 +631,20 @@ const ServiceCreate = forwardRef((props, ref) => {
                                 <div className="col-md-4">
                                     <div style={PRICE_CARD}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 700, color: '#737686', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '14px' }}>
-                                            Retail Unit Price
+                                            {t('Retail Unit Price')}
                                         </div>
                                         <div style={{ marginBottom: '14px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Excl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Excl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.retail_unit_price ?? ''}
-                                                style={PRICE_INPUT} placeholder="0.00"
+                                                style={PRICE_INPUT} placeholder={t('0.00')}
                                                 onChange={(e) => updateRetailExcl(e.target.value)} />
                                         </div>
                                         <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '12px' }}>
-                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>Incl. VAT</div>
+                                            <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', marginBottom: '5px' }}>{t('Incl. VAT')}</div>
                                             <input type="text" inputMode="decimal"
                                                 value={priceInputs.retail_unit_price_with_vat ?? ''}
-                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder="Calculated automatically"
+                                                style={{ ...PRICE_INPUT, background: '#f0f2f4' }} placeholder={t('Calculated automatically')}
                                                 onChange={(e) => updateRetailIncl(e.target.value)} />
                                         </div>
                                     </div>
@@ -622,7 +654,7 @@ const ServiceCreate = forwardRef((props, ref) => {
 
                         {/* ── 5. Photos ─────────────────────────────────────────────── */}
                         <div style={CARD}>
-                            <SectionTitle icon="bi-images">Photos</SectionTitle>
+                            <SectionTitle icon="bi-images">{t('Photos')}</SectionTitle>
                             <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id}
                                 storedImages={formData.images} modelName="product"
                                 handleDelete={handleDeleteImage} />
@@ -631,19 +663,19 @@ const ServiceCreate = forwardRef((props, ref) => {
                         {/* ── 6. Sales History (edit mode only) ─────────────────────── */}
                         {formData.id && (
                             <div style={CARD}>
-                                <SectionTitle icon="bi-clock-history">Transaction History</SectionTitle>
+                                <SectionTitle icon="bi-clock-history">{t('Transaction History')}</SectionTitle>
                                 <div className="d-flex flex-wrap gap-2">
                                     <button type="button" className="btn btn-sm btn-outline-primary"
                                         onClick={() => SalesHistoryRef.current?.open(formData.id)}>
-                                        <i className="bi bi-receipt me-1"></i> Sales History
+                                        <i className="bi bi-receipt me-1"></i> {t('Sales History')}
                                     </button>
                                     <button type="button" className="btn btn-sm btn-outline-secondary"
                                         onClick={() => SalesReturnHistoryRef.current?.open(formData.id)}>
-                                        <i className="bi bi-receipt-cutoff me-1"></i> Sales Returns
+                                        <i className="bi bi-receipt-cutoff me-1"></i> {t('Sales Returns')}
                                     </button>
                                     <button type="button" className="btn btn-sm btn-outline-secondary"
                                         onClick={() => QuotationHistoryRef.current?.open(formData.id)}>
-                                        <i className="bi bi-clipboard2-check me-1"></i> Quotations
+                                        <i className="bi bi-clipboard2-check me-1"></i> {t('Quotations')}
                                     </button>
                                 </div>
                             </div>
@@ -653,7 +685,7 @@ const ServiceCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
             </Modal>
-            <ServiceCategoryCreate ref={ServiceCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceCategoryCreate ref={ServiceCategoryCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshServiceCategories} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />

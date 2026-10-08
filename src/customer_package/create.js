@@ -2,8 +2,11 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import { DEFAULT_MENU } from "../sidebar_menu_config";
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const CustomerPackageCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
     useImperativeHandle(ref, () => ({
         open(id) {
             setFormData({ tab_ids: [] });
@@ -53,13 +56,13 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 if (!data.status) {
                     setErrors(data.errors || {});
-                    if (props.showToastMessage) props.showToastMessage("Error saving package!", "danger");
+                    if (props.showToastMessage) props.showToastMessage(t('error_saving_package'), "danger");
                     return;
                 }
                 setErrors({});
                 if (props.showToastMessage)
                     props.showToastMessage(
-                        formData.id ? "Package Updated!" : "Package Created!",
+                        formData.id ? t('package_updated') : t('package_created'),
                         "success"
                     );
                 if (props.refreshList) props.refreshList();
@@ -67,7 +70,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
             })
             .catch(() => {
                 setProcessing(false);
-                if (props.showToastMessage) props.showToastMessage("Error saving package!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t('error_saving_package'), "danger");
             });
     }
 
@@ -115,18 +118,18 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#434655", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", padding: "4px 8px", borderRadius: "4px" }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f2f4")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "none")}>
-                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }}></i> Back
+                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }}></i> {t('back')}
                 </button>
                 <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "17px", fontWeight: 700, color: "#191c1e", flex: 1 }}>
-                    {formData.id ? `Update Package — ${formData.name}` : "Create New Package"}
+                    {formData.id ? `${t('update_package')} — ${formData.name}` : t('create_new_package')}
                 </Modal.Title>
                 <button type="button"
                     style={{ background: "#004ac6", color: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 18px", fontSize: "13px", fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
                     onClick={handleSave} disabled={isProcessing}>
                     {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden />}
-                    {formData.id ? "Update" : "Create"}
+                    {formData.id ? t('update') : t('create')}
                 </button>
-                <button type="button" className="btn-close ms-1" onClick={() => setShow(false)} aria-label="Close" />
+                <button type="button" className="btn-close ms-1" onClick={() => setShow(false)} aria-label={t('close')} />
             </Modal.Header>
 
             <style>{`
@@ -142,7 +145,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                             <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px" }}>
                                 <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px" }}>
                                     <i className="bi bi-exclamation-circle-fill" style={{ marginRight: "6px" }}></i>
-                                    {allErrors.length} error{allErrors.length > 1 ? "s" : ""} — please fix before saving:
+                                    {allErrors.length} {t('errors_fix_before_saving')}
                                 </div>
                                 <ul style={{ margin: 0, paddingLeft: "18px" }}>
                                     {allErrors.map(([k, v]) => (
@@ -156,11 +159,11 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                         <div style={CARD}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
                                 <i className="bi bi-box-seam" style={{ fontSize: "18px", color: "#004ac6" }}></i>
-                                <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "16px", fontWeight: 600, color: "#191c1e", margin: 0 }}>Package Details</h3>
+                                <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "16px", fontWeight: 600, color: "#191c1e", margin: 0 }}>{t('package_details')}</h3>
                             </div>
                             <div>
                                 <label style={{ display: "block", fontFamily: '"Inter", sans-serif', fontSize: "13px", fontWeight: 600, color: "#191c1e", marginBottom: "4px" }}>
-                                    Name<span style={{ color: "#ba1a1a", marginLeft: "2px" }}>*</span>
+                                    {t('name')}<span style={{ color: "#ba1a1a", marginLeft: "2px" }}>*</span>
                                 </label>
                                 <input
                                     value={formData.name || ""}
@@ -171,7 +174,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData, name: e.target.value });
                                     }}
                                     style={INPUT}
-                                    placeholder="Package name"
+                                    placeholder={t('package_name_placeholder')}
                                 />
                                 {errors.name && (
                                     <div style={{ color: "#ba1a1a", fontSize: "12px", marginTop: "3px" }}>
@@ -186,21 +189,21 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                     <i className="bi bi-layout-sidebar" style={{ fontSize: "18px", color: "#004ac6" }}></i>
-                                    <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "16px", fontWeight: 600, color: "#191c1e", margin: 0 }}>Available Tabs</h3>
+                                    <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "16px", fontWeight: 600, color: "#191c1e", margin: 0 }}>{t('available_tabs')}</h3>
                                 </div>
                                 <div style={{ display: "flex", gap: "8px" }}>
                                     <button type="button" onClick={selectAll}
                                         style={{ fontSize: "12px", fontFamily: "Inter, sans-serif", padding: "4px 10px", border: "1px solid #004ac6", borderRadius: "4px", background: "none", color: "#004ac6", cursor: "pointer" }}>
-                                        Select All
+                                        {t('select_all')}
                                     </button>
                                     <button type="button" onClick={clearAll}
                                         style={{ fontSize: "12px", fontFamily: "Inter, sans-serif", padding: "4px 10px", border: "1px solid #c3c6d7", borderRadius: "4px", background: "none", color: "#434655", cursor: "pointer" }}>
-                                        Clear All
+                                        {t('clear_all')}
                                     </button>
                                 </div>
                             </div>
                             <p style={{ fontSize: "12px", color: "#6b7280", fontFamily: "Inter, sans-serif", marginBottom: "16px" }}>
-                                Select which tabs are available to non-admin users of stores assigned this package.
+                                {t('tabs_selection_description')}
                             </p>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "8px" }}>
                                 {DEFAULT_MENU.map((item) => {
@@ -218,7 +221,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                                             <span style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", fontWeight: checked ? 600 : 400, color: checked ? "#191c1e" : "#434655" }}>
                                                 {item.label}
                                                 {item.adminOnly && (
-                                                    <span style={{ fontSize: "10px", marginLeft: "4px", color: "#004ac6", fontWeight: 600 }}>Admin</span>
+                                                    <span style={{ fontSize: "10px", marginLeft: "4px", color: "#004ac6", fontWeight: 600 }}>{t('admin')}</span>
                                                 )}
                                             </span>
                                         </label>
@@ -226,7 +229,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
                                 })}
                             </div>
                             <div style={{ marginTop: "12px", fontSize: "12px", color: "#6b7280", fontFamily: "Inter, sans-serif" }}>
-                                {(formData.tab_ids || []).length} of {DEFAULT_MENU.length} tabs selected
+                                {t('tabs_selected_count', { selected: (formData.tab_ids || []).length, total: DEFAULT_MENU.length })}
                             </div>
                         </div>
 

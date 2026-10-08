@@ -1,10 +1,12 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from 'react-bootstrap';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone } from '../utils/dateUtils.js';
 
 
 const ExpenseCategoryView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -90,14 +92,14 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                             <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                            Back
+                            {t('Back')}
                         </button>
                         <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                            {model.name ? model.name : 'Details of Expense Category'}
+                            {model.name ? model.name : t('Details of Expense Category')}
                         </h1>
                         {model.parent_name && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Parent: {model.parent_name}
+                                {t('Parent')}: {model.parent_name}
                             </p>
                         )}
                     </div>
@@ -108,7 +110,7 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
                                 style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}
                             >
                                 <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
-                                Create
+                                {t('Create')}
                             </button>
                         )}
                         {props.openUpdateForm && (
@@ -117,7 +119,7 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
                                 style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
                             >
                                 <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
-                                Edit
+                                {t('Edit')}
                             </button>
                         )}
                     </div>
@@ -131,7 +133,7 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
 
                         {/* Name */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Name</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>{t('Name')}</span>
                             <span style={{ fontSize: '20px', fontWeight: 700, lineHeight: '28px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 {model.name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '16px' }}>—</span>}
                             </span>
@@ -139,15 +141,15 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
 
                         {/* Parent Category */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Parent Category</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>{t('Parent Category')}</span>
                             <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                {model.parent_name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '14px' }}>None</span>}
+                                {model.parent_name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '14px' }}>{t('None')}</span>}
                             </span>
                         </div>
 
                         {/* Created By */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Created By</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>{t('Created By')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
                                 {model.created_by_name && (
                                     <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
@@ -164,13 +166,13 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
                     {/* Metadata Section */}
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Details</h3>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Details')}</h3>
                         </div>
                         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '0' }}>
 
                             {/* Created At */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #c3c6d7' }}>
-                                <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created At')}</span>
                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                     {formatInStoreTimezone(model.created_at) || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
                                 </span>
@@ -178,7 +180,7 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
 
                             {/* Updated At */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #c3c6d7' }}>
-                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated At</span>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated At')}</span>
                                 <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
                                     {formatInStoreTimezone(model.updated_at) || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
                                 </span>
@@ -186,7 +188,7 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
 
                             {/* Updated By */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
-                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     {model.updated_by_name && (
                                         <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
@@ -209,13 +211,13 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
                     onClick={handleClose}
                     style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                 >
-                    Cancel
+                    {t('Cancel')}
                 </button>
                 <button
                     onClick={handleClose}
                     style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
                 >
-                    Close
+                    {t('Close')}
                 </button>
             </Modal.Footer>
         </Modal>

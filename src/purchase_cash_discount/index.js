@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import PurchaseCashDiscountCreate from "./create.js";
 import PurchaseCashDiscountView from "./view.js";
 
@@ -13,7 +14,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function PurchaseCashDiscountIndex(props) {
-
+    const { t } = useTranslation('common');
 
 
     const selectedDate = new Date();
@@ -280,7 +281,7 @@ function PurchaseCashDiscountIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            {t('total')}: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalCashDiscounts}
                                     displayType={"text"}
@@ -295,7 +296,7 @@ function PurchaseCashDiscountIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="h3">Purchase Cash Discounts</h1>
+                        <h1 className="h3">{t('purchase_cash_discounts')}</h1>
                     </div>
                 </div>
 
@@ -311,7 +312,7 @@ function PurchaseCashDiscountIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No purchase cash discounts to display</p>
+                                            <p className="text-start">{t('no_purchase_cash_discounts_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -336,7 +337,7 @@ function PurchaseCashDiscountIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('loading')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -347,7 +348,7 @@ function PurchaseCashDiscountIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -402,7 +403,7 @@ function PurchaseCashDiscountIndex(props) {
                                                         }}
                                                     >
 
-                                                        Purchase ID
+                                                        {t('purchase_id')}
                                                         {sortField === "purchase_code" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -421,7 +422,7 @@ function PurchaseCashDiscountIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('amount')}
                                                         {sortField === "amount" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -441,7 +442,7 @@ function PurchaseCashDiscountIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('created_by')}
                                                         {sortField === "created_by_name" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -460,7 +461,7 @@ function PurchaseCashDiscountIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -469,7 +470,7 @@ function PurchaseCashDiscountIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -507,7 +508,7 @@ function PurchaseCashDiscountIndex(props) {
                                                             );
                                                         }}
                                                         options={purchasecashdiscountOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('select_users')}
                                                         selected={selectedCreatedByPurchaseCashDiscounts}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -542,13 +543,13 @@ function PurchaseCashDiscountIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -564,7 +565,7 @@ function PurchaseCashDiscountIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

@@ -3,9 +3,11 @@ import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import PurchaseIndex from "./../purchase/index.js";
+import { useTranslation } from 'react-i18next';
 
 
 const Purchases = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const dragRef = useRef(null);
     let [selectedVendors, setSelectedVendors] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
@@ -46,10 +48,11 @@ const Purchases = forwardRef((props, ref) => {
     return (
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
-                backdrop={false}                // ✅ Allow editing background
+                backdrop={false}
                 keyboard={false}
-                centered={false}                // ❌ disable auto-centering
-                enforceFocus={false}            // ✅ allow focus outside
+                centered={false}
+                enforceFocus={false}
+                style={{ zIndex: 1090 }}
                 dialogAs={({ children, ...props }) => (
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
@@ -62,7 +65,7 @@ const Purchases = forwardRef((props, ref) => {
                                 left: "20%",
                                 transform: "translate(-50%, -50%)",
                                 margin: "0",
-                                zIndex: 1055,
+                                zIndex: 1090,
                                 width: "65%",           // Full width inside container
                             }}
                         >
@@ -72,7 +75,7 @@ const Purchases = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Purchase" : "Purchases"}</Modal.Title>
+                    <Modal.Title>{enableSelection ? t("Select Purchase") : t("Purchases")}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"

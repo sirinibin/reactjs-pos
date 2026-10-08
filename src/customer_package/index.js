@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import CustomerPackageCreate from "./create.js";
 import { confirm } from "react-bootstrap-confirmation";
 import { Button, Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 
 function CustomerPackageIndex(props) {
+    const { t } = useTranslation('common');
     const [list, setList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -33,10 +35,10 @@ function CustomerPackageIndex(props) {
     }
 
     async function handleDelete(id, name) {
-        const ok = await confirm(`Delete package "${name}"?`, {
-            title: "Confirm Delete",
-            okText: "Delete",
-            cancelText: "Cancel",
+        const ok = await confirm(t('delete_package_confirm', { name }), {
+            title: t('confirm_delete'),
+            okText: t('delete'),
+            cancelText: t('cancel'),
             okButtonStyle: "danger",
         });
         if (!ok) return;
@@ -47,7 +49,7 @@ function CustomerPackageIndex(props) {
             .then((r) => r.json())
             .then((data) => {
                 if (data.status) {
-                    if (props.showToastMessage) props.showToastMessage("Package deleted!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t('package_deleted'), "success");
                     fetchList();
                 }
             });
@@ -63,16 +65,16 @@ function CustomerPackageIndex(props) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
                 <div>
                     <h2 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: "22px", fontWeight: 700, color: "#191c1e", margin: 0 }}>
-                        <i className="bi bi-box-seam me-2" style={{ color: "#004ac6" }}></i>Customer Packages
+                        <i className="bi bi-box-seam me-2" style={{ color: "#004ac6" }}></i>{t('customer_packages')}
                     </h2>
                     <p style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#6b7280", margin: "4px 0 0" }}>
-                        Manage tab visibility packages and assign them to stores.
+                        {t('customer_packages_description')}
                     </p>
                 </div>
                 <Button
                     style={{ background: "#004ac6", border: "none", borderRadius: "6px", padding: "8px 18px", fontFamily: "Inter, sans-serif", fontSize: "13px", fontWeight: 600 }}
                     onClick={() => createRef.current.open()}>
-                    <i className="bi bi-plus-lg me-1"></i> New Package
+                    <i className="bi bi-plus-lg me-1"></i> {t('new_package')}
                 </Button>
             </div>
 
@@ -80,20 +82,20 @@ function CustomerPackageIndex(props) {
             <div style={{ background: "#fff", border: "1px solid #c3c6d7", borderRadius: "8px", overflow: "hidden" }}>
                 {isLoading ? (
                     <div style={{ padding: "48px", textAlign: "center" }}>
-                        <Spinner animation="border" size="sm" /> Loading...
+                        <Spinner animation="border" size="sm" /> {t('loading')}
                     </div>
                 ) : list.length === 0 ? (
                     <div style={{ padding: "48px", textAlign: "center", color: "#6b7280", fontFamily: "Inter, sans-serif", fontSize: "14px" }}>
-                        No packages found. <button type="button" onClick={() => createRef.current.open()} style={{ background: "none", border: "none", color: "#004ac6", cursor: "pointer", fontWeight: 600 }}>Create one</button>
+                        {t('no_packages_found')} <button type="button" onClick={() => createRef.current.open()} style={{ background: "none", border: "none", color: "#004ac6", cursor: "pointer", fontWeight: 600 }}>{t('create_one')}</button>
                     </div>
                 ) : (
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr style={{ background: "#f2f4f6", borderBottom: "1px solid #c3c6d7" }}>
-                                <th style={TH}>Name</th>
-                                <th style={TH}>Tabs Enabled</th>
-                                <th style={TH}>Created By</th>
-                                <th style={{ ...TH, width: "120px" }}>Actions</th>
+                                <th style={TH}>{t('name')}</th>
+                                <th style={TH}>{t('tabs_enabled')}</th>
+                                <th style={TH}>{t('created_by')}</th>
+                                <th style={{ ...TH, width: "120px" }}>{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,7 +106,7 @@ function CustomerPackageIndex(props) {
                                     </td>
                                     <td style={TD}>
                                         <span style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#434655" }}>
-                                            {(pkg.tab_ids || []).length} tabs
+                                            {(pkg.tab_ids || []).length} {t('tabs')}
                                         </span>
                                     </td>
                                     <td style={TD}>
@@ -117,12 +119,12 @@ function CustomerPackageIndex(props) {
                                             <button type="button"
                                                 style={{ background: "#d0e1fb", border: "none", borderRadius: "4px", padding: "5px 10px", fontSize: "12px", color: "#004ac6", cursor: "pointer", fontFamily: "Inter, sans-serif", fontWeight: 600 }}
                                                 onClick={() => createRef.current.open(pkg.id)}>
-                                                <i className="bi bi-pencil me-1"></i>Edit
+                                                <i className="bi bi-pencil me-1"></i>{t('edit')}
                                             </button>
                                             <button type="button"
                                                 style={{ background: "#ffdad6", border: "none", borderRadius: "4px", padding: "5px 10px", fontSize: "12px", color: "#93000a", cursor: "pointer", fontFamily: "Inter, sans-serif", fontWeight: 600 }}
                                                 onClick={() => handleDelete(pkg.id, pkg.name)}>
-                                                <i className="bi bi-trash me-1"></i>Delete
+                                                <i className="bi bi-trash me-1"></i>{t('delete')}
                                             </button>
                                         </div>
                                     </td>
@@ -138,11 +140,11 @@ function CustomerPackageIndex(props) {
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", marginTop: "20px" }}>
                     <button type="button" disabled={page <= 1}
                         style={{ border: "1px solid #c3c6d7", borderRadius: "4px", padding: "5px 12px", background: "#fff", cursor: page > 1 ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", fontSize: "13px" }}
-                        onClick={() => setPage(page - 1)}>Prev</button>
-                    <span style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#434655" }}>Page {page} of {totalPages}</span>
+                        onClick={() => setPage(page - 1)}>{t('prev')}</button>
+                    <span style={{ fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#434655" }}>{t('page_of', { page, total: totalPages })}</span>
                     <button type="button" disabled={page >= totalPages}
                         style={{ border: "1px solid #c3c6d7", borderRadius: "4px", padding: "5px 12px", background: "#fff", cursor: page < totalPages ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", fontSize: "13px" }}
-                        onClick={() => setPage(page + 1)}>Next</button>
+                        onClick={() => setPage(page + 1)}>{t('next')}</button>
                 </div>
             )}
         </div>

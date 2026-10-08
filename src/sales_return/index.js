@@ -34,6 +34,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -221,13 +222,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 setReportingInProgress(false);
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
-                setShowErrors(true);
-                //console.log("Inside catch");
-                //console.log(error);
                 setErrors({ ...error });
-                // setErrors({ ...error });
-                //console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
+                if (error?.zatca_reconnect) {
+                    getStore(store.id);
+                    zatcaConnectRef.current?.open(store.id, true);
+                } else {
+                    setShowErrors(true);
+                    if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
+                }
                 list();
             });
     }
@@ -1380,6 +1382,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
 
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
@@ -1501,7 +1504,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     return (
         <>
-            {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} />}
+            {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} modalClass={props.pendingView ? "above-pending-modal" : ""} />}
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={() => list()} />}
             {/* ⚙️ Settings Modal */}
             <TableSettingsModal
@@ -1513,6 +1516,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
                 enableSelection={enableSelection}
+                className={props.pendingView ? "above-pending-modal" : ""}
             />
 
 
@@ -1605,7 +1609,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return Summary"
+                                title={t("Sales Return Summary")}
                                 filters={{
                                     ...(dateValue ? { 'Date': dateValue } : {}),
                                     ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
@@ -1787,6 +1791,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
                                     if (!el) return;
+                                    if (pendingView) return;
                                     const fit = () => {
                                         const top = el.getBoundingClientRect().top;
                                         el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
@@ -1807,8 +1812,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
@@ -1819,7 +1824,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1838,7 +1843,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2285,6 +2290,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                         {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                        if (store.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                                         ReportInvoiceToZatca(salesReturn.id, index);
                                                                     }}>
                                                                         {!salesReturn.zatca?.reportingInProgress && (salesReturn.zatca?.reporting_failed_count > 0 || salesReturn.zatca?.compliance_check_failed_count > 0) ? <i className="bi bi-bootstrap-reboot"></i> : ""}
@@ -2395,6 +2401,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     {showSalesReturnPaymentHistory && <SalesReturnPaymentIndex ref={SalesReturnPaymentListRef} showToastMessage={props.showToastMessage} salesReturn={selectedSalesReturn} refreshSalesReturnList={list} />}
                 </Modal.Body>
             </Modal>
+
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(store.id)} />
         </>
     );
 });

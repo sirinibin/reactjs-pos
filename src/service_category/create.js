@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -16,6 +17,8 @@ const ErrMsg = ({ children }) => (
 );
 
 const ServiceCategoryCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {};
@@ -90,14 +93,14 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
                 if (!r.ok) return Promise.reject(data.errors);
                 setErrors({});
                 setProcessing(false);
-                if (props.showToastMessage) props.showToastMessage("Service Category saved", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Service Category saved"), "success");
                 if (props.refreshList) props.refreshList();
                 handleClose();
             })
             .catch(err => {
                 setProcessing(false);
                 setErrors({ ...err });
-                if (props.showToastMessage) props.showToastMessage("Error saving Service Category", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Error saving Service Category"), "danger");
             });
     }
 
@@ -112,19 +115,19 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                    <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                    <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                 </button>
                 <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
-                    {formData.id ? `Update Service Category — ${formData.name}` : 'Create New Service Category'}
+                    {formData.id ? `${t('Update Service Category')} — ${formData.name}` : t('Create New Service Category')}
                 </Modal.Title>
                 <div className="d-flex align-items-center gap-2">
                     <button type="button"
                         style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         onClick={handleCreate} disabled={isProcessing}>
                         {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                        {formData.id ? 'Update' : 'Create'}
+                        {formData.id ? t('Update') : t('Create')}
                     </button>
-                    <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                    <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
                 </div>
             </Modal.Header>
 
@@ -161,23 +164,23 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
                     <div style={CARD}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                             <i className="bi bi-grid-3x3-gap" style={{ fontSize: '18px', color: '#004ac6' }}></i>
-                            <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Category Details</h3>
+                            <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Category Details')}</h3>
                         </div>
 
                         <div style={{ marginBottom: '16px' }}>
-                            <Label required>Name</Label>
+                            <Label required>{t('Name')}</Label>
                             <input
                                 value={formData.name || ""}
                                 type="text"
                                 onChange={(e) => { errors["name"] = ""; setErrors({ ...errors }); formData.name = e.target.value; setFormData({ ...formData }); }}
                                 style={INPUT}
-                                placeholder="Service category name"
+                                placeholder={t('Service category name')}
                             />
                             {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
                         </div>
 
                         <div style={{ marginBottom: '16px' }}>
-                            <Label>Parent Category</Label>
+                            <Label>{t('Parent Category')}</Label>
                             <Typeahead
                                 id="parent_id"
                                 labelKey="name"
@@ -197,7 +200,7 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
                                     setSelectedParentCategories([...selectedItems]);
                                 }}
                                 options={parentCategoryOptions}
-                                placeholder="Select Parent Category"
+                                placeholder={t('Select Parent Category')}
                                 selected={selectedParentCategories}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm) => suggestCategories(searchTerm)}

@@ -8,6 +8,11 @@ export const DEFAULT_MENU = [
     { id: "purchases", resource: "purchases", label: "Purchases", path: "/dashboard/purchases", icon: "bi-cart4", productsOnly: true },
     { id: "purchase_orders", resource: "purchase_orders", label: "Purchase Orders", path: "/dashboard/purchase-orders", icon: "bi-file-earmark-text", requiresPurchaseOrderModule: true },
     { id: "purchase_requests", resource: "purchase_requests", label: "Purchase Requests", path: "/dashboard/purchase-requests", icon: "bi-clipboard2-pulse", purchaseRequestOnly: true },
+    { id: "rfq_received", resource: "rfq_received", label: "RFQ", path: "/dashboard/rfq-received", icon: "bi-inbox-fill", requiresAIRFQBot: true, requiresRFQModule: true },
+    { id: "rfq_suppliers", resource: "rfq_suppliers", label: "RFQ Suppliers", path: "/dashboard/rfq-suppliers", icon: "bi-building-fill", requiresAIRFQBot: true, requiresRFQModule: true },
+    { id: "procurement_emails", resource: "procurement_emails", label: "Emails", path: "/dashboard/procurement-emails", icon: "bi-envelope-open-fill", requiresAIRFQBot: true },
+    { id: "procurement_whatsapp", resource: "procurement_whatsapp", label: "WhatsApp Messages", path: "/dashboard/procurement-whatsapp", icon: "bi-whatsapp", requiresAIRFQBot: true },
+    { id: "purchase_bill_images", resource: "purchase_bill_images", label: "Purchase Bill images/PDFs", path: "/dashboard/purchase-bill-images", icon: "bi-receipt", requiresPurchaseBillsTracking: true },
     { id: "purchase_return", resource: "purchase_return", label: "Purchase Returns", path: "/dashboard/purchasereturn", icon: "bi-cart-x", productsOnly: true },
     { id: "delivery_notes", resource: "delivery_notes", label: "Delivery Notes", path: "/dashboard/delivery-notes", icon: "bi-truck" },
     { id: "quotations", resource: "quotations", label: "Quotations", path: "/dashboard/quotations", icon: "bi-clipboard2-check" },
@@ -103,7 +108,36 @@ export function applyAutomobileMenuOrder() {
 }
 
 export function saveSidebarConfig(items) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.map(({ id, visible }) => ({ id, visible }))));
+    const slim = items.map(({ id, visible }) => ({ id, visible }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+
+    let storeSettings = null;
+    try { storeSettings = JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) {}
+
+    if (!storeSettings?.save_sidebar_config_to_server) return Promise.resolve({ synced: false });
+
+    const storeId = localStorage.getItem('store_id');
+    const token   = localStorage.getItem('access_token');
+    if (!storeId || !token) return Promise.resolve({ synced: false });
+
+    return fetch('/v1/store/' + storeId + '/sidebar-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ sidebar_config: slim }),
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().catch(() => ({})).then(d => {
+                console.error('[Sidebar] Server sync failed', res.status, d);
+                return { synced: false, status: res.status, error: d };
+            });
+        }
+        return { synced: true };
+    })
+    .catch(err => {
+        console.error('[Sidebar] Server sync network error:', err);
+        return { synced: false, error: err.message };
+    });
 }
 
 // Returns the path the app should navigate to after login —

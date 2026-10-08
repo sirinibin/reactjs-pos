@@ -1,4 +1,4 @@
-import { resolveImageUrl } from "../imageUtils";
+import { resolveImageUrl, storeLogoUrl } from "../imageUtils";
 
 describe("resolveImageUrl", () => {
     test("null filename returns null", () => {
@@ -51,5 +51,39 @@ describe("resolveImageUrl", () => {
         expect(resolveImageUrl("/images/store/logo.jpg", null, "store")).toBe(
             "/images/store/logo.jpg"
         );
+    });
+});
+
+describe("storeLogoUrl", () => {
+    test("returns null when store has no logo", () => {
+        expect(storeLogoUrl({ id: "abc", updated_at: "2026-01-01T00:00:00Z" })).toBeNull();
+    });
+
+    test("returns null when store is null", () => {
+        expect(storeLogoUrl(null)).toBeNull();
+    });
+
+    test("uses updated_at timestamp as cache-buster", () => {
+        const store = { id: "abc123", logo: "logo_abc.png", updated_at: "2026-01-15T10:00:00Z" };
+        const url = storeLogoUrl(store);
+        const expected = new Date("2026-01-15T10:00:00Z").getTime();
+        expect(url).toBe(`/images/abc123/store/logo_abc.png?v=${expected}`);
+    });
+
+    test("uses v=0 when updated_at is missing", () => {
+        const store = { id: "abc123", logo: "logo_abc.png" };
+        const url = storeLogoUrl(store);
+        expect(url).toBe("/images/abc123/store/logo_abc.png?v=0");
+    });
+
+    test("same updated_at produces same URL (cacheable)", () => {
+        const store = { id: "abc123", logo: "logo_abc.png", updated_at: "2026-06-01T00:00:00Z" };
+        expect(storeLogoUrl(store)).toBe(storeLogoUrl(store));
+    });
+
+    test("different updated_at produces different URL (cache-busts on update)", () => {
+        const store1 = { id: "abc123", logo: "logo_abc.png", updated_at: "2026-06-01T00:00:00Z" };
+        const store2 = { id: "abc123", logo: "logo_abc.png", updated_at: "2026-06-02T00:00:00Z" };
+        expect(storeLogoUrl(store1)).not.toBe(storeLogoUrl(store2));
     });
 });

@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import { DEFAULT_MENU } from '../sidebar_menu_config.js';
 
 const ACTIONS = ["read", "create", "update", "delete"];
@@ -13,6 +14,7 @@ const UserRoleView = forwardRef((props, ref) => {
         },
     }));
 
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [role, setRole] = useState(null);
 
@@ -57,47 +59,47 @@ const UserRoleView = forwardRef((props, ref) => {
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#434655", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", padding: "4px 8px", borderRadius: "4px", flexShrink: 0 }}
                     onMouseEnter={e => e.currentTarget.style.background = "#f0f2f4"}
                     onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }} /> Back
+                    <i className="bi bi-arrow-left" style={{ fontSize: "16px" }} /> {t('Back')}
                 </button>
                 <Modal.Title className="ur-title">
-                    {role ? `Role: ${role.name}` : "Role Detail"}
+                    {role ? `${t('Role:')} ${role.name}` : t("Role Detail")}
                 </Modal.Title>
                 {role && (
                     <button type="button"
                         style={{ background: "#d0e1fb", color: "#54647a", border: "none", borderRadius: "4px", padding: "6px 14px", fontSize: "13px", fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: "pointer", flexShrink: 0 }}
                         onClick={() => { handleClose(); if (props.openCreateView) props.openCreateView(role.id); }}>
-                        <i className="bi bi-pencil me-1" />Edit
+                        <i className="bi bi-pencil me-1" />{t('Edit')}
                     </button>
                 )}
-                <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" />
+                <button type="button" className="btn-close" onClick={handleClose} aria-label={t('Close')} />
             </Modal.Header>
 
             <Modal.Body className="ur-body">
                 {!role ? (
-                    <div className="text-center py-5 text-muted">Loading…</div>
+                    <div className="text-center py-5 text-muted">{t('Loading…')}</div>
                 ) : (
                     <>
                         <div style={{ marginBottom: "20px", display: "flex", gap: "32px", flexWrap: "wrap" }}>
                             <div>
-                                <div style={{ fontSize: "11px", fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: ".05em" }}>Role Name</div>
+                                <div style={{ fontSize: "11px", fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: ".05em" }}>{t('Role Name')}</div>
                                 <div style={{ fontSize: "15px", fontWeight: 700, color: "#191c1e", marginTop: "2px" }}>{role.name}</div>
                             </div>
                             <div>
-                                <div style={{ fontSize: "11px", fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: ".05em" }}>Created By</div>
+                                <div style={{ fontSize: "11px", fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: ".05em" }}>{t('Created By')}</div>
                                 <div style={{ fontSize: "13px", color: "#2c2f3a", marginTop: "2px" }}>{role.created_by_name || "—"}</div>
                             </div>
                         </div>
 
                         <div style={{ fontSize: "14px", fontWeight: 700, color: "#191c1e", marginBottom: "12px", fontFamily: '"Hanken Grotesk", sans-serif' }}>
-                            Permissions
+                            {t('Permissions')}
                         </div>
                         <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: '"Inter", sans-serif' }}>
                                 <thead>
                                     <tr style={{ background: "#f2f4f6" }}>
-                                        <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, minWidth: "200px" }}>Module</th>
+                                        <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 600, minWidth: "200px" }}>{t('Module')}</th>
                                         {ACTIONS.map(a => (
-                                            <th key={a} style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, minWidth: "80px", textTransform: "capitalize" }}>{a}</th>
+                                            <th key={a} style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, minWidth: "80px", textTransform: "capitalize" }}>{t(a)}</th>
                                         ))}
                                     </tr>
                                 </thead>

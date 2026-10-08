@@ -16,8 +16,9 @@ jest.mock('react-bootstrap', () => {
     <button onClick={onClick}>{children}</button>
   );
   const Spinner = () => <div data-testid="rb-spinner" />;
+  const Alert   = ({ children }) => <div data-testid="rb-alert">{children}</div>;
 
-  return { Modal, Button, Spinner };
+  return { Modal, Button, Spinner, Alert };
 });
 
 // ── useEnterKeyNavigation util ────────────────────────────────────────────────
@@ -126,7 +127,7 @@ describe('ZatcaConnect smoke tests', () => {
     );
   });
 
-  it('calls showToastMessage with success after a successful connect', async () => {
+  it('calls showToastMessage with success after a successful connect (first-time flow)', async () => {
     const showToastMessage = jest.fn();
     const { ref, getAllByRole } = renderComponent({ showToastMessage });
     act(() => { ref.current.open('store-123'); });
@@ -142,6 +143,51 @@ describe('ZatcaConnect smoke tests', () => {
       'Store Connected to Zatca Successfully!',
       'success'
     );
+  });
+
+  it('shows "Successfully re-connected to ZATCA!" toast on reconnect success', async () => {
+    const showToastMessage = jest.fn();
+    const { ref, getAllByRole } = renderComponent({ showToastMessage });
+    // open with reconnect=true
+    act(() => { ref.current.open('store-123', true); });
+
+    const connectBtn = getAllByRole('button').find(b => /^connect$/i.test(b.textContent.trim()));
+    await act(async () => {
+      connectBtn.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(showToastMessage).toHaveBeenCalledWith(
+      'Successfully re-connected to ZATCA!',
+      'success'
+    );
+  });
+
+  it('shows reconnect warning banner when opened with reconnect=true', () => {
+    const { ref, getByText } = renderComponent();
+    act(() => { ref.current.open('store-123', true); });
+    expect(getByText(/re-connection required/i)).toBeTruthy();
+  });
+
+  it('warning banner mentions business category and registration number (CRN)', () => {
+    const { ref, getByTestId } = renderComponent();
+    act(() => { ref.current.open('store-123', true); });
+    const alert = getByTestId('rb-alert');
+    expect(alert.textContent).toMatch(/business category/i);
+    expect(alert.textContent).toMatch(/registration number \(CRN\)/i);
+  });
+
+  it('does NOT show reconnect warning banner when opened with reconnect=false', () => {
+    const { ref, queryByText } = renderComponent();
+    act(() => { ref.current.open('store-123', false); });
+    expect(queryByText(/re-connection required/i)).toBeNull();
+  });
+
+  it('does NOT show reconnect warning banner when opened without reconnect arg', () => {
+    const { ref, queryByText } = renderComponent();
+    act(() => { ref.current.open('store-123'); });
+    expect(queryByText(/re-connection required/i)).toBeNull();
   });
 
   it('calls refreshList after a successful connect', async () => {

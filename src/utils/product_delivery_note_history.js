@@ -28,7 +28,7 @@ const ProductDeliveryNoteHistory = forwardRef((props, ref) => {
             title={`Delivery Note History of ${product?.name}${product?.name_in_arabic ? " / " + product?.name_in_arabic : ""}`}
             extraClass={props.extraClass}
         >
-            {show && <ProductDeliveryNoteHistoryTable ref={tableRef} model={product} selectedCustomers={selectedCustomers} subFormModalClass={props.extraClass === "order-inner-history-modal" ? "above-inner-history-form" : ""} />}
+            {show && <ProductDeliveryNoteHistoryTable ref={tableRef} model={product} selectedCustomers={selectedCustomers} subFormModalClass="above-inner-history-form" />}
         </DraggableHistoryModal>
     );
 });

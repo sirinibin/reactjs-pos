@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocation, useHistory } from "react-router-dom";
 import QuotationCreate from "./create.js";
+import { ForwardDetail } from "../rfq_received/index.js";
 import QuotationType3Form from "./QuotationType3Form.js";
 import ProductCreate from "../product/create.js";
 import ServiceCreate from "../service/create.js";
@@ -35,6 +38,9 @@ import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 
 function QuotationIndex(props) {
+  const { t } = useTranslation('common');
+  const location = useLocation();
+  const history = useHistory();
   let [enableSelection, setEnableSelection] = useState(props.enableSelection || false);
   let [pendingView, setPendingView] = useState(props.pendingView || false);
 
@@ -74,6 +80,21 @@ function QuotationIndex(props) {
   let [selectedDate, setSelectedDate] = useState(new Date());
   let [selectedFromDate, setSelectedFromDate] = useState(new Date());
   let [selectedToDate, setSelectedToDate] = useState(new Date());
+
+  const [rfqDetailItem, setRfqDetailItem] = useState(null);
+  const [rfqDetailShow, setRfqDetailShow] = useState(false);
+
+  const fetchAndOpenRfqPreview = useCallback(async (rfqId) => {
+    if (!rfqId) return;
+    try {
+      const res = await fetch(`/v1/rfq-received/${rfqId}?store_id=${localStorage.getItem('store_id')}`, {
+        headers: { Authorization: localStorage.getItem('access_token') }
+      });
+      const data = await res.json();
+      const rfq = data.result || data;
+      if (rfq?.id || rfq?._id) { setRfqDetailItem(rfq); setRfqDetailShow(true); }
+    } catch (_) {}
+  }, []);
 
   let [dateValue, setDateValue] = useState("");
   let [fromDateValue, setFromDateValue] = useState("");
@@ -423,7 +444,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount";
+      "select=id,order_code,order_id,order_codes,order_ids,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount,rfq_received_id,rfq_received_code";
 
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
@@ -627,7 +648,7 @@ function QuotationIndex(props) {
   let [showQuotationCreate, setShowQuotationCreate] = useState(false);
 
   function deleteDraftQuotation(id) {
-    if (!window.confirm('Delete this draft?')) return;
+    if (!window.confirm(t('Delete this draft?'))) return;
     const storeId = localStorage.getItem('store_id');
     fetch('/v1/quotation/' + id + '?search[store_id]=' + storeId, {
       method: 'DELETE',
@@ -636,7 +657,7 @@ function QuotationIndex(props) {
   }
 
   function undraftQuotation(id) {
-    if (!window.confirm('Move this draft to the main quotations list?')) return;
+    if (!window.confirm(t('Move this draft to the main quotations list?'))) return;
     const storeId = localStorage.getItem('store_id');
     fetch('/v1/quotation/' + id + '?search[store_id]=' + storeId, {
       method: 'PUT',
@@ -648,7 +669,7 @@ function QuotationIndex(props) {
     }).then(async (res) => {
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        alert('Failed to undraft: ' + (data?.errors ? JSON.stringify(data.errors) : res.statusText));
+        alert(t('Failed to undraft: ') + (data?.errors ? JSON.stringify(data.errors) : res.statusText));
         return;
       }
       list();
@@ -666,13 +687,48 @@ function QuotationIndex(props) {
     }
   }, []);
 
-  function openCreateForm() {
+  function openCreateForm(rfqPrefill) {
     setShowQuotationCreate(true);
-
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
+      if (rfqPrefill) {
+        try { sessionStorage.setItem('rfq_quotation_prefill_active', JSON.stringify(rfqPrefill)); } catch (_) {}
+      }
       CreateFormRef.current?.open();
     }, 50);
+  }
+
+  // Auto-open create form with RFQ prefill when navigated from RFQ page
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('from_rfq') === '1') {
+      try {
+        const raw = sessionStorage.getItem('rfq_quotation_prefill');
+        if (raw) {
+          const prefill = JSON.parse(raw);
+          sessionStorage.removeItem('rfq_quotation_prefill');
+          history.replace('/dashboard/quotations');
+          // Wait for component to mount
+          setTimeout(() => openCreateForm(prefill), 200);
+        }
+      } catch (_) {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-open create form when navigated from Sales form (switch direction)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('from_sales_form') === '1') {
+      history.replace('/dashboard/quotations');
+      setTimeout(() => openCreateForm(), 200);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleSwitchToSales() {
+    setShowQuotationCreate(false);
+    history.push('/dashboard/sales?from_quotation_form=1');
   }
 
   function onDraftSaved() {
@@ -764,6 +820,36 @@ function QuotationIndex(props) {
     }, 50);
   }
 
+  const [unlinkingOrder, setUnlinkingOrder] = useState(null); // { quotationId, orderId, orderCode }
+  const [confirmUnlink, setConfirmUnlink] = useState(null);   // { quotationId, orderId, orderCode }
+
+  async function unlinkOrderFromQuotation(quotationId, orderId, orderCode) {
+    setConfirmUnlink(null);
+    setUnlinkingOrder({ quotationId, orderId });
+    try {
+      const token = localStorage.getItem('access_token');
+      const storeId = localStorage.getItem('store_id');
+      const res = await fetch(`/v1/quotation/${quotationId}/order/${orderId}?search[store_id]=${storeId}`, {
+        method: 'DELETE',
+        headers: { Authorization: token },
+      });
+      const data = await res.json();
+      if (data.status) {
+        setQuotationList(prev => prev.map(q => {
+          if (q.id !== quotationId) return q;
+          const updated = data.result;
+          return { ...q, order_id: updated.order_id, order_code: updated.order_code, order_ids: updated.order_ids || [], order_codes: updated.order_codes || [] };
+        }));
+      } else {
+        alert('Failed to unlink: ' + (data.errors?.unlink || JSON.stringify(data.errors)));
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setUnlinkingOrder(null);
+    }
+  }
+
   //Printing
   const [selectedQuotation, setSelectedQuotation] = useState({});
   let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
@@ -836,6 +922,7 @@ function QuotationIndex(props) {
     { key: "type", label: "Type", fieldName: "type", visible: true },
     { key: "invoiced", label: "Invoiced", fieldName: "invoiced", visible: true },
     { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
+    { key: "rfq_id", label: "RFQ ID", fieldName: "rfq_received_code", visible: false },
     { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
     { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
     { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
@@ -940,14 +1027,14 @@ function QuotationIndex(props) {
       {showCustomerCreate && <CustomerCreate ref={CustomerUpdateFormRef} />}
       {enableSalesInQuotation && <Modal show={showQuotationSalesReturns} size="lg" onHide={handleQuotationSalesReturnsClose} animation={false} scrollable={true}>
         <Modal.Header>
-          <Modal.Title>Qtn. Sales Returns of Qtn. Sale Order #{selectedQuotation?.code}</Modal.Title>
+          <Modal.Title>{t('Qtn. Sales Returns of Qtn. Sale Order #')}{selectedQuotation?.code}</Modal.Title>
 
           <div className="col align-self-end text-end">
             <button
               type="button"
               className="btn-close"
               onClick={handleQuotationSalesReturnsClose}
-              aria-label="Close"
+              aria-label={t('Close')}
             ></button>
 
           </div>
@@ -957,30 +1044,31 @@ function QuotationIndex(props) {
         </Modal.Body>
       </Modal>}
 
-      {enableSalesInQuotation && showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
+      {enableSalesInQuotation && showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
 
       {/* ⚙️ Settings Modal */}
       <TableSettingsModal
           show={showSettings}
           onHide={() => setShowSettings(false)}
-          title="Quotation Settings"
+          title={t('Quotation Settings')}
           columns={displayColumns}
           onToggleColumn={handleToggleDisplayColumn}
           onDragEnd={handleDisplayDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
           enableSelection={enableSelection}
+          className={(props.pendingView || props.enableSelection) ? "above-pending-modal" : ""}
       />
 
       <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
       {showOrderPrint && <OrderPrint ref={PrintRef} />}
-      {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+      {(showOrderPreview || pendingView || props.enableSelection) && <OrderPreview ref={PreviewRef} />}
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
         setShowPrintTypeSelection(showPrintTypeSelection);
-      }} centered className={pendingView ? "above-pending-modal-dialog" : ""}>
+      }} centered className={`quotation-print-type-modal${pendingView ? " above-pending-modal-dialog" : props.enableSelection ? " above-quotations-modal" : ""}`}>
         <Modal.Header closeButton>
-          <Modal.Title>Select Print Type</Modal.Title>
+          <Modal.Title>{t('Select Print Type')}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="d-flex justify-content-around">
           <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -994,7 +1082,7 @@ function QuotationIndex(props) {
               }, 100);
             }
           }}>
-            <i className="bi bi-printer"></i> Print
+            <i className="bi bi-printer"></i> {t('Print')}
           </Button>
 
           <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1010,7 +1098,7 @@ function QuotationIndex(props) {
               }
             }}
           >
-            <i className="bi bi-printer"></i> Print A4 Invoice
+            <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
           </Button>
         </Modal.Body>
       </Modal>
@@ -1019,11 +1107,11 @@ function QuotationIndex(props) {
       <ProductCreate ref={productCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       <ServiceCreate ref={serviceCreateRef} refreshList={() => {}} showToastMessage={props.showToastMessage} />
       {(pendingView || showQuotationCreate) && (store.settings?.enable_automobile_module || store.settings?.quotation_create_form_design === 'type3'
-        ? <QuotationType3Form ref={createFormCallbackRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
-        : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} />
+        ? <QuotationType3Form ref={createFormCallbackRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} openUpdateProductForm={openUpdateProductForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToSales={handleSwitchToSales} />
+        : <QuotationCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToSales={handleSwitchToSales} />
       )}
       <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateQuotation={() => {}} onOpenQuotation={(quotationId) => openUpdateForm(quotationId)} onCreateSalesInvoice={() => {}} />
-      {(pendingView || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
+      {(pendingView || props.enableSelection || showQuotationView) && <QuotationView ref={detailsViewCallbackRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} modalClass={pendingView ? "above-pending-modal" : props.enableSelection ? "above-quotations-modal" : ""} />}
       <div className="container-fluid p-0">
         <div className="row mb-2">
           <div className="col-12">
@@ -1035,11 +1123,11 @@ function QuotationIndex(props) {
                   style={{ whiteSpace: 'nowrap' }}
                   onClick={() => setShowDrafts(d => !d)}
                 >
-                  <i className="bi bi-file-earmark-text"></i> {(showDrafts ? 'Hide Drafts' : 'Drafts') + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
+                  <i className="bi bi-file-earmark-text"></i> {(showDrafts ? t('Hide Drafts') : t('Drafts')) + (draftCount > 0 ? ' (' + draftCount + ')' : '')}
                 </Button>
               )}
               <StatsSummary
-                title="Quotation Summary"
+                title={t('Quotation Summary')}
                 filters={{
                   ...(dateValue ? { 'Date': dateValue } : {}),
                   ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
@@ -1066,7 +1154,7 @@ function QuotationIndex(props) {
                 modalClass={pendingView ? "above-pending-modal" : ""}
               />
               {enableSalesInQuotation && <StatsSummary
-                title="Qtn. Sales Summary"
+                title={t('Qtn. Sales Summary')}
                 filters={{
                   ...(dateValue ? { 'Date': dateValue } : {}),
                   ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
@@ -1106,16 +1194,16 @@ function QuotationIndex(props) {
           <div className="col-12">
             <div className="card">
               <div className="card-header p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <h1 className="h3 mb-0">Quotations</h1>
+                <h1 className="h3 mb-0">{t('Quotations')}</h1>
                 <div className="d-flex gap-2 flex-nowrap">
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={() => openReportPreview("quotation_invoice_report")}>
-                    <i className="bi bi-printer"></i> Print Sales Report
+                    <i className="bi bi-printer"></i> {t('Print Sales Report')}
                   </Button>
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={() => openReportPreview("quotation_report")}>
-                    <i className="bi bi-printer"></i> Print Quotation Report
+                    <i className="bi bi-printer"></i> {t('Print Quotation Report')}
                   </Button>
                   <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
-                    <i className="bi bi-plus-lg"></i> Create
+                    <i className="bi bi-plus-lg"></i> {t('Create')}
                   </Button>
                 </div>
               </div>
@@ -1123,7 +1211,7 @@ function QuotationIndex(props) {
                 <div className="row">
                   {totalItems === 0 && (
                     <div className="col">
-                      <p className="text-start">No Quotations to display</p>
+                      <p className="text-start">{t('No Quotations to display')}</p>
                     </div>
                   )}
                 </div>
@@ -1141,7 +1229,7 @@ function QuotationIndex(props) {
                     ) : (
                       <i className="fa fa-refresh"></i>
                     )}
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t('Loading...')}</span>
                   </Button>
 
                   <PaginationControls
@@ -1160,11 +1248,12 @@ function QuotationIndex(props) {
                     className="btn btn-sm btn-outline-secondary ms-auto"
                     onClick={() => { setShowSettings(!showSettings); }}
                   >
-                    <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                    <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t('Table Settings')} />
                   </button>
                 </div>
                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
                   if (!el) return;
+                  if (pendingView) return;
                   const fit = () => {
                     const top = el.getBoundingClientRect().top;
                     el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
@@ -1185,8 +1274,8 @@ function QuotationIndex(props) {
                       <tr className="text-center">
                         {displayColumns.filter(c => c.visible).map((col) => {
                           return (<React.Fragment key={col.key}>
-                            {col.key === "actions" && <th>{col.label}</th>}
-                            {col.key === "select" && enableSelection && <th>{col.label}</th>}
+                            {col.key === "actions" && <th>{t(col.label)}</th>}
+                            {col.key === "select" && enableSelection && <th>{t(col.label)}</th>}
                             {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                               <b
                                 style={{
@@ -1197,7 +1286,7 @@ function QuotationIndex(props) {
                                   sort(col.fieldName);
                                 }}
                               >
-                                {col.label}
+                                {t(col.label)}
                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                   <i className="bi bi-sort-alpha-up-alt"></i>
                                 ) : null}
@@ -1217,7 +1306,7 @@ function QuotationIndex(props) {
                                   sort(col.fieldName);
                                 }}
                               >
-                                {col.label}
+                                {t(col.label)}
                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                   <i className="bi bi-sort-alpha-up-alt"></i>
                                 ) : null}
@@ -1237,7 +1326,7 @@ function QuotationIndex(props) {
                                   sort(col.fieldName);
                                 }}
                               >
-                                {col.label}
+                                {t(col.label)}
                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                   <i className="bi bi-sort-alpha-up-alt"></i>
                                 ) : null}
@@ -1260,9 +1349,9 @@ function QuotationIndex(props) {
                                   searchByFieldValue("invoiced", e.target.value)
                                 }
                               >
-                                <option value="">ALL</option>
-                                <option value="1">YES</option>
-                                <option value="0">NO</option>
+                                <option value="">{t('ALL')}</option>
+                                <option value="1">{t('YES')}</option>
+                                <option value="0">{t('NO')}</option>
                               </select>
                             </th>}
                             {col.key !== "actions" &&
@@ -1299,7 +1388,7 @@ function QuotationIndex(props) {
                                   );
                                 }}
                                 options={statusOptions}
-                                placeholder="Select Status"
+                                placeholder={t('Select Status')}
                                 selected={selectedStatusList}
                                 highlightOnlyResult={true}
                                 multiple
@@ -1315,9 +1404,9 @@ function QuotationIndex(props) {
 
                                 }}
                               >
-                                <option value="" >All</option>
-                                <option value="quotation" >Quotation</option>
-                                <option value="invoice">Invoice</option>
+                                <option value="" >{t('All')}</option>
+                                <option value="quotation" >{t('Quotation')}</option>
+                                <option value="invoice">{t('Invoice')}</option>
                               </select>
                             </th>}
                             {col.key === "payment_methods" && <th>
@@ -1332,7 +1421,7 @@ function QuotationIndex(props) {
                                   );
                                 }}
                                 options={paymentMethodOptions}
-                                placeholder="Select payment methods"
+                                placeholder={t('Select payment methods')}
                                 selected={selectedPaymentMethodList}
                                 highlightOnlyResult={true}
                                 multiple
@@ -1350,7 +1439,7 @@ function QuotationIndex(props) {
                                   );
                                 }}
                                 options={userOptions}
-                                placeholder="Select Users"
+                                placeholder={t('Select Users')}
                                 selected={selectedCreatedByUsers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
@@ -1389,13 +1478,13 @@ function QuotationIndex(props) {
                                   setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                 }
                               >
-                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                {showCreatedAtDateRange ? t('Less..') : t('More..')}
                               </small>
                               <br />
 
                               {showCreatedAtDateRange ? (
                                 <span className="text-left">
-                                  From:{" "}
+                                  {t('From:')}{" "}
                                   <DatePicker
                                     id="created_at_from"
                                     value={createdAtFromValue}
@@ -1414,7 +1503,7 @@ function QuotationIndex(props) {
                                       setSelectedCreatedAtFromDate(date);
                                     }}
                                   />
-                                  To:{" "}
+                                  {t('To:')}{" "}
                                   <DatePicker
                                     id="created_at_to"
                                     value={createdAtToValue}
@@ -1447,7 +1536,7 @@ function QuotationIndex(props) {
                                   );
                                 }}
                                 options={paymentStatusOptions}
-                                placeholder="Select Payment Status"
+                                placeholder={t('Select Payment Status')}
                                 selected={selectedPaymentStatusList}
                                 highlightOnlyResult={true}
                                 multiple
@@ -1459,9 +1548,9 @@ function QuotationIndex(props) {
                                   searchByFieldValue("reported_to_zatca", e.target.value);
                                 }}
                               >
-                                <option value="">ALL</option>
-                                <option value="1">REPORTED</option>
-                                <option value="0">NOT REPORTED</option>
+                                <option value="">{t('ALL')}</option>
+                                <option value="1">{t('REPORTED')}</option>
+                                <option value="0">{t('NOT REPORTED')}</option>
                               </select>
                             </th>}
                             {col.key === "customer" && <th>
@@ -1477,7 +1566,7 @@ function QuotationIndex(props) {
                                   );
                                 }}
                                 options={customerOptions}
-                                placeholder="Customer Name / Mob / VAT # / ID"
+                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
@@ -1527,13 +1616,13 @@ function QuotationIndex(props) {
                                   }}
                                   onClick={(e) => setShowDateRange(!showDateRange)}
                                 >
-                                  {showDateRange ? "Less.." : "More.."}
+                                  {showDateRange ? t('Less..') : t('More..')}
                                 </small>
                                 <br />
 
                                 {showDateRange ? (
                                   <span className="text-left">
-                                    From:{" "}
+                                    {t('From:')}{" "}
                                     <DatePicker
                                       id="from_date"
                                       value={fromDateValue}
@@ -1552,7 +1641,7 @@ function QuotationIndex(props) {
                                         setSelectedFromDate(date);
                                       }}
                                     />
-                                    To:{" "}
+                                    {t('To:')}{" "}
                                     <DatePicker
                                       id="to_date"
                                       value={toDateValue}
@@ -2322,10 +2411,10 @@ function QuotationIndex(props) {
                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {showDrafts ? (<>
                                     {!quotation.code && <><Button className="btn btn-warning btn-sm" onClick={() => openDraftForm(quotation.id)}>
-                                      <i className="bi bi-pencil"></i> Resume
+                                      <i className="bi bi-pencil"></i> {t('Resume')}
                                     </Button>&nbsp;</>}
                                     {quotation.code && <><Button className="btn btn-success btn-sm" onClick={() => undraftQuotation(quotation.id)}>
-                                      <i className="bi bi-check-circle"></i> Undraft
+                                      <i className="bi bi-check-circle"></i> {t('Undraft')}
                                     </Button>&nbsp;</>}
                                     {!quotation.code && <Button className="btn btn-danger btn-sm" onClick={() => deleteDraftQuotation(quotation.id)}>
                                       <i className="bi bi-trash"></i>
@@ -2360,12 +2449,12 @@ function QuotationIndex(props) {
                                     className="btn btn-dark btn-sm"
                                     data-bs-toggle="tooltip"
                                     data-bs-placement="top"
-                                    title="Create Sales Return"
+                                    title={t('Create Sales Return')}
                                     onClick={() => {
                                       openQuotationSalesReturnCreateForm(quotation.id);
                                     }}
                                   >
-                                    <i className="bi bi-arrow-left"></i> Return
+                                    <i className="bi bi-arrow-left"></i> {t('Return')}
                                   </Button></>}
                                 </>)}
                                 </td>}
@@ -2373,7 +2462,7 @@ function QuotationIndex(props) {
                                   <Button className="btn btn-success btn-sm" onClick={() => {
                                     handleSelected(quotation);
                                   }}>
-                                    Select
+                                    {t('Select')}
                                   </Button>
                                 </td>}
                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2381,14 +2470,65 @@ function QuotationIndex(props) {
                                 </td>}
                                 {(col.fieldName === "invoiced") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
                                   {quotation.order_id && quotation.order_id !== "000000000000000000000000"
-                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>YES</span>
-                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>NO</span>
+                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>{t('YES')}</span>
+                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>{t('NO')}</span>
                                   }
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                    openSalesUpdateForm(quotation.order_id);
-                                  }}>{quotation.order_code}</span>}
+                                  {quotation.order_codes && quotation.order_codes.length > 1
+                                    ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                        {quotation.order_codes.map((code, ci) => {
+                                          const oid = quotation.order_ids && quotation.order_ids[ci] ? quotation.order_ids[ci] : quotation.order_id;
+                                          const isUnlinking = unlinkingOrder && unlinkingOrder.quotationId === quotation.id && unlinkingOrder.orderId === oid;
+                                          const isConfirming = confirmUnlink && confirmUnlink.quotationId === quotation.id && confirmUnlink.orderId === oid;
+                                          return (
+                                            <span key={ci} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                              <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(oid)}>{code}</span>
+                                              {isConfirming ? (
+                                                <>
+                                                  <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>Unlink?</span>
+                                                  <button onClick={() => unlinkOrderFromQuotation(quotation.id, oid, code)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#16a34a', fontSize: '12px', lineHeight: 1, fontWeight: 700 }}>✓</button>
+                                                  <button onClick={() => setConfirmUnlink(null)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#6b7280', fontSize: '12px', lineHeight: 1 }}>✗</button>
+                                                </>
+                                              ) : (
+                                                <button
+                                                  title={`Unlink ${code}`}
+                                                  disabled={isUnlinking}
+                                                  onClick={() => setConfirmUnlink({ quotationId: quotation.id, orderId: oid, orderCode: code })}
+                                                  style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                                >{isUnlinking ? '…' : '×'}</button>
+                                              )}
+                                            </span>
+                                          );
+                                        })}
+                                      </span>
+                                    : quotation.order_code && (() => {
+                                        const isUnlinking = !!(unlinkingOrder && unlinkingOrder.quotationId === quotation.id);
+                                        const isConfirming = !!(confirmUnlink && confirmUnlink.quotationId === quotation.id);
+                                        return (
+                                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                            <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(quotation.order_id)}>{quotation.order_code}</span>
+                                            {isConfirming ? (
+                                              <>
+                                                <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>Unlink?</span>
+                                                <button onClick={() => unlinkOrderFromQuotation(quotation.id, quotation.order_id, quotation.order_code)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#16a34a', fontSize: '12px', lineHeight: 1, fontWeight: 700 }}>✓</button>
+                                                <button onClick={() => setConfirmUnlink(null)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#6b7280', fontSize: '12px', lineHeight: 1 }}>✗</button>
+                                              </>
+                                            ) : (
+                                              <button
+                                                title={`Unlink ${quotation.order_code}`}
+                                                disabled={isUnlinking}
+                                                onClick={() => setConfirmUnlink({ quotationId: quotation.id, orderId: quotation.order_id, orderCode: quotation.order_code })}
+                                                style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                              >{isUnlinking ? '…' : '×'}</button>
+                                            )}
+                                          </span>
+                                        );
+                                      })()
+                                  }
+                                </td>}
+                                {(col.fieldName === "rfq_received_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  {quotation.rfq_received_code && <span role="button" style={{ color: "blue", cursor: "pointer" }} onClick={() => fetchAndOpenRfqPreview(quotation.rfq_received_id)}>{quotation.rfq_received_code}</span>}
                                 </td>}
                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation[col.key] && !isNaN(new Date(quotation[col.key]).getTime()) ? format(new Date(quotation[col.key]), "MMM dd yyyy h:mma") : ""}
@@ -2411,26 +2551,26 @@ function QuotationIndex(props) {
                                 {(col.fieldName === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.type === "invoice" && quotation.order_id && <>
                                     {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
-                                      Reported
+                                      {t('Reported')}
                                       {quotation.reported_to_zatca && quotation.reported_to_zatca_at ? <span>&nbsp;<TimeAgo date={quotation.reported_to_zatca_at} />&nbsp;</span> : ""}
                                       &nbsp;</span></span> : ""}
                                     {!quotation.reported_to_zatca ? <span className="badge bg-warning">
-                                      Not Reported
+                                      {t('Not Reported')}
                                       &nbsp;</span> : ""}
                                   </>}
                                 </td>}
                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.payment_status === "paid" ?
                                     <span className="badge bg-success">
-                                      Paid
+                                      {t('Paid')}
                                     </span> : ""}
                                   {quotation.payment_status === "paid_partially" ?
                                     <span className="badge bg-warning">
-                                      Paid Partially
+                                      {t('Paid Partially')}
                                     </span> : ""}
                                   {quotation.payment_status === "not_paid" ?
                                     <span className="badge bg-danger">
-                                      Not Paid
+                                      {t('Not Paid')}
                                     </span> : ""}
                                 </td>}
                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2538,9 +2678,57 @@ function QuotationIndex(props) {
                             </td> : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                openSalesUpdateForm(quotation.order_id);
-                              }}>{quotation.order_code}</span>}
+                              {quotation.order_codes && quotation.order_codes.length > 1
+                                ? <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                    {quotation.order_codes.map((code, ci) => {
+                                      const oid = quotation.order_ids && quotation.order_ids[ci] ? quotation.order_ids[ci] : quotation.order_id;
+                                      const isUnlinking = unlinkingOrder && unlinkingOrder.quotationId === quotation.id && unlinkingOrder.orderId === oid;
+                                      const isConfirming = confirmUnlink && confirmUnlink.quotationId === quotation.id && confirmUnlink.orderId === oid;
+                                      return (
+                                        <span key={ci} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                          <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(oid)}>{code}</span>
+                                          {isConfirming ? (
+                                            <>
+                                              <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>Unlink?</span>
+                                              <button onClick={() => unlinkOrderFromQuotation(quotation.id, oid, code)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#16a34a', fontSize: '12px', lineHeight: 1, fontWeight: 700 }}>✓</button>
+                                              <button onClick={() => setConfirmUnlink(null)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#6b7280', fontSize: '12px', lineHeight: 1 }}>✗</button>
+                                            </>
+                                          ) : (
+                                            <button
+                                              title={`Unlink ${code}`}
+                                              disabled={isUnlinking}
+                                              onClick={() => setConfirmUnlink({ quotationId: quotation.id, orderId: oid, orderCode: code })}
+                                              style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                            >{isUnlinking ? '…' : '×'}</button>
+                                          )}
+                                        </span>
+                                      );
+                                    })}
+                                  </span>
+                                : quotation.order_code && (() => {
+                                    const isUnlinking = !!(unlinkingOrder && unlinkingOrder.quotationId === quotation.id);
+                                    const isConfirming = !!(confirmUnlink && confirmUnlink.quotationId === quotation.id);
+                                    return (
+                                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                        <span style={{ cursor: "pointer", color: "blue" }} onClick={() => openSalesUpdateForm(quotation.order_id)}>{quotation.order_code}</span>
+                                        {isConfirming ? (
+                                          <>
+                                            <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>Unlink?</span>
+                                            <button onClick={() => unlinkOrderFromQuotation(quotation.id, quotation.order_id, quotation.order_code)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#16a34a', fontSize: '12px', lineHeight: 1, fontWeight: 700 }}>✓</button>
+                                            <button onClick={() => setConfirmUnlink(null)} style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#6b7280', fontSize: '12px', lineHeight: 1 }}>✗</button>
+                                          </>
+                                        ) : (
+                                          <button
+                                            title={`Unlink ${quotation.order_code}`}
+                                            disabled={isUnlinking}
+                                            onClick={() => setConfirmUnlink({ quotationId: quotation.id, orderId: quotation.order_id, orderCode: quotation.order_code })}
+                                            style={{ background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: '#dc2626', fontSize: '11px', lineHeight: 1 }}
+                                          >{isUnlinking ? '…' : '×'}</button>
+                                        )}
+                                      </span>
+                                    );
+                                  })()
+                              }
                             </td>
 
                             <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2600,6 +2788,12 @@ function QuotationIndex(props) {
           </div>
         </div >
       </div >
+      <ForwardDetail
+        rfq={rfqDetailItem}
+        show={rfqDetailShow}
+        onHide={() => setRfqDetailShow(false)}
+        storeId={localStorage.getItem('store_id')}
+      />
     </>
   );
 }

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 import { applyAutomobileMenuOrder } from '../sidebar_menu_config';
+import { AI_PROVIDERS, fileCapabilityLabel } from '../utils/aiProviders.js';
+import ProcurementWhatsAppWidget from './ProcurementWhatsAppWidget';
+import ProcurementEmailWidget from './ProcurementEmailWidget';
+import ProcurementOutgoingEmailWidget from './ProcurementOutgoingEmailWidget';
+import WABATemplatePurposeWidget from './WABATemplatePurposeWidget';
+import WABATemplateTesterWidget from './WABATemplateTesterWidget';
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -8,10 +15,258 @@ import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import { toStoreLocalDate, fromStoreLocalDate } from '../utils/timezone.js';
+import ZatcaConnect from './zatca_connect.js';
+import { resolveImageUrl } from '../utils/imageUtils.js';
+/* eslint-disable no-unused-vars */
+import { invalidateStoreCache } from '../utils/storeUtils.js';
+/* eslint-enable no-unused-vars */
+import SampleInvoiceBg1 from '../INVOICE.jpg';
+import SampleInvoiceBg2 from '../LGK_WHATSAPP.png';
 //import { DebounceInput } from 'react-debounce-input';
+
+const DROPZONE_ACCENT = '#004ac6';
+
+function ImageDropzone({ currentSrc, previewSrc, onFile, onRemove, hint, label, compact = false }) {
+    const { t } = useTranslation('common');
+    const inputRef = React.useRef(null);
+    const [dragging, setDragging] = React.useState(false);
+
+    const displaySrc = previewSrc || currentSrc;
+    const isNew = !!previewSrc;
+
+    function handleFiles(files) {
+        if (!files || !files[0]) return;
+        onFile(files[0]);
+    }
+
+    function openPicker() { inputRef.current?.click(); }
+    function onDragOver(e) { e.preventDefault(); setDragging(true); }
+    function onDragLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false); }
+    function onDrop(e) { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }
+
+    const zoneStyle = {
+        border: `2px dashed ${dragging ? DROPZONE_ACCENT : '#c8d8f5'}`,
+        borderRadius: '10px',
+        padding: compact ? '18px 14px' : '36px 20px',
+        textAlign: 'center',
+        cursor: 'pointer',
+        background: dragging ? '#eef3ff' : '#f8faff',
+        transition: 'all 0.15s',
+        userSelect: 'none',
+    };
+
+    return (
+        <div>
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => handleFiles(e.target.files)}
+            />
+            {displaySrc ? (
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', padding: compact ? '12px' : '16px', background: '#fafbff', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img
+                            src={displaySrc}
+                            alt={label}
+                            title={t('Click to enlarge')}
+                            style={{
+                                maxHeight: compact ? '64px' : '180px',
+                                maxWidth: compact ? '120px' : '240px',
+                                objectFit: 'contain',
+                                borderRadius: '6px',
+                                border: '1px solid #e9ecef',
+                                display: 'block',
+                                cursor: compact ? 'default' : 'pointer',
+                            }}
+                            onClick={compact ? undefined : (e => { const w = window.open(); w.document.write(`<img src="${e.target.src}" style="max-width:100%;max-height:100vh;display:block;margin:auto;">`); })}
+                        />
+                        {!compact && (
+                            <span
+                                style={{ position: 'absolute', bottom: '5px', right: '5px', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                                onClick={e => { const src = e.currentTarget.previousSibling.src; const w = window.open(); w.document.write(`<img src="${src}" style="max-width:100%;max-height:100vh;display:block;margin:auto;">`); }}
+                            >
+                                <i className="bi bi-zoom-in"></i> {t('Enlarge')}
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ marginBottom: '8px' }}>
+                            {isNew ? (
+                                <span style={{ fontSize: '10px', fontWeight: 700, background: '#fff8e1', color: '#7a5800', border: '1px solid #ffe082', borderRadius: '4px', padding: '2px 7px' }}>
+                                    <i className="bi bi-clock me-1"></i>{t('Not saved yet')}
+                                </span>
+                            ) : (
+                                <span style={{ fontSize: '10px', fontWeight: 700, background: '#e6f4ea', color: '#137333', border: '1px solid #a8d5b0', borderRadius: '4px', padding: '2px 7px' }}>
+                                    <i className="bi bi-check-circle me-1"></i>{t('Saved')}
+                                </span>
+                            )}
+                        </div>
+                        {hint && <div style={{ fontSize: '11px', color: '#888', lineHeight: 1.5, marginBottom: '10px' }}>{hint}</div>}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={openPicker}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: `1px solid ${DROPZONE_ACCENT}`, background: '#eef3ff', color: DROPZONE_ACCENT, cursor: 'pointer' }}
+                            >
+                                <i className="bi bi-arrow-repeat"></i> {t('Change')}
+                            </button>
+                            {onRemove && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!window.confirm(t(`Remove this {{label}} image? This will delete it when you save.`, { label }))) return;
+                                        onRemove();
+                                    }}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #dc3545', background: '#fff5f5', color: '#dc3545', cursor: 'pointer' }}
+                                >
+                                    <i className="bi bi-trash3"></i> {t('Remove')}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div style={zoneStyle} onClick={openPicker} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+                    <i className="bi bi-cloud-upload" style={{ fontSize: compact ? '24px' : '36px', color: dragging ? DROPZONE_ACCENT : '#b0bec5', display: 'block' }}></i>
+                    <div style={{ fontWeight: 600, color: '#444', fontSize: '13px', marginTop: '8px' }}>
+                        {dragging ? t('Drop image here') : t('Click to upload or drag & drop')}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>{t('PNG, JPG, WEBP')}</div>
+                    {hint && <div style={{ fontSize: '11px', color: '#aaa', marginTop: '6px' }}>{hint}</div>}
+                </div>
+            )}
+        </div>
+    );
+}
 
 // Formats a UTC ISO string as a datetime-local input value (YYYY-MM-DDTHH:mm)
 // in the store's country timezone.
+function GoogleMapsTestWidget({ apiKey, storeId, purchaseMarkets }) {
+    const [keyword, setKeyword] = React.useState('');
+    const [market, setMarket] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+    const [result, setResult] = React.useState(null); // { count, places } or { error }
+
+    const token = localStorage.getItem('access_token');
+
+    const run = async () => {
+        const key = (apiKey || '').trim();
+        const kw  = keyword.trim();
+        if (!kw) return;
+        setLoading(true);
+        setResult(null);
+        try {
+            const params = new URLSearchParams({ store_id: storeId, keyword: kw });
+            if (market.trim()) params.set('market', market.trim());
+            if (key) params.set('api_key', key);
+            const res = await fetch(`/v1/rfq-bot/test-google-maps?${params}`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            setResult(data);
+        } catch (e) {
+            setResult({ error: e.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{ marginTop: '16px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '14px 16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0369a1', marginBottom: '10px' }}>
+                <i className="bi bi-search me-1"></i> Test Google Maps API
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <div>
+                    <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px' }}>Keyword / Category *</label>
+                    <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        placeholder='e.g. "iphone 15" or "Steel Pipes"'
+                        value={keyword}
+                        onChange={e => setKeyword(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && run()}
+                    />
+                </div>
+                <div>
+                    <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px' }}>Market (optional)</label>
+                    <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        style={{ width: '160px' }}
+                        placeholder={purchaseMarkets && purchaseMarkets[0] ? purchaseMarkets[0] : 'e.g. Riyadh'}
+                        value={market}
+                        onChange={e => setMarket(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && run()}
+                    />
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    style={{ height: '31px' }}
+                    disabled={loading || !keyword.trim()}
+                    onClick={run}
+                >
+                    {loading
+                        ? <><span className="spinner-border spinner-border-sm me-1"></span>Testing…</>
+                        : <><i className="bi bi-lightning-charge me-1"></i>Test API</>}
+                </button>
+                {result && <button type="button" className="btn btn-sm btn-link text-muted p-0" onClick={() => setResult(null)}>clear</button>}
+            </div>
+
+            {result && (
+                <div style={{ marginTop: '12px' }}>
+                    {result.error ? (
+                        <div style={{ color: '#b91c1c', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', padding: '8px 12px', fontSize: '12px' }}>
+                            <i className="bi bi-x-circle me-1"></i><strong>Error:</strong> {result.error}
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{ fontSize: '12px', color: '#15803d', marginBottom: '8px', fontWeight: 600 }}>
+                                <i className="bi bi-check-circle me-1"></i>
+                                Found {result.count} place{result.count !== 1 ? 's' : ''} for "{result.keyword}"{result.market ? ` in ${result.market}` : ''}
+                                {result.count === 0 && <span style={{ color: '#92400e', fontWeight: 400 }}> — API key works but no results for this keyword/market</span>}
+                            </div>
+                            {result.places && result.places.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
+                                    {result.places.map((p, i) => (
+                                        <div key={i} style={{ background: '#fff', border: '1px solid #e0f2fe', borderRadius: '6px', padding: '8px 10px', fontSize: '12px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                                <div>
+                                                    <strong style={{ color: '#0f172a' }}>{p.name}</strong>
+                                                    {p.rating > 0 && <span style={{ color: '#f59e0b', marginLeft: '6px' }}>{'★'.repeat(Math.round(p.rating))} <span style={{ color: '#64748b' }}>{p.rating.toFixed(1)}</span></span>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                                    {p.phone && (
+                                                        <span style={{ background: '#dcfce7', color: '#166534', padding: '1px 6px', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}>
+                                                            <i className="bi bi-telephone me-1"></i>{p.phone}
+                                                        </span>
+                                                    )}
+                                                    {p.maps_url && (
+                                                        <a href={p.maps_url} target="_blank" rel="noopener noreferrer"
+                                                           style={{ fontSize: '11px', color: '#0369a1' }}>
+                                                            <i className="bi bi-geo-alt"></i> Maps
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {p.address && <div style={{ color: '#64748b', marginTop: '2px' }}>{p.address}</div>}
+                                            {!p.phone && <div style={{ color: '#dc2626', marginTop: '2px', fontSize: '11px' }}><i className="bi bi-exclamation-triangle me-1"></i>No phone number — this place would be skipped</div>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function toDatetimeLocalValue(isoString, countryCode) {
     const local = toStoreLocalDate(isoString, countryCode);
     if (!local) return "";
@@ -30,6 +285,7 @@ function fromDatetimeLocalValue(datetimeLocal, countryCode) {
 }
 
 const StoreCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -146,6 +402,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 },
                 purchase_request_serial_number: {
                     prefix: "PR",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                rfq_received_serial_number: {
+                    prefix: "RFQ",
                     start_from_count: 1,
                     padding_count: 4
                 },
@@ -303,6 +564,8 @@ const StoreCreate = forwardRef((props, ref) => {
     }
     const [populating, setPopulating] = useState(false);
     const [clearing, setClearing] = useState(false);
+    const [serialLocks, setSerialLocks] = useState({});
+    const zatcaConnectRef = useRef();
 
     async function populateTestData() {
         if (!formData.id) return;
@@ -472,6 +735,11 @@ const StoreCreate = forwardRef((props, ref) => {
             start_from_count: 1,
             padding_count: 4
         },
+        rfq_received_serial_number: {
+            prefix: "RFQ",
+            start_from_count: 1,
+            padding_count: 4
+        },
     });
 
     const [show, SetShow] = useState(false);
@@ -486,7 +754,6 @@ const StoreCreate = forwardRef((props, ref) => {
             window.location = "/";
         }
     });
-
 
     function fetchCustomerPackages() {
         fetch('/v1/customer-package?limit=500', {
@@ -508,7 +775,10 @@ const StoreCreate = forwardRef((props, ref) => {
                     'Authorization': localStorage.getItem('access_token'),
                 },
             };
-            const response = await fetch(`/v1/store/${id}`, requestOptions);
+            const [response, locksRes] = await Promise.all([
+                fetch(`/v1/store/${id}`, requestOptions),
+                fetch(`/v1/store/${id}/serial-locks`, { headers: { Authorization: localStorage.getItem('access_token') } }).catch(() => null),
+            ]);
             const isJson = response.headers.get('content-type')?.includes('application/json');
             const data = isJson && await response.json();
             if (!response.ok) return;
@@ -525,6 +795,11 @@ const StoreCreate = forwardRef((props, ref) => {
             } else {
                 setSelectedCountries([]);
             }
+            // Apply serial locks to disable "Counting start from" once records exist
+            try {
+                const locksData = locksRes?.ok ? await locksRes.json() : null;
+                if (locksData?.result) setSerialLocks(locksData.result);
+            } catch (_) {}
         } catch (error) { }
     }
 
@@ -562,6 +837,23 @@ const StoreCreate = forwardRef((props, ref) => {
         return regex.test(str);
     }
 
+    function trimStringFields(obj) {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(trimStringFields);
+        const result = {};
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            if (typeof val === 'string') {
+                result[key] = val.trimEnd();
+            } else if (typeof val === 'object' && val !== null) {
+                result[key] = trimStringFields(val);
+            } else {
+                result[key] = val;
+            }
+        }
+        return result;
+    }
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -587,10 +879,6 @@ const StoreCreate = forwardRef((props, ref) => {
 
         if (formData.vat_no) {
             formData.vat_no_in_arabic = convertToArabicNumber(formData.vat_no.toString());
-        }
-
-        if (formData.zipcode) {
-            formData.zipcode_in_arabic = convertToArabicNumber(formData.zipcode.toString());
         }
 
         if (formData.registration_number) {
@@ -668,16 +956,6 @@ const StoreCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        if (!formData.zipcode) {
-            errors["zipcode"] = "Zipcode is required";
-            haveErrors = true;
-        } else {
-            if (!isValidNDigitNumber(formData.zipcode, 5)) {
-                errors["zipcode"] = "Zipcode should be 5 digits";
-                haveErrors = true;
-            }
-        }
-
         if (!formData.vat_no) {
             errors["vat_no"] = "VAT No. is required";
             haveErrors = true;
@@ -701,18 +979,6 @@ const StoreCreate = forwardRef((props, ref) => {
             errors["email"] = "E-mail is not valid";
             haveErrors = true;
         }
-
-        if (!formData.address) {
-            errors["address"] = "Address is required";
-            haveErrors = true;
-        }
-
-        if (!formData.address_in_arabic) {
-            errors["address_in_arabic"] = "Address in arabic is required";
-            haveErrors = true;
-        }
-
-
 
 
         if (!formData.national_address?.building_no) {
@@ -792,7 +1058,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 "Content-Type": "application/json",
                 Authorization: localStorage.getItem("access_token"),
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(trimStringFields(formData)),
         };
 
         console.log("formData:", formData);
@@ -819,9 +1085,15 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
-                const msg = formData.id ? "Store updated successfully!" : "Store created successfully!";
+                const msg = formData.id ? t("Store updated successfully!") : t("Store created successfully!");
                 showFlash(msg, "success");
                 if (props.showToastMessage) props.showToastMessage(msg, "success");
+                if (data.result?.settings) {
+                    localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
+                }
+                invalidateStoreCache(formData.id);
+                localStorage.setItem("store_settings_updated", Date.now());
+                window.dispatchEvent(new StorageEvent('storage', { key: 'store_settings_updated' }));
 
                 if (props.refreshList) {
                     props.refreshList();
@@ -832,9 +1104,14 @@ const StoreCreate = forwardRef((props, ref) => {
                     }
                 }
 
-                handleClose();
-                if (props.openDetailsView)
-                    props.openDetailsView(data.result.id);
+                if (data.result?.zatca?.zatca_reconnect_required) {
+                    showFlash(t("ZATCA-sensitive fields changed. Please reconnect to ZATCA."), "warning");
+                    setTimeout(() => zatcaConnectRef.current?.open(data.result.id), 600);
+                } else {
+                    handleClose();
+                    if (props.openDetailsView)
+                        props.openDetailsView(data.result.id);
+                }
             })
             .catch((error) => {
                 setProcessing(false);
@@ -842,20 +1119,23 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                showFlash("Failed to save store. Please fix the errors and try again.", "danger");
-                if (props.showToastMessage) props.showToastMessage("Failed to process store!", "danger");
+                showFlash(t("Failed to save store. Please fix the errors and try again."), "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process store!"), "danger");
             });
     }
 
 
-    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
-
-        let ratio = parseFloat(originaleWidth / originalHeight);
-
-        targetWidth = parseInt(targetHeight * ratio);
-        targetHeight = parseInt(targetWidth * ratio);
-
-        return { targetWidth: targetWidth, targetHeight: targetHeight };
+    function getTargetDimension(originaleWidth, originalHeight, maxWidth, maxHeight) {
+        const ratio = originaleWidth / originalHeight;
+        let targetWidth, targetHeight;
+        if (ratio > maxWidth / maxHeight) {
+            targetWidth = Math.min(originaleWidth, maxWidth);
+            targetHeight = Math.round(targetWidth / ratio);
+        } else {
+            targetHeight = Math.min(originalHeight, maxHeight);
+            targetWidth = Math.round(targetHeight * ratio);
+        }
+        return { targetWidth, targetHeight };
     }
 
     //let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
@@ -874,26 +1154,51 @@ const StoreCreate = forwardRef((props, ref) => {
     const countryOptions = useMemo(() => countryList().getData(), [])
     //const [selectedCountry, setSelectedCountry] = useState('')
     let [selectedCountries, setSelectedCountries] = useState([]);
+    const [newMarket, setNewMarket] = React.useState('');
+    const [newEmailKeyword, setNewEmailKeyword] = React.useState('');
+    const [newRfqForwardMarket, setNewRfqForwardMarket] = React.useState('');
+    const [waCheck, setWaCheck] = React.useState({ status: 'idle', name: '', error: '' }); // idle|checking|valid|invalid
+    const [populateVendors, setPopulateVendors] = React.useState({ running: false, percent: 0, message: '', done: false });
+    const [extractTest, setExtractTest] = React.useState({
+        provider: '', model: '', text: '', files: [], loading: false, result: null, error: '',
+    });
 
     const countrySearchRef = useRef();
 
     const NAV_TABS = [
         { id: 'general', label: 'General Info', icon: 'bi-building' },
         { id: 'address', label: 'National Address', icon: 'bi-geo-alt' },
+        { id: 'contact', label: 'Contact', icon: 'bi-telephone' },
         { id: 'invoice_titles', label: 'Invoice Titles', icon: 'bi-file-earmark-text' },
         { id: 'serial_numbers', label: 'Serial Numbers', icon: 'bi-hash' },
         { id: 'bank_account', label: 'Bank Account', icon: 'bi-bank' },
         { id: 'settings', label: 'Settings', icon: 'bi-gear' },
+        { id: 'whatsapp_settings', label: 'WhatsApp Settings', icon: 'bi-whatsapp' },
+        { id: 'purchase_bills_settings', label: 'Purchase Bills', icon: 'bi-receipt' },
+        { id: 'email_settings', label: 'Email Settings', icon: 'bi-envelope-fill' },
+        { id: 'google_settings', label: 'Google Settings', icon: 'bi-geo-alt-fill' },
+        { id: 'rfq_settings', label: 'RFQ Settings', icon: 'bi-list-check' },
+        { id: 'ai_models', label: 'AI Models', icon: 'bi-cpu' },
         { id: 'designs', label: 'Designs', icon: 'bi-palette' },
+        { id: 'logo', label: 'Logo', icon: 'bi-image-fill' },
+        { id: 'invoice_background', label: 'Invoice BG Image', icon: 'bi-image' },
         { id: 'opening_balances', label: 'Opening Balances', icon: 'bi-wallet2' },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
+    const createZatcaReportingScope = () => {
+        const parts = ['sales', 'sales returns'];
+        if (formData.settings?.enable_zatca_reporting_for_receivables) parts.push('receivables');
+        if (formData.settings?.enable_zatca_reporting_for_payables) parts.push('payables');
+        return parts.join(', ');
+    };
     const ERROR_TAB_MAP = {
         business_category: 'general', name: 'general', name_in_arabic: 'general',
-        code: 'general', branch_name: 'general', phone: 'general', vat_no: 'general',
-        vat_percent: 'general', email: 'general', address: 'general', address_in_arabic: 'general',
-        country_code: 'general', registration_number: 'general', zipcode: 'general',
-        logo_content: 'general',
+        code: 'general', branch_name: 'general', vat_no: 'general',
+        vat_percent: 'general',
+        phone: 'contact', email: 'contact',
+        registration_number: 'general',
+        logo_content: 'logo',
+        country_code: 'address',
         national_address_building_no: 'address', national_address_street_name: 'address',
         national_address_district_name: 'address', national_address_city_name: 'address',
         national_address_zipcode: 'address',
@@ -921,33 +1226,52 @@ const StoreCreate = forwardRef((props, ref) => {
                     <button type="button" onClick={() => setFlash(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '18px', lineHeight: 1, padding: 0, marginLeft: '4px', opacity: 0.7 }}>×</button>
                 </div>
             )}
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} dialogClassName="pw-modal">
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} dialogClassName="pw-modal" className="above-pw-modal-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
-                    <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Store — ${formData.name}` : 'Create New Store'}
-                    </Modal.Title>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em' }}>
+                                {formData.id ? `${t('Update Store')} — ${formData.name}` : t('Create New Store')}
+                            </div>
+                            {flash && flash.type === 'success' && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', animation: 'fadeInDown 0.2s ease' }}>
+                                    <i className="bi bi-check-circle-fill" style={{ fontSize: '12px' }}></i>
+                                    {flash.text}
+                                </span>
+                            )}
+                        </div>
+                        {formData.zatca?.phase === '2' && formData.zatca?.connected && formData.zatca?.last_connected_at && (
+                            <div style={{ fontSize: '11px', color: '#137333', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="bi bi-clock-history" style={{ fontSize: '10px' }}></i>
+                                {t('ZATCA last connected:')} {(() => {
+                                    const d = toStoreLocalDate(formData.zatca.last_connected_at, formData.country_code);
+                                    return d ? d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                                })()}
+                            </div>
+                        )}
+                    </div>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <>
                                 <button type="button"
                                     style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                     onClick={populateTestData} disabled={populating || clearing}
-                                    title="Fill this store with Automobile Workshop sample data">
+                                    title={t('Fill this store with Automobile Workshop sample data')}>
                                     {populating ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <i className="bi bi-database-add"></i>}
-                                    Populate Test Data
+                                    {t('Populate Test Data')}
                                 </button>
                                 <button type="button"
                                     style={{ background: '#ffdad6', color: '#93000a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                     onClick={clearStoreData} disabled={populating || clearing}
-                                    title="Delete ALL data in this store's database">
+                                    title={t('Delete ALL data in this store\'s database')}>
                                     {clearing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <i className="bi bi-trash3"></i>}
-                                    Clear Data
+                                    {t('Clear Data')}
                                 </button>
                             </>
                         )}
@@ -955,14 +1279,14 @@ const StoreCreate = forwardRef((props, ref) => {
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Save Changes') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -1108,8 +1432,8 @@ const StoreCreate = forwardRef((props, ref) => {
                     <form onSubmit={handleCreate} className="pw-form">
                         <aside className="pw-sidebar">
                             <div className="pw-sidebar-header">
-                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>{formData.id ? 'Edit Store' : 'New Store'}</div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Store Wizard</div>
+                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>{formData.id ? t('Edit Store') : t('New Store')}</div>
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>{t('Store Wizard')}</div>
                             </div>
                             {NAV_TABS.map((tab) => (
                                 <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
@@ -1117,7 +1441,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
                                     onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}>
                                     <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                                    <span style={{ flex: 1 }}>{tab.label}</span>
+                                    <span style={{ flex: 1 }}>{t(tab.label)}</span>
                                     {tabErrorCounts[tab.id] > 0 && (
                                         <span style={{ background: '#ba1a1a', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                             {tabErrorCounts[tab.id]}
@@ -1132,7 +1456,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
                                         <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                            {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                            {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                         </div>
                                         {NAV_TABS.map((tab) => {
                                             const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
@@ -1140,7 +1464,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             return (
                                                 <div key={tab.id} style={{ marginBottom: '6px' }}>
                                                     <button type="button" onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
-                                                        {tab.label}:
+                                                        {t(tab.label)}:
                                                     </button>
                                                     {tabErrs.map(([k, v]) => (
                                                         <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
@@ -1150,12 +1474,65 @@ const StoreCreate = forwardRef((props, ref) => {
                                         })}
                                     </div>
                                 </div>
+                                {formData.zatca?.zatca_reconnect_required && (
+                                    <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '14px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                        <i className="bi bi-exclamation-triangle-fill" style={{ color: '#856404', fontSize: '18px', flexShrink: 0 }}></i>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                            <div style={{ fontWeight: 700, color: '#856404', fontSize: '13px' }}>{t('ZATCA Reconnection Required')}</div>
+                                            <div style={{ color: '#856404', fontSize: '12px', marginTop: '2px' }}>
+                                                {t('Key store details have changed. You must reconnect to ZATCA before reporting')} {createZatcaReportingScope()}.
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            style={{ background: '#856404', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                                            onClick={() => zatcaConnectRef.current?.open(formData.id)}
+                                        >
+                                            <i className="bi bi-plug-fill me-1"></i>{t('Reconnect to ZATCA')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            style={{ background: '#6c757d', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                                            onClick={() => {
+                                                fetch(`/v1/store/${formData.id}/zatca/clear-reconnect`, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json',
+                                                        Authorization: localStorage.getItem('access_token'),
+                                                    },
+                                                })
+                                                    .then(async (res) => {
+                                                        const data = await res.json();
+                                                        if (data.status) {
+                                                            formData.zatca.zatca_reconnect_required = false;
+                                                            setFormData({ ...formData });
+                                                            if (props.showToastMessage) props.showToastMessage("Store relieved from ZATCA re-connect requirement.", "success");
+                                                        } else {
+                                                            if (props.showToastMessage) props.showToastMessage("Failed to relieve store from ZATCA re-connect requirement.", "danger");
+                                                        }
+                                                    })
+                                                    .catch(() => {
+                                                        if (props.showToastMessage) props.showToastMessage("Failed to relieve store from ZATCA re-connect requirement.", "danger");
+                                                    });
+                                            }}
+                                        >
+                                            <i className="bi bi-x-circle me-1"></i>{t('Relieve from Re-Connect Prompt')}
+                                        </button>
+                                    </div>
+                                )}
                                 {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('General Details')}</h3></div>
+                                    {formData.zatca?.phase === '2' && (
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
+                                            <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
+                                            <span><strong>{t('ZATCA Re-Connection Required:')}</strong> {t('Changing any of these fields will require you to')} <strong>{t('Re-Connect')}</strong> {t('this store to ZATCA. Until re-connected, you will not be able to report')} {createZatcaReportingScope()} {t('to ZATCA.')}</span>
+                                        </div>
+                                    )}
                                     <div className="row g-3">
 
                                         <div className="col-md-3">
-                                            <label className="form-label">Customer Package</label>
+                                            <label className="form-label">{t('Customer Package')}</label>
                                             <div className="input-group mb-3">
                                                 <select
                                                     className="form-control"
@@ -1165,7 +1542,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         setFormData({ ...formData });
                                                     }}
                                                 >
-                                                    <option value="">— No Package —</option>
+                                                    <option value="">{t('— No Package —')}</option>
                                                     {customerPackages.map(pkg => (
                                                         <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
                                                     ))}
@@ -1173,13 +1550,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                             {formData.customer_package_id && (
                                                 <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'Inter, sans-serif', marginTop: '-8px' }}>
-                                                    Non-admin users will only see tabs defined in this package.
+                                                    {t('Non-admin users will only see tabs defined in this package.')}
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Zatca phase*</label>
+                                            <label className="form-label">{t('Zatca phase')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <select
@@ -1202,8 +1579,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                 >
-                                                    <option value="1">Phase 1</option>
-                                                    <option value="2">Phase 2</option>
+                                                    <option value="1">{t('Phase 1')}</option>
+                                                    <option value="2">{t('Phase 2')}</option>
 
                                                 </select>
                                             </div>
@@ -1214,7 +1591,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         {formData.zatca?.phase === "2" ? <div className="col-md-2">
-                                            <label className="form-label">Zatca environment*</label>
+                                            <label className="form-label">{t('Zatca environment')} *</label>
                                             <div className="input-group mb-3">
                                                 <select
                                                     value={formData.zatca?.env}
@@ -1237,9 +1614,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     className="form-control"
                                                     disabled
                                                 >
-                                                    <option value="NonProduction">NonProduction</option>
-                                                    <option value="Simulation" >Simulation</option>
-                                                    <option value="Production" >Production</option>
+                                                    <option value="NonProduction">{t('NonProduction')}</option>
+                                                    <option value="Simulation" >{t('Simulation')}</option>
+                                                    <option value="Production" >{t('Production')}</option>
                                                 </select>
                                             </div>
                                             {errors.zatca_env && (
@@ -1249,24 +1626,36 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div> : ""}
 
-                                        <div className="col-md-2">
-                                            <label className="form-label">Business category*</label>
+                                        <div className="col-md-3">
+                                            <label className="form-label">{t('Business category')} *</label>
 
                                             <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.business_category}
-                                                    type='string'
+                                                <select
+                                                    value={formData.business_category || ""}
                                                     onChange={(e) => {
                                                         errors["business_category"] = "";
                                                         setErrors({ ...errors });
                                                         formData.business_category = e.target.value;
                                                         setFormData({ ...formData });
-                                                        console.log(formData);
                                                     }}
                                                     className="form-control"
                                                     id="business_category"
-                                                    placeholder="Business category"
-                                                />
+                                                >
+                                                    <option value="">{t('-- Select category --')}</option>
+                                                    <option value="Supply Activities">{t('Supply Activities')}</option>
+                                                    <option value="Service Activities">{t('Service Activities')}</option>
+                                                    <option value="Retail">{t('Retail')}</option>
+                                                    <option value="Food and Beverages">{t('Food and Beverages')}</option>
+                                                    <option value="Trading">{t('Trading')}</option>
+                                                    <option value="Manufacturing">{t('Manufacturing')}</option>
+                                                    <option value="Healthcare">{t('Healthcare')}</option>
+                                                    <option value="Real Estate">{t('Real Estate')}</option>
+                                                    <option value="Construction">{t('Construction')}</option>
+                                                    <option value="Transportation">{t('Transportation')}</option>
+                                                    <option value="Technology">{t('Technology')}</option>
+                                                    <option value="Education">{t('Education')}</option>
+                                                    <option value="Financial Services">{t('Financial Services')}</option>
+                                                </select>
                                             </div>
                                             {errors.business_category && (
                                                 <div className="pw-err">
@@ -1277,7 +1666,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Name*</label>
+                                            <label className="form-label">{t('Registered Company Name')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1292,7 +1681,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="name"
-                                                    placeholder="Name"
+                                                    placeholder={t('Registered Company Name')}
                                                 />
                                             </div>
                                             {errors.name && (
@@ -1303,7 +1692,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Name In Arabic*</label>
+                                            <label className="form-label">{t('Registered Company Name In Arabic')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1318,7 +1707,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="name_in_arabic"
-                                                    placeholder="Name In Arabic"
+                                                    placeholder={t('Registered Company Name In Arabic')}
                                                 />
                                             </div>
                                             {errors.name_in_arabic && (
@@ -1328,9 +1717,45 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('Store Name')}</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.store_name ? formData.store_name : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.store_name = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="store_name"
+                                                    placeholder={t('Store Name (optional)')}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('Store Name In Arabic')}</label>
+
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.store_name_in_arabic ? formData.store_name_in_arabic : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        formData.store_name_in_arabic = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="store_name_in_arabic"
+                                                    placeholder={t('Store Name In Arabic (optional)')}
+                                                />
+                                            </div>
+                                        </div>
+
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Branch Code*</label>
+                                            <label className="form-label">{t('Branch Code')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1361,7 +1786,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="code"
-                                                    placeholder="Code"
+                                                    placeholder={t('Code')}
                                                 />
 
 
@@ -1374,7 +1799,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Branch Name*</label>
+                                            <label className="form-label">{t('Branch Name')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1389,7 +1814,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="branch_name"
-                                                    placeholder="Branch Name"
+                                                    placeholder={t('Branch Name')}
                                                 />
 
 
@@ -1402,7 +1827,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Title(Optional)</label>
+                                            <label className="form-label">{t('Title (Optional)')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1417,7 +1842,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="title"
-                                                    placeholder="Title"
+                                                    placeholder={t('Title')}
                                                 />
 
                                             </div>
@@ -1430,7 +1855,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Title In Arabic(Optional)</label>
+                                            <label className="form-label">{t('Title In Arabic (Optional)')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1445,7 +1870,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="title_in_arabic"
-                                                    placeholder="Title In Arabic"
+                                                    placeholder={t('Title In Arabic')}
                                                 />
 
 
@@ -1481,7 +1906,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         setSelectedStores(selectedItems);
                                     }}
                                     options={storeOptions}
-                                    placeholder="Select Stores"
+                                    placeholder={t('Select Stores')}
                                     selected={selectedStores}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
@@ -1501,7 +1926,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>*/}
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Registration Number(CRN)*</label>
+                                            <label className="form-label">{t('Registration Number (CRN)')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1516,7 +1941,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="registration_number"
-                                                    placeholder="CRN"
+                                                    placeholder={t('CRN')}
                                                 />
 
 
@@ -1530,66 +1955,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <div className="col-md-2">
-                                            <label className="form-label">Zipcode*(5 digits)</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.zipcode ? formData.zipcode : ""}
-                                                    type='number'
-                                                    onChange={(e) => {
-                                                        errors["zipcode"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.zipcode = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="zipcode"
-                                                    placeholder="Zipcode"
-                                                />
-
-
-                                            </div>
-                                            {errors.zipcode && (
-                                                <div className="pw-err">
-                                                    {errors.zipcode}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-md-2">
-                                            <label className="form-label">Phone* ( 05.. / +966..)</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.phone ? formData.phone : ""}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["phone"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.phone = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="phone"
-                                                    placeholder="Phone"
-                                                />
-
-
-                                            </div>
-                                            {errors.phone && (
-                                                <div className="pw-err">
-
-                                                    {errors.phone}
-                                                </div>
-                                            )}
-                                        </div>
 
 
                                         <div className="col-md-2">
-                                            <label className="form-label">VAT NO.* (15 digits)</label>
+                                            <label className="form-label">{t('VAT NO. (15 digits)')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1604,7 +1973,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="vat_no"
-                                                    placeholder="VAT NO."
+                                                    placeholder={t('VAT NO.')}
                                                 />
 
 
@@ -1618,7 +1987,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-1">
-                                            <label className="form-label">VAT %*</label>
+                                            <label className="form-label">{t('VAT %')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1654,95 +2023,20 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <div className="col-md-3">
-                                            <label className="form-label">Email*</label>
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    value={formData.email ? formData.email : ""}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["email"] = "";
-
-                                                        formData.email = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="email"
-                                                    placeholder="Email"
-                                                />
 
 
-
-                                            </div>
-                                            {errors.email && (
-                                                <div className="pw-err">
-
-                                                    {errors.email}
-                                                </div>
-                                            )}
+                                    </div></div></div>)}
+                                {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('National Address')}</h3></div>
+                                    {formData.zatca?.phase === '2' && (
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#7a5800' }}>
+                                            <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '14px', color: '#f59e0b', flexShrink: 0, marginTop: '1px' }}></i>
+                                            <span><strong>{t('ZATCA Re-Connection Required:')}</strong> {t('Changing any of these fields will require you to')} <strong>{t('Re-Connect')}</strong> {t('this store to ZATCA. Until re-connected, you will not be able to report')} {createZatcaReportingScope()} {t('to ZATCA.')}</span>
                                         </div>
-
+                                    )}
+                                    <div className="row g-3">
                                         <div className="col-md-3">
-                                            <label className="form-label">Address*</label>
-
-                                            <div className="input-group mb-3">
-                                                <textarea
-                                                    value={formData.address}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["address"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.address = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="address"
-                                                    placeholder="Address"
-                                                />
-
-                                            </div>
-                                            {errors.address && (
-                                                <div className="pw-err">
-
-                                                    {errors.address}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-md-3">
-                                            <label className="form-label">Address In Arabic*</label>
-
-                                            <div className="input-group mb-3">
-                                                <textarea
-                                                    value={formData.address_in_arabic}
-                                                    type='string'
-                                                    onChange={(e) => {
-                                                        errors["address_in_arabic"] = "";
-                                                        setErrors({ ...errors });
-                                                        formData.address_in_arabic = e.target.value;
-                                                        setFormData({ ...formData });
-                                                        console.log(formData);
-                                                    }}
-                                                    className="form-control"
-                                                    id="address_in_arabic"
-                                                    placeholder="Address In Arabic"
-                                                />
-
-                                            </div>
-                                            {errors.address_in_arabic && (
-                                                <div className="pw-err">
-
-                                                    {errors.address_in_arabic}
-                                                </div>
-                                            )}
-
-                                        </div>
-
-                                        <div className="col-md-3">
-                                            <label className="form-label">Country*</label>
+                                            <label className="form-label">{t('Country')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <Typeahead
@@ -1766,7 +2060,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         setSelectedCountries(selectedItems);
                                                     }}
                                                     options={countryOptions}
-                                                    placeholder="Country name"
+                                                    placeholder={t('Country name')}
                                                     selected={selectedCountries}
                                                     highlightOnlyResult={true}
                                                     ref={countrySearchRef}
@@ -1786,88 +2080,8 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
-
                                         <div className="col-md-2">
-                                            <label className="form-label">Logo</label>
-
-                                            {formData.logo && !formData.logo_content && (
-                                                <div className="mb-2">
-                                                    <img src={formData.logo} alt="Current logo" style={{ maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} />
-                                                </div>
-                                            )}
-
-                                            <div className="input-group mb-3">
-                                                <input
-                                                    type='file'
-                                                    onChange={(e) => {
-                                                        errors["logo_content"] = "";
-                                                        setErrors({ ...errors });
-
-                                                        if (!e.target.value) {
-                                                            errors["logo_content"] = "Invalid Logo File";
-                                                            setErrors({ ...errors });
-                                                            return;
-                                                        }
-
-                                                        formData.logo = e.target.value;
-
-                                                        let file = document.querySelector('#logo').files[0];
-
-                                                        let targetHeight = 100;
-                                                        let targetWidth = 100;
-
-
-                                                        let url = URL.createObjectURL(file);
-                                                        let img = new Image();
-
-                                                        img.onload = function () {
-                                                            let originaleWidth = img.width;
-                                                            let originalHeight = img.height;
-
-                                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
-                                                            targetWidth = targetDimensions.targetWidth;
-                                                            targetHeight = targetDimensions.targetHeight;
-
-                                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
-                                                                formData.logo_content = result;
-                                                                setFormData({ ...formData });
-
-                                                                console.log("formData.logo_content:", formData.logo_content);
-                                                            });
-                                                        };
-                                                        img.src = url;
-
-                                                        /*
-                                                        resizeFIle(file, (result) => {
-                                                            formData.logo_content = result;
-                
-                                                            console.log("formData.logo_content:", formData.logo_content);
-                
-                                                            setFormData({ ...formData });
-                                                        });
-                                                        */
-                                                    }}
-                                                    className="form-control"
-                                                    id="logo"
-                                                    placeholder="Logo"
-                                                />
-
-
-                                            </div>
-                                            {errors.logo_content && (
-                                                <div className="pw-err">
-
-                                                    {errors.logo_content}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                    </div></div></div>)}
-                                {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
-                                    <div className="row g-3">
-                                        <div className="col-md-2">
-                                            <label className="form-label">Short code</label>
+                                            <label className="form-label">{t('Short Code')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1882,7 +2096,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.short_code "
-                                                    placeholder="Short code "
+                                                    placeholder={t('Short Code')}
                                                 />
                                             </div>
                                             {errors.national_address_short_code && (
@@ -1894,7 +2108,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Building Number(4 digits)*</label>
+                                            <label className="form-label">{t('Building Number (4 digits)')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1909,7 +2123,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.building_no"
-                                                    placeholder="Building Number"
+                                                    placeholder={t('Building Number')}
                                                 />
                                             </div>
                                             {errors.national_address_building_no && (
@@ -1921,7 +2135,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Street Name*</label>
+                                            <label className="form-label">{t('Street Name')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1936,7 +2150,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.street_name"
-                                                    placeholder="Street Name"
+                                                    placeholder={t('Street Name')}
                                                 />
 
 
@@ -1950,7 +2164,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Street Name(Arabic)</label>
+                                            <label className="form-label">{t('Street Name (Arabic)')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1965,7 +2179,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.street_name_arabic"
-                                                    placeholder="Street Name(Arabic)"
+                                                    placeholder={t('Street Name (Arabic)')}
                                                 />
 
 
@@ -1981,7 +2195,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                         <div className="col-md-2">
-                                            <label className="form-label">District Name*</label>
+                                            <label className="form-label">{t('District Name')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -1996,7 +2210,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.district_name"
-                                                    placeholder="District Name"
+                                                    placeholder={t('District Name')}
                                                 />
 
 
@@ -2011,7 +2225,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">District Name(Arabic)</label>
+                                            <label className="form-label">{t('District Name (Arabic)')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2026,7 +2240,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.district_name_arabic"
-                                                    placeholder="District Name(Arabic)"
+                                                    placeholder={t('District Name (Arabic)')}
                                                 />
 
 
@@ -2042,7 +2256,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                         <div className="col-md-2">
-                                            <label className="form-label">City Name*</label>
+                                            <label className="form-label">{t('City Name')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2057,7 +2271,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.city_name"
-                                                    placeholder="City Name"
+                                                    placeholder={t('City Name')}
                                                 />
 
 
@@ -2072,7 +2286,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">City Name(Arabic)</label>
+                                            <label className="form-label">{t('City Name (Arabic)')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2087,7 +2301,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.city_name_arabic"
-                                                    placeholder="City Name(Arabic)"
+                                                    placeholder={t('City Name (Arabic)')}
                                                 />
 
 
@@ -2102,7 +2316,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Zipcode(5 digits)*</label>
+                                            <label className="form-label">{t('Zipcode (5 digits)')} *</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2117,7 +2331,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.zipcode"
-                                                    placeholder="Zipcode"
+                                                    placeholder={t('Zipcode')}
                                                 />
 
 
@@ -2132,7 +2346,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Additional Number</label>
+                                            <label className="form-label">{t('Additional Number')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2147,7 +2361,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.additional_no"
-                                                    placeholder="Additional Number"
+                                                    placeholder={t('Additional Number')}
                                                 />
 
 
@@ -2162,7 +2376,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Unit Number</label>
+                                            <label className="form-label">{t('Unit Number')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -2177,7 +2391,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="national_address.unit_no"
-                                                    placeholder="Unit Number"
+                                                    placeholder={t('Unit Number')}
                                                 />
 
 
@@ -2196,13 +2410,60 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                     </div></div></div>)}
+                                {activeTab === 'contact' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-telephone" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Contact')}</h3></div>
+                                    <div className="row g-3">
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('Phone')} *</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.phone ? formData.phone : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["phone"] = "";
+                                                        setErrors({ ...errors });
+                                                        formData.phone = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="phone"
+                                                    placeholder={t('e.g. +1 555 123 4567')}
+                                                />
+                                            </div>
+                                            {errors.phone && (
+                                                <div className="pw-err">{errors.phone}</div>
+                                            )}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('Email')} *</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.email ? formData.email : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["email"] = "";
+                                                        formData.email = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="email"
+                                                    placeholder={t('Email')}
+                                                />
+                                            </div>
+                                            {errors.email && (
+                                                <div className="pw-err">{errors.email}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div></div>)}
                                 {activeTab === 'invoice_titles' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Titles</h3></div>
-                                    <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
-                                    <h6><b>Sales</b></h6>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Invoice Titles')}</h3></div>
+                                    {formData?.zatca?.phase === '1' && <>
+                                    <h6><b>{t('Zatca Phase 1 Invoice Titles')}</b></h6>
+                                    <h6><b>{t('Sales')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_titles?.paid}
@@ -2216,7 +2477,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_titles?.paid && (
@@ -2226,7 +2487,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_titles?.credit}
@@ -2240,7 +2501,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_titles?.credit && (
@@ -2250,7 +2511,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_titles?.cash}
@@ -2264,7 +2525,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_titles?.cash && (
@@ -2275,10 +2536,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    <h6><b>Sales Return</b></h6>
+                                    <h6><b>{t('Sales Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_return_titles?.paid}
@@ -2292,7 +2553,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_return_titles?.paid && (
@@ -2302,7 +2563,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_return_titles?.credit}
@@ -2316,7 +2577,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_return_titles?.credit && (
@@ -2326,7 +2587,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.sales_return_titles?.cash}
@@ -2340,7 +2601,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.sales_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.sales_return_titles?.cash && (
@@ -2352,10 +2613,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div>
 
 
-                                    <h6><b>Purchase</b></h6>
+                                    <h6><b>{t('Purchase')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_titles?.paid}
@@ -2369,7 +2630,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_titles?.paid && (
@@ -2379,7 +2640,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_titles?.credit}
@@ -2393,7 +2654,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_titles?.credit && (
@@ -2403,7 +2664,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_titles?.cash}
@@ -2417,7 +2678,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_titles?.cash && (
@@ -2428,10 +2689,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    <h6><b>Purchase Return</b></h6>
+                                    <h6><b>{t('Purchase Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_return_titles?.paid}
@@ -2445,7 +2706,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_return_titles?.paid && (
@@ -2455,7 +2716,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_return_titles?.credit}
@@ -2469,7 +2730,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_return_titles?.credit && (
@@ -2479,7 +2740,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase1?.purchase_return_titles?.cash}
@@ -2493,7 +2754,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase1.purchase_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase1?.purchase_return_titles?.cash && (
@@ -2503,13 +2764,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                     </div>
+                                    </>}
 
-
-                                    <h6><b>Zatca Phase 2 Invoice Titles</b></h6>
-                                    <h6><b>Sales</b></h6>
+                                    {formData?.zatca?.phase === '2' && <>
+                                    <h6><b>{t('Zatca Phase 2 Invoice Titles')}</b></h6>
+                                    <h6><b>{t('Sales')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2C*</label>
+                                            <label className="form-label">{t('Paid B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_titles?.paid}
@@ -2523,7 +2785,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_titles?.paid && (
@@ -2533,7 +2795,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2C*</label>
+                                            <label className="form-label">{t('Credit B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_titles?.credit}
@@ -2547,7 +2809,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_titles?.credit && (
@@ -2557,7 +2819,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2C*</label>
+                                            <label className="form-label">{t('Cash B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_titles?.cash}
@@ -2571,7 +2833,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_titles?.cash && (
@@ -2582,7 +2844,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2B*</label>
+                                            <label className="form-label">{t('Paid B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.paid}
@@ -2596,7 +2858,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_titles?.paid && (
@@ -2606,7 +2868,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2B*</label>
+                                            <label className="form-label">{t('Credit B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.credit}
@@ -2620,7 +2882,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_titles?.credit && (
@@ -2630,7 +2892,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2B*</label>
+                                            <label className="form-label">{t('Cash B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.cash}
@@ -2644,7 +2906,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_titles?.cash && (
@@ -2655,10 +2917,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    <h6><b>Sales Return</b></h6>
+                                    <h6><b>{t('Sales Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2C*</label>
+                                            <label className="form-label">{t('Paid B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_return_titles?.paid}
@@ -2672,7 +2934,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_return_titles?.paid && (
@@ -2682,7 +2944,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2C*</label>
+                                            <label className="form-label">{t('Credit B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_return_titles?.credit}
@@ -2696,7 +2958,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_return_titles?.credit && (
@@ -2706,7 +2968,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2C*</label>
+                                            <label className="form-label">{t('Cash B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.sales_return_titles?.cash}
@@ -2720,7 +2982,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.sales_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.sales_return_titles?.cash && (
@@ -2731,7 +2993,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2B*</label>
+                                            <label className="form-label">{t('Paid B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid}
@@ -2745,7 +3007,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid && (
@@ -2755,7 +3017,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2B*</label>
+                                            <label className="form-label">{t('Credit B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit}
@@ -2769,7 +3031,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit && (
@@ -2779,7 +3041,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2B*</label>
+                                            <label className="form-label">{t('Cash B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash}
@@ -2793,7 +3055,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.sales_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash && (
@@ -2806,10 +3068,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div>
 
 
-                                    <h6><b>Purchase</b></h6>
+                                    <h6><b>{t('Purchase')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2C*</label>
+                                            <label className="form-label">{t('Paid B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_titles?.paid}
@@ -2823,7 +3085,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_titles?.paid && (
@@ -2833,7 +3095,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2C*</label>
+                                            <label className="form-label">{t('Credit B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_titles?.credit}
@@ -2847,7 +3109,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_titles?.credit && (
@@ -2857,7 +3119,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2C*</label>
+                                            <label className="form-label">{t('Cash B2C')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_titles?.cash}
@@ -2871,7 +3133,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_titles?.cash && (
@@ -2882,7 +3144,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid B2B*</label>
+                                            <label className="form-label">{t('Paid B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.paid}
@@ -2896,7 +3158,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.purchase_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.paid && (
@@ -2906,7 +3168,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit B2B*</label>
+                                            <label className="form-label">{t('Credit B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.credit}
@@ -2920,7 +3182,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.purchase_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.credit && (
@@ -2930,7 +3192,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash B2B*</label>
+                                            <label className="form-label">{t('Cash B2B')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.cash}
@@ -2944,7 +3206,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2_b2b.purchase_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.cash && (
@@ -2955,10 +3217,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    <h6><b>Purchase Return</b></h6>
+                                    <h6><b>{t('Purchase Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_return_titles?.paid}
@@ -2972,7 +3234,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_return_titles?.paid && (
@@ -2982,7 +3244,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_return_titles?.credit}
@@ -2996,7 +3258,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_return_titles?.credit && (
@@ -3006,7 +3268,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.phase2?.purchase_return_titles?.cash}
@@ -3020,7 +3282,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.phase2.purchase_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.phase2?.purchase_return_titles?.cash && (
@@ -3030,11 +3292,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                     </div>
+                                    </>}
 
-                                    <h6><b>Other Invoice Titles</b></h6>
+                                    <h6><b>{t('Other Invoice Titles')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Quotation*</label>
+                                            <label className="form-label">{t('Quotation')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_title}
@@ -3048,7 +3311,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_titled"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_title && (
@@ -3058,7 +3321,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Delivery Note*</label>
+                                            <label className="form-label">{t('Delivery Note')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.delivery_note_title}
@@ -3072,7 +3335,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.delivery_note_title"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.delivery_note_title && (
@@ -3082,7 +3345,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Stock Transfer*</label>
+                                            <label className="form-label">{t('Stock Transfer')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.stock_transfer_title}
@@ -3096,7 +3359,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.stock_transfer_title"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.stock_transfer_title && (
@@ -3106,7 +3369,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Purchase Order*</label>
+                                            <label className="form-label">{t('Purchase Order')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.purchase_order_title}
@@ -3118,7 +3381,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.purchase_order_title"
-                                                    placeholder="Purchase Order title"
+                                                    placeholder={t('Purchase Order title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.purchase_order_title && (
@@ -3128,7 +3391,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Payable*</label>
+                                            <label className="form-label">{t('Payable')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.payable_title}
@@ -3142,7 +3405,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.payable_title"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.payable_title && (
@@ -3152,7 +3415,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Receivable*</label>
+                                            <label className="form-label">{t('Receivable')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.receivable_title}
@@ -3165,7 +3428,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.receivable_title"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.receivable_title && (
@@ -3174,13 +3437,29 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="col-md-4">
+                                            <label className="form-label">{t('RFQ PDF Title')}</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.settings?.rfq_pdf_title || ''}
+                                                    type='text'
+                                                    onChange={(e) => {
+                                                        formData.settings.rfq_pdf_title = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="settings.rfq_pdf_title"
+                                                    placeholder={t('REQUEST FOR QUOTATION')}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
 
-                                    <h6><b>Qtn. Sales</b></h6>
+                                    <h6><b>{t('Qtn. Sales')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_titles?.paid}
@@ -3194,7 +3473,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_titles?.paid && (
@@ -3204,7 +3483,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_titles?.credit}
@@ -3218,7 +3497,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_titles?.credit && (
@@ -3228,7 +3507,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_titles?.cash}
@@ -3242,7 +3521,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_titles?.cash && (
@@ -3253,10 +3532,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
                                     </div>
 
-                                    <h6><b>Non VAT Sales</b></h6>
+                                    <h6><b>{t('Non VAT Sales')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_titles?.paid}
@@ -3267,12 +3546,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_titles?.credit}
@@ -3283,12 +3562,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_titles?.cash}
@@ -3299,16 +3578,16 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <h6><b>Non VAT Sales Return</b></h6>
+                                    <h6><b>{t('Non VAT Sales Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_return_titles?.paid}
@@ -3319,12 +3598,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_return_titles?.credit}
@@ -3335,12 +3614,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.non_vat_sales_return_titles?.cash}
@@ -3351,16 +3630,16 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.non_vat_sales_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <h6><b>Qtn. Sales Return</b></h6>
+                                    <h6><b>{t('Qtn. Sales Return')}</b></h6>
                                     <div className="row">
                                         <div className="col-md-4">
-                                            <label className="form-label">Paid*</label>
+                                            <label className="form-label">{t('Paid')} *</label>
                                             <div className="input-group mb-">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_return_titles?.paid}
@@ -3374,7 +3653,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_return_titles.paid"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_return_titles?.paid && (
@@ -3384,7 +3663,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Credit*</label>
+                                            <label className="form-label">{t('Credit')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_return_titles?.credit}
@@ -3398,7 +3677,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_return_titles.credit"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_return_titles?.credit && (
@@ -3408,7 +3687,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label">Cash*</label>
+                                            <label className="form-label">{t('Cash')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.settings?.invoice?.quotation_sales_return_titles?.cash}
@@ -3421,7 +3700,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="settings.invoice.quotation_sales_return_titles.cash"
-                                                    placeholder="Invoice title"
+                                                    placeholder={t('Invoice title')}
                                                 />
                                             </div>
                                             {errors.settings?.invoice?.quotation_sales_return_titles?.cash && (
@@ -3435,11 +3714,11 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                 </div></div>)}
                                 {activeTab === 'serial_numbers' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-hash" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Serial Numbers</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-hash" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Serial Numbers')}</h3></div>
                                     <div className="row g-3">
-                                        <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
+                                        <h6><b>{t("Stock Transfer ID's:")}</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.stock_transfer_serial_number?.prefix}
@@ -3467,7 +3746,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.stock_transfer_serial_number?.padding_count}
@@ -3495,7 +3774,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.stock_transfer_serial_number?.start_from_count ? formData.stock_transfer_serial_number.start_from_count : ""}
@@ -3508,7 +3787,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.stock_transfer_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.stock_transfer_serial_number_start_from_count && (
@@ -3519,9 +3798,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
+                                        <h6><b>{t("Sales ID's:")}</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_serial_number.prefix}
@@ -3549,7 +3828,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_serial_number.padding_count}
@@ -3577,11 +3856,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_serial_number?.start_from_count ? formData.sales_serial_number.start_from_count : ""}
                                                     type='number'
+                                                    disabled={!!serialLocks.sales_locked}
+                                                    title={serialLocks.sales_locked ? t("Cannot change: sales records already exist") : ""}
                                                     onChange={(e) => {
 
                                                         errors["formData.sales_serial_number.start_from_count"] = "";
@@ -3591,7 +3872,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.sales_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
 
 
@@ -3604,9 +3885,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Sales Return ID's:</b> {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Sales Return ID's:")}</b> {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_return_serial_number.prefix}
@@ -3634,7 +3915,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_return_serial_number.padding_count}
@@ -3661,11 +3942,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.sales_return_serial_number.start_from_count}
                                                     type='number'
+                                                    disabled={!!serialLocks.sales_return_locked}
+                                                    title={serialLocks.sales_return_locked ? t("Cannot change: sales return records already exist") : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.sales_return_serial_number.start_from_count = e.target.value;
@@ -3679,7 +3962,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.sales_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.sales_return_serial_number_start_from_count && (
@@ -3690,9 +3973,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <h5><b>Purchase ID's:</b> {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Purchase ID's:")}</b> {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_serial_number.prefix}
@@ -3719,7 +4002,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_serial_number.padding_count}
@@ -3744,7 +4027,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_serial_number.start_from_count}
@@ -3762,7 +4045,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.purchase_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
 
                                             </div>
@@ -3775,9 +4058,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <h5><b>Purchase Return ID's:</b> {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Purchase Return ID's:")}</b> {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_return_serial_number.prefix}
@@ -3805,7 +4088,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_return_serial_number.padding_count}
@@ -3833,7 +4116,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_return_serial_number.start_from_count}
@@ -3851,7 +4134,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.purchase_return_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
 
                                             </div>
@@ -3865,9 +4148,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <h5><b>Purchase Order ID's:</b> {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String(formData.purchase_order_serial_number?.start_from_count).padStart(formData.purchase_order_serial_number?.padding_count, '0')}, {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String((formData.purchase_order_serial_number?.start_from_count + 1)).padStart(formData.purchase_order_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Purchase Order ID's:")}</b> {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String(formData.purchase_order_serial_number?.start_from_count).padStart(formData.purchase_order_serial_number?.padding_count, '0')}, {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String((formData.purchase_order_serial_number?.start_from_count + 1)).padStart(formData.purchase_order_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_order_serial_number?.prefix}
@@ -3891,7 +4174,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_order_serial_number?.padding_count}
@@ -3915,7 +4198,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.purchase_order_serial_number?.start_from_count}
@@ -3932,7 +4215,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.purchase_order_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.purchase_order_serial_number_start_from_count && (
@@ -3944,9 +4227,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <h5><b>Quotation ID's:</b> {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Quotation ID's:")}</b> {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_serial_number.prefix}
@@ -3974,7 +4257,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_serial_number.padding_count}
@@ -4000,7 +4283,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_serial_number.start_from_count}
@@ -4019,7 +4302,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.quotation_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.quotation_serial_number_start_from_count && (
@@ -4030,9 +4313,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Quotation Sales Return ID's:</b> {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String(formData.quotation_sales_return_serial_number.start_from_count).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}, {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String((formData.quotation_sales_return_serial_number.start_from_count + 1)).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Quotation Sales Return ID's:")}</b> {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String(formData.quotation_sales_return_serial_number.start_from_count).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}, {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String((formData.quotation_sales_return_serial_number.start_from_count + 1)).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
-                                            <label className="form-label">Prefix*</label>
+                                            <label className="form-label">{t('Prefix')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_sales_return_serial_number.prefix}
@@ -4060,7 +4343,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Padding count*</label>
+                                            <label className="form-label">{t('Padding count')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_sales_return_serial_number.padding_count}
@@ -4087,7 +4370,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.quotation_sales_return_serial_number.start_from_count}
@@ -4105,7 +4388,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.quotation_sales_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.quotation_sales_return_serial_number_start_from_count && (
@@ -4116,7 +4399,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
 
-                                        <h5><b>Non VAT Sales ID's:</b> {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}...</h5>
+                                        <h5><b>{t("Non VAT Sales ID's:")}</b> {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_serial_number?.padding_count || 3, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4152,7 +4435,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.non_vat_sales_serial_number?.start_from_count || 1}
@@ -4169,12 +4452,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.non_vat_sales_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1"
+                                                    placeholder={t('eg: Start counting from 1')}
                                                 />
                                             </div>
                                         </div>
 
-                                        <h5><b>Non VAT Sales Return ID's:</b> {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_return_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_return_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}...</h5>
+                                        <h5><b>{t("Non VAT Sales Return ID's:")}</b> {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String(formData.non_vat_sales_return_serial_number?.start_from_count || 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}, {formData.non_vat_sales_return_serial_number?.prefix?.toUpperCase()}-{String((formData.non_vat_sales_return_serial_number?.start_from_count || 1) + 1).padStart(formData.non_vat_sales_return_serial_number?.padding_count || 3, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4210,7 +4493,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                         <div className="col-md-2">
-                                            <label className="form-label">Counting start from*</label>
+                                            <label className="form-label">{t('Counting start from')} *</label>
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.non_vat_sales_return_serial_number?.start_from_count || 1}
@@ -4227,12 +4510,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.non_vat_sales_return_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1"
+                                                    placeholder={t('eg: Start counting from 1')}
                                                 />
                                             </div>
                                         </div>
 
-                                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Customer ID's:")}</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4307,7 +4590,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.customer_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.customer_serial_number_start_from_count && (
@@ -4318,7 +4601,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Vendor ID's:")}</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4392,7 +4675,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.vendor_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.vendor_serial_number_start_from_count && (
@@ -4403,7 +4686,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Expense ID's:</b> {formData.expense_serial_number?.prefix.toUpperCase()}-{String(formData.expense_serial_number?.start_from_count).padStart(formData.expense_serial_number.padding_count, '0')}, {formData.expense_serial_number?.prefix.toUpperCase()}-{String((formData.expense_serial_number?.start_from_count + 1)).padStart(formData.expense_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Expense ID's:")}</b> {formData.expense_serial_number?.prefix.toUpperCase()}-{String(formData.expense_serial_number?.start_from_count).padStart(formData.expense_serial_number.padding_count, '0')}, {formData.expense_serial_number?.prefix.toUpperCase()}-{String((formData.expense_serial_number?.start_from_count + 1)).padStart(formData.expense_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4477,7 +4760,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.expense_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.expense_serial_number_start_from_count && (
@@ -4488,7 +4771,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Delivery Note ID's:</b> {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String(formData.delivery_note_serial_number?.start_from_count).padStart(formData.delivery_note_serial_number.padding_count, '0')}, {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String((formData.delivery_note_serial_number?.start_from_count + 1)).padStart(formData.delivery_note_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Delivery Note ID's:")}</b> {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String(formData.delivery_note_serial_number?.start_from_count).padStart(formData.delivery_note_serial_number.padding_count, '0')}, {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String((formData.delivery_note_serial_number?.start_from_count + 1)).padStart(formData.delivery_note_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4561,7 +4844,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.delivery_note_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.delivery_note_serial_number_start_from_count && (
@@ -4571,7 +4854,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
-                                        <h5><b>Purchase Request ID's:</b> {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String(formData.purchase_request_serial_number?.start_from_count).padStart(formData.purchase_request_serial_number?.padding_count, '0')}, {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String((formData.purchase_request_serial_number?.start_from_count + 1)).padStart(formData.purchase_request_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Purchase Request ID's:")}</b> {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String(formData.purchase_request_serial_number?.start_from_count).padStart(formData.purchase_request_serial_number?.padding_count, '0')}, {formData.purchase_request_serial_number?.prefix.toUpperCase()}-{String((formData.purchase_request_serial_number?.start_from_count + 1)).padStart(formData.purchase_request_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4621,12 +4904,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="formData.purchase_request_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                         </div>
 
-                                        <h5><b>Customer Receivable ID's:</b> {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.customer_deposit_serial_number?.start_from_count).padStart(formData.customer_deposit_serial_number.padding_count, '0')}, {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.ustomer_deposit_serial_number?.start_from_count + 1)).padStart(formData.ustomer_deposit_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Customer Receivable ID's:")}</b> {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.customer_deposit_serial_number?.start_from_count).padStart(formData.customer_deposit_serial_number.padding_count, '0')}, {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.ustomer_deposit_serial_number?.start_from_count + 1)).padStart(formData.ustomer_deposit_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4685,8 +4968,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.customer_deposit_serial_number.start_from_count}
-
                                                     type='number'
+                                                    disabled={!!serialLocks.customer_deposit_locked}
+                                                    title={serialLocks.customer_deposit_locked ? "Cannot change: receivable records already exist" : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.customer_deposit_serial_number.start_from_count = e.target.value;
@@ -4700,7 +4984,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="customer_deposit_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.customer_deposit_serial_number_start_from_count && (
@@ -4711,7 +4995,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Customer Payable ID's:</b> {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String(formData.customer_withdrawal_serial_number?.start_from_count).padStart(formData.customer_withdrawal_serial_number.padding_count, '0')}, {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String((formData.customer_withdrawal_serial_number?.start_from_count + 1)).padStart(formData.customer_withdrawal_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Customer Payable ID's:")}</b> {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String(formData.customer_withdrawal_serial_number?.start_from_count).padStart(formData.customer_withdrawal_serial_number.padding_count, '0')}, {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String((formData.customer_withdrawal_serial_number?.start_from_count + 1)).padStart(formData.customer_withdrawal_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4770,8 +5054,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                             <div className="input-group mb-3">
                                                 <input
                                                     value={formData.customer_withdrawal_serial_number.start_from_count}
-
                                                     type='number'
+                                                    disabled={!!serialLocks.customer_withdrawal_locked}
+                                                    title={serialLocks.customer_withdrawal_locked ? "Cannot change: payable records already exist" : ""}
                                                     onChange={(e) => {
                                                         if (!e.target.value) {
                                                             formData.customer_withdrawal_serial_number.start_from_count = e.target.value;
@@ -4785,7 +5070,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="customer_withdrawal_serial_number.start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.customer_withdrawal_serial_number_start_from_count && (
@@ -4796,7 +5081,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Capital ID's:</b> {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.capital_deposit_serial_number?.start_from_count).padStart(formData.capital_deposit_serial_number.padding_count, '0')}, {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.capital_deposit_serial_number?.start_from_count + 1)).padStart(formData.capital_deposit_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Capital ID's:")}</b> {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.capital_deposit_serial_number?.start_from_count).padStart(formData.capital_deposit_serial_number.padding_count, '0')}, {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.capital_deposit_serial_number?.start_from_count + 1)).padStart(formData.capital_deposit_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4870,7 +5155,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="capital_deposit_serial_number_start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.capital_deposit_serial_number_start_from_count && (
@@ -4881,7 +5166,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
-                                        <h5><b>Drawing ID's:</b> {formData.divident_serial_number?.prefix.toUpperCase()}-{String(formData.divident_serial_number?.start_from_count).padStart(formData.divident_serial_number.padding_count, '0')}, {formData.divident_serial_number?.prefix.toUpperCase()}-{String((formData.divident_serial_number?.start_from_count + 1)).padStart(formData.divident_serial_number?.padding_count, '0')}...</h5>
+                                        <h5><b>{t("Drawing ID's:")}</b> {formData.divident_serial_number?.prefix.toUpperCase()}-{String(formData.divident_serial_number?.start_from_count).padStart(formData.divident_serial_number.padding_count, '0')}, {formData.divident_serial_number?.prefix.toUpperCase()}-{String((formData.divident_serial_number?.start_from_count + 1)).padStart(formData.divident_serial_number?.padding_count, '0')}...</h5>
                                         <div className="col-md-2">
                                             <label className="form-label">Prefix</label>
                                             <div className="input-group mb-3">
@@ -4955,7 +5240,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="divident_serial_number_start_from_count"
-                                                    placeholder="eg: Start counting from 1000"
+                                                    placeholder={t('eg: Start counting from 1000')}
                                                 />
                                             </div>
                                             {errors.divident_serial_number_start_from_count && (
@@ -4966,12 +5251,78 @@ const StoreCreate = forwardRef((props, ref) => {
                                             )}
                                         </div>
 
+                                        <h5><b>{t("RFQ ID's:")}</b> {formData.rfq_received_serial_number?.prefix?.toUpperCase()}-{String(formData.rfq_received_serial_number?.start_from_count).padStart(formData.rfq_received_serial_number?.padding_count, '0')}, {formData.rfq_received_serial_number?.prefix?.toUpperCase()}-{String((formData.rfq_received_serial_number?.start_from_count + 1)).padStart(formData.rfq_received_serial_number?.padding_count, '0')}...</h5>
+                                        <div className="col-md-2">
+                                            <label className="form-label">Prefix</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.prefix || ''}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        errors["rfq_received_serial_number.prefix"] = "";
+                                                        formData.rfq_received_serial_number.prefix = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number.prefix"
+                                                    placeholder="RFQ"
+                                                />
+                                            </div>
+                                            {errors.rfq_received_serial_number_prefix && (
+                                                <div className="pw-err">
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.rfq_received_serial_number_prefix}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Padding count</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.padding_count || 4}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        errors["rfq_received_serial_number_padding_count"] = "";
+                                                        formData.rfq_received_serial_number.padding_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number_padding_count"
+                                                    placeholder="4 will make counter value: 0001"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-2">
+                                            <label className="form-label">Counting start from</label>
+                                            <div className="input-group mb-3">
+                                                <input
+                                                    value={formData.rfq_received_serial_number?.start_from_count || 1}
+                                                    type='number'
+                                                    onChange={(e) => {
+                                                        if (!e.target.value) {
+                                                            formData.rfq_received_serial_number.start_from_count = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            return;
+                                                        }
+                                                        errors["rfq_received_serial_number.start_from_count"] = "";
+                                                        formData.rfq_received_serial_number.start_from_count = parseInt(e.target.value);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    id="rfq_received_serial_number_start_from_count"
+                                                    placeholder={t('eg: Start counting from 1000')}
+                                                />
+                                            </div>
+                                        </div>
+
                                     </div></div></div>)}
                                 {activeTab === 'bank_account' && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Bank Account</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Bank Account')}</h3></div>
                                     <div className="row g-3">
                                         <div className="col-md-4">
-                                            <label className="form-label">Bank Name</label>
+                                            <label className="form-label">{t('Bank Name')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -4986,7 +5337,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="bank_account_bank_name"
-                                                    placeholder="Bank Name"
+                                                    placeholder={t('Bank Name')}
                                                 />
 
 
@@ -5000,7 +5351,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Customer No.</label>
+                                            <label className="form-label">{t('Customer No.')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -5015,7 +5366,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="bank_account_customer_no"
-                                                    placeholder="Customer No"
+                                                    placeholder={t('Customer No')}
                                                 />
                                             </div>
                                             {errors.bank_account_customer_no && (
@@ -5026,7 +5377,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">IBAN</label>
+                                            <label className="form-label">{t('IBAN')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -5052,7 +5403,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Account Name</label>
+                                            <label className="form-label">{t('Account Name')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -5067,7 +5418,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="bank_account_account_name"
-                                                    placeholder="Account Name"
+                                                    placeholder={t('Account Name')}
                                                 />
                                             </div>
                                             {errors.bank_account_account_name && (
@@ -5078,7 +5429,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="col-md-4">
-                                            <label className="form-label">Account No.</label>
+                                            <label className="form-label">{t('Account No.')}</label>
 
                                             <div className="input-group mb-3">
                                                 <input
@@ -5093,7 +5444,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     }}
                                                     className="form-control"
                                                     id="bank_account_account_no"
-                                                    placeholder="Account No."
+                                                    placeholder={t('Account No.')}
                                                 />
                                             </div>
                                             {errors.bank_account_account_no && (
@@ -5105,103 +5456,113 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                     </div></div></div>)}
                                 {activeTab === 'settings' && (<div className="pw-tab-wrap">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-gear" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Settings</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-gear" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Settings')}</h3></div>
 
                                     {/* ── Invoice & Display ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-receipt" style={{ color: '#004ac6' }}></i> Invoice &amp; Display</div>
+                                        <div className="pw-group-title"><i className="bi bi-receipt" style={{ color: '#004ac6' }}></i> {t('Invoice & Display')}</div>
                                         <div className="pw-check-grid">
                                             <label className="pw-check" htmlFor="show_currency_symbol">
                                                 <input type="checkbox" id="show_currency_symbol" checked={!!formData.settings.show_currency_symbol} value={formData.settings.show_currency_symbol} onChange={() => { errors["show_currency_symbol"] = ""; formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol; setFormData({ ...formData }); }} />
-                                                <span>Show Currency Symbol</span>
+                                                <span>{t('Show Currency Symbol')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="show_seller_info_in_invoice">
                                                 <input type="checkbox" id="show_seller_info_in_invoice" checked={!!formData.settings.show_seller_info_in_invoice} value={formData.settings.show_seller_info_in_invoice} onChange={() => { errors["show_seller_info_in_invoice"] = ""; formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice; setFormData({ ...formData }); }} />
-                                                <span>Show Seller Info in Invoice</span>
+                                                <span>{t('Show Seller Info in Invoice')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="show_address_in_invoice_footer">
                                                 <input type="checkbox" id="show_address_in_invoice_footer" checked={!!formData.settings.show_address_in_invoice_footer} value={formData.settings.show_address_in_invoice_footer} onChange={() => { errors["formData.show_address_in_invoice_footer"] = ""; formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer; setFormData({ ...formData }); }} />
-                                                <span>Show Address in Invoice Footer</span>
+                                                <span>{t('Show Address in Invoice Footer')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="show_received_by_footer_in_invoice">
                                                 <input type="checkbox" id="show_received_by_footer_in_invoice" name="show_received_by_footer_in_invoice" checked={!!formData.settings.show_received_by_footer_in_invoice} value={formData.settings.show_received_by_footer_in_invoice} onChange={() => { errors["show_received_by_footer_in_invoice"] = ""; formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice; setFormData({ ...formData }); }} />
-                                                <span>Show Received By Footer in Invoices</span>
+                                                <span>{t('Show Received By Footer in Invoices')}</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="show_created_by_in_invoice_preview">
+                                                <input type="checkbox" id="show_created_by_in_invoice_preview" name="show_created_by_in_invoice_preview" checked={!!formData.settings.show_created_by_in_invoice_preview} value={formData.settings.show_created_by_in_invoice_preview} onChange={() => { formData.settings.show_created_by_in_invoice_preview = !formData.settings.show_created_by_in_invoice_preview; setFormData({ ...formData }); }} />
+                                                <span>{t('Show Created By in Invoice/Receivables Preview')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="zatca_qr_on_left_bottom">
                                                 <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
-                                                <span>ZATCA QR on Left Bottom</span>
+                                                <span>{t('ZATCA QR on Left Bottom')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_zatca_reporting_for_receivables">
                                                 <input type="checkbox" id="enable_zatca_reporting_for_receivables" checked={!!formData.settings.enable_zatca_reporting_for_receivables} value={formData.settings.enable_zatca_reporting_for_receivables} onChange={() => { formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables; setFormData({ ...formData }); }} />
-                                                <span>Enable ZATCA Reporting for Receivables (Debit Note)</span>
+                                                <span>{t('Enable ZATCA Reporting for Receivables (Debit Note)')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_zatca_reporting_for_payables">
                                                 <input type="checkbox" id="enable_zatca_reporting_for_payables" checked={!!formData.settings.enable_zatca_reporting_for_payables} value={formData.settings.enable_zatca_reporting_for_payables} onChange={() => { formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables; setFormData({ ...formData }); }} />
-                                                <span>Enable ZATCA Reporting for Payables (Credit Note)</span>
+                                                <span>{t('Enable ZATCA Reporting for Payables (Credit Note)')}</span>
                                             </label>
+                                            {formData.zatca?.phase === '2' && (
+                                            <label className="pw-check" htmlFor="disable_sales_edit_once_reported_to_zatca">
+                                                <input type="checkbox" id="disable_sales_edit_once_reported_to_zatca" checked={formData.settings.disable_sales_edit_once_reported_to_zatca !== false} value={formData.settings.disable_sales_edit_once_reported_to_zatca} onChange={() => { formData.settings.disable_sales_edit_once_reported_to_zatca = !(formData.settings.disable_sales_edit_once_reported_to_zatca !== false); setFormData({ ...formData }); }} />
+                                                <span>{t('Disable Sales Edit once Reported to ZATCA')}</span>
+                                            </label>
+                                            )}
                                             <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
                                                 <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
-                                                <span>Auto Prompt Advance Payment Linking in Sales Payments</span>
+                                                <span>{t('Auto Prompt Advance Payment Linking in Sales Payments')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="display_vat_in_receivables_and_payables">
                                                 <input type="checkbox" id="display_vat_in_receivables_and_payables" checked={!!formData.settings.display_vat_in_receivables_and_payables} value={formData.settings.display_vat_in_receivables_and_payables} onChange={() => { formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables; setFormData({ ...formData }); }} />
-                                                <span>Display VAT in Receivables &amp; Payables</span>
+                                                <span>{t('Display VAT in Receivables & Payables')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_invoice_print_type_selection">
                                                 <input type="checkbox" id="enable_invoice_print_type_selection" checked={!!formData.settings.enable_invoice_print_type_selection} value={formData.settings.enable_invoice_print_type_selection} onChange={() => { errors["enable_invoice_print_type_selection"] = ""; formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection; setFormData({ ...formData }); }} />
-                                                <span>Enable Invoice Print Type Selection</span>
+                                                <span>{t('Enable Invoice Print Type Selection')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="one_line_product_name_in_invoice">
                                                 <input type="checkbox" id="one_line_product_name_in_invoice" checked={!!formData.settings.one_line_product_name_in_invoice} value={formData.settings.one_line_product_name_in_invoice} onChange={() => { errors["one_line_product_name_in_invoice"] = ""; formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice; setFormData({ ...formData }); }} />
-                                                <span>One Line Product Name in Invoice</span>
+                                                <span>{t('One Line Product Name in Invoice')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="one_line_product_name_in_print_invoice">
                                                 <input type="checkbox" id="one_line_product_name_in_print_invoice" checked={!!formData.settings.one_line_product_name_in_print_invoice} value={formData.settings.one_line_product_name_in_print_invoice} onChange={() => { errors["one_line_product_name_in_print_invoice"] = ""; formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice; setFormData({ ...formData }); }} />
-                                                <span>One Line Product Name in Print Invoice</span>
+                                                <span>{t('One Line Product Name in Print Invoice')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="add_price_details_in_delivery_note">
                                                 <input type="checkbox" id="add_price_details_in_delivery_note" checked={!!formData.settings.add_price_details_in_delivery_note} value={formData.settings.add_price_details_in_delivery_note} onChange={() => { errors["add_price_details_in_delivery_note"] = ""; formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note; setFormData({ ...formData }); }} />
-                                                <span>Add Price Details in Delivery Note</span>
+                                                <span>{t('Add Price Details in Delivery Note')}</span>
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* ── Sales & Purchasing ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-cart3" style={{ color: '#004ac6' }}></i> Sales &amp; Purchasing</div>
+                                        <div className="pw-group-title"><i className="bi bi-cart3" style={{ color: '#004ac6' }}></i> {t('Sales & Purchasing')}</div>
                                         <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
                                             <label className="pw-check" htmlFor="skip_product_selection_while_delivery_note_import">
                                                 <input type="checkbox" id="skip_product_selection_while_delivery_note_import" checked={!!formData.settings.skip_product_selection_while_delivery_note_import} value={formData.settings.skip_product_selection_while_delivery_note_import} onChange={() => { errors["skip_product_selection_while_delivery_note_import"] = ""; formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import; setFormData({ ...formData }); }} />
-                                                <span>Skip Product Selection on Delivery Note Import</span>
+                                                <span>{t('Skip Product Selection on Delivery Note Import')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="disable_purchases_on_accounts">
                                                 <input type="checkbox" id="disable_purchases_on_accounts" checked={!!formData.settings.disable_purchases_on_accounts} value={formData.settings.disable_purchases_on_accounts} onChange={() => { errors["disable_purchases_on_accounts"] = ""; formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts; setFormData({ ...formData }); }} />
-                                                <span>Disable Purchases on Accounts</span>
+                                                <span>{t('Disable Purchases on Accounts')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="block_sale_when_purchase_price_is_higher">
                                                 <input type="checkbox" id="block_sale_when_purchase_price_is_higher" checked={!!formData.settings.block_sale_when_purchase_price_is_higher} value={formData.settings.block_sale_when_purchase_price_is_higher} onChange={() => { errors["block_sale_when_purchase_price_is_higher"] = ""; formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher; setFormData({ ...formData }); }} />
-                                                <span>Block Sale When Purchase Price is Lower</span>
+                                                <span>{t('Block Sale When Purchase Price is Lower')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_auto_sales_payment_close_on_purchase">
                                                 <input type="checkbox" id="enable_auto_sales_payment_close_on_purchase" checked={!!formData.settings.enable_auto_sales_payment_close_on_purchase} value={formData.settings.enable_auto_sales_payment_close_on_purchase} onChange={() => { errors["enable_auto_sales_payment_close_on_purchase"] = ""; formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase; setFormData({ ...formData }); }} />
-                                                <span>Auto-close Sales Payment on Purchase</span>
+                                                <span>{t('Auto-close Sales Payment on Purchase')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_auto_purchase_payment_close_on_sales">
                                                 <input type="checkbox" id="enable_auto_purchase_payment_close_on_sales" checked={!!formData.settings.enable_auto_purchase_payment_close_on_sales} value={formData.settings.enable_auto_purchase_payment_close_on_sales} onChange={() => { errors["enable_auto_purchase_payment_close_on_sales"] = ""; formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales; setFormData({ ...formData }); }} />
-                                                <span>Auto-close Purchase Payment on Sales</span>
+                                                <span>{t('Auto-close Purchase Payment on Sales')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_auto_payment_close_on_return">
                                                 <input type="checkbox" id="enable_auto_payment_close_on_return" checked={!!formData.settings.enable_auto_payment_close_on_return} value={formData.settings.enable_auto_payment_close_on_return} onChange={() => { errors["enable_auto_payment_close_on_return"] = ""; formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return; setFormData({ ...formData }); }} />
-                                                <span>Auto-close Payment on Return</span>
+                                                <span>{t('Auto-close Payment on Return')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="allow_adjust_same_date_payments">
                                                 <input type="checkbox" id="allow_adjust_same_date_payments" checked={!!formData.settings.allow_adjust_same_date_payments} value={formData.settings.allow_adjust_same_date_payments} onChange={() => { errors["allow_adjust_same_date_payments"] = ""; formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments; setFormData({ ...formData }); }} />
-                                                <span>Allow Adjusting Same-Date Payments</span>
+                                                <span>{t('Allow Adjusting Same-Date Payments')}</span>
                                             </label>
                                         </div>
                                         <div style={{ maxWidth: '280px' }}>
                                             <div className="pw-field">
-                                                <label htmlFor="block_sales_after_pending_count">Block Sales After N Pending <span style={{ color: '#6b7280', fontWeight: 400 }}>(0 = disabled)</span></label>
+                                                <label htmlFor="block_sales_after_pending_count">{t('Block Sales After N Pending')} <span style={{ color: '#6b7280', fontWeight: 400 }}>{t('(0 = disabled)')}</span></label>
                                                 <input type="number" min="0" id="block_sales_after_pending_count" placeholder="0" value={formData.settings.block_sales_after_pending_count || ""}
                                                     onChange={(e) => { const raw = e.target.value; formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0); setFormData({ ...formData }); }} />
                                             </div>
@@ -5210,163 +5571,165 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                     {/* ── Modules & Features ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-grid-3x3-gap" style={{ color: '#004ac6' }}></i> Modules &amp; Features</div>
+                                        <div className="pw-group-title"><i className="bi bi-grid-3x3-gap" style={{ color: '#004ac6' }}></i> {t('Modules & Features')}</div>
                                         <div className="pw-check-grid">
                                             <label className="pw-check" htmlFor="enable_warehouse_module">
                                                 <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
-                                                <span>Enable Warehouse Module</span>
+                                                <span>{t('Enable Warehouse Module')}</span>
                                             </label>
-                                            {formData.settings.enable_warehouse_module && (
-                                                <label className="pw-check" htmlFor="show_warehouse_stock_in_selected_products" style={{ marginLeft: '16px' }}>
-                                                    <input type="checkbox" id="show_warehouse_stock_in_selected_products" checked={!!formData.settings.show_warehouse_stock_in_selected_products} value={formData.settings.show_warehouse_stock_in_selected_products} onChange={() => { formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products; setFormData({ ...formData }); }} />
-                                                    <span>Show Selected Warehouse Stock in Products Table</span>
-                                                </label>
-                                            )}
+                                            <label className="pw-check" htmlFor="enable_custom_sales_invoice_id">
+                                                <input type="checkbox" id="enable_custom_sales_invoice_id" checked={!!formData.settings.enable_custom_sales_invoice_id} value={formData.settings.enable_custom_sales_invoice_id} onChange={() => { formData.settings.enable_custom_sales_invoice_id = !formData.settings.enable_custom_sales_invoice_id; setFormData({ ...formData }); }} />
+                                                <span>{t('Enable Custom Sales Invoice ID')}</span>
+                                            </label>
                                             <label className="pw-check" htmlFor="enable_purchase_order_module">
                                                 <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
-                                                <span>Enable Purchase Order Module</span>
+                                                <span>{t('Enable Purchase Order Module')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_purchase_request_module">
                                                 <input type="checkbox" id="enable_purchase_request_module" checked={!!formData.settings.enable_purchase_request_module} value={formData.settings.enable_purchase_request_module} onChange={() => { formData.settings.enable_purchase_request_module = !formData.settings.enable_purchase_request_module; setFormData({ ...formData }); }} />
-                                                <span>Enable Purchase Requests Module (P.R)</span>
+                                                <span>{t('Enable Purchase Requests Module (P.R)')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_drafts">
                                                 <input type="checkbox" id="enable_drafts" checked={!!formData.settings.enable_drafts} value={formData.settings.enable_drafts} onChange={() => { formData.settings.enable_drafts = !formData.settings.enable_drafts; setFormData({ ...formData }); }} />
-                                                <span>Enable Drafts</span>
+                                                <span>{t('Enable Drafts')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_rbac_module">
                                                 <input type="checkbox" id="enable_rbac_module" checked={!!formData.settings.enable_rbac_module} value={formData.settings.enable_rbac_module} onChange={() => { formData.settings.enable_rbac_module = !formData.settings.enable_rbac_module; setFormData({ ...formData }); }} />
-                                                <span>Enable RBAC Module (Role Based Access Control)</span>
+                                                <span>{t('Enable RBAC Module (Role Based Access Control)')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_sales_page_selection">
                                                 <input type="checkbox" id="enable_sales_page_selection" checked={!!formData.settings.enable_sales_page_selection} value={formData.settings.enable_sales_page_selection} onChange={() => { formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection; setFormData({ ...formData }); }} />
-                                                <span>Enable Sales Page Selection</span>
+                                                <span>{t('Enable Sales Page Selection')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_notification">
                                                 <input type="checkbox" id="enable_notification" checked={!!formData.settings.enable_notification} value={formData.settings.enable_notification} onChange={() => { formData.settings.enable_notification = !formData.settings.enable_notification; setFormData({ ...formData }); }} />
-                                                <span>Enable Notifications</span>
+                                                <span>{t('Enable Notifications')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_auto_translation_to_arabic">
                                                 <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
-                                                <span>Enable Auto Translation to Arabic</span>
+                                                <span>{t('Enable Auto Translation to Arabic')}</span>
+                                            </label>
+                                            <label className="pw-check" htmlFor="use_rtl_for_arabic">
+                                                <input type="checkbox" id="use_rtl_for_arabic" checked={!!formData.settings.use_rtl_for_arabic} value={formData.settings.use_rtl_for_arabic} onChange={() => { formData.settings.use_rtl_for_arabic = !formData.settings.use_rtl_for_arabic; setFormData({ ...formData }); }} />
+                                                <span>{t('Use RTL for Arabic')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_arabic_names_list">
                                                 <input type="checkbox" id="enable_arabic_names_list" checked={!!formData.settings.enable_arabic_names_list} value={formData.settings.enable_arabic_names_list} onChange={() => { formData.settings.enable_arabic_names_list = !formData.settings.enable_arabic_names_list; setFormData({ ...formData }); }} />
-                                                <span>Enable Arabic Names List (Product Form)</span>
+                                                <span>{t('Enable Arabic Names List (Product Form)')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="allow_products_duplicates_by_default">
                                                 <input type="checkbox" id="allow_products_duplicates_by_default" checked={!!formData.settings.allow_products_duplicates_by_default} value={formData.settings.allow_products_duplicates_by_default} onChange={() => { formData.settings.allow_products_duplicates_by_default = !formData.settings.allow_products_duplicates_by_default; setFormData({ ...formData }); }} />
-                                                <span>Mark Allow Products Duplicates by Default</span>
+                                                <span>{t('Mark Allow Products Duplicates by Default')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_products">
                                                 <input type="checkbox" id="enable_products" checked={!!formData.settings.enable_products} value={formData.settings.enable_products} onChange={() => { formData.settings.enable_products = !formData.settings.enable_products; setFormData({ ...formData }); }} />
-                                                <span>Enable Products</span>
+                                                <span>{t('Enable Products')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_services">
                                                 <input type="checkbox" id="enable_services" checked={!!formData.settings.enable_services} value={formData.settings.enable_services} onChange={() => { formData.settings.enable_services = !formData.settings.enable_services; setFormData({ ...formData }); }} />
-                                                <span>Enable Services</span>
+                                                <span>{t('Enable Services')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_customer_po_no">
                                                 <input type="checkbox" id="enable_customer_po_no" checked={!!formData.settings.enable_customer_po_no} value={formData.settings.enable_customer_po_no} onChange={() => { formData.settings.enable_customer_po_no = !formData.settings.enable_customer_po_no; setFormData({ ...formData }); }} />
-                                                <span>Enable Customer P.O No. Field</span>
+                                                <span>{t('Enable Customer P.O No. Field')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="non_vat_sales">
                                                 <input type="checkbox" id="non_vat_sales" checked={!!formData.settings.non_vat_sales} value={formData.settings.non_vat_sales} onChange={() => { formData.settings.non_vat_sales = !formData.settings.non_vat_sales; setFormData({ ...formData }); }} />
-                                                <span>Enable Non VAT Sales</span>
+                                                <span>{t('Enable Non VAT Sales')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_automobile_module">
                                                 <input type="checkbox" id="enable_automobile_module" checked={!!formData.settings.enable_automobile_module} value={formData.settings.enable_automobile_module} onChange={() => { const nextEnabled = !formData.settings.enable_automobile_module; formData.settings.enable_automobile_module = nextEnabled; const currentDesign = formData.settings.sales_create_form_design || "type1"; if (nextEnabled) { if (!formData.settings.sales_create_form_design || currentDesign === "type1") { formData.settings.sales_create_form_design = "type5"; } applyAutomobileMenuOrder(); } else if (currentDesign === "type5") { formData.settings.sales_create_form_design = "type1"; } setFormData({ ...formData }); }} />
-                                                <span>Enable AutoMobile Workshop Module</span>
+                                                <span>{t('Enable AutoMobile Workshop Module')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_employee_module">
                                                 <input type="checkbox" id="enable_employee_module" checked={!!formData.settings.enable_employee_module} value={formData.settings.enable_employee_module} onChange={() => { formData.settings.enable_employee_module = !formData.settings.enable_employee_module; setFormData({ ...formData }); }} />
-                                                <span>Enable Employee Module</span>
+                                                <span>{t('Enable Employee Module')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_purchase_unit_price_validation">
                                                 <input type="checkbox" id="enable_purchase_unit_price_validation" checked={!!formData.settings.enable_purchase_unit_price_validation} value={formData.settings.enable_purchase_unit_price_validation} onChange={() => { formData.settings.enable_purchase_unit_price_validation = !formData.settings.enable_purchase_unit_price_validation; setFormData({ ...formData }); }} />
-                                                <span>Enable Purchase Unit Price Validation</span>
+                                                <span>{t('Enable Purchase Unit Price Validation')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_auto_update_prices_from_last_purchase">
                                                 <input type="checkbox" id="enable_auto_update_prices_from_last_purchase" checked={!!formData.settings.enable_auto_update_prices_from_last_purchase} value={formData.settings.enable_auto_update_prices_from_last_purchase} onChange={() => { formData.settings.enable_auto_update_prices_from_last_purchase = !formData.settings.enable_auto_update_prices_from_last_purchase; setFormData({ ...formData }); }} />
-                                                <span>Enable Auto Update Wholesale &amp; Retail Prices from Last Purchase (using Margin %)</span>
+                                                <span>{t('Enable Auto Update Wholesale & Retail Prices from Last Purchase (using Margin %)')}</span>
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* ── Accounting & Financials ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-calculator" style={{ color: '#004ac6' }}></i> Accounting &amp; Financials</div>
+                                        <div className="pw-group-title"><i className="bi bi-calculator" style={{ color: '#004ac6' }}></i> {t('Accounting & Financials')}</div>
                                         <div className="pw-check-grid">
                                             <label className="pw-check" htmlFor="show_minus_on_liability_balance_in_balance_sheet">
                                                 <input type="checkbox" id="show_minus_on_liability_balance_in_balance_sheet" checked={!!formData.settings.show_minus_on_liability_balance_in_balance_sheet} value={formData.settings.show_minus_on_liability_balance_in_balance_sheet} onChange={() => { errors["show_minus_on_liability_balance_in_balance_sheet"] = ""; formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet; setFormData({ ...formData }); }} />
-                                                <span>Show Minus on Liability Balance in Balance Sheet</span>
+                                                <span>{t('Show Minus on Liability Balance in Balance Sheet')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="hide_total_amount_row_in_balance_sheet">
                                                 <input type="checkbox" id="hide_total_amount_row_in_balance_sheet" checked={!!formData.settings.hide_total_amount_row_in_balance_sheet} value={formData.settings.hide_total_amount_row_in_balance_sheet} onChange={() => { errors["hide_total_amount_row_in_balance_sheet"] = ""; formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet; setFormData({ ...formData }); }} />
-                                                <span>Hide Total Amount Row in Balance Sheet</span>
+                                                <span>{t('Hide Total Amount Row in Balance Sheet')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="quotation_invoice_accounting">
                                                 <input type="checkbox" id="quotation_invoice_accounting" checked={!!formData.settings.quotation_invoice_accounting} value={formData.settings.quotation_invoice_accounting} onChange={() => { errors["formData.quotation_invoice_accounting"] = ""; formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting; setFormData({ ...formData }); }} />
-                                                <span>Enable Quotation Invoice Accounting</span>
+                                                <span>{t('Enable Quotation Invoice Accounting')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_sales_in_quotation">
                                                 <input type="checkbox" id="enable_sales_in_quotation" checked={!!formData.settings.enable_sales_in_quotation} value={formData.settings.enable_sales_in_quotation} onChange={() => { formData.settings.enable_sales_in_quotation = !formData.settings.enable_sales_in_quotation; setFormData({ ...formData }); }} />
-                                                <span>Enable Sales in Quotation</span>
+                                                <span>{t('Enable Sales in Quotation')}</span>
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* ── Stats Dashboard ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-bar-chart-line" style={{ color: '#004ac6' }}></i> Stats Dashboard</div>
+                                        <div className="pw-group-title"><i className="bi bi-bar-chart-line" style={{ color: '#004ac6' }}></i> {t('Stats Dashboard')}</div>
                                         <div className="pw-check-grid">
                                             <label className="pw-check" htmlFor="stats_show_overall_summary">
                                                 <input type="checkbox" id="stats_show_overall_summary" checked={!!formData.settings.stats_show_overall_summary} value={formData.settings.stats_show_overall_summary} onChange={() => { formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary; setFormData({ ...formData }); }} />
-                                                <span>Show Overall Summary</span>
+                                                <span>{t('Show Overall Summary')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="stats_show_profit_loss_statement">
                                                 <input type="checkbox" id="stats_show_profit_loss_statement" checked={!!formData.settings.stats_show_profit_loss_statement} value={formData.settings.stats_show_profit_loss_statement} onChange={() => { formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement; setFormData({ ...formData }); }} />
-                                                <span>Show Profit / Loss Statement</span>
+                                                <span>{t('Show Profit / Loss Statement')}</span>
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* ── Dashboard Visibility ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-speedometer2" style={{ color: '#004ac6' }}></i> Dashboard Visibility</div>
+                                        <div className="pw-group-title"><i className="bi bi-speedometer2" style={{ color: '#004ac6' }}></i> {t('Dashboard Visibility')}</div>
                                         <div className="pw-check-grid">
                                             <label className="pw-check" htmlFor="enable_common_dashboard">
                                                 <input type="checkbox" id="enable_common_dashboard" checked={formData.settings.enable_common_dashboard !== false} value={formData.settings.enable_common_dashboard} onChange={() => { formData.settings.enable_common_dashboard = formData.settings.enable_common_dashboard !== false ? false : true; setFormData({ ...formData }); }} />
-                                                <span>Common Dashboard</span>
+                                                <span>{t('Common Dashboard')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_automobile_dashboard">
                                                 <input type="checkbox" id="enable_automobile_dashboard" checked={!!formData.settings.enable_automobile_dashboard} value={formData.settings.enable_automobile_dashboard} onChange={() => { formData.settings.enable_automobile_dashboard = !formData.settings.enable_automobile_dashboard; setFormData({ ...formData }); }} />
-                                                <span>Auto Mobile Dashboard</span>
+                                                <span>{t('Auto Mobile Dashboard')}</span>
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* ── Quotation Settings ── */}
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Quotation Settings</div>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> {t('Quotation Settings')}</div>
                                         <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
                                             <label className="pw-check" htmlFor="update_product_stock_on_quotation_sales">
                                                 <input type="checkbox" id="update_product_stock_on_quotation_sales" checked={!!formData.settings.update_product_stock_on_quotation_sales} value={formData.settings.update_product_stock_on_quotation_sales} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales; setFormData({ ...formData }); }} />
-                                                <span>Update Product Stock on Quotation Sales</span>
+                                                <span>{t('Update Product Stock on Quotation Sales')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="enable_monthly_serial_number">
                                                 <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
-                                                <span>Enable Monthly Serial Number Reset</span>
+                                                <span>{t('Enable Monthly Serial Number Reset')}</span>
                                             </label>
                                             <label className="pw-check" htmlFor="no_tax_for_quotation_invoice">
                                                 <input type="checkbox" id="no_tax_for_quotation_invoice" checked={!!formData.settings.no_tax_for_quotation_invoice} value={formData.settings.no_tax_for_quotation_invoice} onChange={() => { formData.settings.no_tax_for_quotation_invoice = !formData.settings.no_tax_for_quotation_invoice; setFormData({ ...formData }); }} />
-                                                <span>No Tax for Quotation Invoice &amp; Quotation Sales Return</span>
+                                                <span>{t('No Tax for Quotation Invoice & Quotation Sales Return')}</span>
                                             </label>
                                         </div>
                                         <div className="row g-3" style={{ maxWidth: '560px' }}>
                                             <div className="col-md-6">
                                                 <div className="pw-field">
-                                                    <label htmlFor="default_quotation_validity_days">Default Quotation Validity (days)</label>
+                                                    <label htmlFor="default_quotation_validity_days">{t('Default Quotation Validity (days)')}</label>
                                                     <input type="number" id="default_quotation_validity_days" placeholder="e.g. 30"
                                                         value={formData.settings.default_quotation_validity_days || ""}
                                                         onChange={(e) => {
@@ -5379,7 +5742,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="pw-field">
-                                                    <label htmlFor="default_quotation_delivery_days">Default Quotation Delivery (days)</label>
+                                                    <label htmlFor="default_quotation_delivery_days">{t('Default Quotation Delivery (days)')}</label>
                                                     <input type="number" id="default_quotation_delivery_days" placeholder="e.g. 7"
                                                         value={formData.settings.default_quotation_delivery_days || ""}
                                                         onChange={(e) => {
@@ -5397,33 +5760,33 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <div className="pw-card" style={{ marginBottom: '0', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
                                         <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
                                             <i className="bi bi-whatsapp" style={{ color: '#25d366', fontSize: '14px' }}></i>
-                                            <span style={{ color: '#1a4d2e' }}>WhatsApp Integration (Evolution API)</span>
+                                            <span style={{ color: '#1a4d2e' }}>{t('WhatsApp Integration (Evolution API)')}</span>
                                         </div>
                                         <div style={{ marginBottom: '14px' }}>
                                             <label className="pw-check" htmlFor="use_whatsapp_api" style={{ maxWidth: '420px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
                                                 <input type="checkbox" id="use_whatsapp_api" checked={!!formData.settings.use_whatsapp_api} value={formData.settings.use_whatsapp_api} onChange={() => { formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api; setFormData({ ...formData }); }} />
-                                                <span style={{ color: '#1a4d2e', fontWeight: 600 }}>Use WhatsApp API — send invoices as PDF attachments</span>
+                                                <span style={{ color: '#1a4d2e', fontWeight: 600 }}>{t('Use WhatsApp API — send invoices as PDF attachments')}</span>
                                             </label>
-                                            <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c', fontFamily: '"Inter", sans-serif' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</p>
+                                            <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c', fontFamily: '"Inter", sans-serif' }}>{t('When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.')}</p>
                                         </div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
                                                 <div className="pw-field">
-                                                    <label htmlFor="evolution_api_url">Evolution API URL</label>
-                                                    <input type="text" id="evolution_api_url" placeholder="http://localhost:8081" value={formData.settings.evolution_api_url || ""} onChange={(e) => { formData.settings.evolution_api_url = e.target.value; setFormData({ ...formData }); }} />
-                                                    <small>Leave blank to use default (http://localhost:8081)</small>
+                                                    <label htmlFor="evolution_api_url">{t('Evolution API URL')}</label>
+                                                    <input type="text" id="evolution_api_url" placeholder={t('http://localhost:8081')} value={formData.settings.evolution_api_url || ""} onChange={(e) => { formData.settings.evolution_api_url = e.target.value; setFormData({ ...formData }); }} />
+                                                    <small>{t('Leave blank to use default (http://localhost:8081)')}</small>
                                                 </div>
                                             </div>
                                             <div className="col-md-4">
                                                 <div className="pw-field">
-                                                    <label htmlFor="evolution_api_key">Evolution API Key</label>
-                                                    <input type="text" id="evolution_api_key" placeholder="startpos-evo-local-key" value={formData.settings.evolution_api_key || ""} onChange={(e) => { formData.settings.evolution_api_key = e.target.value; setFormData({ ...formData }); }} />
+                                                    <label htmlFor="evolution_api_key">{t('Evolution API Key')}</label>
+                                                    <input type="text" id="evolution_api_key" placeholder={t('startpos-evo-local-key')} value={formData.settings.evolution_api_key || ""} onChange={(e) => { formData.settings.evolution_api_key = e.target.value; setFormData({ ...formData }); }} />
                                                 </div>
                                             </div>
                                             <div className="col-md-4">
                                                 <div className="pw-field">
-                                                    <label htmlFor="evolution_instance_name">Evolution Instance Name</label>
-                                                    <input type="text" id="evolution_instance_name" placeholder="startpos" value={formData.settings.evolution_instance_name || ""} onChange={(e) => { formData.settings.evolution_instance_name = e.target.value; setFormData({ ...formData }); }} />
+                                                    <label htmlFor="evolution_instance_name">{t('Evolution Instance Name')}</label>
+                                                    <input type="text" id="evolution_instance_name" placeholder={t('startpos')} value={formData.settings.evolution_instance_name || ""} onChange={(e) => { formData.settings.evolution_instance_name = e.target.value; setFormData({ ...formData }); }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -5503,24 +5866,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {formData.settings.enable_warehouse_module && (
-                                        <div className="col-md-2">
-                                            <div className="input-group mb-3">
-                                                <input type="checkbox"
-                                                    value={formData.settings.show_warehouse_stock_in_selected_products}
-                                                    checked={!!formData.settings.show_warehouse_stock_in_selected_products}
-                                                    onChange={() => {
-                                                        formData.settings.show_warehouse_stock_in_selected_products = !formData.settings.show_warehouse_stock_in_selected_products;
-                                                        setFormData({ ...formData });
-                                                    }}
-                                                    className=""
-                                                    id="show_warehouse_stock_in_selected_products"
-                                                /> &nbsp;Show Selected Warehouse Stock in Products Table
-                                            </div>
-                                            <label className="form-label"></label>
-                                        </div>
-                                        )}
 
                                         <div className="col-md-2">
                                             <div className="input-group mb-3">
@@ -5657,31 +6002,31 @@ const StoreCreate = forwardRef((props, ref) => {
                                                     id="use_whatsapp_api"
                                                 /> &nbsp;Use WhatsApp API (send PDF as attachment)
                                             </div>
-                                            <label className="form-label text-muted" style={{ fontSize: '0.8em' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</label>
+                                            <label className="form-label text-muted" style={{ fontSize: '0.8em' }}>{t('When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.')}</label>
                                         </div>
 
                                         <div className="col-md-4">
                                             <div className="mb-3">
-                                                <label className="form-label fw-bold">Evolution API URL</label>
+                                                <label className="form-label fw-bold">{t('Evolution API URL')}</label>
                                                 <input type="text"
                                                     className="form-control"
-                                                    placeholder="http://localhost:8081"
+                                                    placeholder={t('http://localhost:8081')}
                                                     value={formData.settings.evolution_api_url || ""}
                                                     onChange={(e) => {
                                                         formData.settings.evolution_api_url = e.target.value;
                                                         setFormData({ ...formData });
                                                     }}
                                                 />
-                                                <small className="text-muted">Leave blank to use default (http://localhost:8081)</small>
+                                                <small className="text-muted">{t('Leave blank to use default (http://localhost:8081)')}</small>
                                             </div>
                                         </div>
 
                                         <div className="col-md-4">
                                             <div className="mb-3">
-                                                <label className="form-label fw-bold">Evolution API Key</label>
+                                                <label className="form-label fw-bold">{t('Evolution API Key')}</label>
                                                 <input type="text"
                                                     className="form-control"
-                                                    placeholder="startpos-evo-local-key"
+                                                    placeholder={t('startpos-evo-local-key')}
                                                     value={formData.settings.evolution_api_key || ""}
                                                     onChange={(e) => {
                                                         formData.settings.evolution_api_key = e.target.value;
@@ -5693,10 +6038,10 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                         <div className="col-md-4">
                                             <div className="mb-3">
-                                                <label className="form-label fw-bold">Evolution Instance Name</label>
+                                                <label className="form-label fw-bold">{t('Evolution Instance Name')}</label>
                                                 <input type="text"
                                                     className="form-control"
-                                                    placeholder="startpos"
+                                                    placeholder={t('startpos')}
                                                     value={formData.settings.evolution_instance_name || ""}
                                                     onChange={(e) => {
                                                         formData.settings.evolution_instance_name = e.target.value;
@@ -6037,6 +6382,22 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.show_created_by_in_invoice_preview}
+                                                    checked={!!formData.settings.show_created_by_in_invoice_preview}
+                                                    onChange={() => {
+                                                        formData.settings.show_created_by_in_invoice_preview = !formData.settings.show_created_by_in_invoice_preview;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className=""
+                                                    id="show_created_by_in_invoice_preview2"
+                                                    name="show_created_by_in_invoice_preview"
+                                                /> &nbsp;Show Created By in Invoice/Receivables Preview
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
 
 
 
@@ -6095,6 +6456,23 @@ const StoreCreate = forwardRef((props, ref) => {
                                             </div>
                                             <label className="form-label"></label>
                                         </div>
+
+                                        {formData.zatca?.phase === '2' && (
+                                        <div className="col-md-2">
+                                            <div className="input-group mb-3">
+                                                <input type="checkbox"
+                                                    value={formData.settings.disable_sales_edit_once_reported_to_zatca}
+                                                    checked={formData.settings.disable_sales_edit_once_reported_to_zatca !== false}
+                                                    onChange={() => {
+                                                        formData.settings.disable_sales_edit_once_reported_to_zatca = !(formData.settings.disable_sales_edit_once_reported_to_zatca !== false);
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    id="formData.disable_sales_edit_once_reported_to_zatca"
+                                                /> &nbsp;Disable Sales Edit once Reported to ZATCA
+                                            </div>
+                                            <label className="form-label"></label>
+                                        </div>
+                                        )}
 
                                         <div className="col-md-2">
                                             <div className="input-group mb-3">
@@ -6290,86 +6668,114 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div></div>)}
 
                                 {activeTab === 'designs' && (<div className="pw-tab-wrap">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Designs</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Designs')}</h3></div>
 
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-file-earmark-bar-graph" style={{ color: '#004ac6' }}></i> Balance Sheet</div>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-bar-graph" style={{ color: '#004ac6' }}></i> {t('Balance Sheet')}</div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet Design</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Balance Sheet Design')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.balance_sheet_design || 'type1'}
                                                     onChange={(e) => { formData.settings.balance_sheet_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default — Classic Ledger)</option>
-                                                    <option value="type2">Type 2 (Modern Professional)</option>
+                                                    <option value="type1">{t('Type 1 (Default — Classic Ledger)')}</option>
+                                                    <option value="type2">{t('Type 2 (Modern Professional)')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the Balance Sheet UI layout</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls the Balance Sheet UI layout')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet A4 Preview</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Balance Sheet A4 Preview')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.balance_sheet_a4_preview_design || 'type1'}
                                                     onChange={(e) => { formData.settings.balance_sheet_a4_preview_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2 (Modern Professional)</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2 (Modern Professional)')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the Balance Sheet A4 / PDF preview layout</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls the Balance Sheet A4 / PDF preview layout')}</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Invoice A4 Preview</div>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> {t('Invoice A4 Preview')}</div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Invoice A4 Preview Design</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Invoice A4 Preview Design')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.invoice_a4_preview_design || 'type1'}
                                                     onChange={(e) => { formData.settings.invoice_a4_preview_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2 (Classic Professional)</option>
-                                                    <option value="type3">Type 3 (Sales Return — Compact)</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2 (Classic Professional)')}</option>
+                                                    <option value="type3">{t('Type 3 (Sales Return — Compact)')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls the A4 invoice layout for Sales, Purchase, Quotation and all related document types</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls the A4 invoice layout for Sales, Purchase, Quotation and all related document types')}</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-file-earmark-pdf" style={{ color: '#004ac6' }}></i> Print / Preview Designs</div>
+                                        <div className="pw-group-title"><i className="bi bi-file-earmark-pdf" style={{ color: '#004ac6' }}></i> {t('Print / Preview Designs')}</div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>A4/PDF/WhatsApp Preview Header</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('A4/PDF/WhatsApp Preview Header')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.invoice_header_design || 'type1'}
                                                     onChange={(e) => { formData.settings.invoice_header_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2 (Modern Dark Toolbar)</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2 (Modern Dark Toolbar)')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls toolbar style for the preview modal</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls toolbar style for the preview modal')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Balance Sheet / Receivable / Payable Preview Header</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Balance Sheet / Receivable / Payable Preview Header')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.balance_sheet_header_design || 'type1'}
                                                     onChange={(e) => { formData.settings.balance_sheet_header_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2 (Modern Dark Toolbar)</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2 (Modern Dark Toolbar)')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Controls toolbar style for the balance sheet preview modal</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Controls toolbar style for the balance sheet preview modal')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Auto Refresh on New Version</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Save Sidebar Config to Server')}</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="save_sidebar_config_to_server"
+                                                        checked={!!formData.settings?.save_sidebar_config_to_server}
+                                                        onChange={() => { formData.settings.save_sidebar_config_to_server = !formData.settings.save_sidebar_config_to_server; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="save_sidebar_config_to_server">{t('Enable')}</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Saves sidebar menu order and visibility to the server so it is shared across browsers/devices. Default: localStorage only.')}</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Save Print Settings to Server')}</label>
+                                                <div className="form-check form-switch mt-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id="save_print_settings_to_server"
+                                                        checked={!!formData.settings?.save_print_settings_to_server}
+                                                        onChange={() => { formData.settings.save_print_settings_to_server = !formData.settings.save_print_settings_to_server; setFormData({ ...formData }); }}
+                                                    />
+                                                    <label className="form-check-label" htmlFor="save_print_settings_to_server">{t('Enable')}</label>
+                                                </div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Saves font, font size, show store header, margin top, and page size settings to the server so they are shared across browsers/devices')}</div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Auto Refresh on New Version')}</label>
                                                 <div className="form-check form-switch mt-1">
                                                     <input
                                                         className="form-check-input"
@@ -6378,12 +6784,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         checked={!!formData.settings?.enable_auto_refresh}
                                                         onChange={() => { formData.settings.enable_auto_refresh = !formData.settings.enable_auto_refresh; setFormData({ ...formData }); }}
                                                     />
-                                                    <label className="form-check-label" htmlFor="enable_auto_refresh">Enable</label>
+                                                    <label className="form-check-label" htmlFor="enable_auto_refresh">{t('Enable')}</label>
                                                 </div>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Polls every 10 min; prompts user to reload when a new build is deployed</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Polls every 10 min; prompts user to reload when a new build is deployed')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>VAT on Dashboards</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('VAT on Dashboards')}</label>
                                                 <div className="form-check form-switch mt-1">
                                                     <input
                                                         className="form-check-input"
@@ -6392,110 +6798,1691 @@ const StoreCreate = forwardRef((props, ref) => {
                                                         checked={!!formData.settings?.enable_vat_box}
                                                         onChange={() => { formData.settings.enable_vat_box = !formData.settings.enable_vat_box; setFormData({ ...formData }); }}
                                                     />
-                                                    <label className="form-check-label" htmlFor="enable_vat_box">Enable</label>
+                                                    <label className="form-check-label" htmlFor="enable_vat_box">{t('Enable')}</label>
                                                 </div>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Shows a VAT KPI card on both dashboards (Sales VAT − Returns VAT − Purchase VAT + Purchase Return VAT + Expense VAT)</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Shows a VAT KPI card on both dashboards (Sales VAT − Returns VAT − Purchase VAT + Purchase Return VAT + Expense VAT)')}</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
-                                        <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> Form Designs</div>
+                                        <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> {t('Form Designs')}</div>
                                         <div className="row g-3">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Sales Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.sales_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.sales_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
-                                                    <option value="type4">VAN Store (Type 4)</option>
-                                                    {formData.settings.enable_automobile_module && <option value="type5">Workshop (Type 5)</option>}
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
+                                                    <option value="type4">{t('VAN Store (Type 4)')}</option>
+                                                    {formData.settings.enable_automobile_module && <option value="type5">{t('Workshop (Type 5)')}</option>}
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales order creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the sales order creation and update form')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Return Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Sales Return Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.sales_return_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the sales return creation and update form')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Purchase Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.purchase_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.purchase_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the purchase creation and update form')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Return Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Purchase Return Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.purchase_return_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.purchase_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase return creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the purchase return creation and update form')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Quotation Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.quotation_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.quotation_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the quotation creation and update form')}</div>
                                             </div>
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Sales Return Create/Update Form</label>
+                                                <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>{t('Quotation Sales Return Create/Update Form')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={formData.settings?.quotation_sales_return_create_form_design || 'type1'}
                                                     onChange={(e) => { formData.settings.quotation_sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
                                                 >
-                                                    <option value="type1">Type 1 (Default)</option>
-                                                    <option value="type2">Type 2</option>
-                                                    <option value="type3">Type 3</option>
+                                                    <option value="type1">{t('Type 1 (Default)')}</option>
+                                                    <option value="type2">{t('Type 2')}</option>
+                                                    <option value="type3">{t('Type 3')}</option>
                                                 </select>
-                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation sales return creation and update form</div>
+                                                <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>{t('Layout style for the quotation sales return creation and update form')}</div>
                                             </div>
                                         </div>
                                     </div>
 
                                 </div>)}
 
+                                {activeTab === 'logo' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-image-fill" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Logo')}</h3></div>
+                                    <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>{t('Logo Guidelines')}</div>
+                                        <div>• <strong>{t('Recommended size:')} </strong> 300 × 100 px</div>
+                                        <div>• <strong>{t('Format:')} </strong> {t('transparent PNG preferred')}</div>
+                                        <div>• <strong>{t('Max file size:')} </strong> 500 KB</div>
+                                        <div>• {t('Used in the invoice header')}</div>
+                                    </div>
+                                    <ImageDropzone
+                                        label={t('Logo')}
+                                        currentSrc={formData.logo ? resolveImageUrl(formData.logo, formData.id, 'store') : null}
+                                        previewSrc={formData.logo_content || null}
+                                        hint="Recommended 300×100 px · transparent PNG · max 500 KB · used in invoice header"
+                                        onFile={file => {
+                                            errors["logo_content"] = "";
+                                            setErrors({ ...errors });
+                                            const url = URL.createObjectURL(file);
+                                            const img = new Image();
+                                            img.onload = function () {
+                                                const dims = getTargetDimension(img.width, img.height, 100, 100);
+                                                resizeFIle(file, dims.targetWidth, dims.targetHeight, (result) => {
+                                                    formData.logo_content = result;
+                                                    setFormData({ ...formData });
+                                                });
+                                            };
+                                            img.src = url;
+                                        }}
+                                        onRemove={() => { formData.logo = ''; formData.logo_content = ''; formData.remove_logo = true; setFormData({ ...formData }); }}
+                                    />
+                                    {errors.logo_content && (
+                                        <div className="pw-err">{errors.logo_content}</div>
+                                    )}
+                                </div></div>)}
+
+                                {activeTab === 'invoice_background' && (<div className="pw-tab-wrap"><div className="pw-card">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-image" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Invoice Background Image')}</h3></div>
+                                    <div style={{ background: '#f0f4ff', border: '1px solid #c8d8f5', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1558d6', lineHeight: 1.7 }}>
+                                        <div style={{ fontWeight: 700, marginBottom: '4px' }}><i className="bi bi-info-circle-fill me-1"></i>{t('Background Image Guidelines')}</div>
+                                        <div>• <strong>{t('Recommended size:')} </strong> A4 at 150 dpi — <strong>1240 × 1754 px</strong></div>
+                                        <div>• {t('Acceptable: A4 at 72 dpi — 595 × 842 px (lower quality on high-DPI screens)')}</div>
+                                        <div>• <strong>{t('Format:')} </strong> {t('PNG (transparent areas stay clear) or JPG')}</div>
+                                        <div>• {t('The image is stretched to fill the entire invoice page — keep important content centred or near edges')}</div>
+                                        <div>• <strong>{t('Max file size:')} </strong> 2 MB</div>
+                                        <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #c8d8f5' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: '8px' }}><i className="bi bi-download me-1"></i>{t('Sample backgrounds — download to see how it should look:')}</div>
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                <a href={SampleInvoiceBg1} download="sample-invoice-background-1.jpg"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
+                                                    <i className="bi bi-file-earmark-image"></i> {t('Sample 1 (JPG)')}
+                                                </a>
+                                                <a href={SampleInvoiceBg2} download="sample-invoice-background-2.png"
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '6px', border: '1px solid #1558d6', background: '#fff', color: '#1558d6', textDecoration: 'none', cursor: 'pointer' }}>
+                                                    <i className="bi bi-file-earmark-image"></i> {t('Sample 2 (PNG)')}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <ImageDropzone
+                                        label={t('Invoice Background')}
+                                        currentSrc={formData.invoice_background ? resolveImageUrl(formData.invoice_background, formData.id, 'store') : null}
+                                        previewSrc={formData.invoice_background_content || null}
+                                        hint="Recommended 1240×1754 px (A4 @ 150 dpi) · PNG or JPG · max 2 MB"
+                                        onFile={file => {
+                                            const reader = new FileReader();
+                                            reader.onload = ev => {
+                                                formData.invoice_background_content = ev.target.result;
+                                                setFormData({ ...formData });
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }}
+                                        onRemove={() => { formData.invoice_background = ''; formData.remove_invoice_background = true; setFormData({ ...formData }); }}
+                                    />
+                                </div></div>)}
+
+                                {activeTab === 'whatsapp_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                        <i className="bi bi-whatsapp" style={{ fontSize: '18px', color: '#25D366' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('WhatsApp Settings')}</h3>
+                                    </div>
+
+                                    {/* Meta quick-access links */}
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                                        <a href="https://business.facebook.com/latest/whatsapp_manager/phone_numbers?business_id=1442312137713796&asset_id=28106721685688550" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-bar-chart me-1"></i>{t('Insights')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=1442312137713796&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=28106721685688550" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-grid me-1"></i>{t('Templates')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/details/?asset_id=28106721685688550&business_id=1442312137713796&payment_account_id=2075149283102188&placement=whatsapp_ads&payment_method_id=" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-credit-card me-1"></i>{t('Billing')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/?business_id=1442312137713796&asset_id=28106721685688550&placement=BILLING_HUB&payment_account_id=2075149283102188" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-wallet2 me-1"></i>{t('Payments')}
+                                        </a>
+                                        <a href="https://business.facebook.com/latest/billing_hub/accounts/details/?asset_id=28106721685688550&business_id=1442312137713796&payment_account_id=2075149283102188&placement=BILLING_HUB&payment_method_id=" target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary" style={{ fontSize: '12px' }}>
+                                            <i className="bi bi-receipt me-1"></i>{t('Payment Details')}
+                                        </a>
+                                    </div>
+
+                                    {/* Feature toggle */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                id="enable_ai_rfq_bot"
+                                                checked={!!formData.settings.enable_ai_rfq_bot}
+                                                onChange={() => { formData.settings.enable_ai_rfq_bot = !formData.settings.enable_ai_rfq_bot; setFormData({ ...formData }); }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable AI RFQ Bot')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('Automatically forward customer RFQs to matching suppliers via WhatsApp.')}
+                                                </div>
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {/* 1. Bot WhatsApp (receives RFQs) */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-whatsapp text-success me-2"></i>
+                                            {t('1. Bot WhatsApp Number')} <small className="text-muted fw-normal">({t('receives RFQs from customers')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Connect a dedicated WhatsApp number that customers will send their RFQs to. The bot will listen for incoming messages and process them automatically.')}
+                                        </p>
+                                        <ProcurementWhatsAppWidget
+                                            storeId={formData.id}
+                                            endpointBase="/v1/rfq-bot"
+                                            label="Bot WhatsApp"
+                                            useWABA={true}
+                                        />
+
+                                        {/* ── Meta Webhook Setup Instructions ── */}
+                                        {formData.id && (
+                                            <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '14px 16px', marginTop: '16px', fontSize: '12px' }}>
+                                                <div style={{ fontWeight: 700, marginBottom: '8px', fontSize: '13px' }}>
+                                                    <i className="bi bi-info-circle-fill text-warning me-2"></i>
+                                                    {t('Required: Configure Meta Webhook to receive WhatsApp messages')}
+                                                </div>
+
+                                                {/* ── Critical: App must be published ── */}
+                                                <div style={{ background: '#fdecea', border: '1px solid #f5c6cb', borderRadius: '6px', padding: '10px 12px', marginBottom: '10px', lineHeight: '1.6' }}>
+                                                    <strong><i className="bi bi-exclamation-octagon-fill text-danger me-1"></i>{t('Critical: Your Meta app must be Published')}</strong>
+                                                    <div style={{ marginTop: '4px', color: '#721c24' }}>
+                                                        {t('Unpublished apps only receive test webhooks sent from the Meta dashboard — real WhatsApp messages from any phone are blocked by Meta until you publish the app.')}{' '}
+                                                        {t('The "Send to server" test button works because it is a direct HTTP call and bypasses this restriction.')}
+                                                    </div>
+                                                    <div style={{ marginTop: '6px' }}>
+                                                        {t('To publish:')}{' '}
+                                                        <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer">
+                                                            {t('Open your app')}
+                                                        </a>{' '}
+                                                        → <strong>{t('Use cases → Connect on WhatsApp → Step 3: Business verification')}</strong>{' '}
+                                                        → {t('complete business verification → then click')} <strong>{t('"Publish your app"')}</strong>.{' '}
+                                                        {t('Verification usually takes 1–3 business days.')}
+                                                    </div>
+                                                </div>
+
+                                                <p style={{ marginBottom: '8px', color: '#555' }}>
+                                                    {t('After publishing, configure the webhook so Meta knows where to send messages:')}
+                                                </p>
+                                                <div style={{ marginBottom: '10px' }}>
+                                                    <a
+                                                        href="https://developers.facebook.com/apps/1435954091720046/use_cases/customize/wa-configurations-v2/?business_id=1442312137713796&use_case_enum=WHATSAPP_BUSINESS_MESSAGING&selected_tab=wa-configurations-v2&product_route=whatsapp-business#auto_subscribe"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="btn btn-sm btn-primary"
+                                                        style={{ fontSize: '12px' }}
+                                                    >
+                                                        <i className="bi bi-box-arrow-up-right me-1"></i>
+                                                        {t('Open Meta WhatsApp Webhook Settings')}
+                                                    </a>
+                                                    <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
+                                                        {t('(opens Meta dashboard to change webhook URL)')}
+                                                    </span>
+                                                </div>
+                                                <ol style={{ paddingLeft: '18px', marginBottom: '10px', color: '#333', lineHeight: '1.8' }}>
+                                                    <li>{t('Click the link above → go to')} <strong>Webhook</strong> {t('section')}</li>
+                                                    <li>{t('Under "Webhook", click')} <strong>{t('Edit')}</strong></li>
+                                                    <li>
+                                                        {t('Set')} <strong>{t('Callback URL')}</strong> {t('to:')}<br />
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px', wordBreak: 'break-all', fontSize: '11px' }}>
+                                                            {window.location.origin}/v1/rfq-bot/webhook?store_id={formData.id}
+                                                        </code>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-secondary ms-2"
+                                                            style={{ fontSize: '10px', padding: '0 6px' }}
+                                                            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/v1/rfq-bot/webhook?store_id=${formData.id}`)}
+                                                        >
+                                                            <i className="bi bi-clipboard"></i> {t('Copy')}
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        {t('Set')} <strong>{t('Verify Token')}</strong> {t('to:')}{' '}
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>startpos-rfq-verify</code>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-secondary ms-2"
+                                                            style={{ fontSize: '10px', padding: '0 6px' }}
+                                                            onClick={() => navigator.clipboard.writeText('startpos-rfq-verify')}
+                                                        >
+                                                            <i className="bi bi-clipboard"></i> {t('Copy')}
+                                                        </button>
+                                                    </li>
+                                                    <li>{t('Click')} <strong>{t('Verify and Save')}</strong></li>
+                                                    <li>
+                                                        {t('Under "Webhook fields", click')} <strong>{t('Manage')}</strong>{' '}
+                                                        → {t('find')} <strong>messages</strong> → {t('click')} <strong>{t('Subscribe')}</strong>
+                                                    </li>
+                                                    <li>
+                                                        <strong>{t('Subscribe your app to your WhatsApp Business Account (WABA)')}</strong>
+                                                        {' — '}{t('this is required for real messages; the dashboard "Send to server" test bypasses it.')}
+                                                        <div style={{ marginTop: '6px', background: '#f0f4ff', border: '1px solid #c7d2fe', borderRadius: '6px', padding: '10px', fontSize: '11px', lineHeight: '1.7' }}>
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <strong>Option A — via Graph API Explorer (easiest):</strong>
+                                                            </div>
+                                                            <ol style={{ paddingLeft: '16px', marginBottom: '6px' }} type="a">
+                                                                <li>
+                                                                    {t('Open')}{' '}
+                                                                    <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noreferrer">
+                                                                        Graph API Explorer
+                                                                    </a>
+                                                                </li>
+                                                                <li>{t('Select your App from the top-right dropdown')}</li>
+                                                                <li>{t('Set method to')} <strong>POST</strong></li>
+                                                                <li>
+                                                                    {t('Enter endpoint:')}{' '}
+                                                                    <code style={{ background: '#fff', padding: '1px 5px', borderRadius: '3px' }}>
+                                                                        /{'{'}WABA_ID{'}'}/subscribed_apps
+                                                                    </code>
+                                                                    {' '}{t('(replace with your WABA ID from the field below)')}
+                                                                </li>
+                                                                <li>{t('Click')} <strong>Submit</strong> — {t('you should get')} <code>{"{ \"success\": true }"}</code></li>
+                                                            </ol>
+                                                            <div style={{ marginBottom: '4px' }}>
+                                                                <strong>Option B — via Meta Business Manager:</strong>
+                                                            </div>
+                                                            <ol style={{ paddingLeft: '16px', marginBottom: '0' }} type="a">
+                                                                <li>
+                                                                    {t('Go to')}{' '}
+                                                                    <a href="https://business.facebook.com/settings/whatsapp-business-accounts" target="_blank" rel="noreferrer">
+                                                                        Meta Business Manager → WhatsApp Accounts
+                                                                    </a>
+                                                                </li>
+                                                                <li>{t('Click your WABA → go to')} <strong>{t('Settings')}</strong> → <strong>{t('App Subscriptions')}</strong></li>
+                                                                <li>{t('Add your app if not already listed')}</li>
+                                                            </ol>
+                                                        </div>
+                                                    </li>
+                                                </ol>
+                                                <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '6px', padding: '8px 12px', fontSize: '11px', color: '#5d4037', marginBottom: '8px' }}>
+                                                    <i className="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                                    <strong>{t('Why does the test button work but real messages don\'t?')}</strong>{' '}
+                                                    {t('The "Send to server" button in Meta\'s dashboard posts the payload directly to your URL — it skips the WABA subscription check. Real WhatsApp messages only reach your server after completing step 8 above.')}
+                                                </div>
+                                                <div style={{ color: '#666', fontSize: '11px' }}>
+                                                    <i className="bi bi-lightbulb text-warning me-1"></i>
+                                                    {t('Once all steps are done, every WhatsApp message sent to your connected number will appear automatically in the Procurement → WhatsApp inbox.')}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* WABA Business Account ID — required for template listing */}
+                                        <div style={{ marginTop: '12px', maxWidth: '420px' }}>
+                                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
+                                                {t('WABA Business Account ID')}
+                                            </label>
+                                            <div className="d-flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    placeholder="e.g. 123456789012345"
+                                                    value={formData.settings.bot_waba_business_account_id || ''}
+                                                    onChange={e => {
+                                                        formData.settings.bot_waba_business_account_id = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    style={{ whiteSpace: 'nowrap' }}
+                                                    disabled={!formData.id || !formData.settings.bot_waba_business_account_id}
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch('/v1/rfq-bot/waba-business-account-id', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    Authorization: localStorage.getItem('access_token'),
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    store_id: formData.id,
+                                                                    waba_business_account_id: formData.settings.bot_waba_business_account_id,
+                                                                }),
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.success) alert(t('WABA Business Account ID saved.'));
+                                                            else alert(data.error || t('Failed to save.'));
+                                                        } catch (e) {
+                                                            alert(t('Failed to save: ') + e.message);
+                                                        }
+                                                    }}
+                                                >
+                                                    {t('Save')}
+                                                </button>
+                                            </div>
+                                            <small className="text-muted" style={{ lineHeight: '1.6', display: 'block', marginTop: '4px' }}>
+                                                {t('How to find it:')}{' '}
+                                                <a href="https://business.facebook.com/settings/whatsapp-business-accounts" target="_blank" rel="noreferrer">
+                                                    {t('Meta Business Manager → WhatsApp Accounts')}
+                                                </a>
+                                                {' → '}{t('click your account → the ID is shown at the top of the Account Overview page (a 15-digit number).')}{' '}
+                                                {t('Required to load and map message templates.')}
+                                            </small>
+                                        </div>
+
+                                        {/* WABA Template Purpose Mapping */}
+                                        <WABATemplatePurposeWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+
+                                        {/* RFQ Message Contact Number */}
+                                        <div style={{ marginTop: '16px', maxWidth: '420px' }}>
+                                            <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 600 }}>
+                                                {t('RFQ Message Contact Number')}
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                className="form-control form-control-sm"
+                                                placeholder="e.g. 966501234567"
+                                                value={formData.settings?.rfq_message_contact_phone || ''}
+                                                onChange={e => {
+                                                    formData.settings.rfq_message_contact_phone = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <small className="text-muted" style={{ fontSize: '11px' }}>
+                                                {t('Phone number shown in {{contact}} of the supplier WhatsApp message. Leave blank to use the Bot WhatsApp number.')}
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    {/* 1c. WABA Template Tester */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-send-check text-success me-2"></i>
+                                            {t('WABA Template Tester')}
+                                        </h6>
+                                        <WABATemplateTesterWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                        />
+                                    </div>
+
+
+                                    {/* Intro text for first-contact messages */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="form-label fw-semibold" style={{ fontSize: '14px' }}>
+                                            {t('rfq_intro_label')}
+                                        </label>
+                                        <textarea
+                                            className="form-control form-control-sm"
+                                            rows={3}
+                                            placeholder={t('rfq_intro_placeholder')}
+                                            value={formData.settings.rfq_intro || ''}
+                                            onChange={e => {
+                                                formData.settings.rfq_intro = e.target.value;
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                        <div className="form-text">{t('rfq_intro_help')}</div>
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'purchase_bills_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-receipt" style={{ fontSize: '18px', color: '#25D366' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Purchase Bills Settings')}</h3>
+                                    </div>
+
+                                    {/* ── Purchase Bills Tracking ── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
+                                        <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
+                                            <i className="bi bi-receipt" style={{ color: '#25d366', fontSize: '14px' }}></i>
+                                            <span style={{ color: '#1a4d2e' }}>{t('Purchase Bills Tracking (WhatsApp)')}</span>
+                                        </div>
+                                        <div style={{ marginBottom: '14px' }}>
+                                            <label className="pw-check" htmlFor="enable_purchase_bills_tracking2" style={{ maxWidth: '480px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
+                                                <input type="checkbox" id="enable_purchase_bills_tracking2" checked={!!formData.settings.enable_purchase_bills_tracking} onChange={() => { formData.settings.enable_purchase_bills_tracking = !formData.settings.enable_purchase_bills_tracking; setFormData({ ...formData }); }} />
+                                                <span style={{ color: '#1a4d2e', fontWeight: 600 }}>{t('Enable Purchase Bills Tracking')}</span>
+                                            </label>
+                                            <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c' }}>{t('When enabled, images and PDFs received from Purchase Managers numbers are shown in the Purchase Bill images/PDFs tab for extraction and purchase creation.')}</p>
+                                        </div>
+                                        {!!formData.settings.enable_purchase_bills_tracking && (
+                                            <div>
+                                                <div className="pw-field" style={{ marginBottom: '10px' }}>
+                                                    <label style={{ fontWeight: 600 }}>{t('Purchase Managers Numbers')}</label>
+                                                    <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '8px' }}>{t('Add the WhatsApp numbers of your purchase managers. All incoming images/PDFs from these numbers will appear in the Purchase Bills tab.')}</p>
+                                                    {(formData.settings.purchase_bills_manager_numbers || []).map((num, idx) => (
+                                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                            <input
+                                                                type="text"
+                                                                value={num}
+                                                                placeholder={t('e.g. 966501234567')}
+                                                                style={{ flex: 1, padding: '6px 10px', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '13px' }}
+                                                                onChange={(e) => {
+                                                                    const nums = [...(formData.settings.purchase_bills_manager_numbers || [])];
+                                                                    nums[idx] = e.target.value;
+                                                                    formData.settings.purchase_bills_manager_numbers = nums;
+                                                                    setFormData({ ...formData });
+                                                                }}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-danger"
+                                                                onClick={() => {
+                                                                    const nums = (formData.settings.purchase_bills_manager_numbers || []).filter((_, i) => i !== idx);
+                                                                    formData.settings.purchase_bills_manager_numbers = nums;
+                                                                    setFormData({ ...formData });
+                                                                }}
+                                                            ><i className="bi bi-trash"></i></button>
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-success"
+                                                        style={{ marginTop: '4px' }}
+                                                        onClick={() => {
+                                                            const nums = [...(formData.settings.purchase_bills_manager_numbers || []), ''];
+                                                            formData.settings.purchase_bills_manager_numbers = nums;
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    ><i className="bi bi-plus-circle me-1"></i>{t('Add Number')}</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'email_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-envelope-fill" style={{ fontSize: '18px', color: '#0d6efd' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Email Settings')}</h3>
+                                    </div>
+
+                                    {/* 1b. Email Source (receives RFQs) */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-envelope-at text-primary me-2"></i>
+                                            {t('Email Source')} <small className="text-muted fw-normal">({t('receive RFQs via email')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Connect an email inbox to receive RFQs by email. Each incoming email is examined by the LLM to decide whether it is an RFQ, then processed the same way as WhatsApp messages.')}
+                                        </p>
+                                        <ProcurementEmailWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 1b-2. Incoming Email — Keyword filter */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-funnel me-2 text-primary"></i>
+                                            {t('Incoming Email')} — {t('Keyword Filter')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Accept only emails whose subject contains at least one of these keywords (case-insensitive). Emails whose subject does not match are discarded before reaching the database. Leave empty to accept all incoming emails.')}
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder={t('Add keyword…')}
+                                                style={{ maxWidth: '260px' }}
+                                                value={newEmailKeyword}
+                                                onChange={e => setNewEmailKeyword(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const kw = newEmailKeyword.trim().toLowerCase();
+                                                        if (kw) {
+                                                            const current = formData.settings.incoming_email_keywords || [];
+                                                            if (!current.includes(kw)) {
+                                                                formData.settings.incoming_email_keywords = [...current, kw];
+                                                                setFormData({ ...formData });
+                                                            }
+                                                            setNewEmailKeyword('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary"
+                                                onClick={() => {
+                                                    const kw = newEmailKeyword.trim().toLowerCase();
+                                                    if (kw) {
+                                                        const current = formData.settings.incoming_email_keywords || [];
+                                                        if (!current.includes(kw)) {
+                                                            formData.settings.incoming_email_keywords = [...current, kw];
+                                                            setFormData({ ...formData });
+                                                        }
+                                                        setNewEmailKeyword('');
+                                                    }
+                                                }}
+                                            >
+                                                {t('Add')}
+                                            </button>
+                                            {(formData.settings.incoming_email_keywords || []).length === 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => {
+                                                        formData.settings.incoming_email_keywords = ['quotation', 'rfq', 'request for quotation'];
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                >
+                                                    {t('Use defaults')}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {(formData.settings.incoming_email_keywords || []).map((kw, i) => (
+                                                <span key={i} className="badge bg-primary" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 400 }}>
+                                                    {kw}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.incoming_email_keywords = (formData.settings.incoming_email_keywords || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {(formData.settings.incoming_email_keywords || []).length === 0 && (
+                                                <span style={{ fontSize: '12px', color: '#9aa0a6', fontStyle: 'italic' }}>{t('No filter — all emails accepted')}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 1c. Outgoing Email (send emails from the app) */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-envelope-arrow-up text-success me-2"></i>
+                                            {t('Outgoing Email')} <small className="text-muted fw-normal">({t('send emails from the app')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Connect a transactional email provider to send emails (e.g. RFQ replies, notifications) from the app. Choose a provider, enter credentials, and send a test email to verify.')}
+                                        </p>
+                                        <ProcurementOutgoingEmailWidget
+                                            storeId={formData.id}
+                                            settings={formData.settings}
+                                            onSettingsChange={changes => {
+                                                Object.assign(formData.settings, changes);
+                                                setFormData({ ...formData });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 1d. Message Log — auto-delete setting */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-chat-square-text text-secondary me-2"></i>
+                                            {t('Message Log')}
+                                        </h6>
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
+                                                {t('Auto-delete messages older than')}
+                                            </label>
+                                            <div className="input-group input-group-sm" style={{ maxWidth: '220px' }}>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="0"
+                                                    value={formData.settings.auto_delete_procurement_messages_days ?? 0}
+                                                    onChange={e => { formData.settings.auto_delete_procurement_messages_days = parseInt(e.target.value, 10) || 0; setFormData({ ...formData }); }}
+                                                />
+                                                <span className="input-group-text">{t('days (0 = never)')}</span>
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '6px' }}>
+                                                {t('View all messages via the Emails and WhatsApp Messages items in the sidebar.')}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>)}
+
+                                {activeTab === 'google_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-geo-alt-fill" style={{ fontSize: '18px', color: '#ea4335' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Google Settings')}</h3>
+                                    </div>
+
+                                    {/* 4. Google Maps API Key */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-geo-alt me-2 text-danger"></i>
+                                            {t('4. Google Maps API Key')} <small className="text-muted fw-normal">({t('finds suppliers by product category')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Used to search Google Maps Places API for suppliers matching the RFQ product categories.')} {t('Enable')} <strong>Places API</strong> {t('in your Google Cloud project. If enough suppliers are already in the RFQ Suppliers database, Google Maps won\'t be queried.')}
+                                        </p>
+                                        <div style={{ maxWidth: '480px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder="Google Maps API Key (AIza...)"
+                                                value={formData.settings.google_maps_api_key || ''}
+                                                onChange={e => { formData.settings.google_maps_api_key = e.target.value; setFormData({ ...formData }); }}
+                                            />
+                                        </div>
+                                        <GoogleMapsTestWidget
+                                            apiKey={formData.settings.google_maps_api_key}
+                                            storeId={formData.id || localStorage.getItem('store_id')}
+                                            purchaseMarkets={formData.settings.purchase_markets}
+                                        />
+                                        <div style={{ maxWidth: '240px', marginTop: '12px' }}>
+                                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>
+                                                {t('rfq_min_suppliers_label')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="20"
+                                                className="form-control form-control-sm"
+                                                placeholder="2"
+                                                value={formData.settings.rfq_min_suppliers || ''}
+                                                onChange={e => {
+                                                    const v = parseInt(e.target.value, 10);
+                                                    formData.settings.rfq_min_suppliers = isNaN(v) ? 0 : Math.min(20, Math.max(1, v));
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
+                                                {t('rfq_min_suppliers_help')}
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>)}
+
+                                {activeTab === 'rfq_settings' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-list-check" style={{ fontSize: '18px', color: '#004ac6' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('RFQ Settings')}</h3>
+                                    </div>
+
+                                    {/* 2. LLM Model for auto-processing — provider/model selected from AI Models tab */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-cpu me-2 text-primary"></i>
+                                            {t('2. LLM Model')} <small className="text-muted fw-normal">({t('auto-processes incoming WhatsApp RFQs')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '8px' }}>
+                                            {t('Select which AI model should automatically parse incoming RFQ messages. API keys are managed in the')}{' '}
+                                            <strong
+                                                style={{ color: '#004ac6', cursor: 'pointer', textDecoration: 'underline' }}
+                                                onClick={() => setActiveTab('ai_models')}
+                                            >
+                                                {t('AI Models tab')}
+                                            </strong>.
+                                        </p>
+                                        {formData.settings.disable_auto_rfq_from_email && formData.settings.disable_auto_rfq_from_whatsapp && (
+                                            <div className="alert alert-warning py-1 px-2 mb-2" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-exclamation-triangle me-1"></i>
+                                                {t('This LLM is only used when "Automatic RFQ creation upon receipt of a new Email" or "Automatic RFQ creation upon receipt of a new WhatsApp message" is enabled (see section 5 below).')}
+                                            </div>
+                                        )}
+                                        <div className="row g-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.rfq_llm_provider || ''}
+                                                    onChange={e => { formData.settings.rfq_llm_provider = e.target.value; formData.settings.rfq_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Select provider —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.rfq_llm_model || ''}
+                                                    onChange={e => { formData.settings.rfq_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.rfq_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.rfq_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.rfq_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 2b. Classification LLM — for auto-labeling incoming messages */}
+                                    <div className="pw-card" style={{ marginBottom: '16px', background: '#fff8f0', border: '1px solid #fed7aa' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-tags me-2 text-warning"></i>
+                                            {t('3. Classification LLM')} <small className="text-muted fw-normal">({t('auto-labels incoming emails & WhatsApp messages')})</small>
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                            {t('Classifies incoming messages as')} <strong>{t('Customer RFQ')}</strong> {t('or')} <strong>{t('Supplier Quotation')}</strong> {t('(all others are ignored). Leave blank to use the LLM Model above.')}
+                                        </p>
+                                        <div className="row g-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.classify_llm_provider || ''}
+                                                    onChange={e => { formData.settings.classify_llm_provider = e.target.value; formData.settings.classify_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Same as LLM Model above —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.classify_llm_model || ''}
+                                                    onChange={e => { formData.settings.classify_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.classify_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.classify_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.classify_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    {/* RFQ Creation */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-lightning-charge me-2 text-warning"></i>
+                                            {t('RFQ Creation')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Control whether RFQs are created automatically when a new email or WhatsApp message arrives and is identified as an RFQ. Disable to review messages manually and create RFQs on demand.')}
+                                        </p>
+                                        <div className="form-check mb-2">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="auto_rfq_email"
+                                                checked={!formData.settings.disable_auto_rfq_from_email}
+                                                onChange={() => { formData.settings.disable_auto_rfq_from_email = !formData.settings.disable_auto_rfq_from_email; setFormData({ ...formData }); }}
+                                            />
+                                            <label className="form-check-label" htmlFor="auto_rfq_email" style={{ fontSize: '13px' }}>
+                                                {t('Automatic RFQ creation upon receipt of a new Email identified as an RFQ')}
+                                            </label>
+                                        </div>
+                                        <div className="form-check">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="auto_rfq_whatsapp"
+                                                checked={!formData.settings.disable_auto_rfq_from_whatsapp}
+                                                onChange={() => { formData.settings.disable_auto_rfq_from_whatsapp = !formData.settings.disable_auto_rfq_from_whatsapp; setFormData({ ...formData }); }}
+                                            />
+                                            <label className="form-check-label" htmlFor="auto_rfq_whatsapp" style={{ fontSize: '13px' }}>
+                                                {t('Automatic RFQ creation upon receipt of a new WhatsApp message identified as an RFQ')}
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Purchase Markets */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-building text-primary me-2"></i>
+                                            {t('purchase_markets_label')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('purchase_markets_help')}
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder={t('purchase_markets_placeholder')}
+                                                style={{ maxWidth: '240px' }}
+                                                value={newMarket}
+                                                onChange={e => setNewMarket(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (newMarket.trim()) {
+                                                            formData.settings.purchase_markets = [...(formData.settings.purchase_markets || []), newMarket.trim()];
+                                                            setFormData({ ...formData });
+                                                            setNewMarket('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary"
+                                                onClick={() => {
+                                                    if (newMarket.trim()) {
+                                                        formData.settings.purchase_markets = [...(formData.settings.purchase_markets || []), newMarket.trim()];
+                                                        setFormData({ ...formData });
+                                                        setNewMarket('');
+                                                    }
+                                                }}
+                                            >
+                                                {t('Add')}
+                                            </button>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {(formData.settings.purchase_markets || []).map((market, i) => (
+                                                <span key={i} className="badge bg-secondary" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    {market}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.purchase_markets = (formData.settings.purchase_markets || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Default Purchase Markets to Forward RFQs */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-2">
+                                            <i className="bi bi-send text-success me-2"></i>
+                                            {t('Default Purchase Markets to Forward RFQs')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('These markets are pre-selected by default in the "Send RFQ to Suppliers" modal. Users can add or remove markets per-RFQ as needed.')}
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                                            <input
+                                                type="text"
+                                                className="form-control form-control-sm"
+                                                placeholder={t('purchase_markets_placeholder')}
+                                                style={{ maxWidth: '240px' }}
+                                                value={newRfqForwardMarket}
+                                                onChange={e => setNewRfqForwardMarket(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (newRfqForwardMarket.trim()) {
+                                                            formData.settings.rfq_forward_markets = [...(formData.settings.rfq_forward_markets || []), newRfqForwardMarket.trim()];
+                                                            setFormData({ ...formData });
+                                                            setNewRfqForwardMarket('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-primary"
+                                                onClick={() => {
+                                                    if (newRfqForwardMarket.trim()) {
+                                                        formData.settings.rfq_forward_markets = [...(formData.settings.rfq_forward_markets || []), newRfqForwardMarket.trim()];
+                                                        setFormData({ ...formData });
+                                                        setNewRfqForwardMarket('');
+                                                    }
+                                                }}
+                                            >
+                                                {t('Add')}
+                                            </button>
+                                            {(() => {
+                                                const allMarkets = formData.settings.purchase_markets || [];
+                                                const alreadySet = new Set(formData.settings.rfq_forward_markets || []);
+                                                const toAdd = allMarkets.filter(m => !alreadySet.has(m));
+                                                if (toAdd.length === 0) return null;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-success"
+                                                        title="Add all Purchase Markets to this list"
+                                                        onClick={() => {
+                                                            formData.settings.rfq_forward_markets = [...new Set([...alreadySet, ...allMarkets])];
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-check-all me-1"></i>
+                                                        {t('Select All')} ({toAdd.length})
+                                                    </button>
+                                                );
+                                            })()}
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {(formData.settings.rfq_forward_markets || []).map((market, i) => (
+                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    {market}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.rfq_forward_markets = (formData.settings.rfq_forward_markets || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                            {(formData.settings.rfq_forward_markets || []).length === 0 && (
+                                                <span style={{ fontSize: '12px', color: '#9aa0a6', fontStyle: 'italic' }}>{t('No defaults set — all purchase markets will be available for selection')}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+
+                                    {/* ── RFQ Module & Quotation Settings ────────────────── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-toggles2 text-primary me-2"></i>
+                                            {t('RFQ Module & Quotation Settings')}
+                                        </h6>
+
+                                        {/* Enable RFQ Module */}
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px', display: 'flex', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.settings.enable_rfq_module}
+                                                onChange={() => {
+                                                    formData.settings.enable_rfq_module = !formData.settings.enable_rfq_module;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable RFQ Module')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('Shows RFQ menu items in the sidebar, and RFQ-related columns in the Quotation index table.')}
+                                                </div>
+                                            </span>
+                                        </label>
+
+                                        {/* Default Customer Quotation Margin */}
+                                        <div className="row g-2 mb-3" style={{ maxWidth: '400px' }}>
+                                            <div className="col-6">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>
+                                                    {t('Default Customer Quotation Margin (%)')}
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    min="0"
+                                                    max="500"
+                                                    step="0.5"
+                                                    value={formData.settings.default_quotation_margin_percent ?? 35}
+                                                    onChange={e => {
+                                                        formData.settings.default_quotation_margin_percent = parseFloat(e.target.value) || 0;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                                <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                    {t('Applied as starting margin in the RFQ price comparison table. Default: 35%')}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Quotation Extraction LLM */}
+                                        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', color: '#495057' }}>
+                                            {t('Quotation Extraction LLM')}
+                                        </div>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '10px' }}>
+                                            {t('Provider and model used to extract prices from supplier quotation documents (PDF, image, Excel). Uses the same per-provider API key from the AI Models tab.')}
+                                        </p>
+                                        <div className="row g-2 mb-2">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.quotation_llm_provider || ''}
+                                                    onChange={e => { formData.settings.quotation_llm_provider = e.target.value; formData.settings.quotation_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.quotation_llm_model || ''}
+                                                    onChange={e => { formData.settings.quotation_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.quotation_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.quotation_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.quotation_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    {/* ── Content Extraction Test ─────────────────────────── */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-1">
+                                            <i className="bi bi-magic me-2 text-purple" style={{ color: '#7c3aed' }}></i>
+                                            {t('Content Extraction Test')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Test LLM extraction on any text, image, PDF, or spreadsheet. Extracts customer info, products (part no / name / qty / unit), and additional notes.')}
+                                        </p>
+
+                                        {/* Provider + Model */}
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={extractTest.provider}
+                                                    onChange={e => setExtractTest(s => ({ ...s, provider: e.target.value, model: '' }))}
+                                                >
+                                                    <option value="">{t('— Select provider —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                                {extractTest.provider && (() => {
+                                                    const p = AI_PROVIDERS.find(x => x.value === extractTest.provider);
+                                                    const hasKey = p && !!(formData.settings?.[p.apiKeyField]);
+                                                    return <div style={{ fontSize: '11px', marginTop: '3px', color: hasKey ? '#198754' : '#dc3545' }}>
+                                                        {hasKey ? '✅ ' + t('API key from AI Models tab') : '⚠️ ' + t('No API key saved — set it in AI Models tab')}
+                                                    </div>;
+                                                })()}
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={extractTest.model}
+                                                    onChange={e => setExtractTest(s => ({ ...s, model: e.target.value }))}
+                                                    disabled={!extractTest.provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(extractTest.provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === extractTest.provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Free text input */}
+                                        <div className="mb-3">
+                                            <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('Text (optional)')}</label>
+                                            <textarea
+                                                className="form-control form-control-sm"
+                                                rows={4}
+                                                placeholder={t('Paste email body, quotation text, or any RFQ content here…')}
+                                                value={extractTest.text}
+                                                onChange={e => setExtractTest(s => ({ ...s, text: e.target.value }))}
+                                                style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                                            />
+                                        </div>
+
+                                        {/* File upload */}
+                                        <div className="mb-3">
+                                            <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>
+                                                {t('Files (optional)')} <small className="text-muted">{t('PDF, Excel, CSV, TXT, images')}</small>
+                                            </label>
+                                            <div
+                                                style={{
+                                                    border: '2px dashed #ced4da', borderRadius: '6px', padding: '12px',
+                                                    textAlign: 'center', cursor: 'pointer', fontSize: '12px', color: '#6c757d',
+                                                    background: extractTest.files.length > 0 ? '#f8fff8' : '#fafafa',
+                                                }}
+                                                onClick={() => document.getElementById('extractTestFileInput').click()}
+                                                onDragOver={e => e.preventDefault()}
+                                                onDrop={e => {
+                                                    e.preventDefault();
+                                                    const dropped = Array.from(e.dataTransfer.files);
+                                                    setExtractTest(s => ({ ...s, files: [...s.files, ...dropped] }));
+                                                }}
+                                            >
+                                                <i className="bi bi-cloud-upload me-1"></i>
+                                                {extractTest.files.length === 0
+                                                    ? t('Click or drag files here')
+                                                    : extractTest.files.map(f => f.name).join(', ')}
+                                            </div>
+                                            <input
+                                                id="extractTestFileInput"
+                                                type="file"
+                                                multiple
+                                                hidden
+                                                accept=".pdf,.xlsx,.xls,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                                                onChange={e => {
+                                                    const picked = Array.from(e.target.files);
+                                                    setExtractTest(s => ({ ...s, files: [...s.files, ...picked] }));
+                                                    e.target.value = '';
+                                                }}
+                                            />
+                                            {extractTest.files.length > 0 && (
+                                                <div className="mt-1 d-flex flex-wrap gap-1">
+                                                    {extractTest.files.map((f, i) => (
+                                                        <span key={i} className="badge bg-secondary d-flex align-items-center gap-1" style={{ fontSize: '11px' }}>
+                                                            {f.name}
+                                                            <button
+                                                                type="button"
+                                                                className="btn-close btn-close-white"
+                                                                style={{ fontSize: '8px' }}
+                                                                onClick={() => setExtractTest(s => ({ ...s, files: s.files.filter((_, j) => j !== i) }))}
+                                                            />
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Extract button */}
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-success"
+                                            disabled={extractTest.loading || !extractTest.provider || (!extractTest.text && extractTest.files.length === 0)}
+                                            onClick={async () => {
+                                                setExtractTest(s => ({ ...s, loading: true, result: null, error: '' }));
+                                                try {
+                                                    const fd = new FormData();
+                                                    fd.append('llm_provider', extractTest.provider);
+                                                    fd.append('llm_model', extractTest.model);
+                                                    fd.append('text', extractTest.text);
+                                                    extractTest.files.forEach(f => fd.append('files', f));
+                                                    const resp = await fetch(`/v1/procurement-extract-test?store_id=${formData.id || ''}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                                                        body: fd,
+                                                    });
+                                                    const data = await resp.json();
+                                                    if (!resp.ok) {
+                                                        setExtractTest(s => ({ ...s, loading: false, error: data.error || 'Extraction failed' }));
+                                                    } else {
+                                                        setExtractTest(s => ({ ...s, loading: false, result: data }));
+                                                    }
+                                                } catch (e) {
+                                                    setExtractTest(s => ({ ...s, loading: false, error: e.message }));
+                                                }
+                                            }}
+                                        >
+                                            {extractTest.loading
+                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Extracting…')}</>
+                                                : <><i className="bi bi-magic me-2"></i>{t('Extract')}</>}
+                                        </button>
+
+                                        {/* Error */}
+                                        {extractTest.error && (
+                                            <div className="alert alert-danger mt-3 py-2" style={{ fontSize: '12px' }}>
+                                                {extractTest.error}
+                                            </div>
+                                        )}
+
+                                        {/* Results */}
+                                        {extractTest.result && (() => {
+                                            const r = extractTest.result;
+                                            return (
+                                                <div className="mt-3" style={{ borderTop: '1px solid #dee2e6', paddingTop: '12px' }}>
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginBottom: '8px' }}>
+                                                        {t('Model used')}: <strong>{r.llm_model || extractTest.model}</strong>
+                                                    </div>
+
+                                                    {/* Customer Info */}
+                                                    {(r.customer_name || r.customer_email || r.customer_phone || r.customer_company) && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-person-circle me-1 text-primary"></i>{t('Customer Info')}
+                                                            </div>
+                                                            <table className="table table-sm table-bordered" style={{ fontSize: '12px', marginBottom: 0 }}>
+                                                                <tbody>
+                                                                    {r.customer_name && <tr><td className="fw-semibold" style={{ width: '30%' }}>{t('Name')}</td><td>{r.customer_name}</td></tr>}
+                                                                    {r.customer_company && <tr><td className="fw-semibold">{t('Company')}</td><td>{r.customer_company}</td></tr>}
+                                                                    {r.customer_email && <tr><td className="fw-semibold">{t('Email')}</td><td>{r.customer_email}</td></tr>}
+                                                                    {r.customer_phone && <tr><td className="fw-semibold">{t('Phone')}</td><td>{r.customer_phone}</td></tr>}
+                                                                    {r.customer_vat_no && <tr><td className="fw-semibold">{t('VAT No')}</td><td>{r.customer_vat_no}</td></tr>}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Products Table */}
+                                                    {r.products && r.products.length > 0 && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-box-seam me-1 text-success"></i>{t('Products')} ({r.products.length})
+                                                            </div>
+                                                            <div style={{ overflowX: 'auto' }}>
+                                                                <table className="table table-sm table-bordered table-hover" style={{ fontSize: '12px', marginBottom: 0 }}>
+                                                                    <thead className="table-light">
+                                                                        <tr>
+                                                                            <th>#</th>
+                                                                            <th>{t('Part No')}</th>
+                                                                            <th>{t('Name')}</th>
+                                                                            <th>{t('Qty')}</th>
+                                                                            <th>{t('Unit Price')}</th>
+                                                                            <th>{t('Unit')}</th>
+                                                                            <th>{t('Notes')}</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {r.products.map((p, i) => (
+                                                                            <tr key={i}>
+                                                                                <td>{i + 1}</td>
+                                                                                <td>{p.part_no || '—'}</td>
+                                                                                <td>{p.name || p.item_name || '—'}</td>
+                                                                                <td>{p.quantity ?? p.qty ?? '—'}</td>
+                                                                                <td>{p.unit_price > 0 ? p.unit_price : '—'}</td>
+                                                                                <td>{p.unit || '—'}</td>
+                                                                                <td style={{ maxWidth: '280px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '11px' }}>{p.notes || '—'}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* General Instructions */}
+                                                    {r.general_instructions && (
+                                                        <div className="mb-3">
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>
+                                                                <i className="bi bi-info-circle me-1 text-primary"></i>{t('General Instructions')}
+                                                            </div>
+                                                            <div style={{ background: '#f0f4ff', border: '1px solid #c7d3f5', borderRadius: '4px', padding: '8px 10px', fontSize: '12px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                                {r.general_instructions}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Raw fallback */}
+                                                    {!r.customer_name && (!r.products || r.products.length === 0) && r.text_content && (
+                                                        <div>
+                                                            <div className="fw-semibold mb-1" style={{ fontSize: '13px' }}>{t('Raw Output')}</div>
+                                                            <pre style={{ background: '#f8f9fa', borderRadius: '4px', padding: '8px', fontSize: '11px', whiteSpace: 'pre-wrap', maxHeight: '300px', overflow: 'auto' }}>
+                                                                {r.text_content}
+                                                            </pre>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary mt-2"
+                                                        onClick={() => setExtractTest(s => ({ ...s, result: null, error: '' }))}
+                                                    >
+                                                        {t('Clear Results')}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    {/* Allowed senders whitelist */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-shield-lock-fill text-primary me-2"></i>
+                                            {t('rfq_allowed_senders_label')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('rfq_allowed_senders_help')}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                                            <input
+                                                type="text"
+                                                className={`form-control form-control-sm${waCheck.status === 'valid' ? ' is-valid' : waCheck.status === 'invalid' ? ' is-invalid' : ''}`}
+                                                placeholder={t('rfq_allowed_senders_placeholder')}
+                                                id="rfq-allowed-sender-input"
+                                                disabled={waCheck.status === 'checking'}
+                                                onChange={() => { if (waCheck.status !== 'idle') setWaCheck({ status: 'idle', name: '', error: '' }); }}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        document.getElementById('rfq-wa-add-btn').click();
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                id="rfq-wa-add-btn"
+                                                type="button"
+                                                className="btn btn-sm btn-outline-primary"
+                                                disabled={waCheck.status === 'checking'}
+                                                onClick={async () => {
+                                                    const input = document.getElementById('rfq-allowed-sender-input');
+                                                    const val = input.value.trim().replace(/\D/g, '');
+                                                    if (!val) return;
+                                                    const list = formData.settings.rfq_allowed_senders || [];
+                                                    if (list.includes(val)) { input.value = ''; return; }
+                                                    if (waCheck.status === 'valid') {
+                                                        formData.settings.rfq_allowed_senders = [...list, val];
+                                                        setFormData({ ...formData });
+                                                        input.value = '';
+                                                        setWaCheck({ status: 'idle', name: '', error: '' });
+                                                        return;
+                                                    }
+                                                    setWaCheck({ status: 'checking', name: '', error: '' });
+                                                    try {
+                                                        const res = await fetch(`/v1/rfq-bot/check-whatsapp?store_id=${formData.id}&phone=${encodeURIComponent(val)}`);
+                                                        const data = await res.json();
+                                                        if (data.exists) {
+                                                            setWaCheck({ status: 'valid', name: data.name || '', error: '' });
+                                                        } else if (data.error) {
+                                                            setWaCheck({ status: 'invalid', name: '', error: data.error });
+                                                        } else {
+                                                            setWaCheck({ status: 'invalid', name: '', error: t('wa_number_not_found') });
+                                                        }
+                                                    } catch (err) {
+                                                        setWaCheck({ status: 'invalid', name: '', error: err.message });
+                                                    }
+                                                }}
+                                            >
+                                                {waCheck.status === 'checking'
+                                                    ? <span className="spinner-border spinner-border-sm" role="status" />
+                                                    : waCheck.status === 'valid'
+                                                        ? <><i className="bi bi-check-lg me-1"></i>{t('add_button')}</>
+                                                        : t('wa_check_and_add')}
+                                            </button>
+                                        </div>
+                                        {waCheck.status === 'valid' && (
+                                            <div className="valid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-whatsapp me-1"></i>
+                                                {t('wa_number_valid')}{waCheck.name ? ` — ${waCheck.name}` : ''}.
+                                                {' '}{t('wa_click_add_to_confirm')}
+                                            </div>
+                                        )}
+                                        {waCheck.status === 'invalid' && (
+                                            <div className="invalid-feedback d-block" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-x-circle me-1"></i>
+                                                {waCheck.error || t('wa_number_not_found')}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                            {(formData.settings.rfq_allowed_senders || []).map((num, i) => (
+                                                <span key={i} className="badge bg-success" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <i className="bi bi-whatsapp me-1"></i>+{num}
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                                                        onClick={() => {
+                                                            formData.settings.rfq_allowed_senders = (formData.settings.rfq_allowed_senders || []).filter((_, j) => j !== i);
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Enable Populate RFQ Supplier on Create/Update */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <label className="pw-check" style={{ maxWidth: '480px', background: '#edf3fa', borderRadius: '6px', padding: '10px 12px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.settings.enable_rfq_supplier_on_purchase}
+                                                onChange={() => {
+                                                    formData.settings.enable_rfq_supplier_on_purchase = !formData.settings.enable_rfq_supplier_on_purchase;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <span style={{ marginLeft: '8px' }}>
+                                                <strong>{t('Enable Populate RFQ Supplier on Create/Update')}</strong>
+                                                <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
+                                                    {t('When enabled, automatically create or update the RFQ supplier record whenever a purchase is created or updated. Requires Google Maps API key and LLM API key.')}
+                                                </div>
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {/* Populate RFQ Suppliers from Vendors */}
+                                    <div className="pw-card" style={{ marginBottom: '16px' }}>
+                                        <h6 className="fw-semibold mb-3">
+                                            <i className="bi bi-people-fill text-primary me-2"></i>
+                                            {t('Populate RFQ Suppliers from Vendors')}
+                                        </h6>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '12px' }}>
+                                            {t('Iterate all vendor records, extract their purchased product names, call the LLM to identify categories, search Google Maps to find their WhatsApp number, and create/update RFQ supplier records. Progress is shown in real time.')}
+                                        </p>
+                                        <div className="row g-2 mb-3">
+                                            <div className="col-md-4">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Provider')}</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_provider || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_provider = e.target.value; formData.settings.populate_suppliers_llm_model = ''; setFormData({ ...formData }); }}
+                                                >
+                                                    <option value="">{t('— Use default RFQ LLM —')}</option>
+                                                    {AI_PROVIDERS.map(p => {
+                                                        const hasKey = !!(formData.settings?.[p.apiKeyField]);
+                                                        return <option key={p.value} value={p.value}>{p.label}{hasKey ? ' ✅' : ''}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                            <div className="col-md-8">
+                                                <label className="form-label" style={{ fontSize: '12px', fontWeight: 500 }}>{t('LLM Model')} <span className="text-muted" style={{ fontSize: '11px' }}>({t('cheapest first')})</span></label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={formData.settings.populate_suppliers_llm_model || ''}
+                                                    onChange={e => { formData.settings.populate_suppliers_llm_model = e.target.value; setFormData({ ...formData }); }}
+                                                    disabled={!formData.settings.populate_suppliers_llm_provider}
+                                                >
+                                                    <option value="">{t('— Select model —')}</option>
+                                                    {(formData.settings.populate_suppliers_llm_provider
+                                                        ? [...(AI_PROVIDERS.find(p => p.value === formData.settings.populate_suppliers_llm_provider)?.models || [])].sort((a,b)=>a.costPer1M-b.costPer1M)
+                                                        : []
+                                                    ).map(m => (
+                                                        <option key={m.value} value={m.value}>{m.label} — {m.costLabel}{m.badge ? ` (${m.badge})` : ''}{fileCapabilityLabel(m)}</option>
+                                                    ))}
+                                                </select>
+                                                {formData.settings.populate_suppliers_llm_provider && (
+                                                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '3px' }}>
+                                                        {t('API key from AI Models tab will be used')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-primary"
+                                            disabled={populateVendors.running || !formData.id}
+                                            onClick={async () => {
+                                                if (!formData.id) return;
+                                                setPopulateVendors({ running: true, percent: 0, message: 'Starting...', done: false });
+                                                try {
+                                                    await fetch(`/v1/rfq-bot/populate-suppliers?store_id=${formData.id}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+                                                    });
+                                                } catch (e) {
+                                                    setPopulateVendors({ running: false, percent: 0, message: 'Failed to start: ' + e.message, done: true });
+                                                    return;
+                                                }
+                                                const es = new EventSource(`/v1/rfq-bot/events?store_id=${formData.id}`);
+                                                es.addEventListener('populate_progress', (e) => {
+                                                    try {
+                                                        const d = JSON.parse(e.data);
+                                                        setPopulateVendors({ running: !d.done, percent: d.percent || 0, message: d.message || '', done: !!d.done });
+                                                        if (d.done) { es.close(); }
+                                                    } catch (_) {}
+                                                });
+                                                es.onerror = () => {
+                                                    es.close();
+                                                    setPopulateVendors(prev => ({ ...prev, running: false, done: true }));
+                                                };
+                                            }}
+                                        >
+                                            {populateVendors.running
+                                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />{t('Populating...')}</>
+                                                : <><i className="bi bi-arrow-repeat me-2"></i>{t('Populate RFQ Suppliers from Vendors')}</>}
+                                        </button>
+                                        {(populateVendors.running || populateVendors.done) && (
+                                            <div style={{ marginTop: '12px' }}>
+                                                <div className="progress" style={{ height: '8px', marginBottom: '6px' }}>
+                                                    <div
+                                                        className={`progress-bar${populateVendors.done ? ' bg-success' : ''}`}
+                                                        role="progressbar"
+                                                        style={{ width: `${populateVendors.percent}%` }}
+                                                    />
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#555' }}>
+                                                    {populateVendors.percent}% — {populateVendors.message}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>)}
+
+
+                                {activeTab === 'ai_models' && (<div className="pw-tab-wrap">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                                        <i className="bi bi-cpu" style={{ fontSize: '18px', color: '#004ac6' }}></i>
+                                        <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('AI Models — API Keys')}</h3>
+                                    </div>
+                                    <div className="pw-card" style={{ marginBottom: '8px' }}>
+                                        <p style={{ fontSize: '12px', color: '#6c757d', margin: 0 }}>
+                                            {t('Save API keys for LLM providers here. They are used by the Extract buttons in Procurement Emails and in RFQ creation for AI-based product extraction. Keys are stored securely and never exposed to the browser after saving.')}
+                                        </p>
+                                    </div>
+                                    {AI_PROVIDERS.map(provider => (
+                                        <div key={provider.value} className="pw-card" style={{ marginBottom: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '2px' }}>{provider.label}</div>
+                                                    <div style={{ fontSize: '12px', color: '#6c757d' }}>{provider.description}</div>
+                                                    {provider.keyInstructions && (
+                                                        <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '4px' }}>
+                                                            {provider.keyInstructions}{' '}
+                                                            <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#004ac6', fontWeight: 500 }}>Get API Key →</a>
+                                                        </div>
+                                                    )}
+                                                    {!provider.keyInstructions && provider.docsUrl && (
+                                                        <div style={{ marginTop: '4px' }}>
+                                                            <a href={provider.docsUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#004ac6', fontWeight: 500 }}>Get API Key →</a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {formData.settings?.[provider.apiKeyField] && (
+                                                    <span style={{ fontSize: '11px', background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '2px 8px', whiteSpace: 'nowrap', alignSelf: 'center' }}>
+                                                        ✅ {t('Key saved')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="row g-2">
+                                                <div className="col-md-6">
+                                                    <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>API Key</label>
+                                                    <input
+                                                        type="password"
+                                                        className="form-control form-control-sm"
+                                                        placeholder={provider.hint}
+                                                        value={formData.settings?.[provider.apiKeyField] || ''}
+                                                        onChange={e => { if (!formData.settings) formData.settings = {}; formData.settings[provider.apiKeyField] = e.target.value; setFormData({ ...formData }); }}
+                                                    />
+                                                </div>
+                                                {(provider.extraFields || []).map(ef => (
+                                                    <div key={ef.key} className="col-md-6">
+                                                        <label className="form-label mb-1" style={{ fontSize: '12px', fontWeight: 500 }}>{ef.label}</label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm"
+                                                            placeholder={ef.hint}
+                                                            value={formData.settings?.[ef.key] || ''}
+                                                            onChange={e => { if (!formData.settings) formData.settings = {}; formData.settings[ef.key] = e.target.value; setFormData({ ...formData }); }}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ marginTop: '8px', fontSize: '11px', color: '#6c757d' }}>
+                                                {t('Models')}: {[...provider.models].sort((a,b)=>a.costPer1M-b.costPer1M).map(m => `${m.label} (${m.costLabel})`).join(' · ')}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>)}
+
                                 {activeTab === 'opening_balances' && (<div className="pw-tab-wrap">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-wallet2" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Opening Balances</h3></div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-wallet2" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('Opening Balances')}</h3></div>
                                     <div className="pw-card" style={{ marginBottom: '16px' }}>
                                         <div style={{ color: '#6c757d', fontSize: '12px', marginBottom: '16px' }}>
-                                            Enter the cash and bank balances already held when you joined this system. These are posted as the starting point in the Cash and Bank ledgers.
+                                            {t('Enter the cash and bank balances already held when you joined this system. These are posted as the starting point in the Cash and Bank ledgers.')}
                                         </div>
                                         <div className="row">
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Cash A/C Opening Balance</label>
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('Cash A/C Opening Balance')}</label>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -6515,7 +8502,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 )}
                                             </div>
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>As of Date &amp; Time (Cash)</label>
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('As of Date & Time (Cash)')}</label>
                                                 <input
                                                     type="datetime-local"
                                                     className="form-control form-control-sm"
@@ -6532,7 +8519,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 )}
                                             </div>
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Bank A/C Opening Balance</label>
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('Bank A/C Opening Balance')}</label>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -6552,7 +8539,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 )}
                                             </div>
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>As of Date &amp; Time (Bank)</label>
+                                                <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>{t('As of Date & Time (Bank)')}</label>
                                                 <input
                                                     type="datetime-local"
                                                     className="form-control form-control-sm"
@@ -6572,24 +8559,25 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div>
                                 </div>)}
 
+
                                 {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
-                                    <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>ZATCA Credentials</h6>
+                                    <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>{t('ZATCA Credentials')}</h6>
                                     {[
-                                        { label: 'Environment', value: formData.zatca?.env },
-                                        { label: 'Connected', value: formData.zatca?.connected ? 'Yes' : 'No' },
-                                        { label: 'OTP', value: formData.zatca?.otp },
-                                        { label: 'CSR', value: formData.zatca?.csr },
-                                        { label: 'Private Key', value: formData.zatca?.private_key },
-                                        { label: 'Binary Security Token', value: formData.zatca?.binary_security_token },
-                                        { label: 'Secret', value: formData.zatca?.secret },
-                                        { label: 'Production Binary Security Token', value: formData.zatca?.production_binary_security_token },
-                                        { label: 'Production Secret', value: formData.zatca?.production_secret },
-                                        { label: 'Compliance Request ID', value: formData.zatca?.compliance_request_id },
-                                        { label: 'Production Request ID', value: formData.zatca?.production_request_id },
-                                        { label: 'Last Connected At', value: formData.zatca?.last_connected_at },
-                                        { label: 'Last Disconnected At', value: formData.zatca?.last_disconnected_at },
-                                        { label: 'Connection Failed Count', value: formData.zatca?.connection_failed_count },
-                                        { label: 'Last Failed At', value: formData.zatca?.connection_last_failed_at },
+                                        { label: t('Environment'), value: formData.zatca?.env },
+                                        { label: t('Connected'), value: formData.zatca?.connected ? t('Yes') : t('No') },
+                                        { label: t('OTP'), value: formData.zatca?.otp },
+                                        { label: t('CSR'), value: formData.zatca?.csr },
+                                        { label: t('Private Key'), value: formData.zatca?.private_key },
+                                        { label: t('Binary Security Token'), value: formData.zatca?.binary_security_token },
+                                        { label: t('Secret'), value: formData.zatca?.secret },
+                                        { label: t('Production Binary Security Token'), value: formData.zatca?.production_binary_security_token },
+                                        { label: t('Production Secret'), value: formData.zatca?.production_secret },
+                                        { label: t('Compliance Request ID'), value: formData.zatca?.compliance_request_id },
+                                        { label: t('Production Request ID'), value: formData.zatca?.production_request_id },
+                                        { label: t('Last Connected At'), value: formData.zatca?.last_connected_at },
+                                        { label: t('Last Disconnected At'), value: formData.zatca?.last_disconnected_at },
+                                        { label: t('Connection Failed Count'), value: formData.zatca?.connection_failed_count },
+                                        { label: t('Last Failed At'), value: formData.zatca?.connection_last_failed_at },
                                     ].map(({ label, value }) => (
                                         <div className="row mb-2" key={label}>
                                             <div className="col-md-4">
@@ -6607,7 +8595,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {formData.zatca?.connection_errors?.length > 0 && (
                                         <div className="row mb-2">
                                             <div className="col-md-4">
-                                                <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>Connection Errors</label>
+                                                <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>{t('Connection Errors')}</label>
                                             </div>
                                             <div className="col-md-8">
                                                 {formData.zatca.connection_errors.map((err, i) => (
@@ -6625,6 +8613,13 @@ const StoreCreate = forwardRef((props, ref) => {
 
             </Modal>
 
+            <ZatcaConnect
+                ref={zatcaConnectRef}
+                refreshList={() => {
+                    if (props.refreshList) props.refreshList();
+                    showFlash(t('Successfully connected to ZATCA!'), 'success');
+                }}
+            />
 
         </>
     );

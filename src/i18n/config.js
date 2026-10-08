@@ -84,9 +84,9 @@ const resources = {
   },
 };
 
-// RTL languages list
-//export const RTL_LANGUAGES = ['ar', 'ur'];
-export const RTL_LANGUAGES = [];
+// RTL languages list — RTL is only applied when the store has use_rtl_for_arabic=true
+// (checked at runtime via localStorage). The list defines which languages can trigger RTL.
+export const RTL_LANGUAGES = ['ar'];
 
 // Language options for switcher
 export const LANGUAGE_OPTIONS = [
@@ -124,12 +124,19 @@ i18n
     }
   });
 
-// Function to set HTML direction
+// Function to set HTML direction.
+// RTL is applied only when both conditions are true:
+//   1. The selected language is in RTL_LANGUAGES (e.g. Arabic)
+//   2. The store setting use_rtl_for_arabic is enabled (stored in localStorage)
 const setDirection = (lng) => {
-  const dir = RTL_LANGUAGES.includes(lng) ? 'rtl' : 'ltr';
+  const rtlEnabled = localStorage.getItem('use_rtl_for_arabic') === 'true';
+  const dir = (rtlEnabled && RTL_LANGUAGES.includes(lng)) ? 'rtl' : 'ltr';
   document.documentElement.setAttribute('dir', dir);
   document.documentElement.setAttribute('lang', lng);
 };
+
+// Exported so Sidebar.js can re-apply direction after the store setting is written to localStorage.
+export const applyDocumentDirection = () => setDirection(i18n.language);
 
 // Set initial direction on page load
 i18n.on('initialized', () => {

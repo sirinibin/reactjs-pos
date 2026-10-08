@@ -245,7 +245,7 @@ const VendorPending = forwardRef((props, ref) => {
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
                             ref={dragRef}
-                            className="modal-dialog modal-fullscreen"
+                            className="modal-dialog modal-fullscreen modal-dialog-scrollable"
                             {...dlgProps}
                             style={{
                                 position: "fixed",
@@ -254,9 +254,10 @@ const VendorPending = forwardRef((props, ref) => {
                                 margin: "0",
                                 zIndex: 1082,
                                 width: "100%",
+                                height: "100%",
                             }}
                         >
-                            <div className="modal-content">{children}</div>
+                            <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>{children}</div>
                         </div>
                     </Draggable>
                 )}
@@ -286,7 +287,7 @@ const VendorPending = forwardRef((props, ref) => {
 
                     </div>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{ overflowY: 'auto', flex: '1 1 auto', minHeight: 0 }}>
                     <>
 
                         <Tabs

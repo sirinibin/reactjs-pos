@@ -12,6 +12,14 @@ jest.mock('react-router-dom', () => ({
 // react-i18next: t(key) returns key (matches global mock contract).
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key) => key }),
+    initReactI18next: {},
+}));
+
+// Prevent i18n config from initialising i18next (which needs initReactI18next).
+jest.mock('../i18n/config', () => ({
+    applyDocumentDirection: jest.fn(),
+    LANGUAGE_OPTIONS: [],
+    RTL_LANGUAGES: [],
 }));
 
 // Provide a small, controlled item list so tests are independent of real config.

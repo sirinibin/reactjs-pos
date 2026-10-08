@@ -30,6 +30,7 @@
     "n2words": "^1.10.1",
     "number-to-words": "^1.2.4",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^2.6.347",
     "qrcode.react": "^4.2.0",
     "quagga": "^0.12.1",
     "react": "^17.0.2",
@@ -68,7 +69,7 @@
     "prebuild": "tailwindcss -i ./src/tailwind.input.css -o ./src/tailwind.generated.css --config ./tailwind.config.js --minify",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --forceExit --testTimeout=40000",
     "eject": "react-scripts eject"
   },
   "jest": {

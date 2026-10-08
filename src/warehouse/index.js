@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import WarehouseCreate from "./create.js";
 import WarehouseView from "./view.js";
 
@@ -10,7 +11,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 
 
 function WarehouseIndex(props) {
-
+    const { t } = useTranslation('common');
 
     //list
     const [warehouseList, setWarehouseList] = useState([]);
@@ -229,7 +230,7 @@ function WarehouseIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Warehouses</h1>
+                        <h1 className="h3">{t('Warehouses')}</h1>
                     </div>
 
                     {localStorage.getItem('user_role') === "Admin" ? <div className="col text-end">
@@ -239,7 +240,7 @@ function WarehouseIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div> : ""}
                 </div>
@@ -271,7 +272,7 @@ function WarehouseIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Warehouses to display</p>
+                                            <p className="text-start">{t('No Warehouses to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -296,7 +297,7 @@ function WarehouseIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -307,7 +308,7 @@ function WarehouseIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -362,7 +363,7 @@ function WarehouseIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('Name')}
                                                         {sortField === "name" && sortWarehouse === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -381,7 +382,7 @@ function WarehouseIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        Code
+                                                        {t('Code')}
                                                         {sortField === "code" && sortWarehouse === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -392,7 +393,7 @@ function WarehouseIndex(props) {
                                                 </th>
 
 
-                                                <th>Actions</th>
+                                                <th>{t('Actions')}</th>
                                             </tr>
                                         </thead>
 

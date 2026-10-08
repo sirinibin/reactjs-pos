@@ -25,9 +25,11 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { useTranslation } from "react-i18next";
 
 
 function CustomerIndex(props) {
+    const { t } = useTranslation('common');
 
     let [enableSelection, setEnableSelection] = useState(false);
 
@@ -713,7 +715,7 @@ function CustomerIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Customer restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Customer restored successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -754,7 +756,7 @@ function CustomerIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Customer deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Customer deleted successfully!"), "success");
                 list();
             })
             .catch((error) => {
@@ -765,7 +767,7 @@ function CustomerIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to delete this customer?');
+        const result = await confirm(t('Are you sure, you want to delete this customer?'));
         console.log(result);
         if (result) {
             deleteCustomer(id);
@@ -774,7 +776,7 @@ function CustomerIndex(props) {
 
     const confirmRestore = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to restore this customer?');
+        const result = await confirm(t('Are you sure, you want to restore this customer?'));
         console.log(result);
         if (result) {
             restoreCustomer(id);
@@ -884,7 +886,7 @@ function CustomerIndex(props) {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t("Successfully restored to default settings!"));
     }
 
 
@@ -990,18 +992,18 @@ function CustomerIndex(props) {
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
             <Modal show={showHistoryModal} onHide={() => setShowHistoryModal(false)} size="xl" centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Customer History{historyCustomer ? ` — ${historyCustomer}` : ""}</Modal.Title>
+                    <Modal.Title>{t('Customer History')}{historyCustomer ? ` — ${historyCustomer}` : ""}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <ul className="nav nav-tabs mb-3">
                         <li className="nav-item">
                             <button className={"nav-link" + (historyTab === "churn" ? " active" : "")} onClick={() => setHistoryTab("churn")}>
-                                Churn Risk History
+                                {t('Churn Risk History')}
                             </button>
                         </li>
                         <li className="nav-item">
                             <button className={"nav-link" + (historyTab === "clv" ? " active" : "")} onClick={() => setHistoryTab("clv")}>
-                                CLV History
+                                {t('CLV History')}
                             </button>
                         </li>
                     </ul>
@@ -1011,12 +1013,12 @@ function CustomerIndex(props) {
                             <table className="table table-sm table-bordered">
                                 <thead className="table-light">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Risk Tier</th>
-                                        <th>Churn %</th>
-                                        <th>Total Spend</th>
-                                        <th>Days Since Last Buy</th>
-                                        <th>Reason</th>
+                                        <th>{t('Date')}</th>
+                                        <th>{t('Risk Tier')}</th>
+                                        <th>{t('Churn %')}</th>
+                                        <th>{t('Total Spend')}</th>
+                                        <th>{t('Days Since Last Buy')}</th>
+                                        <th>{t('Reason')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1039,7 +1041,7 @@ function CustomerIndex(props) {
                                             <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.risk_tier_reason || "—"}</td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={6} className="text-center text-muted">No churn history found</td></tr>
+                                        <tr><td colSpan={6} className="text-center text-muted">{t('No churn history found')}</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1050,13 +1052,13 @@ function CustomerIndex(props) {
                             <table className="table table-sm table-bordered">
                                 <thead className="table-light">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>CLV Segment</th>
-                                        <th>Predicted CLV 12m</th>
-                                        <th>Avg Order</th>
-                                        <th>Orders Count</th>
-                                        <th>Spend</th>
-                                        <th>Reason</th>
+                                        <th>{t('Date')}</th>
+                                        <th>{t('CLV Segment')}</th>
+                                        <th>{t('Predicted CLV 12m')}</th>
+                                        <th>{t('Avg Order')}</th>
+                                        <th>{t('Orders Count')}</th>
+                                        <th>{t('Spend')}</th>
+                                        <th>{t('Reason')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1079,7 +1081,7 @@ function CustomerIndex(props) {
                                             <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.lifetime_value_segment_reason_for_12months || "—"}</td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={7} className="text-center text-muted">No CLV history found</td></tr>
+                                        <tr><td colSpan={7} className="text-center text-muted">{t('No CLV history found')}</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1087,7 +1089,7 @@ function CustomerIndex(props) {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>Close</Button>
+                    <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>{t('Close')}</Button>
                 </Modal.Footer>
             </Modal>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
@@ -1106,7 +1108,7 @@ function CustomerIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Customer Stats Summary"
+                                title={t("Customer Stats Summary")}
                                 filters={{
                                     ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
                                     ...Object.fromEntries(
@@ -1182,7 +1184,7 @@ function CustomerIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Customers</h1>
+                        <h1 className="h3">{t('Customers')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -1192,7 +1194,7 @@ function CustomerIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -1209,7 +1211,7 @@ function CustomerIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Customers to display</p>
+                                            <p className="text-start">{t('No Customers to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1233,7 +1235,7 @@ function CustomerIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -1255,7 +1257,7 @@ function CustomerIndex(props) {
                                         <i
                                             className="bi bi-gear-fill"
                                             style={{ fontSize: "1.2rem" }}
-                                            title="Table Settings"
+                                            title={t('Table Settings')}
                                         />
                                     </button>
                                 </div>
@@ -1275,7 +1277,7 @@ function CustomerIndex(props) {
                                                     className=""
                                                     id="ignoreZeroCreditBalance"
 
-                                                /> &nbsp;Ignore Zero Credit Balance
+                                                /> &nbsp;{t('Ignore Zero Credit Balance')}
                                             </span>
                                             <span style={{ marginLeft: "10px" }}>
                                                 <input type="checkbox"
@@ -1289,7 +1291,7 @@ function CustomerIndex(props) {
                                                     className=""
                                                     id="ignoreZeroQtnCreditBalance"
 
-                                                /> &nbsp;Ignore Zero Qtn. Invoice Credit Balance
+                                                /> &nbsp;{t('Ignore Zero Qtn. Invoice Credit Balance')}
                                             </span>
                                         </p>
                                     </div>
@@ -1316,11 +1318,12 @@ function CustomerIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th style={{ width: 40 }}>#</th>
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "deleted" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
@@ -1331,7 +1334,7 @@ function CustomerIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortCustomer === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2146,6 +2149,7 @@ function CustomerIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
                                                         {(col.key === "deleted") && <th>
@@ -2188,7 +2192,7 @@ function CustomerIndex(props) {
                                                                     }
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2301,29 +2305,29 @@ function CustomerIndex(props) {
                                                         {col.key === "churn_risk_tier" && <th>
                                                             <select className="form-control"
                                                                 onChange={(e) => searchByFieldValue("churn_risk_tier", e.target.value)}>
-                                                                <option value="">All Tiers</option>
+                                                                <option value="">{t('All Tiers')}</option>
                                                                 <option value="Critical">Critical</option>
                                                                 <option value="High">High</option>
                                                                 <option value="Medium">Medium</option>
                                                                 <option value="Low">Low</option>
                                                             </select>
                                                         </th>}
-                                                        {col.key === "churn_percent" && <th><input className="form-control" type="number" placeholder="Churn %" /></th>}
-                                                        {col.key === "total_spend" && <th><input className="form-control" type="number" placeholder="Total Spend" onChange={(e) => searchByFieldValue("total_spend", e.target.value)} /></th>}
-                                                        {col.key === "churn_risk_tier_reason" && <th><input className="form-control" placeholder="Churn Reason" /></th>}
-                                                        {col.key === "days_since_last_buy" && <th><input className="form-control" type="number" placeholder="Days Since Buy" /></th>}
-                                                        {col.key === "predicted_clv_amount_12months" && <th><input className="form-control" type="number" placeholder="CLV 12m" /></th>}
+                                                        {col.key === "churn_percent" && <th><input className="form-control" type="number" placeholder={t('Churn %')} /></th>}
+                                                        {col.key === "total_spend" && <th><input className="form-control" type="number" placeholder={t('Total Spend')} onChange={(e) => searchByFieldValue("total_spend", e.target.value)} /></th>}
+                                                        {col.key === "churn_risk_tier_reason" && <th><input className="form-control" placeholder={t('Churn Reason')} /></th>}
+                                                        {col.key === "days_since_last_buy" && <th><input className="form-control" type="number" placeholder={t('Days Since Buy')} /></th>}
+                                                        {col.key === "predicted_clv_amount_12months" && <th><input className="form-control" type="number" placeholder={t('CLV 12m')} /></th>}
                                                         {col.key === "lifetime_value_segment_for_12months" && <th>
                                                             <select className="form-control"
                                                                 onChange={(e) => searchByFieldValue("lifetime_value_segment_for_12months", e.target.value)}>
-                                                                <option value="">All Segments</option>
+                                                                <option value="">{t('All Segments')}</option>
                                                                 <option value="High Value">High Value</option>
                                                                 <option value="Mid Value">Mid Value</option>
                                                                 <option value="Low Value">Low Value</option>
                                                             </select>
                                                         </th>}
-                                                        {col.key === "tenure_days" && <th><input className="form-control" type="number" placeholder="Tenure Days" /></th>}
-                                                        {col.key === "lifetime_value_segment_reason_for_12months" && <th><input className="form-control" placeholder="CLV Reason" /></th>}
+                                                        {col.key === "tenure_days" && <th><input className="form-control" type="number" placeholder={t('Tenure Days')} /></th>}
+                                                        {col.key === "lifetime_value_segment_reason_for_12months" && <th><input className="form-control" placeholder={t('CLV Reason')} /></th>}
                                                         {col.key === "first_purchase_at" && <th></th>}
                                                         {col.key === "last_purchase_at" && <th></th>}
                                                         {["retention_1month", "retention_3month", "retention_6month", "retention_12month", "retention_24month"].includes(col.key) && <th>
@@ -2346,7 +2350,7 @@ function CustomerIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2385,13 +2389,13 @@ function CustomerIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From:')}{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
@@ -2410,7 +2414,7 @@ function CustomerIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To:')}{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
@@ -2914,13 +2918,14 @@ function CustomerIndex(props) {
 
                                         <tbody className="text-center">
                                             {customerList &&
-                                                customerList.map((customer) => (
+                                                customerList.map((customer, idx) => (
                                                     <tr key={customer.id}>
+                                                        <td className="text-center text-muted" style={{ width: 40, fontSize: 12 }}>{offset + idx + 1}</td>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<React.Fragment key={col.key}>
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(customer); }}>
-                                                                        Select
+                                                                        {t('Select')}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "deleted") && <td>{customer.deleted ? "YES" : "NO"}</td>}
@@ -2948,41 +2953,41 @@ function CustomerIndex(props) {
                                                                     </Button>
 
                                                                     <Dropdown as="span" align="end">
-                                                                        <Dropdown.Toggle variant="outline-secondary" size="sm" id={`cust-hist-${customer.id}`} title="History & Links">
+                                                                        <Dropdown.Toggle variant="outline-secondary" size="sm" id={`cust-hist-${customer.id}`} title={t('History & Links')}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                         </Dropdown.Toggle>
                                                                         <Dropdown.Menu style={{ minWidth: 230 }} popperConfig={{ strategy: 'fixed' }} renderOnMount>
                                                                             <Dropdown.Item onClick={() => DetailsViewRef.current?.open(customer.id, 'repairs')}>
-                                                                                <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                                                                <i className="bi bi-tools me-2 text-secondary"></i>{t('Repair Jobs')}
                                                                             </Dropdown.Item>
                                                                             {automobileModuleEnabled && (
                                                                                 <Dropdown.Item onClick={() => DetailsViewRef.current?.open(customer.id, 'vehicles')}>
-                                                                                    <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                                                                    <i className="bi bi-car-front me-2 text-secondary"></i>{t('Vehicles')}
                                                                                 </Dropdown.Item>
                                                                             )}
                                                                             <Dropdown.Divider />
                                                                             <Dropdown.Item onClick={() => openCustomerSales(customer)}>
-                                                                                <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                                                                <i className="bi bi-receipt me-2 text-success"></i>{t('Sales History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Item onClick={() => openCustomerSalesReturns(customer)}>
-                                                                                <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                                                                <i className="bi bi-receipt-cutoff me-2 text-warning"></i>{t('Sales Return History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Divider />
                                                                             <Dropdown.Item onClick={() => openCustomerQuotations(customer)}>
-                                                                                <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                                                                <i className="bi bi-clipboard2-check me-2 text-info"></i>{t('Quotation History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Item onClick={() => openCustomerQtnSales(customer)}>
-                                                                                <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                                                                <i className="bi bi-file-earmark-check me-2 text-info"></i>{t('Qtn. Sales History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Item onClick={() => openCustomerQtnSalesReturns(customer)}>
-                                                                                <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                                                                <i className="bi bi-clipboard2-x me-2 text-warning"></i>{t('Qtn. Sales Return History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Divider />
                                                                             <Dropdown.Item onClick={() => openHistoryModal(customer.id, customer.name, 'churn')}>
-                                                                                <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                                                                <i className="bi bi-exclamation-triangle me-2 text-danger"></i>{t('Churn Risk History')}
                                                                             </Dropdown.Item>
                                                                             <Dropdown.Item onClick={() => openHistoryModal(customer.id, customer.name, 'clv')}>
-                                                                                <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                                                                <i className="bi bi-graph-up-arrow me-2 text-primary"></i>{t('CLV History')}
                                                                             </Dropdown.Item>
                                                                         </Dropdown.Menu>
                                                                     </Dropdown>

@@ -113,6 +113,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const draftFlashShownRef = useRef(false);
     const [isResumingDraft, setIsResumingDraft] = useState(false);
     const [draftSavedFlash, setDraftSavedFlash] = useState(false);
+    const onCreatedFromExtractionRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         open(id, selectedVendorsValue) {
@@ -160,11 +161,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
             if (selectedVendorsValue?.length > 0) {
-                setSelectedVendors([...selectedVendorsValue]);
                 formData.vendor_id = selectedVendorsValue[0].id;
                 if (selectedVendorsValue[0].use_remarks_in_purchases && selectedVendorsValue[0].remarks) {
                     formData.remarks = selectedVendorsValue[0].remarks;
                 }
+                autoSettingVendorRef.current = true;
+                console.error('[open] setting vendor:', JSON.stringify({id: selectedVendorsValue[0].id, search_label: selectedVendorsValue[0].search_label}), 'autoSettingVendorRef:', autoSettingVendorRef.current);
+                setSelectedVendors([...selectedVendorsValue]);
+                setTimeout(() => { autoSettingVendorRef.current = false; }, 1000);
+            } else {
+                console.error('[open] no selectedVendorsValue, vendors will be empty');
             }
 
             ResetForm();
@@ -206,6 +212,41 @@ const PurchaseCreate = forwardRef((props, ref) => {
             //reCalculate();
             getStore(localStorage.getItem("store_id"));
             setShow(true);
+        },
+
+        openFromExtraction(data, msgId, msgCode, vendorObj, resolvedProducts, onCreated) {
+            onCreatedFromExtractionRef.current = onCreated || null;
+            // Pass pre-resolved vendor to open() so it is set synchronously before the form renders
+            const vendors = vendorObj?.id ? [{ ...vendorObj, search_label: vendorObj.search_label || vendorObj.name || '' }] : undefined;
+            console.error('[openFromExtraction] vendorObj:', JSON.stringify(vendorObj ? {id: vendorObj.id, name: vendorObj.name} : null), 'vendors:', JSON.stringify(vendors ? vendors.map(v => ({id: v.id, search_label: v.search_label})) : null));
+            this.open(null, vendors);
+            // 100ms > open()'s internal 50ms clear timeout, so our state survives
+            setTimeout(() => {
+                // Set basic form fields
+                if (data.invoice_number) formData.vendor_invoice_no = data.invoice_number;
+                if (data.vendor_national_address) formData.vendor_national_address = data.vendor_national_address;
+                if (data.total_amount > 0) formData.net_total = data.total_amount;
+                setFormData({ ...formData });
+
+                // Add pre-resolved products synchronously
+                if (resolvedProducts && resolvedProducts.length > 0) {
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    for (const rp of resolvedProducts) {
+                        addProduct(rp.dbProduct);
+                        const idx = selectedProducts.length - 1;
+                        if (idx >= 0) {
+                            if (rp.quantity !== 1) selectedProducts[idx].quantity = rp.quantity;
+                            if (rp.unit_price > 0) {
+                                selectedProducts[idx].purchase_unit_price = rp.unit_price;
+                                selectedProducts[idx].purchase_unit_price_with_vat = rp.unit_price * (1 + (formData.vat_percent || 15) / 100);
+                            }
+                        }
+                    }
+                    setSelectedProducts([...selectedProducts]);
+                    setTimeout(() => reCalculate(), 100);
+                }
+            }, 100);
         },
 
         openDraft(id) {
@@ -298,6 +339,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
     let [selectedVendors, setSelectedVendors] = useState([]);
+    const autoSettingVendorRef = useRef(false);
     //const [isVendorsLoading, setIsVendorsLoading] = useState(false);
 
     //Product Auto Suggestion
@@ -1129,6 +1171,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     if (props.showToastMessage) props.showToastMessage("Purchase updated successfully!", "success");
                 } else {
                     if (props.showToastMessage) props.showToastMessage("Purchase created successfully!", "success");
+                    if (onCreatedFromExtractionRef.current) {
+                        onCreatedFromExtractionRef.current(data.result.id, data.result.code);
+                        onCreatedFromExtractionRef.current = null;
+                    }
                 }
 
                 if (isResumingDraft) {
@@ -2227,6 +2273,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             })
             .catch(() => setSelectedVendors([fallbackData]));
     }
+
 
     const UserCreateFormRef = useRef();
 
@@ -3474,6 +3521,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const VendorPendingRef = useRef();
     const paymentValidationTimer = useRef(null);
+    const purchaseDragIndexRef = useRef(null);
+    const purchaseDragOverIndexRef = useRef(null);
+
+    function handlePurchaseDragStart(index) { purchaseDragIndexRef.current = index; }
+    function handlePurchaseDragOver(e, index) { e.preventDefault(); purchaseDragOverIndexRef.current = index; }
+    function handlePurchaseDrop() {
+        const from = purchaseDragIndexRef.current;
+        const to = purchaseDragOverIndexRef.current;
+        if (from === null || to === null || from === to) return;
+        const reordered = [...selectedProducts];
+        const [moved] = reordered.splice(from, 1);
+        reordered.splice(to, 0, moved);
+        setSelectedProducts(reordered);
+        purchaseDragIndexRef.current = null;
+        purchaseDragOverIndexRef.current = null;
+        setTimeout(() => reCalculate(), 50);
+    }
+
     function openVendorPending(vendor) {
         setShowVendorPending(true);
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -3697,7 +3762,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onInputChange={(searchTerm, e) => {
                                                             formData.vendor_name = searchTerm;
-                                                            if (!searchTerm) { formData.vendor_id = ""; setSelectedVendors([]); }
+                                                            if (!searchTerm) { console.error('[onInputChange] EMPTY searchTerm, autoSettingVendorRef:', autoSettingVendorRef.current, '→ will clear:', !autoSettingVendorRef.current); }
+                                                            if (!searchTerm && !autoSettingVendorRef.current) { formData.vendor_id = ""; setSelectedVendors([]); }
                                                             setFormData({ ...formData });
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
@@ -4290,8 +4356,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     .filter(i => i !== -1);
                                 const duplicateCount = duplicateIndexes.length;
                                 return (
-                                    <tr className="text-center fixed-row " key={index}
-                                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
+                                    <tr className="text-center fixed-row" key={index}
+                                        style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s', cursor: 'grab' }}
+                                        draggable
+                                        onDragStart={() => handlePurchaseDragStart(index)}
+                                        onDragOver={(e) => handlePurchaseDragOver(e, index)}
+                                        onDrop={handlePurchaseDrop}
                                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
                                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
                                         {purchaseSPColumns.filter(c => c.visible).map(col => {
@@ -4305,7 +4375,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     <i className="bi bi-trash"> </i>
                                                 </div>
                                             </td>);
-                                            if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>);
+                                            if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                    <i className="bi bi-grip-vertical" style={{ color: '#aaa', fontSize: '14px', cursor: 'grab' }} />
+                                                    {index + 1}
+                                                </span>
+                                            </td>);
                                             // eslint-disable-next-line no-lone-blocks
                                             {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                                     <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
@@ -6155,7 +6230,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                             }}
                                                                             onInputChange={(searchTerm, e) => {
                                                                                 formData.vendor_name = searchTerm;
-                                                                                if (!searchTerm) { formData.vendor_id = ""; setSelectedVendors([]); }
+                                                                                if (!searchTerm && !autoSettingVendorRef.current) { formData.vendor_id = ""; setSelectedVendors([]); }
                                                                                 setFormData({ ...formData });
                                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                                 timerRef.current = setTimeout(() => { suggestVendors(searchTerm); }, 350);
@@ -8161,7 +8236,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleTogglePurchaseSPColumn(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>
@@ -8201,7 +8276,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                         <input type="checkbox" className="form-check-input mt-0" checked={col.visible}
                                                             onChange={() => handleTogglePurchaseSPType3Column(col.key)} />
-                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                     </li>
                                                 )}
                                             </Draggable>

@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const columnStyle = {
   width: '20%',
@@ -54,6 +55,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
   const countryOptions = useMemo(() => countryList().getData(), [])
+  const { t } = useTranslation('common');
   //const [selectedCountry, setSelectedCountry] = useState('')
   let [selectedCountries, setSelectedCountries] = useState([]);
 
@@ -134,6 +136,14 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedBrands, setSelectedBrands] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
   let [brandOptions, setBrandOptions] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [brandSearch, setBrandSearch] = useState('');
+  // eslint-disable-next-line no-unused-vars
+  const [brandOpen, setBrandOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [categorySearch, setCategorySearch] = useState('');
+  // eslint-disable-next-line no-unused-vars
+  const [categoryOpen, setCategoryOpen] = useState(false);
   let [arabicNameOptions, setArabicNameOptions] = useState([]);
   let [selectedArabicNames, setSelectedArabicNames] = useState([]);
 
@@ -390,9 +400,6 @@ const ProductCreate = forwardRef((props, ref) => {
   }
 
   async function suggestCategories(searchTerm) {
-    console.log("Inside handle suggest Categories");
-
-    console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
       return;
     }
@@ -429,9 +436,6 @@ const ProductCreate = forwardRef((props, ref) => {
   }
 
   async function suggestBrands(searchTerm) {
-    console.log("Inside handle suggest Brands");
-
-    console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
       return;
     }
@@ -514,7 +518,7 @@ const ProductCreate = forwardRef((props, ref) => {
       }
 
       if (!formData.set.products[i].quantity) {
-        errors["set_product_quantity_" + i] = "Quantity is required";
+        errors["set_product_quantity_" + i] = t('Quantity is required');
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -535,13 +539,13 @@ const ProductCreate = forwardRef((props, ref) => {
       }*/
 
       if (/^\d*\.?\d{0,8}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
-        errors["set_product_unit_price_with_vat_" + i] = "Only 8 decimal points are allowed";
+        errors["set_product_unit_price_with_vat_" + i] = t('Only 8 decimal points are allowed');
         haveErrors = true;
         setErrors({ ...errors });
       }
 
       if (/^\d*\.?\d{0,8}$/.test(formData.set?.products[i].retail_unit_price) === false) {
-        errors["set_product_unit_price_" + i] = "Only 8 decimal points are allowed";
+        errors["set_product_unit_price_" + i] = t('Only 8 decimal points are allowed');
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -678,7 +682,7 @@ const ProductCreate = forwardRef((props, ref) => {
         formData.id = data.result?.id;
         setFormData({ ...formData });
 
-        const msg = wasNew ? "Product created successfully!" : "Product updated successfully!";
+        const msg = wasNew ? t('Product created successfully!') : t('Product updated successfully!');
         showFlash(msg, "success");
 
         try {
@@ -712,7 +716,7 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        showFlash("Failed to save product. Please fix the errors and try again.", "danger");
+        showFlash(t('Failed to save product. Please fix the errors and try again.'), "danger");
       });
   }
 
@@ -739,6 +743,7 @@ const ProductCreate = forwardRef((props, ref) => {
     ProductBrandCreateFormRef.current.open();
   }
 
+  // eslint-disable-next-line no-unused-vars
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
 
   function makePartNumberPrefix() {
@@ -968,7 +973,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const inputRefs = useRef({});
   const countrySearchRef = useRef();
+  // eslint-disable-next-line no-unused-vars
   const brandSearchRef = useRef();
+  // eslint-disable-next-line no-unused-vars
   const categorySearchRef = useRef();
 
   function AddProductToSet(product) {
@@ -1697,6 +1704,16 @@ const ProductCreate = forwardRef((props, ref) => {
     }
   }, [loadWarehouses, show]);
 
+  useEffect(() => {
+    if (!show) return;
+    const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+    const storeId = localStorage.getItem("store_id");
+    fetch(`/v1/product-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { headers })
+      .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+    fetch(`/v1/product-brand?select=id,code,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { headers })
+      .then(r => r.json()).then(d => { if (d.result) setBrandOptions(d.result); }).catch(() => {});
+  }, [show]);
+
   // ── Design tokens (Enterprise Core) ──────────────────────────────────
   const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
   const TH = { padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
@@ -1751,11 +1768,23 @@ const ProductCreate = forwardRef((props, ref) => {
       <ProductCategoryCreate
         ref={ProductCategoryCreateFormRef}
         showToastMessage={props.showToastMessage}
+        refreshList={() => {
+          const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+          const storeId = localStorage.getItem("store_id");
+          fetch(`/v1/product-category?select=id,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { headers })
+            .then(r => r.json()).then(d => { if (d.result) setCategoryOptions(d.result); }).catch(() => {});
+        }}
       />
 
       <ProductBrandCreate
         ref={ProductBrandCreateFormRef}
         showToastMessage={props.showToastMessage}
+        refreshList={() => {
+          const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+          const storeId = localStorage.getItem("store_id");
+          fetch(`/v1/product-brand?select=id,code,name&limit=500${storeId ? `&search[store_id]=${storeId}` : ''}`, { headers })
+            .then(r => r.json()).then(d => { if (d.result) setBrandOptions(d.result); }).catch(() => {});
+        }}
       />
       <ArabicNameCreate
         ref={ArabicNameCreateRef}
@@ -1792,30 +1821,30 @@ const ProductCreate = forwardRef((props, ref) => {
         </div>
       )}
 
-      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="pw-modal-wrap">
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className={`pw-modal-wrap${props.modalClass ? ' ' + props.modalClass : ''}`}>
         <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button type="button" onClick={handleClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
           </button>
           <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-            {formData.id ? <>Update Product{formData.part_number ? <span style={{ fontWeight: 700, color: '#5a6478', marginLeft: '8px', fontSize: '17px' }}>#{formData.part_number}</span> : ''} — {formData.name}</> : 'Create New Product'}
+            {formData.id ? <>{t('Update Product')}{formData.part_number ? <span style={{ fontWeight: 700, color: '#5a6478', marginLeft: '8px', fontSize: '17px' }}>#{formData.part_number}</span> : ''} — {formData.name}</> : t('Create New Product')}
           </Modal.Title>
           <div className="d-flex align-items-center gap-2">
             {formData.id && (
               <button type="button"
                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                <i className="bi bi-eye me-1"></i>View Detail
+                <i className="bi bi-eye me-1"></i>{t('View Detail')}
               </button>
             )}
             <button type="button"
               style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               onClick={handleCreate} disabled={isProcessing}>
               {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-              {formData.id ? 'Update' : 'Create'}
+              {formData.id ? t('Update') : t('Create')}
             </button>
             <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
           </div>
@@ -1881,10 +1910,10 @@ const ProductCreate = forwardRef((props, ref) => {
               <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-person-badge">Product Identity</SectionTitle>
+                    <SectionTitle icon="bi-person-badge">{t('Product Identity')}</SectionTitle>
                     <div className="row g-3">
                       <div className="col-md-6">
-                        <Label required>Name</Label>
+                        <Label required>{t('Name')}</Label>
                         <input id="product_name" name="product_name" type="text"
                           value={formData.name || ''}
                           onChange={(e) => {
@@ -1893,12 +1922,12 @@ const ProductCreate = forwardRef((props, ref) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
                             timerRef.current = setTimeout(() => { translateText(e.target.value); }, 100);
                           }}
-                          style={INPUT} placeholder="Product name"
+                          style={INPUT} placeholder={t('Product name')}
                         />
                         {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
                       </div>
                       <div className="col-md-6">
-                        <Label>Name in Arabic</Label>
+                        <Label>{t('Name in Arabic')}</Label>
                         {store?.settings?.enable_arabic_names_list ? (
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1946,11 +1975,11 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                               />
                             </div>
-                            <Button className="btn btn-primary btn-sm" title="Add new Arabic name"
+                            <Button className="btn btn-primary btn-sm" title={t('Add new Arabic name')}
                               onClick={() => ArabicNameCreateRef.current?.open()}>
                               <i className="bi bi-plus-lg"></i>
                             </Button>
-                          <Button className="btn btn-primary btn-sm" title="Browse Arabic names"
+                          <Button className="btn btn-primary btn-sm" title={t('Browse Arabic names')}
                               onClick={() => ArabicNameListRef.current?.open()}>
                               <i className="bi bi-list"></i>
                             </Button>
@@ -1968,31 +1997,46 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-tags">Classification</SectionTitle>
+                    <SectionTitle icon="bi-tags">{t('Classification')}</SectionTitle>
                     <div className="row g-3">
                       <div className="col-md-4">
-                        <Label>Brand</Label>
-                        <div className="d-flex gap-1">
+                        <Label>{t('Brand')}</Label>
+                        <div className="d-flex gap-1 align-items-center">
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <Typeahead id="brand_id" labelKey="name" positionFixed={true} isLoading={isBrandsLoading}
+                            <Typeahead
+                              id="brand"
+                              labelKey="name"
+                              filterBy={() => true}
+                              positionFixed={true}
+                              options={brandOptions}
+                              selected={selectedBrands}
+                              placeholder={t('-- Select Brand --')}
+                              onInputChange={(searchTerm) => {
+                                if (searchTerm) suggestBrands(searchTerm);
+                                else setBrandOptions([]);
+                              }}
                               onChange={(selectedItems) => {
-                                errors.brand_id = ''; setErrors(errors);
-                                if (selectedItems.length === 0) { formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = ''; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]); return; }
-                                formData.brand_id = selectedItems[0].id; formData.brand_code = selectedItems[0].code; formData.brand_name = selectedItems[0].name;
+                                if (selectedItems.length === 0) {
+                                  formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = '';
+                                  makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]);
+                                  return;
+                                }
+                                const b = selectedItems[0];
+                                formData.brand_id = b.id; formData.brand_code = b.code || ''; formData.brand_name = b.name;
                                 makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands(selectedItems);
                               }}
-                              options={brandOptions} placeholder="Brand name" selected={selectedBrands} highlightOnlyResult={true} ref={brandSearchRef}
-                              onKeyDown={(e) => { if (e.key === 'Escape') { setBrandOptions([]); brandSearchRef.current?.clear(); } }}
-                              onInputChange={(searchTerm) => { suggestBrands(searchTerm); }}
+                              renderMenuItemChildren={(option) => (
+                                <span style={{ fontSize: '13px' }}>{option.name}</span>
+                              )}
                             />
                           </div>
-                          <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title="New Brand">
+                          <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title={t('New Brand')}>
                             <i className="bi bi-plus-lg"></i>
                           </button>
                         </div>
                       </div>
                       <div className="col-md-4">
-                        <Label>Country of Origin</Label>
+                        <Label>{t('Country of Origin')}</Label>
                         <Typeahead id="country_code" labelKey="label" positionFixed={true}
                           onChange={(selectedItems) => {
                             errors.country_code = ''; setErrors(errors);
@@ -2000,72 +2044,87 @@ const ProductCreate = forwardRef((props, ref) => {
                             formData.country_code = selectedItems[0].value; formData.country_name = selectedItems[0].label;
                             makePartNumberPrefix(); setFormData({ ...formData }); setSelectedCountries(selectedItems);
                           }}
-                          options={countryOptions} placeholder="Country name" selected={selectedCountries} highlightOnlyResult={true} ref={countrySearchRef}
+                          options={countryOptions} placeholder={t('Country name')} selected={selectedCountries} highlightOnlyResult={true} ref={countrySearchRef}
                           onKeyDown={(e) => { if (e.key === 'Escape') { countrySearchRef.current?.clear(); } }}
                           onInputChange={() => {}}
                         />
                       </div>
                       <div className="col-md-2">
-                        <Label>Part No. Prefix</Label>
+                        <Label>{t('Part No. Prefix')}</Label>
                         <input id="product_prefix_part_no" name="product_prefix_part_no" type="text"
                           value={formData.prefix_part_number || ''}
                           onChange={(e) => { errors['part_number'] = ''; setErrors({ ...errors }); formData.prefix_part_number = e.target.value; setFormData({ ...formData }); }}
-                          style={INPUT} placeholder="Prefix"
+                          style={INPUT} placeholder={t('Prefix')}
                         />
                         {errors.prefix_part_number && <ErrMsg>{errors.prefix_part_number}</ErrMsg>}
                       </div>
                       <div className="col-md-2">
-                        <Label>Part No.</Label>
+                        <Label>{t('Part No.')}</Label>
                         <input id="product_part_no" name="product_part_no" type="text"
                           value={formData.part_number || ''}
                           onChange={(e) => { errors['part_number'] = ''; setErrors({ ...errors }); formData.part_number = e.target.value; setFormData({ ...formData }); }}
-                          style={INPUT} placeholder="Part Number"
+                          style={INPUT} placeholder={t('Part Number')}
                         />
                         {errors.part_number && <ErrMsg>{errors.part_number}</ErrMsg>}
                       </div>
                       <div className="col-md-4">
-                        <Label>Category</Label>
-                        <div className="d-flex gap-1">
+                        <Label>{t('Category')}</Label>
+                        <div className="d-flex gap-1 align-items-center">
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <Typeahead ref={categorySearchRef} id="category_id" labelKey="name" positionFixed={true}
-                              isInvalid={errors.category_id ? true : false}
-                              onChange={(selectedItems) => {
-                                errors.category_id = ''; setErrors(errors);
-                                if (selectedItems.length === 0) { errors.category_id = 'Invalid Category selected'; setErrors(errors); setSelectedCategories([]); return; }
-                                setFormData({ ...formData }); setSelectedCategories(selectedItems);
+                            <Typeahead
+                              id="category"
+                              labelKey="name"
+                              filterBy={() => true}
+                              positionFixed={true}
+                              options={categoryOptions}
+                              selected={selectedCategories}
+                              placeholder={t('-- Select Category --')}
+                              inputProps={{ style: { borderColor: errors.category_id ? '#dc3545' : undefined } }}
+                              onInputChange={(searchTerm) => {
+                                errors.category_id = ''; setErrors({ ...errors });
+                                if (searchTerm) suggestCategories(searchTerm);
+                                else setCategoryOptions([]);
                               }}
-                              options={categoryOptions} placeholder="Select Category" selected={selectedCategories} highlightOnlyResult={true}
-                              onInputChange={(searchTerm) => { suggestCategories(searchTerm); }}
-                              onKeyDown={(e) => { if (e.key === 'Escape') { setCategoryOptions([]); categorySearchRef.current?.clear(); } }}
+                              onChange={(selectedItems) => {
+                                errors.category_id = ''; setErrors({ ...errors });
+                                if (selectedItems.length === 0) {
+                                  setSelectedCategories([]); setFormData({ ...formData });
+                                  return;
+                                }
+                                setSelectedCategories(selectedItems); setFormData({ ...formData });
+                              }}
+                              renderMenuItemChildren={(option) => (
+                                <span style={{ fontSize: '13px' }}>{option.name}</span>
+                              )}
                             />
                           </div>
-                          <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title="New Category">
+                          <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title={t('New Category')}>
                             <i className="bi bi-plus-lg"></i>
                           </button>
                         </div>
                         {errors.category_id && <ErrMsg>{errors.category_id}</ErrMsg>}
                       </div>
                       <div className="col-md-2">
-                        <Label required>Unit</Label>
+                        <Label required>{t('Unit')}</Label>
                         <select className="form-select form-select-sm" style={{ height: '30px', padding: '2px 8px' }} value={formData.unit}
                           onChange={(e) => { formData.unit = e.target.value; setFormData({ ...formData }); }}>
-                          <option value="">Piece (PCE)</option>
-                          <option value="drum">Drum (DRM)</option>
-                          <option value="set">Set (SET)</option>
-                          <option value="Kg">Kilogram (KGM)</option>
-                          <option value="Meter(s)">Metre (MTR)</option>
-                          <option value="CMT">Centimetre (CMT)</option>
-                          <option value="MMT">Millimetre (MMT)</option>
-                          <option value="Gm">Gram (GRM)</option>
-                          <option value="L">Litre (LTR)</option>
-                          <option value="Mg">Milligram (MG)</option>
+                          <option value="">{t('Piece (PCE)')}</option>
+                          <option value="drum">{t('Drum (DRM)')}</option>
+                          <option value="set">{t('Set (SET)')}</option>
+                          <option value="Kg">{t('Kilogram (KGM)')}</option>
+                          <option value="Meter(s)">{t('Metre (MTR)')}</option>
+                          <option value="CMT">{t('Centimetre (CMT)')}</option>
+                          <option value="MMT">{t('Millimetre (MMT)')}</option>
+                          <option value="Gm">{t('Gram (GRM)')}</option>
+                          <option value="L">{t('Litre (LTR)')}</option>
+                          <option value="Mg">{t('Milligram (MG)')}</option>
                         </select>
                         {(() => {
                           const map = { '': {code:'PCE', label:'Piece'}, drum: {code:'DRM', label:'Drum'}, set: {code:'SET', label:'Set'}, Kg: {code:'KGM', label:'Kilogram'}, 'Meter(s)': {code:'MTR', label:'Metre'}, CMT: {code:'CMT', label:'Centimetre'}, MMT: {code:'MMT', label:'Millimetre'}, Gm: {code:'GRM', label:'Gram'}, L: {code:'LTR', label:'Litre'}, Mg: {code:'MG', label:'Milligram'} };
                           const { code, label } = map[formData.unit ?? ''] || { code: 'PCE', label: 'Piece' };
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
-                              <span style={{ fontSize: '10px', color: '#737686' }}>ZATCA code:</span>
+                              <span style={{ fontSize: '10px', color: '#737686' }}>{t('ZATCA code:')}</span>
                               <span style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', color: '#004ac6', background: '#eef2ff', padding: '1px 5px', borderRadius: '3px' }}>({code})</span>
                               <span style={{ fontSize: '11px', color: '#737686' }}>{label}</span>
                             </div>
@@ -2076,15 +2135,15 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-currency-dollar">Unit Prices</SectionTitle>
+                    <SectionTitle icon="bi-currency-dollar">{t('Unit Prices')}</SectionTitle>
                     <div className="row g-4 pw-price-cards">
 
                       {/* Purchase Price Card */}
                       <div className="col-md-4">
                         <div style={PRICE_CARD}>
-                          <div style={PRICE_CARD_LABEL}>Purchase Unit Price</div>
+                          <div style={PRICE_CARD_LABEL}>{t('Purchase Unit Price')}</div>
                           <div style={{ marginBottom: '16px' }}>
-                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Excl. VAT')}</div>
                             <input id="product_purchase_unit_price_0" name="product_purchase_unit_price_0" type="number"
                               value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price}
                               disabled={formData.set?.purchase_total}
@@ -2096,15 +2155,12 @@ const ProductCreate = forwardRef((props, ref) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['purchase_unit_price_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_0'] = 'Purchase Unit Price should not be < 0'; setErrors({ ...errors }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_0'] = t('Purchase Unit Price should not be < 0'); setErrors({ ...errors }); return; }
                                 const _sid = localStorage.getItem('store_id');
                                 const _pp = parseFloat(e.target.value);
                                 const _mnow = new Date().toISOString();
                                 productStores[_sid].purchase_unit_price = _pp;
-                                const _wm = parseFloat(productStores[_sid]?.wholesale_margin_percent) || 0;
-                                const _rm = parseFloat(productStores[_sid]?.retail_margin_percent) || 0;
-                                if (_wm > 0) { const _wp = parseFloat(trimTo8Decimals(_pp * (1 + _wm / 100))); productStores[_sid].wholesale_unit_price = _wp; productStores[_sid].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp * (1 + (store.vat_percent / 100)))); productStores[_sid].wholesale_manual_price_updated_at = _mnow; }
-                                if (_rm > 0) { const _rp = parseFloat(trimTo8Decimals(_pp * (1 + _rm / 100))); productStores[_sid].retail_unit_price = _rp; productStores[_sid].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp * (1 + (store.vat_percent / 100)))); productStores[_sid].retail_manual_price_updated_at = _mnow; }
+                                { const _wm = parseFloat(productStores[_sid]?.wholesale_margin_percent) || 0; const _rm = parseFloat(productStores[_sid]?.retail_margin_percent) || 0; const _cwp = parseFloat(productStores[_sid]?.wholesale_unit_price) || 0; const _crp = parseFloat(productStores[_sid]?.retail_unit_price) || 0; if (_wm > 0) { const _wp = parseFloat(trimTo8Decimals(_pp * (1 + _wm / 100))); productStores[_sid].wholesale_unit_price = _wp; productStores[_sid].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp * (1 + (store.vat_percent / 100)))); productStores[_sid].wholesale_manual_price_updated_at = _mnow; } else if (_cwp > 0) { productStores[_sid].wholesale_margin_percent = parseFloat(trimTo8Decimals(((_cwp / _pp) - 1) * 100)); } if (_rm > 0) { const _rp = parseFloat(trimTo8Decimals(_pp * (1 + _rm / 100))); productStores[_sid].retail_unit_price = _rp; productStores[_sid].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp * (1 + (store.vat_percent / 100)))); productStores[_sid].retail_manual_price_updated_at = _mnow; } else if (_crp > 0) { productStores[_sid].retail_margin_percent = parseFloat(trimTo8Decimals(((_crp / _pp) - 1) * 100)); } }
                                 setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[_sid].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[_sid].purchase_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
@@ -2112,29 +2168,26 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors['purchase_unit_price_0'] && <ErrMsg>{errors['purchase_unit_price_0']}</ErrMsg>}
                           </div>
                           <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
-                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Incl. VAT')}</div>
                             <input id="product_purchase_unit_price_with_vat_0" name="product_purchase_unit_price_with_vat_0" type="number"
                               disabled={formData.set?.purchase_total_with_vat}
                               value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat : ''}
                               ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_purchase_unit_price_with_vat_0'] = el; }}
                               onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_with_vat_0']?.select(); }, 100); }}
                               onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0']?.select(); }, 100); } if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_0'].focus(); }, 100); } }}
-                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder={t('Calculated automatically')}
                               onChange={(e) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['purchase_unit_price_with_vat_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_with_vat_0'] = 'Purchase Unit Price with VAT should not be < 0'; setErrors({ ...errors }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_with_vat_0'] = t('Purchase Unit Price with VAT should not be < 0'); setErrors({ ...errors }); return; }
                                 const _sid2 = localStorage.getItem('store_id');
                                 productStores[_sid2].purchase_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => {
                                   const _pp2 = parseFloat(trimTo8Decimals(productStores[_sid2].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                                   productStores[_sid2].purchase_unit_price = _pp2;
                                   const _mnow2 = new Date().toISOString();
-                                  const _wm2 = parseFloat(productStores[_sid2]?.wholesale_margin_percent) || 0;
-                                  const _rm2 = parseFloat(productStores[_sid2]?.retail_margin_percent) || 0;
-                                  if (_wm2 > 0) { const _wp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _wm2 / 100))); productStores[_sid2].wholesale_unit_price = _wp2; productStores[_sid2].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].wholesale_manual_price_updated_at = _mnow2; }
-                                  if (_rm2 > 0) { const _rp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _rm2 / 100))); productStores[_sid2].retail_unit_price = _rp2; productStores[_sid2].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].retail_manual_price_updated_at = _mnow2; }
+                                  { const _wm2 = parseFloat(productStores[_sid2]?.wholesale_margin_percent) || 0; const _rm2 = parseFloat(productStores[_sid2]?.retail_margin_percent) || 0; const _cwp2 = parseFloat(productStores[_sid2]?.wholesale_unit_price) || 0; const _crp2 = parseFloat(productStores[_sid2]?.retail_unit_price) || 0; if (_wm2 > 0) { const _wp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _wm2 / 100))); productStores[_sid2].wholesale_unit_price = _wp2; productStores[_sid2].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].wholesale_manual_price_updated_at = _mnow2; } else if (_cwp2 > 0) { productStores[_sid2].wholesale_margin_percent = parseFloat(trimTo8Decimals(((_cwp2 / _pp2) - 1) * 100)); } if (_rm2 > 0) { const _rp2 = parseFloat(trimTo8Decimals(_pp2 * (1 + _rm2 / 100))); productStores[_sid2].retail_unit_price = _rp2; productStores[_sid2].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp2 * (1 + (store.vat_percent / 100)))); productStores[_sid2].retail_manual_price_updated_at = _mnow2; } else if (_crp2 > 0) { productStores[_sid2].retail_margin_percent = parseFloat(trimTo8Decimals(((_crp2 / _pp2) - 1) * 100)); } }
                                   setProductStores({ ...productStores });
                                 }, 100);
                               }}
@@ -2148,19 +2201,19 @@ const ProductCreate = forwardRef((props, ref) => {
                       <div className="col-md-4">
                         <div style={PRICE_CARD}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                            <div style={PRICE_CARD_LABEL}>Wholesale Unit Price</div>
+                            <div style={PRICE_CARD_LABEL}>{t('Wholesale Unit Price')}</div>
                             {store?.settings?.enable_auto_update_prices_from_last_purchase && formData.id && (
                               <button type="button" title="Fetch last purchase price and recalculate using Wholesale Margin %"
                                 style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #004ac6', background: '#eef2ff', color: '#004ac6', cursor: 'pointer', whiteSpace: 'nowrap' }}
                                 onClick={async () => {
                                   const storeId = localStorage.getItem('store_id');
                                   const margin = parseFloat(productStores[storeId]?.wholesale_margin_percent) || 0;
-                                  if (!margin) { alert('Set Wholesale Margin % first'); return; }
+                                  if (!margin) { alert(t('Set Wholesale Margin % first')); return; }
                                   try {
                                     const token = localStorage.getItem('access_token');
                                     const res = await fetch(`/v1/product/${formData.id}/last-purchase-price?search[store_id]=${storeId}`, { headers: { Authorization: 'Bearer ' + token } });
                                     const data = await res.json();
-                                    if (!data.status) { alert(data.errors?.last_purchase || 'No purchase found for this product'); return; }
+                                    if (!data.status) { alert(data.errors?.last_purchase || t('No purchase found for this product')); return; }
                                     const newPrice = parseFloat((data.result.purchase_unit_price * (1 + margin / 100)).toFixed(2));
                                     productStores[storeId].purchase_unit_price = data.result.purchase_unit_price;
                                     productStores[storeId].purchase_unit_price_with_vat = data.result.purchase_unit_price_with_vat;
@@ -2171,20 +2224,21 @@ const ProductCreate = forwardRef((props, ref) => {
                                     productStores[storeId].last_purchase_price_updated_at = new Date().toISOString();
                                     productStores[storeId].wholesale_manual_price_updated_at = null;
                                     setProductStores({ ...productStores });
-                                  } catch (e) { alert('Failed to fetch last purchase price'); }
+                                  } catch (e) { alert(t('Failed to fetch last purchase price')); }
                                 }}
-                              >Update Now</button>
+                              >{t('Update Now')}</button>
                             )}
                           </div>
                           {store?.settings?.enable_auto_update_prices_from_last_purchase && (
                             <div style={{ marginBottom: '12px' }}>
-                              <div style={PRICE_SUB_LABEL}>Wholesale Margin %</div>
+                              <div style={PRICE_SUB_LABEL}>{t('Wholesale Margin %')}</div>
                               <input type="number" placeholder="e.g. 20" min="0"
                                 style={{ ...PRICE_INPUT, background: '#f8f9ff' }}
                                 value={productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent || productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_margin_percent : ''}
                                 onChange={(e) => {
                                   const storeId = localStorage.getItem('store_id');
                                   productStores[storeId].wholesale_margin_percent = e.target.value !== '' ? parseFloat(e.target.value) : '';
+                                  const _wm3 = e.target.value !== '' ? parseFloat(e.target.value) : 0; const _pp3 = parseFloat(productStores[storeId]?.purchase_unit_price) || 0; if (_wm3 > 0 && _pp3 > 0) { const _wp3 = parseFloat(trimTo8Decimals(_pp3 * (1 + _wm3 / 100))); productStores[storeId].wholesale_unit_price = _wp3; productStores[storeId].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(_wp3 * (1 + (store.vat_percent / 100)))); }
                                   setProductStores({ ...productStores });
                                 }}
                               />
@@ -2197,12 +2251,12 @@ const ProductCreate = forwardRef((props, ref) => {
                                     setProductStores({ ...productStores });
                                   }}
                                 />
-                                Enable Auto Update from Last Purchase
+                                {t('Enable Auto Update from Last Purchase')}
                               </label>
                             </div>
                           )}
                           <div style={{ marginBottom: '16px' }}>
-                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Excl. VAT')}</div>
                             <input id="product_wholesale_unit_price" name="product_wholesale_unit_price" type="number"
                               value={productStores[localStorage.getItem('store_id')]?.wholesale_unit_price || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price : ''}
                               ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_wholesale_unit_price_0'] = el; }}
@@ -2213,28 +2267,30 @@ const ProductCreate = forwardRef((props, ref) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['wholesale_unit_price']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price'] = 'Wholesale unit price should not be < 0'; setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].wholesale_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price'] = t('Wholesale unit price should not be < 0'); setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].wholesale_manual_price_updated_at = new Date().toISOString();
+                                { const _pp = parseFloat(productStores[localStorage.getItem('store_id')].purchase_unit_price) || 0; if (_pp > 0) { productStores[localStorage.getItem('store_id')].wholesale_margin_percent = parseFloat(trimTo8Decimals(((parseFloat(e.target.value) / _pp) - 1) * 100)); } }
+                                setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['wholesale_unit_price'] && <ErrMsg>{errors['wholesale_unit_price']}</ErrMsg>}
                           </div>
                           <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
-                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Incl. VAT')}</div>
                             <input id="product_wholesale_unit_price_with_vat" name="product_wholesale_unit_price_with_vat" type="number"
                               value={productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat : ''}
                               ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_wholesale_unit_price_with_vat_0'] = el; }}
                               onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0']?.select(); }, 100); }}
                               onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_with_vat_0']?.select(); }, 100); } else if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_with_vat_0'].focus(); }, 100); } }}
-                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder={t('Calculated automatically')}
                               onChange={(e) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['wholesale_unit_price_with_vat']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price_with_vat'] = 'Wholesale unit price with VAT should not be < 0'; setErrors({ ...errors }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price_with_vat'] = t('Wholesale unit price with VAT should not be < 0'); setErrors({ ...errors }); return; }
                                 productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].wholesale_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
-                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                                timerRef.current = setTimeout(() => { const _sid3 = localStorage.getItem('store_id'); productStores[_sid3].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[_sid3].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100)))); const _pp4 = parseFloat(productStores[_sid3]?.purchase_unit_price) || 0; if (_pp4 > 0 && productStores[_sid3].wholesale_unit_price) { productStores[_sid3].wholesale_margin_percent = parseFloat(trimTo8Decimals(((productStores[_sid3].wholesale_unit_price / _pp4) - 1) * 100)); } setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['wholesale_unit_price_with_vat'] && <ErrMsg>{errors['wholesale_unit_price_with_vat']}</ErrMsg>}
@@ -2269,19 +2325,19 @@ const ProductCreate = forwardRef((props, ref) => {
                       <div className="col-md-4">
                         <div style={PRICE_CARD}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                            <div style={PRICE_CARD_LABEL}>Retail Unit Price</div>
+                            <div style={PRICE_CARD_LABEL}>{t('Retail Unit Price')}</div>
                             {store?.settings?.enable_auto_update_prices_from_last_purchase && formData.id && (
                               <button type="button" title="Fetch last purchase price and recalculate using Retail Margin %"
                                 style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #004ac6', background: '#eef2ff', color: '#004ac6', cursor: 'pointer', whiteSpace: 'nowrap' }}
                                 onClick={async () => {
                                   const storeId = localStorage.getItem('store_id');
                                   const margin = parseFloat(productStores[storeId]?.retail_margin_percent) || 0;
-                                  if (!margin) { alert('Set Retail Margin % first'); return; }
+                                  if (!margin) { alert(t('Set Retail Margin % first')); return; }
                                   try {
                                     const token = localStorage.getItem('access_token');
                                     const res = await fetch(`/v1/product/${formData.id}/last-purchase-price?search[store_id]=${storeId}`, { headers: { Authorization: 'Bearer ' + token } });
                                     const data = await res.json();
-                                    if (!data.status) { alert(data.errors?.last_purchase || 'No purchase found for this product'); return; }
+                                    if (!data.status) { alert(data.errors?.last_purchase || t('No purchase found for this product')); return; }
                                     const newPrice = parseFloat((data.result.purchase_unit_price * (1 + margin / 100)).toFixed(2));
                                     productStores[storeId].purchase_unit_price = data.result.purchase_unit_price;
                                     productStores[storeId].purchase_unit_price_with_vat = data.result.purchase_unit_price_with_vat;
@@ -2292,20 +2348,21 @@ const ProductCreate = forwardRef((props, ref) => {
                                     productStores[storeId].last_purchase_price_updated_at = new Date().toISOString();
                                     productStores[storeId].retail_manual_price_updated_at = null;
                                     setProductStores({ ...productStores });
-                                  } catch (e) { alert('Failed to fetch last purchase price'); }
+                                  } catch (e) { alert(t('Failed to fetch last purchase price')); }
                                 }}
-                              >Update Now</button>
+                              >{t('Update Now')}</button>
                             )}
                           </div>
                           {store?.settings?.enable_auto_update_prices_from_last_purchase && (
                             <div style={{ marginBottom: '12px' }}>
-                              <div style={PRICE_SUB_LABEL}>Retail Margin %</div>
+                              <div style={PRICE_SUB_LABEL}>{t('Retail Margin %')}</div>
                               <input type="number" placeholder="e.g. 30" min="0"
                                 style={{ ...PRICE_INPUT, background: '#f8f9ff' }}
                                 value={productStores[localStorage.getItem('store_id')]?.retail_margin_percent || productStores[localStorage.getItem('store_id')]?.retail_margin_percent === 0 ? productStores[localStorage.getItem('store_id')]?.retail_margin_percent : ''}
                                 onChange={(e) => {
                                   const storeId = localStorage.getItem('store_id');
                                   productStores[storeId].retail_margin_percent = e.target.value !== '' ? parseFloat(e.target.value) : '';
+                                  const _rm4 = e.target.value !== '' ? parseFloat(e.target.value) : 0; const _pp5 = parseFloat(productStores[storeId]?.purchase_unit_price) || 0; if (_rm4 > 0 && _pp5 > 0) { const _rp4 = parseFloat(trimTo8Decimals(_pp5 * (1 + _rm4 / 100))); productStores[storeId].retail_unit_price = _rp4; productStores[storeId].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(_rp4 * (1 + (store.vat_percent / 100)))); }
                                   setProductStores({ ...productStores });
                                 }}
                               />
@@ -2318,12 +2375,12 @@ const ProductCreate = forwardRef((props, ref) => {
                                     setProductStores({ ...productStores });
                                   }}
                                 />
-                                Enable Auto Update from Last Purchase
+                                {t('Enable Auto Update from Last Purchase')}
                               </label>
                             </div>
                           )}
                           <div style={{ marginBottom: '16px' }}>
-                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Excl. VAT')}</div>
                             <input id="product_retail_unit_price" name="product_retail_unit_price" type="number"
                               disabled={formData.set?.total}
                               value={productStores[localStorage.getItem('store_id')]?.retail_unit_price || productStores[localStorage.getItem('store_id')]?.retail_unit_price === 0 ? productStores[localStorage.getItem('store_id')]?.retail_unit_price : ''}
@@ -2335,29 +2392,31 @@ const ProductCreate = forwardRef((props, ref) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['retail_unit_price']; delete errors['retail_unit_price_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_0'] = 'Retail Unit Price should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
-                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].retail_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
+                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_0'] = t('Retail Unit Price should not be < 0'); productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].retail_manual_price_updated_at = new Date().toISOString();
+                                { const _pp = parseFloat(productStores[localStorage.getItem('store_id')].purchase_unit_price) || 0; if (_pp > 0) { productStores[localStorage.getItem('store_id')].retail_margin_percent = parseFloat(trimTo8Decimals(((parseFloat(e.target.value) / _pp) - 1) * 100)); } }
+                                setProductStores({ ...productStores });
                                 timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['retail_unit_price'] && <ErrMsg>{errors['retail_unit_price']}</ErrMsg>}
                           </div>
                           <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
-                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <div style={PRICE_SUB_LABEL}>{t('Incl. VAT')}</div>
                             <input id="product_retail_unit_price_with_vat" name="product_retail_unit_price_with_vat" type="number"
                               disabled={formData.set?.total}
                               value={productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat : ''}
                               ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_retail_unit_price_with_vat_0'] = el; }}
                               onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_with_vat_0']?.select(); }, 100); }}
                               onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0'].focus(); }, 100); } }}
-                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder={t('Calculated automatically')}
                               onChange={(e) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 delete errors['retail_unit_price_with_vat']; delete errors['retail_unit_price_with_vat_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
-                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_with_vat_0'] = 'Retail Unit Price with VAT should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
+                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_with_vat_0'] = t('Retail Unit Price with VAT should not be < 0'); productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
                                 productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(e.target.value); productStores[localStorage.getItem('store_id')].retail_manual_price_updated_at = new Date().toISOString(); setProductStores({ ...productStores });
-                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                                timerRef.current = setTimeout(() => { const _sid4 = localStorage.getItem('store_id'); productStores[_sid4].retail_unit_price = parseFloat(trimTo8Decimals(productStores[_sid4].retail_unit_price_with_vat / (1 + (store.vat_percent / 100)))); const _pp6 = parseFloat(productStores[_sid4]?.purchase_unit_price) || 0; if (_pp6 > 0 && productStores[_sid4].retail_unit_price) { productStores[_sid4].retail_margin_percent = parseFloat(trimTo8Decimals(((productStores[_sid4].retail_unit_price / _pp6) - 1) * 100)); } setProductStores({ ...productStores }); }, 100);
                               }}
                             />
                             {errors['retail_unit_price_with_vat'] && <ErrMsg>{errors['retail_unit_price_with_vat']}</ErrMsg>}
@@ -2393,14 +2452,14 @@ const ProductCreate = forwardRef((props, ref) => {
 
                   {!store?.settings?.enable_warehouse_module && (
                     <div className="pw-card" style={CARD}>
-                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <SectionTitle icon="bi-geo-alt">{t('Rack / Location')}</SectionTitle>
                       <div className="row">
                         <div className="col-md-4">
-                          <Label>Rack / Location</Label>
+                          <Label>{t('Rack / Location')}</Label>
                           <input id="product_rack" name="product_rack" type="text"
                             value={formData.rack || ''}
                             onChange={(e) => { formData.rack = e.target.value; setFormData({ ...formData }); }}
-                            style={INPUT} placeholder="Rack / Location"
+                            style={INPUT} placeholder={t('Rack / Location')}
                           />
                           {errors.rack && <ErrMsg>{errors.rack}</ErrMsg>}
                         </div>
@@ -2410,13 +2469,13 @@ const ProductCreate = forwardRef((props, ref) => {
 
                   {store?.settings?.enable_warehouse_module && (
                     <div className="pw-card" style={CARD}>
-                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <SectionTitle icon="bi-geo-alt">{t('Rack / Location')}</SectionTitle>
                       <div style={{ overflowX: 'auto', maxWidth: '560px' }}>
                         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                           <thead>
                             <tr style={{ background: '#eceef0' }}>
-                              <th style={TH}>Storage Facility</th>
-                              <th style={TH}>Rack / Location</th>
+                              <th style={TH}>{t('Storage Facility')}</th>
+                              <th style={TH}>{t('Rack / Location')}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2457,10 +2516,10 @@ const ProductCreate = forwardRef((props, ref) => {
                       />
                       <div>
                         <label htmlFor="allow_duplicates" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 500, color: '#191c1e', cursor: 'pointer', marginBottom: '2px', display: 'block' }}>
-                          Allow duplicates in Sales, Purchases etc.
+                          {t('Allow duplicates in Sales, Purchases etc.')}
                         </label>
                         <p style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686', marginBottom: 0 }}>
-                          System will not flag redundant entries for this product.
+                          {t('System will not flag redundant entries for this product.')}
                         </p>
                       </div>
                     </div>
@@ -2468,7 +2527,7 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-journal-text">Note</SectionTitle>
+                    <SectionTitle icon="bi-journal-text">{t('Note')}</SectionTitle>
                     <textarea
                       id="product_note"
                       name="product_note"
@@ -2480,7 +2539,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       }}
                       onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
                       style={{ ...INPUT, resize: 'vertical', minHeight: '88px' }}
-                      placeholder="Optional note about this product…"
+                      placeholder={t('Optional note about this product…')}
                     />
                   </div>
 
@@ -2490,13 +2549,13 @@ const ProductCreate = forwardRef((props, ref) => {
               <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-boxes">Current Stock Levels</SectionTitle>
+                    <SectionTitle icon="bi-boxes">{t('Current Stock Levels')}</SectionTitle>
                     <div style={{ overflowX: 'auto', maxWidth: '500px' }}>
                       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                         <thead>
                           <tr style={{ background: '#eceef0' }}>
-                            <th style={TH}>Location</th>
-                            <th style={TH}>Stock</th>
+                            <th style={TH}>{t('Location')}</th>
+                            <th style={TH}>{t('Stock')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -2523,25 +2582,25 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-arrow-left-right">Stock Adjustments</SectionTitle>
+                    <SectionTitle icon="bi-arrow-left-right">{t('Stock Adjustments')}</SectionTitle>
                     <div style={{ marginBottom: '16px' }}>
                       <Label>Quick Adjust (Damaged / Missing Stock)</Label>
                       <div className="d-flex align-items-center gap-2 mt-1">
                         <input id="product_damaged_stock_0" name="product_damaged_stock_0" type="number"
-                          value={damagedStock} style={{ ...INPUT, maxWidth: '180px' }} placeholder="Enter quantity"
+                          value={damagedStock} style={{ ...INPUT, maxWidth: '180px' }} placeholder={t('Enter quantity')}
                           onChange={(e) => { errors['damaged_stock_0'] = ''; setErrors({ ...errors }); setDamagedStock(parseFloat(e.target.value)); setOperationType(null); }}
                         />
                         {damagedStock && !operationType && (
                           <>
-                            <button type="button" className="btn btn-sm btn-success" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_added) productStores[localStorage.getItem('store_id')].stocks_added = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'adding'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>Add</button>
-                            <button type="button" className="btn btn-sm btn-danger" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_removed) productStores[localStorage.getItem('store_id')].stocks_removed = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'removing'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>Remove</button>
+                            <button type="button" className="btn btn-sm btn-success" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_added) productStores[localStorage.getItem('store_id')].stocks_added = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'adding'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>{t('Add')}</button>
+                            <button type="button" className="btn btn-sm btn-danger" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_removed) productStores[localStorage.getItem('store_id')].stocks_removed = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'removing'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>{t('Remove')}</button>
                           </>
                         )}
                       </div>
                     </div>
 
                     <button type="button" style={{ ...SEC_BTN, marginBottom: '12px' }} onClick={() => addStockAdjustment()}>
-                      <i className="bi bi-plus-lg"></i>Create Stock Adjustment
+                      <i className="bi bi-plus-lg"></i>{t('Create Stock Adjustment')}
                     </button>
 
                     {productStores[localStorage.getItem('store_id')]?.stock_adjustments?.filter(a => !a.deleted).length > 0 && (
@@ -2549,8 +2608,8 @@ const ProductCreate = forwardRef((props, ref) => {
                         <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '700px' }}>
                           <thead>
                             <tr style={{ background: '#eceef0' }}>
-                              <th style={TH}>Date</th><th style={TH}>Qty</th><th style={TH}>Add/Remove</th>
-                              <th style={TH}>Warehouse/Store</th><th style={TH}>Reason</th><th style={TH}></th>
+                              <th style={TH}>{t('Date')}</th><th style={TH}>{t('Qty')}</th><th style={TH}>{t('Add/Remove')}</th>
+                              <th style={TH}>{t('Warehouse/Store')}</th><th style={TH}>{t('Reason')}</th><th style={TH}></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2609,7 +2668,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 <td style={{ ...TD, width: '160px' }}>
                                   <textarea id={`adjustment_reason_${key}`} name={`adjustment_reason_${key}`}
                                     value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason || ''}
-                                    className="form-control form-control-sm" placeholder="Reason" rows={2} style={{ resize: 'vertical' }}
+                                    className="form-control form-control-sm" placeholder={t('Reason')} rows={2} style={{ resize: 'vertical' }}
                                     onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
                                     onChange={(e) => { productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason = e.target.value; setProductStores({ ...productStores }); }}
                                   />
@@ -2627,25 +2686,25 @@ const ProductCreate = forwardRef((props, ref) => {
                     )}
 
                     <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f2f4f6', borderRadius: '6px', border: '1px solid #c3c6d7', display: 'flex', gap: '24px' }}>
-                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#16a34a', fontWeight: 600 }}>+ Added: {productStores[localStorage.getItem('store_id')]?.stocks_added || 0}</span>
-                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#dc2626', fontWeight: 600 }}>− Removed: {productStores[localStorage.getItem('store_id')]?.stocks_removed || 0}</span>
+                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#16a34a', fontWeight: 600 }}>{t('+ Added:')} {productStores[localStorage.getItem('store_id')]?.stocks_added || 0}</span>
+                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#dc2626', fontWeight: 600 }}>{t('− Removed:')} {productStores[localStorage.getItem('store_id')]?.stocks_removed || 0}</span>
                     </div>
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-collection">SET Configuration</SectionTitle>
+                    <SectionTitle icon="bi-collection">{t('SET Configuration')}</SectionTitle>
                     <div className="row g-3">
                       <div className="col-md-3">
-                        <Label>Set Name</Label>
+                        <Label>{t('Set Name')}</Label>
                         <input id="set_name" name="set_name" type="text"
                           value={formData.set?.name || ''}
-                          style={INPUT} placeholder="Set Name"
+                          style={INPUT} placeholder={t('Set Name')}
                           onChange={(e) => { errors['set_name'] = ''; setErrors({ ...errors }); formData.set.name = e.target.value; formData.name = e.target.value; setFormData({ ...formData }); }}
                         />
                         {errors.set_name && <ErrMsg>{errors.set_name}</ErrMsg>}
                       </div>
                       <div className="col-md-9">
-                        <Label>Add Products to SET</Label>
+                        <Label>{t('Add Products to SET')}</Label>
                         <Typeahead id="set_product_id" labelKey="search_label" emptyLabel="" ref={productSetSearchRef}
                           paginate={false} maxResults={10000}
                           onChange={(selectedItems) => {
@@ -2654,7 +2713,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             AddProductToSet(selectedItems[0]);
                             timerRef.current = setTimeout(() => { setOpenProductSetSearchResult(false); setProductSetOptions([]); productSetSearchRef.current?.clear(); inputRefs.current[(formData.set.products.length - 1)]?.[`set_product_quantity_${formData.set.products.length - 1}`]?.select(); }, 300);
                           }}
-                          options={productSetOptions} placeholder="Search and select products..." highlightOnlyResult={true}
+                          options={productSetOptions} placeholder={t('Search and select products...')} highlightOnlyResult={true}
                           open={openProductSetSearchResult}
                           onKeyDown={(e) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -2668,9 +2727,9 @@ const ProductCreate = forwardRef((props, ref) => {
                               <Menu {...menuProps}>
                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                   <div style={{ background: '#f8f9fa', zIndex: 2, display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                    <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>Part Number</div><div style={{ width: '29%' }}>Name</div>
-                                    <div style={{ width: '10%' }}>S.Unit Price</div><div style={{ width: '13%' }}>Stock</div><div style={{ width: '5%' }}>Photos</div>
-                                    <div style={{ width: '8%' }}>Brand</div><div style={{ width: '10%' }}>P.Unit Price</div><div style={{ width: '8%' }}>Country</div>
+                                    <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>{t('Part Number')}</div><div style={{ width: '29%' }}>{t('Name')}</div>
+                                    <div style={{ width: '10%' }}>{t('S.Unit Price')}</div><div style={{ width: '13%' }}>{t('Stock')}</div><div style={{ width: '5%' }}>{t('Photos')}</div>
+                                    <div style={{ width: '8%' }}>{t('Brand')}</div><div style={{ width: '10%' }}>{t('P.Unit Price')}</div><div style={{ width: '8%' }}>{t('Country')}</div>
                                   </div>
                                 </MenuItem>
                                 {results.map((option, index) => {
@@ -2714,7 +2773,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                         }}
                                       >
                                         {isLoadingMoreProducts
-                                          ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                          ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> {t('Loading...')}</>
                                           : <>Load {productSearchTotalCount - results.length} more</>
                                         }
                                       </button>
@@ -2733,10 +2792,10 @@ const ProductCreate = forwardRef((props, ref) => {
                         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                           <thead>
                             <tr style={{ background: '#eceef0' }}>
-                              <th style={TH}>Part No.</th><th style={{ ...TH, minWidth: '200px' }}>Name</th><th style={TH}>Info</th>
-                              <th style={TH}>Qty</th><th style={TH}>Unit</th>
-                              <th style={TH}>Purchase Price</th><th style={TH}>Purchase (VAT)</th><th style={TH}>Purchase %</th>
-                              <th style={TH}>Retail Price</th><th style={TH}>Retail (VAT)</th><th style={TH}>Retail %</th>
+                              <th style={TH}>{t('Part No.')}</th><th style={{ ...TH, minWidth: '200px' }}>{t('Name')}</th><th style={TH}>{t('Info')}</th>
+                              <th style={TH}>{t('Qty')}</th><th style={TH}>{t('Unit')}</th>
+                              <th style={TH}>{t('Purchase Price')}</th><th style={TH}>{t('Purchase (VAT)')}</th><th style={TH}>{t('Purchase %')}</th>
+                              <th style={TH}>{t('Retail Price')}</th><th style={TH}>{t('Retail (VAT)')}</th><th style={TH}>{t('Retail %')}</th>
                               <th style={TH}></th>
                             </tr>
                           </thead>
@@ -2752,17 +2811,17 @@ const ProductCreate = forwardRef((props, ref) => {
                                         <i className="bi bi-info"></i>
                                       </Dropdown.Toggle>
                                       <Dropdown.Menu style={{ zIndex: 9999, position: 'absolute' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                        <Dropdown.Item onClick={() => openLinkedProducts(product)}><i className="bi bi-link"></i>&nbsp;Linked Products ({getShortcut('linkedProducts')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openProductHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;History ({getShortcut('productHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Sales History ({getShortcut('salesHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Sales Return History ({getShortcut('salesReturnHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openPurchaseHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Purchase History ({getShortcut('purchaseHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Purchase Return History ({getShortcut('purchaseReturnHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Delivery Note History ({getShortcut('deliveryNoteHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openQuotationHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Quotation History ({getShortcut('quotationHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Qtn. Sales History ({getShortcut('quotationSalesHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})</Dropdown.Item>
-                                        <Dropdown.Item onClick={() => openProductImages(product.product_id)}><i className="bi bi-images"></i>&nbsp;Images ({getShortcut('images')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openLinkedProducts(product)}><i className="bi bi-link"></i>&nbsp;{t('Linked Products')} ({getShortcut('linkedProducts')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openProductHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('History')} ({getShortcut('productHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Sales History')} ({getShortcut('salesHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Sales Return History')} ({getShortcut('salesReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openPurchaseHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Purchase History')} ({getShortcut('purchaseHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Purchase Return History')} ({getShortcut('purchaseReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Delivery Note History')} ({getShortcut('deliveryNoteHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Quotation History')} ({getShortcut('quotationHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Qtn. Sales History')} ({getShortcut('quotationSalesHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;{t('Qtn. Sales Return History')} ({getShortcut('quotationSalesReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openProductImages(product.product_id)}><i className="bi bi-images"></i>&nbsp;{t('Images')} ({getShortcut('images')})</Dropdown.Item>
                                       </Dropdown.Menu>
                                     </Dropdown>
                                   </div>
@@ -2838,7 +2897,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               </tr>
                             )).reverse()}
                             <tr style={{ fontWeight: 700, background: '#eceef0' }}>
-                              <td style={TD}></td><td style={TD}></td><td style={{ ...TD, textAlign: 'right' }}>Total</td>
+                              <td style={TD}></td><td style={TD}></td><td style={{ ...TD, textAlign: 'right' }}>{t('Total')}</td>
                               <td style={TD}>{formData.set?.total_quantity ? trimTo4Decimals(formData.set.total_quantity) : ''}</td>
                               <td style={TD}></td>
                               <td style={TD}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set.purchase_total) : ''}{errors['set_purchase_total'] && <ErrMsg>{errors['set_purchase_total']}</ErrMsg>}</td>
@@ -2860,7 +2919,7 @@ const ProductCreate = forwardRef((props, ref) => {
               <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-link-45deg">Linked Products</SectionTitle>
+                    <SectionTitle icon="bi-link-45deg">{t('Linked Products')}</SectionTitle>
                     <Typeahead id="linked_product_id" labelKey="search_label" emptyLabel="" filterBy={() => true} ref={productSearchRef} multiple
                       onChange={(selectedItems) => {
                         if (selectedItems.length > selectedLinkedProducts.length) {
@@ -2868,7 +2927,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         } else { setSelectedLinkedProducts(selectedItems); }
                         setOpenProductSearchResult(false);
                       }}
-                      options={productOptions} placeholder="Search products to link..." selected={selectedLinkedProducts} highlightOnlyResult={true} open={openProductSearchResult}
+                      options={productOptions} placeholder={t('Search products to link...')} selected={selectedLinkedProducts} highlightOnlyResult={true} open={openProductSearchResult}
                       onKeyDown={(e) => { if (e.key === 'Escape') { setProductOptions([]); setOpenProductSearchResult(false); } }}
                       onInputChange={(searchTerm) => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { suggestProducts(searchTerm); }, 100); }}
                       renderMenu={(results, menuProps, state) => {
@@ -2877,9 +2936,9 @@ const ProductCreate = forwardRef((props, ref) => {
                           <Menu {...menuProps}>
                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                               <div style={{ background: '#f8f9fa', zIndex: 2, display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>Part Number</div><div style={{ width: '29%' }}>Name</div>
-                                <div style={{ width: '12%' }}>S.Unit Price</div><div style={{ width: '5%' }}>Stock</div><div style={{ width: '5%' }}>Photos</div>
-                                <div style={{ width: '10%' }}>Brand</div><div style={{ width: '12%' }}>P.Unit Price</div><div style={{ width: '10%' }}>Country</div>
+                                <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>{t('Part Number')}</div><div style={{ width: '29%' }}>{t('Name')}</div>
+                                <div style={{ width: '12%' }}>{t('S.Unit Price')}</div><div style={{ width: '5%' }}>{t('Stock')}</div><div style={{ width: '5%' }}>{t('Photos')}</div>
+                                <div style={{ width: '10%' }}>{t('Brand')}</div><div style={{ width: '12%' }}>{t('P.Unit Price')}</div><div style={{ width: '10%' }}>{t('Country')}</div>
                               </div>
                             </MenuItem>
                             {results.map((option, index) => {
@@ -2911,7 +2970,7 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                   <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-images">Product Photos</SectionTitle>
+                    <SectionTitle icon="bi-images">{t('Product Photos')}</SectionTitle>
                     <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName="product" handleDelete={handleDeleteImage} onImageClick={handleGalleryImageClick} />
                   </div>
 

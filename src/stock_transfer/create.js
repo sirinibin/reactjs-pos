@@ -46,6 +46,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { useTranslation } from "react-i18next";
 
 
 const columnStyle = {
@@ -58,6 +59,7 @@ const columnStyle = {
 };
 
 const StockTransferCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     useImperativeHandle(ref, () => ({
         async open(id) {
             if (id) {
@@ -1500,9 +1502,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
         if (selectedProducts[i].unit_price && selectedProducts[i].unit_price <= 0) {
-            errors["unit_price_" + i] = "Unit Price should be > 0";
+            errors["unit_price_" + i] = t("Unit Price should be > 0");
         } else if (!selectedProducts[i].unit_price) {
-            errors["unit_price_" + i] = "Unit Price is required";
+            errors["unit_price_" + i] = t("Unit Price is required");
         } else {
             delete errors["unit_price_" + i];
         }
@@ -1510,9 +1512,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         if (store?.settings?.block_stocktransfer_when_purchase_price_is_higher) {
             if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should be > 0");
             } else if (!selectedProducts[i].purchase_unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price is required";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price is required");
             } else {
                 delete errors["purchase_unit_price_" + i];
             }
@@ -1523,8 +1525,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
         if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
 
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
-                errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)")
+                errors["unit_price_" + i] = t("Unit price should not be less than Purchase Unit Price(without VAT)")
             } else {
                 delete errors["purchase_unit_price_" + i];
                 delete errors["unit_price_" + i];
@@ -1580,7 +1582,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 const warehouseStocks = storeData.warehouse_stocks ?? { "main_store": storeData.stock ?? 0 };
                 const stockInWH = warehouseStocks[fromWarehouseCode] ?? storeData.stock ?? 0;
                 if (!formData.id && stockInWH < sp.quantity) {
-                    newWarnings["quantity_" + i] = "Warning: Available stock in " + fromWarehouseCode + " is " + stockInWH;
+                    newWarnings["quantity_" + i] = t("Warning: Available stock in ") + fromWarehouseCode + t(" is ") + stockInWH;
                 } else {
                     delete newWarnings["quantity_" + i];
                 }
@@ -1642,7 +1644,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
             selectedProducts[i].warehouse_stocks[fromWarehouseCode] = 0;
         }
         if (!formData.id && selectedProducts[i].warehouse_stocks[fromWarehouseCode] < selectedProducts[i].quantity) {
-            warnings["quantity_" + i] = "Warning: Available stock in " + fromWarehouseCode + " is " + (selectedProducts[i].warehouse_stocks[fromWarehouseCode]);
+            warnings["quantity_" + i] = t("Warning: Available stock in ") + fromWarehouseCode + t(" is ") + (selectedProducts[i].warehouse_stocks[fromWarehouseCode]);
         } else {
             delete warnings["quantity_" + i];
         }
@@ -2974,7 +2976,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showProductSearchSettings}
                 onHide={() => setShowProductSearchSettings(false)}
-                title="Product Search Settings"
+                title={t("Product Search Settings")}
                 columns={searchProductsColumns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -2991,7 +2993,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
 
@@ -3008,7 +3010,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -3024,7 +3026,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal >
@@ -3070,10 +3072,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
             <Modal show={show} size="xl" fullscreen id="stocktransfer_create_form"
-                onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={props.modalClass || ""}>
+                onHide={handleClose} animation={false} backdrop="static" scrollable={true} className={`${props.fromHistory ? 'from-history-form ' : ''}${props.modalClass || ''}`}>
                 <Modal.Header>
                     <Modal.Title>
-                        {isUpdateForm ? "Update Stock Transfer #" + formData.code : "Create New Stock Transfer"}
+                        {isUpdateForm ? t("Update Stock Transfer #") + formData.code : t("Create New Stock Transfer")}
 
                     </Modal.Title>
                     <div className="col align-self-end text-end">
@@ -3093,7 +3095,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                             }}
                         >
-                            <i className="bi-chevron-double-left"></i> Previous
+                            <i className="bi-chevron-double-left"></i> {t("Previous")}
                         </Button>
                         &nbsp;&nbsp;
                         <Button
@@ -3106,7 +3108,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                 openNextForm();
                             }}
                         >
-                            Next  <i className="bi-chevron-double-right"></i>
+                            {t("Next")}  <i className="bi-chevron-double-right"></i>
                         </Button>
                         &nbsp;&nbsp;
                         <Button
@@ -3119,16 +3121,16 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                 openCreateForm();
                             }}
                         >
-                            <i className="bi bi-plus"></i>  Create New
+                            <i className="bi bi-plus"></i>  {t("Create New")}
                         </Button>
                         &nbsp;&nbsp;
                         <Button variant="secondary" disabled={!isUpdateForm} onClick={openPrint}>
-                            <i className="bi bi-printer"></i> Print
+                            <i className="bi bi-printer"></i> {t("Print")}
                         </Button>
                         &nbsp;&nbsp;
 
                         <Button variant="primary" disabled={!isUpdateForm} onClick={() => openPreview(formData)}>
-                            <i className="bi bi-printer"></i> Print A4 Invoice
+                            <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                         </Button>
                         &nbsp;&nbsp;
 
@@ -3151,7 +3153,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
+                            {isUpdateForm && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
 
                         </Button>
 
@@ -3159,7 +3161,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t("Close")}
                         ></button>
                     </div>
                 </Modal.Header>
@@ -3208,7 +3210,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
 
                         <div className="col-md-2">
-                            <label className="form-label">From Warehouse/Store</label>
+                            <label className="form-label">{t("From Warehouse/Store")}</label>
                             <div className="input-group mb-2">
                                 <select
                                     id={`from_warehouse_id`}
@@ -3233,7 +3235,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                         checkWarnings();
                                     }}
                                 >
-                                    <option value="main_store">Main Store</option>
+                                    <option value="main_store">{t("Main Store")}</option>
                                     {warehouseList.map((warehouse) => (
                                         <option key={warehouse.id} value={warehouse.id}>
                                             {warehouse.name} ({warehouse.code})
@@ -3250,7 +3252,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">To Warehouse/Store</label>
+                            <label className="form-label">{t("To Warehouse/Store")}</label>
                             <div className="input-group mb-2">
                                 <select
                                     id={`to_warehouse_id`}
@@ -3275,7 +3277,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                         checkWarnings();
                                     }}
                                 >
-                                    <option value="main_store">Main Store</option>
+                                    <option value="main_store">{t("Main Store")}</option>
                                     {warehouseList.map((warehouse) => (
                                         <option key={warehouse.id} value={warehouse.id}>
                                             {warehouse.name} ({warehouse.code})
@@ -3293,7 +3295,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-3">
-                            <label className="form-label">Date*</label>
+                            <label className="form-label">{t("Date*")}</label>
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
@@ -3323,7 +3325,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-3">
-                            <label className="form-label">Remarks</label>
+                            <label className="form-label">{t("Remarks")}</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.remarks}
@@ -3337,7 +3339,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="remarks"
-                                    placeholder="Remarks"
+                                    placeholder={t("Remarks")}
                                 />
                             </div>
                             {errors.remarks && (
@@ -3349,13 +3351,13 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Product Barcode Scan</label>
+                            <label className="form-label">{t("Product Barcode Scan")}</label>
 
                             <div className="input-group mb-3">
                                 <DebounceInput
                                     minLength={3}
                                     debounceTimeout={100}
-                                    placeholder="Scan Barcode"
+                                    placeholder={t("Scan Barcode")}
                                     className="form-control barcode"
                                     value={formData.barcode}
                                     onChange={event => getProductByBarCode(event.target.value)} />
@@ -3369,7 +3371,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-10" >
-                            <label className="form-label">Product Search*</label>
+                            <label className="form-label">{t("Product Search*")}</label>
                             <Typeahead
                                 id="product_id"
                                 filterBy={() => true}
@@ -3411,7 +3413,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     }, 100);
                                 }}
                                 options={productOptions}
-                                placeholder="Part No. | Name | Name in Arabic | Brand | Country"
+                                placeholder={t("Part No. | Name | Name in Arabic | Brand | Country")}
                                 highlightOnlyResult={true}
                                 onKeyDown={(e) => {
                                     if (e.key === "Escape") {
@@ -3456,15 +3458,15 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                         const rh = <div onMouseDown={e => startPsColResize(e, col.key)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 2 }} />;
                                                         return (<React.Fragment key={col.key}>
                                                             {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{rh}</div>}
-                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Part Number{rh}</div>}
-                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Name{rh}</div>}
-                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>S.Unit Price{rh}</div>}
-                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Stock{rh}</div>}
-                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Photos{rh}</div>}
-                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Brand{rh}</div>}
-                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>P.Unit Price{rh}</div>}
-                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Country{rh}</div>}
-                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Rack{rh}</div>}
+                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Part Number")}{rh}</div>}
+                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Name")}{rh}</div>}
+                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("S.Unit Price")}{rh}</div>}
+                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Stock")}{rh}</div>}
+                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Photos")}{rh}</div>}
+                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Brand")}{rh}</div>}
+                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("P.Unit Price")}{rh}</div>}
+                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Country")}{rh}</div>}
+                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Rack")}{rh}</div>}
                                                         </React.Fragment>)
                                                     })}
                                                     {/* Settings icon on right */}
@@ -3685,7 +3687,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                             }}
                                                         >
                                                             {isLoadingMoreProducts
-                                                                ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
+                                                                ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> {t("Loading...")}</>
                                                                 : <>Load {productSearchTotalCount - results.length} more</>
                                                             }
                                                         </button>
@@ -3697,7 +3699,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                 }}
                             />
 
-                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t("New")}</Button>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>
 
@@ -3716,7 +3718,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                             <div style={{ zIndex: "9999 !important", marginTop: "30px" }}>
                                 <Dropdown style={{}}>
                                     <Dropdown.Toggle variant="success" id="dropdown-basic">
-                                        <i className="bi bi-download"></i>    Import
+                                        <i className="bi bi-download"></i>    {t("Import")}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu >
                                         <Dropdown.Item onClick={() => {
@@ -3724,7 +3726,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            From Quotations
+                                            {t("From Quotations")}
                                         </Dropdown.Item>
 
                                         <Dropdown.Item onClick={() => {
@@ -3732,7 +3734,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            From Delivery Notes
+                                            {t("From Delivery Notes")}
                                         </Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
@@ -3767,7 +3769,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
                         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
-                            <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowStSPSettings(true)}>
+                            <Button variant="light" size="sm" title={t("Table Settings")} onClick={() => setShowStSPSettings(true)}>
                                 <i className="bi bi-gear"></i>
                             </Button>
                         </div>
@@ -3779,16 +3781,16 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         {stSPColumns.filter(c => c.visible).map(col => {
                                             if (col.key === 'delete') return <th key="delete"></th>;
-                                            if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
-                                            if (col.key === 'part_number') return <th key="part_number">Part No.</th>;
-                                            if (col.key === 'name') return <th key="name" style={{ minWidth: "250px" }}>Name</th>;
-                                            if (col.key === 'info') return <th key="info">Info</th>;
-                                            if (col.key === 'stock') return <th key="stock">Stock</th>;
-                                            if (col.key === 'qty') return <th key="qty" style={{ minWidth: "80px", maxWidth: "80px" }}>Qty</th>;
-                                            if (col.key === 'unit_price') return <th key="unit_price">P.Unit Price(without VAT)</th>;
-                                            if (col.key === 'unit_price_with_vat') return <th key="unit_price_with_vat">P.Unit Price(with VAT)</th>;
-                                            if (col.key === 'price') return <th key="price">Price(without VAT)</th>;
-                                            if (col.key === 'price_with_vat') return <th key="price_with_vat">Price(with VAT)</th>;
+                                            if (col.key === 'si_no') return <th key="si_no">{t("SI No.")}</th>;
+                                            if (col.key === 'part_number') return <th key="part_number">{t("Part No.")}</th>;
+                                            if (col.key === 'name') return <th key="name" style={{ minWidth: "250px" }}>{t("Name")}</th>;
+                                            if (col.key === 'info') return <th key="info">{t("Info")}</th>;
+                                            if (col.key === 'stock') return <th key="stock">{t("Stock")}</th>;
+                                            if (col.key === 'qty') return <th key="qty" style={{ minWidth: "80px", maxWidth: "80px" }}>{t("Qty")}</th>;
+                                            if (col.key === 'unit_price') return <th key="unit_price">{t("P.Unit Price(without VAT)")}</th>;
+                                            if (col.key === 'unit_price_with_vat') return <th key="unit_price_with_vat">{t("P.Unit Price(with VAT)")}</th>;
+                                            if (col.key === 'price') return <th key="price">{t("Price(without VAT)")}</th>;
+                                            if (col.key === 'price_with_vat') return <th key="price_with_vat">{t("Price(with VAT)")}</th>;
                                             return null;
                                         })}
                                     </tr>
@@ -3828,7 +3830,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
                                                             }}
-                                                            placeholder="Part No." onChange={(e) => {
+                                                            placeholder={t("Part No.")} onChange={(e) => {
                                                                 delete errors["part_number_" + index];
                                                                 setErrors({ ...errors });
 
@@ -3868,7 +3870,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                 onKeyDown={(e) => {
                                                                     RunKeyActions(e, product);
                                                                 }}
-                                                                placeholder="Name" onChange={(e) => {
+                                                                placeholder={t("Name")} onChange={(e) => {
                                                                     delete errors["name_" + index];
                                                                     setErrors({ ...errors });
 
@@ -3966,57 +3968,57 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                 <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                                     <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                         <i className="bi bi-link"></i>&nbsp;
-                                                                        Linked Products ({getShortcut('linkedProducts')})
+                                                                        {t("Linked Products")} ({getShortcut('linkedProducts')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openProductHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        History ({getShortcut('productHistory')})
+                                                                        {t("History")} ({getShortcut('productHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openSalesHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Sales History ({getShortcut('salesHistory')})
+                                                                        {t("Sales History")} ({getShortcut('salesHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Sales Return History ({getShortcut('salesReturnHistory')})
+                                                                        {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Purchase History ({getShortcut('purchaseHistory')})
+                                                                        {t("Purchase History")} ({getShortcut('purchaseHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                                                        {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                                                        {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openQuotationHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Quotation History ({getShortcut('quotationHistory')})
+                                                                        {t("Quotation History")} ({getShortcut('quotationHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                                                        {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                                                        {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
                                                                     </Dropdown.Item>
 
                                                                     <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        Images ({getShortcut('images')})
+                                                                        {t("Images")} ({getShortcut('images')})
                                                                     </Dropdown.Item>
                                                                 </Dropdown.Menu>
 
@@ -4049,11 +4051,11 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         });
                                                                         const details = stocktransferedEntries
                                                                             .map(([key, value]) => {
-                                                                                let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                let name = key === "main_store" ? t("Main Store") : key.replace(/^wh/, "WH").toUpperCase();
                                                                                 return `${name}: ${value}`;
                                                                             })
                                                                             .join(", ");
-                                                                        return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                                                        return details ? `(${details})` : "(" + t("Main Store") + ": " + selectedProducts[index].stock + ")";
                                                                     })()}
                                                                 </Tooltip>
                                                             }
@@ -4209,7 +4211,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                     value={selectedProducts[index].unit_price}
                                                                     disabled={true}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Unit Price(without VAT)"
+                                                                    placeholder={t("Unit Price(without VAT)")}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"stocktransfer_product_unit_price_" + index}`] = el;
@@ -4279,8 +4281,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                                         if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                                                             if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
-                                                                                errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
-                                                                                errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                                                                errors["unit_price_" + index] = t("Unit price should not be less than Purchase Unit Price(without VAT)");
+                                                                                errors["purchase_unit_price_" + index] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)");
                                                                             } else {
                                                                                 delete errors["unit_price_" + index];
                                                                                 delete errors["purchase_unit_price_" + index];
@@ -4330,7 +4332,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"stocktransfer_product_unit_price_with_vat_" + index}`] = el;
                                                                     }}
-                                                                    placeholder="Unit Price(with VAT)"
+                                                                    placeholder={t("Unit Price(with VAT)")}
                                                                     disabled={true}
                                                                     onFocus={() => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
@@ -4379,7 +4381,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         if (e.target.value === 0) {
-                                                                            errors["unit_price_with_vat_" + index] = "Unit Price should be > 0";
+                                                                            errors["unit_price_with_vat_" + index] = t("Unit Price should be > 0");
                                                                             selectedProducts[index].unit_price_with_vat = 0;
                                                                             selectedProducts[index].unit_price = 0;
                                                                             setSelectedProducts([...selectedProducts]);
@@ -4639,7 +4641,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].line_total_with_vat}
                                                                     className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    placeholder="Line total with VAT"
+                                                                    placeholder={t("Line total with VAT")}
                                                                     disabled={true}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -4765,7 +4767,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     <tr>
 
 
-                                        <th colSpan="8" className="text-end">Total(without VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(without VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total)}
@@ -4777,7 +4779,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="8" className="text-end">Total(with VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(with VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total_with_vat)}
@@ -4790,7 +4792,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Total Taxable Amount(without VAT)
+                                            {t("Total Taxable Amount(without VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4808,7 +4810,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="stocktransfer_vat_percent" name="stocktransfer_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> {t("VAT")}  <input type="number" id="stocktransfer_vat_percent" name="stocktransfer_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
@@ -4865,7 +4867,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT) Before Rounding
+                                            {t("Net Total(with VAT) Before Rounding")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4882,7 +4884,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end">  Rounding Amount
+                                        <th colSpan="8" className="text-end">  {t("Rounding Amount")}
                                             [<input type="checkbox"
                                                 id="stocktransfer_auto_rounding_amount"
                                                 name="stocktransfer_auto_rounding_amount"
@@ -4900,7 +4902,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     }, 100);
 
                                                     console.log(formData);
-                                                }} />{" Auto Calculate]"}
+                                                }} />{" "}{t("Auto Calculate]")}
                                         </th>
                                         <td className="text-end">
                                             <input type="number"
@@ -4970,7 +4972,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT)
+                                            {t("Net Total(with VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4992,7 +4994,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t("Close")}
                             </Button>
                             <Button
                                 variant="primary"
@@ -5013,7 +5015,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                                     : ""
                                 }
-                                {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
+                                {isUpdateForm && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
 
                             </Button>
                         </Modal.Footer>
@@ -5026,7 +5028,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
             {/* ST SP Table Settings Modal */}
             <Modal show={showStSPSettings} onHide={() => setShowStSPSettings(false)} size="md">
                 <Modal.Header closeButton>
-                    <Modal.Title>Table Settings</Modal.Title>
+                    <Modal.Title>{t("Table Settings")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <DragDropContext onDragEnd={onDragEndStSP}>
@@ -5042,7 +5044,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     {...provided.dragHandleProps}>
                                                     <input type="checkbox" checked={col.visible}
                                                         onChange={() => handleToggleStSPColumn(col.key)} />
-                                                    {col.label}
+                                                    {t(col.label)}
                                                 </li>
                                             )}
                                         </Draggable>
@@ -5054,8 +5056,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
                     </DragDropContext>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={restoreDefaultStSPSettings}>Restore Defaults</Button>
-                    <Button variant="primary" onClick={() => setShowStSPSettings(false)}>Close</Button>
+                    <Button variant="secondary" onClick={restoreDefaultStSPSettings}>{t("Restore Defaults")}</Button>
+                    <Button variant="primary" onClick={() => setShowStSPSettings(false)}>{t("Close")}</Button>
                 </Modal.Footer>
             </Modal>
 

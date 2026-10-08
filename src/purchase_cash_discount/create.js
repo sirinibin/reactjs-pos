@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -35,6 +36,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
     let [purchase, setPurchase] = useState({});
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -126,14 +128,14 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
         }
 
         if (formData.amount <= 0) {
-            errors["amount"] = "Amount should be > 0";
+            errors["amount"] = t("amount_greater_than_zero");
             setErrors({ ...errors });
             return;
         }
 
 
         if (formData.amount >= purchase.total) {
-            errors["amount"] = "Amount should be less than total amount:" + purchase.total;
+            errors["amount"] = t("amount_should_be_less_than_total") + purchase.total;
             setErrors({ ...errors });
             return;
         }
@@ -177,7 +179,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Product Category Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("cash_discount_created_successfully"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -191,7 +193,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating PurchaseCashDiscount!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("error_creating_purchase_cash_discount"), "danger");
             });
     }
 
@@ -201,7 +203,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Cash Discount for purchase#" + formData.purchase_code : "Add Cash Discount for purchase#" + formData.purchase_code}
+                        {formData.id ? t('update_cash_discount_for_purchase') + formData.purchase_code : t('add_cash_discount_for_purchase') + formData.purchase_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -210,7 +212,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t('view_detail')}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -225,13 +227,13 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t('update') : !isProcessing ? t('create') : ""}
                         </Button>
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t('close')}
                         ></button>
                     </div>
                 </Modal.Header>
@@ -239,7 +241,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-6">
-                            <label className="form-label">Amount*</label>
+                            <label className="form-label">{t('amount')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -249,14 +251,14 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                                         console.log("Inside onchange vat discount");
                                         if (!e.target.value) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Invalid amount";
+                                            errors["amount"] = t("invalid_amount");
                                             setErrors({ ...errors });
                                             return;
                                         }
 
                                         if (parseFloat(e.target.value) <= 0) {
                                             formData.amount = e.target.value;
-                                            errors["amount"] = "Amount should be > 0";
+                                            errors["amount"] = t("amount_greater_than_zero");
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -267,7 +269,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
                                         console.log("purchase.total:", purchase.total);
                                         if (formData.amount >= purchase.total) {
-                                            errors["amount"] = "Amount should be less than total amount:" + purchase.total;
+                                            errors["amount"] = t("amount_should_be_less_than_total") + purchase.total;
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -277,7 +279,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Name"
+                                    placeholder={t('amount')}
                                 />
                             </div>
                             {errors.amount && (
@@ -288,13 +290,13 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                             {formData.amount && !errors.amount && (
                                 <div style={{ color: "green" }}>
                                     <i className="bi bi-check-lg"> </i>
-                                    Looks good!
+                                    {t('looks_good')}
                                 </div>
                             )}
                         </div>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('close')}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -304,9 +306,9 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
+                                    /> + " " + t('processing')
 
-                                    : formData.id ? "Update" : "Create"
+                                    : formData.id ? t('update') : t('create')
                                 }
                             </Button>
                         </Modal.Footer>

@@ -114,9 +114,9 @@ describe('ProductSalesReturnHistory wrapper', () => {
         expect(!ec || ec === '__undefined__').toBe(true);
     });
 
-    test('4. extraClass="" → TABLE receives subFormModalClass=""', () => {
+    test('4. extraClass="" → TABLE receives subFormModalClass="above-inner-history-form" (always)', () => {
         openWrapper(ProductSalesReturnHistory, '', [{ name: 'P' }, []]);
-        expect(screen.getByTestId('sr-table')).toHaveAttribute('data-sub-form-modal-class', '');
+        expect(screen.getByTestId('sr-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 
     test('5. extraClass="order-inner-history-modal" → TABLE subFormModalClass="above-inner-history-form"', () => {
@@ -124,9 +124,9 @@ describe('ProductSalesReturnHistory wrapper', () => {
         expect(screen.getByTestId('sr-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 
-    test('6. extraClass="something-else" → TABLE receives subFormModalClass=""', () => {
+    test('6. extraClass="something-else" → TABLE receives subFormModalClass="above-inner-history-form" (always)', () => {
         openWrapper(ProductSalesReturnHistory, 'something-else', [{ name: 'P' }, []]);
-        expect(screen.getByTestId('sr-table')).toHaveAttribute('data-sub-form-modal-class', '');
+        expect(screen.getByTestId('sr-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 
     test('7. modal is shown after open() is called', () => {
@@ -138,9 +138,9 @@ describe('ProductSalesReturnHistory wrapper', () => {
 // ── ProductPurchaseHistory ────────────────────────────────────────────────────
 
 describe('ProductPurchaseHistory wrapper', () => {
-    test('8. extraClass="" → TABLE receives subFormModalClass=""', () => {
+    test('8. extraClass="" → TABLE receives subFormModalClass="above-inner-history-form" (always)', () => {
         openWrapper(ProductPurchaseHistory, '', [{ name: 'P' }, []]);
-        expect(screen.getByTestId('pur-table')).toHaveAttribute('data-sub-form-modal-class', '');
+        expect(screen.getByTestId('pur-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 
     test('9. extraClass="order-inner-history-modal" → subFormModalClass="above-inner-history-form"', () => {
@@ -157,9 +157,9 @@ describe('ProductPurchaseHistory wrapper', () => {
 // ── ProductDeliveryNoteHistory ────────────────────────────────────────────────
 
 describe('ProductDeliveryNoteHistory wrapper', () => {
-    test('11. extraClass="" → TABLE receives subFormModalClass=""', () => {
+    test('11. extraClass="" → TABLE receives subFormModalClass="above-inner-history-form" (always)', () => {
         openWrapper(ProductDeliveryNoteHistory, '', [{ name: 'DN' }, []]);
-        expect(screen.getByTestId('dn-table')).toHaveAttribute('data-sub-form-modal-class', '');
+        expect(screen.getByTestId('dn-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 
     test('12. extraClass="order-inner-history-modal" → subFormModalClass="above-inner-history-form" (new fix)', () => {
@@ -172,9 +172,9 @@ describe('ProductDeliveryNoteHistory wrapper', () => {
         expect(draggableExtraClass()).toBe('order-inner-history-modal');
     });
 
-    test('14. arbitrary extraClass does NOT produce subFormModalClass="above-inner-history-form"', () => {
+    test('14. arbitrary extraClass still produces subFormModalClass="above-inner-history-form" (always)', () => {
         openWrapper(ProductDeliveryNoteHistory, 'other-class', [{ name: 'DN' }, []]);
-        expect(screen.getByTestId('dn-table')).toHaveAttribute('data-sub-form-modal-class', '');
+        expect(screen.getByTestId('dn-table')).toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
     });
 });
 
@@ -194,25 +194,27 @@ describe('ProductNonVATSalesHistory wrapper (inline content, no sub-TABLE)', () 
 
 // ── subFormModalClass edge-case exhaustion ────────────────────────────────────
 
-describe('subFormModalClass computation: exhaustive string matching', () => {
-    // Uses ProductSalesReturnHistory as the representative.
-    test('17. only exact "order-inner-history-modal" triggers "above-inner-history-form"', () => {
-        const cases = [
-            ['',                            ''],
-            ['order-inner-history-modal',   'above-inner-history-form'],
-            ['ORDER-INNER-HISTORY-MODAL',   ''],    // case-sensitive
-            ['order-inner-history',         ''],    // partial prefix
-            [' order-inner-history-modal',  ''],    // leading space
-            ['order-inner-history-modal ',  ''],    // trailing space
-            ['above-inner-history-form',    ''],    // output value, not trigger
+describe('subFormModalClass is always "above-inner-history-form" regardless of extraClass', () => {
+    // subFormModalClass is no longer conditional — the DraggableHistoryModal always has
+    // z-index 1150 so any sub-form opened from within it must always sit above it.
+    test('17. subFormModalClass is "above-inner-history-form" for all extraClass values', () => {
+        const extraClasses = [
+            '',
+            'order-inner-history-modal',
+            'ORDER-INNER-HISTORY-MODAL',
+            'order-inner-history',
+            ' order-inner-history-modal',
+            'order-inner-history-modal ',
+            'above-inner-history-form',
+            'some-other-class',
         ];
 
-        for (const [extraClass, expected] of cases) {
+        for (const extraClass of extraClasses) {
             const ref = React.createRef();
             render(<ProductSalesReturnHistory ref={ref} extraClass={extraClass} />);
             act(() => { ref.current.open({ name: 'P' }, []); });
             expect(screen.getAllByTestId('sr-table').pop())
-                .toHaveAttribute('data-sub-form-modal-class', expected);
+                .toHaveAttribute('data-sub-form-modal-class', 'above-inner-history-form');
         }
     });
 });

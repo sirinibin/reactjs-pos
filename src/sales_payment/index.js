@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import SalesPaymentCreate from "./create.js";
 import SalesPaymentView from "./view.js";
 
@@ -14,7 +15,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 
 function SalesPaymentIndex(props) {
-
+    const { t } = useTranslation('common');
 
 
     const selectedDate = new Date();
@@ -368,7 +369,7 @@ function SalesPaymentIndex(props) {
                 }
 
 
-                if (props.showToastMessage) props.showToastMessage("Sales payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("sales_payment_deleted_successfully"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -400,19 +401,19 @@ function SalesPaymentIndex(props) {
                     <div className="col">
                         {paymentStatus === "paid" ?
                             <span className="badge bg-success">
-                                Paid
+                                {t('paid')}
                             </span> : ""}
                         {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
-                                Paid Partially
+                                {t('paid_partially')}
                             </span> : ""}
                         {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
-                                Not Paid
+                                {t('not_paid')}
                             </span> : ""}
 
                         <h1 className="text-end">
-                            Total paid amount: <Badge bg="secondary">
+                            {t('total_paid_amount')} <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -423,7 +424,7 @@ function SalesPaymentIndex(props) {
                             </Badge>
                         </h1>
                         {props.order ? <h4 className="text-end">
-                            Balance amount: <Badge bg="secondary">
+                            {t('balance_amount')} <Badge bg="secondary">
                                 <NumberFormat
                                     value={balanceAmount.toFixed(2)}
                                     displayType={"text"}
@@ -438,7 +439,7 @@ function SalesPaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="h3">Sales Payments</h1>
+                        <h1 className="h3">{t('sales_payments')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -448,7 +449,7 @@ function SalesPaymentIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('create')}
                         </Button> : ""}
                     </div>
                 </div>
@@ -465,7 +466,7 @@ function SalesPaymentIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No sales payment s to display</p>
+                                            <p className="text-start">{t('no_sales_payments_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -490,7 +491,7 @@ function SalesPaymentIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('loading')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -501,7 +502,7 @@ function SalesPaymentIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -556,7 +557,7 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                     >
 
-                                                        Order ID
+                                                        {t('order_id')}
                                                         {sortField === "order_code" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -575,7 +576,7 @@ function SalesPaymentIndex(props) {
                                                             sort("date");
                                                         }}
                                                     >
-                                                        Date
+                                                        {t('date')}
                                                         {sortField === "date" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -594,7 +595,7 @@ function SalesPaymentIndex(props) {
                                                             sort("amount");
                                                         }}
                                                     >
-                                                        Amount
+                                                        {t('amount')}
                                                         {sortField === "amount" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -614,7 +615,7 @@ function SalesPaymentIndex(props) {
                                                             sort("method");
                                                         }}
                                                     >
-                                                        Payment Method
+                                                        {t('payment_method')}
                                                         {sortField === "method" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -635,7 +636,7 @@ function SalesPaymentIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('created_by')}
                                                         {sortField === "created_by_name" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -654,7 +655,7 @@ function SalesPaymentIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -663,8 +664,8 @@ function SalesPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th >Actions</th>
-                                                <th >Deleted</th>
+                                                <th >{t('actions')}</th>
+                                                <th >{t('deleted')}</th>
                                             </tr>
                                         </thead>
 
@@ -704,13 +705,13 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
@@ -726,7 +727,7 @@ function SalesPaymentIndex(props) {
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
@@ -778,7 +779,7 @@ function SalesPaymentIndex(props) {
                                                             );
                                                         }}
                                                         options={salespaymentOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('select_users')}
                                                         selected={selectedCreatedBySalesPayments}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -813,13 +814,13 @@ function SalesPaymentIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -835,7 +836,7 @@ function SalesPaymentIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to')}:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
@@ -868,8 +869,8 @@ function SalesPaymentIndex(props) {
                                                             }
                                                         }}
                                                     >
-                                                        <option value="0">NO</option>
-                                                        <option value="1">YES</option>
+                                                        <option value="0">{t('no')}</option>
+                                                        <option value="1">{t('yes')}</option>
                                                     </select>
                                                 </th>
                                             </tr>
@@ -927,7 +928,7 @@ function SalesPaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
-                                                        <td>{salespayment.deleted ? "YES" : "NO"}</td>
+                                                        <td>{salespayment.deleted ? t('yes') : t('no')}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

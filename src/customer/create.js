@@ -16,8 +16,10 @@ import VehicleCreate from "../vehicle/create.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const CustomerCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef();
@@ -93,6 +95,16 @@ const CustomerCreate = forwardRef((props, ref) => {
     });
 
     const [show, SetShow] = useState(false);
+    useEffect(() => {
+        if (!show) return;
+        const apply = () => {
+            const el = document.querySelector('.modal.cust-create-wrap');
+            if (el) el.style.setProperty('z-index', '1600', 'important');
+        };
+        apply();
+        const t = setTimeout(apply, 80);
+        return () => clearTimeout(t);
+    }, [show]);
 
     function handleClose() {
         SetShow(false);
@@ -259,7 +271,7 @@ const CustomerCreate = forwardRef((props, ref) => {
         let haveErrors = false;
         setErrors({ ...errors });
         if (!formData.name) {
-            errors["name"] = "Name is required";
+            errors["name"] = t("Name is required");
             haveErrors = true;
         }
 
@@ -267,10 +279,10 @@ const CustomerCreate = forwardRef((props, ref) => {
 
         if (formData.country_code === "" || formData.country_code === "SA") {
             if (formData.vat_no && !isValidNDigitNumber(formData.vat_no, 15)) {
-                errors["vat_no"] = "VAT No. should be 15 digits";
+                errors["vat_no"] = t("VAT No. should be 15 digits");
                 haveErrors = true;
             } else if (formData.vat_no && !NumberStartAndEndWith(formData.vat_no, 3)) {
-                errors["vat_no"] = "VAT No should start and end with 3";
+                errors["vat_no"] = t("VAT No should start and end with 3");
                 haveErrors = true;
             }
         }
@@ -279,24 +291,24 @@ const CustomerCreate = forwardRef((props, ref) => {
         if (formData.vat_no && store.zatca?.phase === "2") {
 
             if (formData.national_address?.building_no && !isValidNDigitNumber(formData.national_address?.building_no, 4)) {
-                errors["national_address_building_no"] = "Building number should be 4 digits";
+                errors["national_address_building_no"] = t("Building number should be 4 digits");
                 haveErrors = true;
             }
 
 
             if (formData.national_address?.zipcode && !isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
-                errors["national_address_zipcode"] = "Zipcode should be 5 digits";
+                errors["national_address_zipcode"] = t("Zipcode should be 5 digits");
                 haveErrors = true;
             }
         }
 
         if (formData.registration_number && !IsAlphanumeric(formData.registration_number)) {
-            errors["registration_number"] = "CRN should be alpha numeric(a-zA-Z0-9)";
+            errors["registration_number"] = t("CRN should be alpha numeric(a-zA-Z0-9)");
             haveErrors = true;
         }
 
         if (formData.email && !validateEmail(formData.email)) {
-            errors["email"] = "E-mail is not valid";
+            errors["email"] = t("E-mail is not valid");
             haveErrors = true;
         }
 
@@ -389,10 +401,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                     setProcessing(false);
                     if (formData.id) {
                         if (props.showToastMessage)
-                            props.showToastMessage("Customer updated successfully!", "success");
+                            props.showToastMessage(t("Customer updated successfully!"), "success");
                     } else {
                         if (props.showToastMessage)
-                            props.showToastMessage("Customer created successfully!", "success");
+                            props.showToastMessage(t("Customer created successfully!"), "success");
                     }
 
                     if (props.refreshList) {
@@ -421,7 +433,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process customer!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process customer!"), "danger");
             });
     }
 
@@ -514,7 +526,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     }
 
     function deleteVehicle(id) {
-        if (!window.confirm("Are you sure you want to delete this vehicle?")) {
+        if (!window.confirm(t("Are you sure you want to delete this vehicle?"))) {
             return;
         }
 
@@ -540,14 +552,14 @@ const CustomerCreate = forwardRef((props, ref) => {
                     return Promise.reject(data && data.errors);
                 }
                 if (props.showToastMessage) {
-                    props.showToastMessage("Vehicle deleted successfully!", "success");
+                    props.showToastMessage(t("Vehicle deleted successfully!"), "success");
                 }
                 loadCustomerVehicles(formData.id);
             })
             .catch(error => {
                 console.log(error);
                 if (props.showToastMessage) {
-                    props.showToastMessage("Failed to delete vehicle!", "danger");
+                    props.showToastMessage(t("Failed to delete vehicle!"), "danger");
                 }
             });
     }
@@ -585,63 +597,63 @@ const CustomerCreate = forwardRef((props, ref) => {
             <QuotationSalesReturns ref={QtnSalesReturnsRef} showToastMessage={props.showToastMessage} />
             {!props.noVehicleCreate && <VehicleCreate ref={VehicleCreateRef} refreshList={() => loadCustomerVehicles()} showToastMessage={props.showToastMessage} />}
             {/*  <CustomerView ref={DetailsViewRef} />*/}
-            <style>{`.cust-create-wrap { z-index: 1090 !important; }`}</style>
+            <style>{`.cust-create-wrap { z-index: ${props.zIndex || 1600} !important; }`}</style>
             <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="cust-create-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? <>Update Customer{formData.code ? <span style={{ fontWeight: 700, color: '#5a6478', marginLeft: '8px', fontSize: '17px' }}>#{formData.code}</span> : ''} — {formData.name}</> : 'Create New Customer'}
+                        {formData.id ? <>{t('Update Customer')}{formData.code ? <span style={{ fontWeight: 700, color: '#5a6478', marginLeft: '8px', fontSize: '17px' }}>#{formData.code}</span> : ''} — {formData.name}</> : t('Create New Customer')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         {formData.id && (
                             <Dropdown align="end">
-                                <Dropdown.Toggle variant="outline-secondary" size="sm" id="cust-create-hist-dd" title="History & Links">
-                                    <i className="bi bi-clock-history me-1"></i>History
+                                <Dropdown.Toggle variant="outline-secondary" size="sm" id="cust-create-hist-dd" title={t('History & Links')}>
+                                    <i className="bi bi-clock-history me-1"></i>{t('History')}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu style={{ minWidth: 230 }}>
                                     <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'repairs'); }}>
-                                        <i className="bi bi-tools me-2 text-secondary"></i>Repair Jobs
+                                        <i className="bi bi-tools me-2 text-secondary"></i>{t('Repair Jobs')}
                                     </Dropdown.Item>
                                     {automobileEnabledCreate && (
                                         <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'vehicles'); }}>
-                                            <i className="bi bi-car-front me-2 text-secondary"></i>Vehicles
+                                            <i className="bi bi-car-front me-2 text-secondary"></i>{t('Vehicles')}
                                         </Dropdown.Item>
                                     )}
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={() => SalesRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
-                                        <i className="bi bi-receipt me-2 text-success"></i>Sales History
+                                        <i className="bi bi-receipt me-2 text-success"></i>{t('Sales History')}
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => SalesReturnsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
-                                        <i className="bi bi-receipt-cutoff me-2 text-warning"></i>Sales Return History
+                                        <i className="bi bi-receipt-cutoff me-2 text-warning"></i>{t('Sales Return History')}
                                     </Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={() => QuotationsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], 'quotation', null)}>
-                                        <i className="bi bi-clipboard2-check me-2 text-info"></i>Quotation History
+                                        <i className="bi bi-clipboard2-check me-2 text-info"></i>{t('Quotation History')}
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => QtnSalesRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], 'invoice', null)}>
-                                        <i className="bi bi-file-earmark-check me-2 text-info"></i>Qtn. Sales History
+                                        <i className="bi bi-file-earmark-check me-2 text-info"></i>{t('Qtn. Sales History')}
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => QtnSalesReturnsRef.current?.open(false, [{ id: formData.id, name: formData.name, search_label: formData.search_label }], null)}>
-                                        <i className="bi bi-clipboard2-x me-2 text-warning"></i>Qtn. Sales Return History
+                                        <i className="bi bi-clipboard2-x me-2 text-warning"></i>{t('Qtn. Sales Return History')}
                                     </Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'churnHistory'); }}>
-                                        <i className="bi bi-exclamation-triangle me-2 text-danger"></i>Churn Risk History
+                                        <i className="bi bi-exclamation-triangle me-2 text-danger"></i>{t('Churn Risk History')}
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id, 'clvHistory'); }}>
-                                        <i className="bi bi-graph-up-arrow me-2 text-primary"></i>CLV History
+                                        <i className="bi bi-graph-up-arrow me-2 text-primary"></i>{t('CLV History')}
                                     </Dropdown.Item>
                                 </Dropdown.Menu>
                             </Dropdown>
@@ -650,7 +662,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -700,7 +712,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                               <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
                                 <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
                                   <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
-                                  {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                  {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                 </div>
                                 {allErrors.map(([k, v]) => (
                                   <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
@@ -712,10 +724,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 {/* ── Basic Info ── */}
                                 <>
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-person-circle">Identity</SectionTitle>
+                                            <SectionTitle icon="bi-person-circle">{t('Identity')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-6">
-                                                    <Label required>Name</Label>
+                                                    <Label required>{t('Name')}</Label>
                                                     <input
                                                         id="customer_name"
                                                         name="customer_name"
@@ -735,13 +747,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             }, 500);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Name"
+                                                        placeholder={t('Name')}
                                                     />
                                                     {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-6">
-                                                    <Label>Name in Arabic</Label>
+                                                    <Label>{t('Name in Arabic')}</Label>
                                                     <input
                                                         id="customer_name_in_arabic"
                                                         name="customer_name_in_arabic"
@@ -755,13 +767,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Name in Arabic"
+                                                        placeholder={t('Name in Arabic')}
                                                     />
                                                     {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Email</Label>
+                                                    <Label>{t('Email')}</Label>
                                                     <input
                                                         value={formData.email ? formData.email : ""}
                                                         type='text'
@@ -774,13 +786,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         style={INPUT}
                                                         id="customer_email"
                                                         name="customer_email"
-                                                        placeholder="Email"
+                                                        placeholder={t('Email')}
                                                     />
                                                     {errors.email && <ErrMsg>{errors.email}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Phone (05.. / +966..)</Label>
+                                                    <Label>{t('Phone (05.. / +966..)')}</Label>
                                                     <input
                                                         id="customer_phone"
                                                         name="customer_phone"
@@ -794,13 +806,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Phone"
+                                                        placeholder={t('Phone')}
                                                     />
                                                     {errors.phone && <ErrMsg>{errors.phone}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Phone2 (05.. / +966..)</Label>
+                                                    <Label>{t('Phone2 (05.. / +966..)')}</Label>
                                                     <input
                                                         id="customer_phone2"
                                                         name="customer_phone2"
@@ -814,13 +826,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Phone2"
+                                                        placeholder={t('Phone2')}
                                                     />
                                                     {errors.phone2 && <ErrMsg>{errors.phone2}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Contact Person</Label>
+                                                    <Label>{t('Contact Person')}</Label>
                                                     <input
                                                         id="customer_contact_person"
                                                         name="customer_contact_person"
@@ -833,13 +845,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Contact Person"
+                                                        placeholder={t('Contact Person')}
                                                     />
                                                     {errors.contact_person && <ErrMsg>{errors.contact_person}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Country</Label>
+                                                    <Label>{t('Country')}</Label>
                                                     <Typeahead
                                                         id="country_code"
                                                         labelKey="label"
@@ -867,7 +879,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             }
                                                         }}
                                                         options={countryOptions}
-                                                        placeholder="Country name"
+                                                        placeholder={t('Country name')}
                                                         selected={selectedCountries}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -880,10 +892,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-building">Business Details</SectionTitle>
+                                            <SectionTitle icon="bi-building">{t('Business Details')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-6">
-                                                    <Label>VAT No. (15 digits)</Label>
+                                                    <Label>{t('VAT No. (15 digits)')}</Label>
                                                     <input
                                                         id="customer_vat_no"
                                                         name="customer_vat_no"
@@ -897,13 +909,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="VAT NO."
+                                                        placeholder={t('VAT NO.')}
                                                     />
                                                     {errors.vat_no && <ErrMsg>{errors.vat_no}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-6">
-                                                    <Label>Registration Number (CRN)</Label>
+                                                    <Label>{t('Registration Number (CRN)')}</Label>
                                                     <input
                                                         value={formData.registration_number ? formData.registration_number : ""}
                                                         type='text'
@@ -917,7 +929,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         style={INPUT}
                                                         id="customer_registration_number"
                                                         name="customer_registration_number"
-                                                        placeholder="CRN"
+                                                        placeholder={t('CRN')}
                                                     />
                                                     {errors.registration_number && <ErrMsg>{errors.registration_number}</ErrMsg>}
                                                 </div>
@@ -925,11 +937,11 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-chat-left-text">Remarks</SectionTitle>
+                                            <SectionTitle icon="bi-chat-left-text">{t('Remarks')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-12">
                                                     <Label>
-                                                        Remarks&nbsp;|&nbsp;
+                                                        {t('Remarks')}&nbsp;|&nbsp;
                                                         <input type="checkbox" style={{ marginLeft: '3px' }}
                                                             value={formData.use_remarks_in_sales}
                                                             checked={formData.use_remarks_in_sales}
@@ -941,7 +953,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             }}
                                                             id="customer_use_remarks_in_sales"
                                                         />
-                                                        {' '}Use in Sales / Sales Return
+                                                        {' '}{t('Use in Sales / Sales Return')}
                                                     </Label>
                                                     <textarea
                                                         value={formData.remarks}
@@ -954,7 +966,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         }}
                                                         style={{ ...INPUT, minHeight: '80px', resize: 'vertical' }}
                                                         id="remarks"
-                                                        placeholder="Remarks"
+                                                        placeholder={t('Remarks')}
                                                     />
                                                     {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
                                                 </div>
@@ -965,10 +977,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 {/* ── Address ── */}
                                 <>
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-signpost">National Address</SectionTitle>
+                                            <SectionTitle icon="bi-signpost">{t('National Address')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-4">
-                                                    <Label>Building Number</Label>
+                                                    <Label>{t('Building Number')}</Label>
                                                     <input
                                                         value={formData.national_address && formData.national_address.building_no ? formData.national_address.building_no : ""}
                                                         type='text'
@@ -981,13 +993,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         style={INPUT}
                                                         id="customer_national_address_building_no"
                                                         name="customer_national_address_building_no"
-                                                        placeholder="Building Number"
+                                                        placeholder={t('Building Number')}
                                                     />
                                                     {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Street Name</Label>
+                                                    <Label>{t('Street Name')}</Label>
                                                     <input
                                                         value={formData.national_address && formData.national_address.street_name ? formData.national_address.street_name : ""}
                                                         type='text'
@@ -1006,13 +1018,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         style={INPUT}
                                                         id="customer_national_address_street_name"
                                                         name="customer_national_address_street_name"
-                                                        placeholder="Street Name"
+                                                        placeholder={t('Street Name')}
                                                     />
                                                     {errors.national_address_street_name && <ErrMsg>{errors.national_address_street_name}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Street Name (Arabic)</Label>
+                                                    <Label>{t('Street Name (Arabic)')}</Label>
                                                     <input
                                                         id="customer_national_address_street_name_arabic"
                                                         name="customer_national_address_street_name_arabic"
@@ -1025,13 +1037,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Street Name (Arabic)"
+                                                        placeholder={t('Street Name (Arabic)')}
                                                     />
                                                     {errors.national_address_street_name_arabic && <ErrMsg>{errors.national_address_street_name_arabic}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>District Name</Label>
+                                                    <Label>{t('District Name')}</Label>
                                                     <input
                                                         id="customer_national_address_district_name_arabic"
                                                         name="customer_national_address_district_name_arabic"
@@ -1050,13 +1062,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             }, 500);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="District Name"
+                                                        placeholder={t('District Name')}
                                                     />
                                                     {errors.national_address_district_name && <ErrMsg>{errors.national_address_district_name}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>District Name (Arabic)</Label>
+                                                    <Label>{t('District Name (Arabic)')}</Label>
                                                     <input
                                                         id="national_address.district_name_arabic"
                                                         name="national_address.district_name_arabic"
@@ -1069,13 +1081,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="District Name (Arabic)"
+                                                        placeholder={t('District Name (Arabic)')}
                                                     />
                                                     {errors.national_address_district_name_arabic && <ErrMsg>{errors.national_address_district_name_arabic}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Unit Number</Label>
+                                                    <Label>{t('Unit Number')}</Label>
                                                     <input
                                                         id="customer_national_address_unit_no"
                                                         model="customer_national_address_unit_no"
@@ -1088,13 +1100,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Unit Number"
+                                                        placeholder={t('Unit Number')}
                                                     />
                                                     {errors.national_address_unit_no && <ErrMsg>{errors.national_address_unit_no}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>City Name</Label>
+                                                    <Label>{t('City Name')}</Label>
                                                     <input
                                                         id="customer_national_address_city_name"
                                                         name="customer_national_address_city_name"
@@ -1113,13 +1125,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             }, 500);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="City Name"
+                                                        placeholder={t('City Name')}
                                                     />
                                                     {errors.national_address_city_name && <ErrMsg>{errors.national_address_city_name}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>City Name (Arabic)</Label>
+                                                    <Label>{t('City Name (Arabic)')}</Label>
                                                     <input
                                                         id="customer_national_address.city_name_arabic"
                                                         name="customer_national_address.city_name_arabic"
@@ -1132,13 +1144,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="City Name (Arabic)"
+                                                        placeholder={t('City Name (Arabic)')}
                                                     />
                                                     {errors.national_address_city_name_arabic && <ErrMsg>{errors.national_address_city_name_arabic}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Zipcode</Label>
+                                                    <Label>{t('Zipcode')}</Label>
                                                     <input
                                                         id="customer_national_address_zipcode"
                                                         value={formData.national_address && formData.national_address.zipcode ? formData.national_address.zipcode : ""}
@@ -1150,13 +1162,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Zipcode"
+                                                        placeholder={t('Zipcode')}
                                                     />
                                                     {errors.national_address_zipcode && <ErrMsg>{errors.national_address_zipcode}</ErrMsg>}
                                                 </div>
 
                                                 <div className="col-md-4">
-                                                    <Label>Additional Number</Label>
+                                                    <Label>{t('Additional Number')}</Label>
                                                     <input
                                                         id="customer_national_address.additional_no"
                                                         name="customer_national_address.additional_no"
@@ -1169,7 +1181,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                             console.log(formData);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="Additional Number"
+                                                        placeholder={t('Additional Number')}
                                                     />
                                                     {errors.national_address_additional_no && <ErrMsg>{errors.national_address_additional_no}</ErrMsg>}
                                                 </div>
@@ -1180,10 +1192,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 {/* ── Financial ── */}
                                 <>
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-cash-stack">Credit &amp; Balances</SectionTitle>
+                                            <SectionTitle icon="bi-cash-stack">{t('Credit & Balances')}</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-4">
-                                                    <Label>Credit Limit</Label>
+                                                    <Label>{t('Credit Limit')}</Label>
                                                     <input
                                                         id="customer_credit_limit"
                                                         name="customer_credit_limit"
@@ -1209,7 +1221,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 {formData.id && (
                                                     <>
                                                         <div className="col-md-4">
-                                                            <Label>Credit Balance</Label>
+                                                            <Label>{t('Credit Balance')}</Label>
                                                             <input
                                                                 type='text'
                                                                 disabled={true}
@@ -1221,7 +1233,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         </div>
 
                                                         <div className="col-md-4">
-                                                            <Label>Qtn. Credit Invoice Amount</Label>
+                                                            <Label>{t('Qtn. Credit Invoice Amount')}</Label>
                                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                                 <input
                                                                     type='number'
@@ -1238,7 +1250,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                         </div>
 
                                                         <div className="col-md-4">
-                                                            <Label>Qtn. Paid Invoice Amount</Label>
+                                                            <Label>{t('Qtn. Paid Invoice Amount')}</Label>
                                                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                                 <input
                                                                     type='number'
@@ -1262,16 +1274,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 {store.settings?.enable_automobile_module === true && !!formData.id && (
                                     <div style={CARD} className="pw-card">
                                         <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                                            <SectionTitle icon="bi-car-front">Vehicles</SectionTitle>
+                                            <SectionTitle icon="bi-car-front">{t('Vehicles')}</SectionTitle>
                                             {formData.id && (
                                                 <Button type="button" className="btn btn-primary btn-sm" onClick={openVehicleCreate}>
-                                                    <i className="bi bi-plus-lg"></i> Add Vehicle
+                                                    <i className="bi bi-plus-lg"></i> {t('Add Vehicle')}
                                                 </Button>
                                             )}
                                         </div>
 
                                         {!formData.id && (
-                                            <p className="text-muted mb-0">Save the customer first to add vehicles.</p>
+                                            <p className="text-muted mb-0">{t('Save the customer first to add vehicles.')}</p>
                                         )}
 
                                         {formData.id && isVehicleListLoading && (
@@ -1281,7 +1293,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         )}
 
                                         {formData.id && !isVehicleListLoading && customerVehicles.length === 0 && (
-                                            <p className="text-muted mb-0">No vehicles added for this customer yet.</p>
+                                            <p className="text-muted mb-0">{t('No vehicles added for this customer yet.')}</p>
                                         )}
 
                                         {formData.id && !isVehicleListLoading && customerVehicles.length > 0 && (
@@ -1289,11 +1301,11 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 <table className="table table-sm table-bordered table-striped mb-0">
                                                     <thead>
                                                         <tr className="text-center">
-                                                            <th>Brand / Model</th>
-                                                            <th>Variant</th>
-                                                            <th>Year</th>
-                                                            <th>Vehicle # / Istimara No.</th>
-                                                            <th>Actions</th>
+                                                            <th>{t('Brand / Model')}</th>
+                                                            <th>{t('Variant')}</th>
+                                                            <th>{t('Year')}</th>
+                                                            <th>{t('Vehicle # / Istimara No.')}</th>
+                                                            <th>{t('Actions')}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="text-center">
@@ -1327,39 +1339,39 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                                 {/* ── Opening Balance ── */}
                                 <div style={CARD} className="pw-card">
-                                    <SectionTitle icon="bi-arrow-left-right">Opening Balance</SectionTitle>
+                                    <SectionTitle icon="bi-arrow-left-right">{t('Opening Balance')}</SectionTitle>
                                     <p style={{ fontSize: '12px', color: '#5c6470', fontFamily: '"Inter", sans-serif', marginBottom: '12px' }}>
-                                        If this customer has an outstanding balance from your previous system, enter the amount and date. Leave as 0 if fully settled.
-                                        {formData.opening_balance_posted && ' (An opening balance entry has already been posted — changing values below will update it.)'}
+                                        {t('If this customer has an outstanding balance from your previous system, enter the amount and date. Leave as 0 if fully settled.')}
+                                        {formData.opening_balance_posted && ' ' + t('(An opening balance entry has already been posted — changing values below will update it.)')}
                                     </p>
                                     <div className="row g-3">
                                         <div className="col-12">
-                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Balance Direction</label>
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>{t('Balance Direction')}</label>
                                             <div style={{ display: 'flex', gap: '24px' }}>
                                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                                                     <input type="radio" name="cust_ob_type" value="receivable"
                                                         checked={(formData.opening_balance_type || 'receivable') === 'receivable'}
                                                         onChange={() => { formData.opening_balance_type = 'receivable'; setFormData({ ...formData }); }} />
-                                                    Customer owes Store
+                                                    {t('Customer owes Store')}
                                                 </label>
                                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
                                                     <input type="radio" name="cust_ob_type" value="payable"
                                                         checked={formData.opening_balance_type === 'payable'}
                                                         onChange={() => { formData.opening_balance_type = 'payable'; setFormData({ ...formData }); }} />
-                                                    Store owes Customer
+                                                    {t('Store owes Customer')}
                                                 </label>
                                             </div>
                                             {errors.opening_balance_type && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance_type}</div>}
                                         </div>
                                         <div className="col-md-6">
-                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Opening Balance Amount</label>
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>{t('Opening Balance Amount')}</label>
                                             <input type="number" step="0.01" min="0" style={INPUT}
                                                 value={formData.opening_balance ?? ''}
                                                 onChange={e => { formData.opening_balance = e.target.value === '' ? '' : parseFloat(e.target.value); setFormData({ ...formData }); }} />
                                             {errors.opening_balance && <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>{errors.opening_balance}</div>}
                                         </div>
                                         <div className="col-md-6">
-                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>As Of Date</label>
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>{t('As Of Date')}</label>
                                             <DatePicker
                                                 selected={formData.opening_balance_date ? new Date(formData.opening_balance_date) : null}
                                                 onChange={(value) => { formData.opening_balance_date = value; setFormData({ ...formData }); }}
@@ -1367,7 +1379,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 timeIntervals={1}
                                                 dateFormat="MMMM d, yyyy h:mm aa"
                                                 locale={enUS}
-                                                placeholderText="Select date & time"
+                                                placeholderText={t('Select date & time')}
                                                 isClearable
                                                 className={`form-control form-control-sm${errors.opening_balance_date ? " is-invalid" : ""}`}
                                             />
@@ -1379,7 +1391,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 {/* ── Photos ── */}
                                 <>
                                         <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-images">Customer Photos</SectionTitle>
+                                            <SectionTitle icon="bi-images">{t('Customer Photos')}</SectionTitle>
                                             <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"customer"} />
                                         </div>
                                 </>

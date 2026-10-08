@@ -59,17 +59,19 @@ const Products = forwardRef((props, ref) => {
 
     const [show, SetShow] = useState(false);
 
-    // Force the selection modal's outer div to z-index 1085 so pw-modal-wrap forms
-    // (z-index 1095 from App.css) always render on top of it.
+    // Force the selection modal's outer div z-index:
+    //   1085 normally (below pw-modal-wrap at 1095/1096)
+    //   1096 in pendingView (above the pendingView edit form at 1090/1095)
     useEffect(() => {
         if (show) {
             requestAnimationFrame(() => {
                 if (selectionModalRef.current?.dialog) {
-                    selectionModalRef.current.dialog.style.setProperty('z-index', '1085', 'important');
+                    const zIndex = props.pendingView ? '1096' : '1085';
+                    selectionModalRef.current.dialog.style.setProperty('z-index', zIndex, 'important');
                 }
             });
         }
-    }, [show]);
+    }, [show, props.pendingView]);
 
     function handleClose() {
         SetShow(false);

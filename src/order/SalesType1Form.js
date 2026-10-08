@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
@@ -69,6 +69,7 @@ export function SalesType1Header({
     dismissDnNotification,
     openJobCard,
     repairJobInfos,
+    onSwitchToQuotation,
 }) {
     const { t } = useTranslation('common');
     return (
@@ -83,6 +84,11 @@ export function SalesType1Header({
                             }} style={{ width: "16px", height: "16px", verticalAlign: "middle", marginRight: "6px" }} /> {t("Report to Zatca")} <br />
                         </div>}
                         <div className="col align-self-end text-end">
+                            {!isUpdateForm && onSwitchToQuotation && (
+                                <><button type="button" onClick={onSwitchToQuotation} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid #6c757d', backgroundColor: '#f8f9fa', color: '#495057', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                    <i className="bi bi-arrow-left-right" style={{ fontSize: '13px' }}></i> {t('Switch to Quotation')}
+                                </button>&nbsp;&nbsp;</>
+                            )}
                             <Button variant="primary" className="btn btn-primary" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }}>
                                 <i className="bi-chevron-double-left"></i> {t('Previous')}
                             </Button>
@@ -296,6 +302,31 @@ export function SalesType1Body({
     startPsColResize,
 }) {
     const { t } = useTranslation('common');
+
+    const dragIndexRef = useRef(null);
+    const dragOverIndexRef = useRef(null);
+
+    function handleDragStart(index) {
+        dragIndexRef.current = index;
+    }
+
+    function handleDragOver(e, index) {
+        e.preventDefault();
+        dragOverIndexRef.current = index;
+    }
+
+    function handleDrop() {
+        const from = dragIndexRef.current;
+        const to = dragOverIndexRef.current;
+        if (from === null || to === null || from === to) return;
+        const reordered = [...selectedProducts];
+        const [moved] = reordered.splice(from, 1);
+        reordered.splice(to, 0, moved);
+        setSelectedProducts(reordered);
+        dragIndexRef.current = null;
+        dragOverIndexRef.current = null;
+        setTimeout(() => reCalculate(), 50);
+    }
 
     function removeDepositPayments() {
         if (!formData.payments_input) return;
@@ -675,6 +706,29 @@ export function SalesType1Body({
                                                         className="form-control"
                                                         placeholder={t('Customer P.O No.')}
                                                     />
+                                                </div>
+                                            )}
+
+                                            {/* Custom Invoice ID */}
+                                            {store?.settings?.enable_custom_sales_invoice_id && (
+                                                <div>
+                                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>
+                                                        {t('Invoice ID')}
+                                                        {isUpdateForm && <span style={{ color: '#dc3545', marginLeft: '2px' }}>*</span>}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        id="custom_invoice_id"
+                                                        name="custom_invoice_id"
+                                                        value={formData.code || ''}
+                                                        onChange={(e) => {
+                                                            formData.code = e.target.value;
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                        className={`form-control${errors?.code ? ' is-invalid' : ''}`}
+                                                        placeholder={isUpdateForm ? t('Invoice ID (required)') : t('Leave empty to auto-generate')}
+                                                    />
+                                                    {errors?.code && <div className="invalid-feedback">{errors.code}</div>}
                                                 </div>
                                             )}
 
@@ -1176,8 +1230,14 @@ export function SalesType1Body({
                                             const duplicateCount = duplicateIndexes.length;
                                             return (
                                                 <tr
-                                                    className="text-center fixed-row "
-                                                    key={index}>
+                                                    className="text-center fixed-row"
+                                                    key={index}
+                                                    draggable={!isZatcaReported}
+                                                    onDragStart={() => handleDragStart(index)}
+                                                    onDragOver={(e) => handleDragOver(e, index)}
+                                                    onDrop={handleDrop}
+                                                    style={{ cursor: isZatcaReported ? undefined : 'grab' }}
+                                                >
                                                     {selectedProductsColumns.filter(c => c.visible).map(col => {
                                                         if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
                                                             <div
@@ -1189,9 +1249,11 @@ export function SalesType1Body({
                                                                 <i className="bi bi-trash"> </i>
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'si_no') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                                                            {index + 1}
-
+                                                        if (col.key === 'si_no') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem', whiteSpace: 'nowrap' }}>
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                                {!isZatcaReported && <i className="bi bi-grip-vertical" style={{ color: '#aaa', fontSize: '14px', cursor: 'grab' }} />}
+                                                                {index + 1}
+                                                            </span>
                                                         </td>);
                                                         if (col.key === 'part_number') return (<ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center' }}>

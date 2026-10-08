@@ -215,9 +215,12 @@ describe('Products — source-code checks for DraggableDialog and selectionModal
         expect(PRODUCTS_JS).not.toMatch(/zIndex\s*:\s*1060/);
     });
 
-    test('selectionModalRef z-index is set to 1085 in the show useEffect', () => {
+    test('selectionModalRef z-index is set conditionally: 1096 in pendingView, 1085 otherwise', () => {
         expect(PRODUCTS_JS).toMatch(
-            /selectionModalRef\.current.*dialog.*setProperty.*z-index.*1085/s
+            /props\.pendingView\s*\?\s*'1096'\s*:\s*'1085'/
+        );
+        expect(PRODUCTS_JS).toMatch(
+            /selectionModalRef\.current.*dialog.*setProperty.*z-index.*zIndex/s
         );
     });
 

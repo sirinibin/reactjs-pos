@@ -52,6 +52,7 @@ export function SalesVanStoreHeader({
     openPrint, openPreview,
     handleCreate, handleClose,
     openSalesFromDnInForm, dismissDnNotification,
+    onSwitchToQuotation,
 }) {
     const { t } = useTranslation("common");
 
@@ -156,6 +157,14 @@ export function SalesVanStoreHeader({
                         <option value="type2" style={{ color: "#000" }}>Type 2</option>
                         <option value="type1" style={{ color: "#000" }}>Type 1</option>
                     </select>
+                )}
+
+                {/* Switch to Quotation */}
+                {!isUpdateForm && onSwitchToQuotation && (
+                    <button type="button" onClick={onSwitchToQuotation}
+                        style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 5, padding: "5px 9px", fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        <i className="bi bi-arrow-left-right" style={{ fontSize: 12 }} /><span className="d-none d-sm-inline">{t("Quotation")}</span>
+                    </button>
                 )}
 
                 {/* Create/Update primary button */}

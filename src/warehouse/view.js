@@ -2,6 +2,7 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone } from '../utils/dateUtils.js';
+import { useTranslation } from "react-i18next";
 
 const WarehouseView = forwardRef((props, ref) => {
 
@@ -14,6 +15,7 @@ const WarehouseView = forwardRef((props, ref) => {
         },
     }));
 
+    const { t } = useTranslation('common');
     let [model, setModel] = useState({});
     const [show, SetShow] = useState(false);
 
@@ -65,31 +67,31 @@ const WarehouseView = forwardRef((props, ref) => {
     const hasNationalAddress = model.national_address && Object.values(model.national_address).some(v => v);
 
     const detailRows = [
-        { label: 'Name', value: model.name },
-        { label: 'Name (Arabic)', value: model.name_in_arabic },
-        { label: 'Code', value: model.code },
-        { label: 'Phone', value: model.phone },
-        { label: 'Phone (Arabic)', value: model.phone_in_arabic },
-        { label: 'Email', value: model.email },
-        { label: 'Country', value: model.country_name },
+        { label: t('Name'), value: model.name },
+        { label: t('Name (Arabic)'), value: model.name_in_arabic },
+        { label: t('Code'), value: model.code },
+        { label: t('Phone'), value: model.phone },
+        { label: t('Phone (Arabic)'), value: model.phone_in_arabic },
+        { label: t('Email'), value: model.email },
+        { label: t('Country'), value: model.country_name },
     ].filter(r => r.value);
 
     const naRows = model.national_address ? [
-        { label: 'Short Code', value: model.national_address.short_code },
-        { label: 'Building Number', value: model.national_address.building_no },
-        { label: 'Building Number (Arabic)', value: model.national_address.building_no_arabic },
-        { label: 'Street Name', value: model.national_address.street_name },
-        { label: 'Street Name (Arabic)', value: model.national_address.street_name_arabic },
-        { label: 'District Name', value: model.national_address.district_name },
-        { label: 'District Name (Arabic)', value: model.national_address.district_name_arabic },
-        { label: 'City Name', value: model.national_address.city_name },
-        { label: 'City Name (Arabic)', value: model.national_address.city_name_arabic },
-        { label: 'Zipcode', value: model.national_address.zipcode },
-        { label: 'Zipcode (Arabic)', value: model.national_address.zipcode_arabic },
-        { label: 'Additional Number', value: model.national_address.additional_no },
-        { label: 'Additional Number (Arabic)', value: model.national_address.additional_no_arabic },
-        { label: 'Unit Number', value: model.national_address.unit_no },
-        { label: 'Unit Number (Arabic)', value: model.national_address.unit_no_arabic },
+        { label: t('Short Code'), value: model.national_address.short_code },
+        { label: t('Building Number'), value: model.national_address.building_no },
+        { label: t('Building Number (Arabic)'), value: model.national_address.building_no_arabic },
+        { label: t('Street Name'), value: model.national_address.street_name },
+        { label: t('Street Name (Arabic)'), value: model.national_address.street_name_arabic },
+        { label: t('District Name'), value: model.national_address.district_name },
+        { label: t('District Name (Arabic)'), value: model.national_address.district_name_arabic },
+        { label: t('City Name'), value: model.national_address.city_name },
+        { label: t('City Name (Arabic)'), value: model.national_address.city_name_arabic },
+        { label: t('Zipcode'), value: model.national_address.zipcode },
+        { label: t('Zipcode (Arabic)'), value: model.national_address.zipcode_arabic },
+        { label: t('Additional Number'), value: model.national_address.additional_no },
+        { label: t('Additional Number (Arabic)'), value: model.national_address.additional_no_arabic },
+        { label: t('Unit Number'), value: model.national_address.unit_no },
+        { label: t('Unit Number (Arabic)'), value: model.national_address.unit_no_arabic },
     ].filter(r => r.value) : [];
 
     return (
@@ -97,7 +99,7 @@ const WarehouseView = forwardRef((props, ref) => {
             <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
                 {/* Close button */}
-                <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"
+                <button type="button" className="btn-close" onClick={handleClose} aria-label={t('Close')}
                     style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }} />
 
                 {/* Page Header */}
@@ -106,7 +108,7 @@ const WarehouseView = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                 <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                Back
+                                {t('Back')}
                             </button>
                             <h1 style={{ margin: 0, fontSize: '28px', lineHeight: '36px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
                                 {model.name}{model.name_in_arabic ? ' / ' + model.name_in_arabic : ''}
@@ -119,7 +121,7 @@ const WarehouseView = forwardRef((props, ref) => {
                         </div>
                         {model.phone && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Phone: <span style={{ fontFamily: 'monospace', color: '#004ac6' }}>{model.phone}</span>
+                                {t('Phone:')} <span style={{ fontFamily: 'monospace', color: '#004ac6' }}>{model.phone}</span>
                             </p>
                         )}
                     </div>
@@ -128,14 +130,14 @@ const WarehouseView = forwardRef((props, ref) => {
                             <button onClick={() => { handleClose(); props.openCreateForm(); }}
                                 style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                                 <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
-                                Create
+                                {t('Create')}
                             </button>
                         )}
                         {props.openUpdateForm && (
                             <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }}
                                 style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                 <i className="bi bi-pencil" style={{ fontSize: '16px' }}></i>
-                                Edit
+                                {t('Edit')}
                             </button>
                         )}
                     </div>
@@ -146,7 +148,7 @@ const WarehouseView = forwardRef((props, ref) => {
 
                     {/* Warehouse Details */}
                     {detailRows.length > 0 && (
-                        <SectionCard title="Warehouse Details">
+                        <SectionCard title={t('Warehouse Details')}>
                             {detailRows.map((row, idx) => (
                                 <DetailRow key={row.label} label={row.label} value={row.value} isLast={idx === detailRows.length - 1} />
                             ))}
@@ -155,7 +157,7 @@ const WarehouseView = forwardRef((props, ref) => {
 
                     {/* National Address */}
                     {hasNationalAddress && naRows.length > 0 && (
-                        <SectionCard title="National Address">
+                        <SectionCard title={t('National Address')}>
                             {naRows.map((row, idx) => (
                                 <DetailRow key={row.label} label={row.label} value={row.value} isLast={idx === naRows.length - 1} />
                             ))}
@@ -166,12 +168,12 @@ const WarehouseView = forwardRef((props, ref) => {
                     {(model.created_at || model.created_by_name) && (
                         <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                             <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Metadata')}</h3>
                             </div>
                             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {model.created_by_name && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created By')}</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
                                                 {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
@@ -182,19 +184,19 @@ const WarehouseView = forwardRef((props, ref) => {
                                 )}
                                 {model.updated_by_name && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
                                     </div>
                                 )}
                                 {model.created_at && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created At')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at)}</span>
                                     </div>
                                 )}
                                 {model.updated_at && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Updated At</span>
+                                        <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Updated At')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
                                     </div>
                                 )}
@@ -206,10 +208,10 @@ const WarehouseView = forwardRef((props, ref) => {
             </Modal.Body>
             <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                    Cancel
+                    {t('Cancel')}
                 </button>
                 <button onClick={handleClose} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                    Close
+                    {t('Close')}
                 </button>
             </Modal.Footer>
         </Modal>

@@ -10,9 +10,10 @@ import { Button, Spinner } from "react-bootstrap";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 function SignatureIndex(props) {
-
+    const { t } = useTranslation('common');
 
     const selectedDate = new Date();
 
@@ -273,7 +274,7 @@ function SignatureIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Signatures</h1>
+                        <h1 className="h3">{t('signatures')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -283,7 +284,7 @@ function SignatureIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('create')}
                         </Button>
                     </div>
                 </div>
@@ -300,7 +301,7 @@ function SignatureIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Signatures to display</p>
+                                            <p className="text-start">{t('no_signatures_to_display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -325,7 +326,7 @@ function SignatureIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('loading')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -336,7 +337,7 @@ function SignatureIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -390,7 +391,7 @@ function SignatureIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('name')}
                                                         {sortField === "name" && sortSignature === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -409,7 +410,7 @@ function SignatureIndex(props) {
                                                             sort("created_by_name");
                                                         }}
                                                     >
-                                                        Created By
+                                                        {t('created_by')}
                                                         {sortField === "created_by_name" && sortSignature === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -428,7 +429,7 @@ function SignatureIndex(props) {
                                                             sort("created_at");
                                                         }}
                                                     >
-                                                        Created At
+                                                        {t('created_at')}
                                                         {sortField === "created_at" && sortSignature === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
@@ -437,7 +438,7 @@ function SignatureIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>{t('actions')}</th>
                                             </tr>
                                         </thead>
 
@@ -465,7 +466,7 @@ function SignatureIndex(props) {
                                                             );
                                                         }}
                                                         options={userOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t('select_users')}
                                                         selected={selectedCreatedByUsers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -500,13 +501,13 @@ function SignatureIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('less') : t('more')}
                                                     </small>
                                                     <br />
 
                                                     {showCreatedAtDateRange ? (
                                                         <span className="text-left">
-                                                            From:{" "}
+                                                            {t('from_label')}{" "}
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
@@ -522,7 +523,7 @@ function SignatureIndex(props) {
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
-                                                            To:{" "}
+                                                            {t('to_label')}{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}

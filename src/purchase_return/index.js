@@ -1278,6 +1278,7 @@ function PurchaseReturnIndex(props) {
 
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
                                     if (!el) return;
+                                    if (pendingView) return;
                                     const fit = () => {
                                         const top = el.getBoundingClientRect().top;
                                         el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
@@ -1298,8 +1299,8 @@ function PurchaseReturnIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "actions" && <th>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th>{col.label}</th>}
+                                                        {col.key === "actions" && <th>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th>{t(col.label)}</th>}
                                                         {col.key !== "actions" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
@@ -1310,7 +1311,7 @@ function PurchaseReturnIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}

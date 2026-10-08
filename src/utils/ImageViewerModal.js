@@ -106,7 +106,7 @@ const ImageViewerModal = forwardRef((props, ref) => {
     const cursor = zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default';
 
     return (
-        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen className={`above-sales-modal${props.modalClassName ? ' ' + props.modalClassName : ''}`}>
+        <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen className={`above-sales-modal image-viewer-modal-wrap${props.modalClassName ? ' ' + props.modalClassName : ''}`}>
             <Modal.Header closeButton />
             <Modal.Body
                 className="p-0 d-flex justify-content-center align-items-center position-relative"

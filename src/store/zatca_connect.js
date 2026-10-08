@@ -1,13 +1,15 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
+import { Modal, Button, Alert } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const ZatcaConnect = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
-        open(id) {
+        open(id, reconnect = false) {
             setErrors({});
             selectedStores = [];
             setSelectedStores(selectedStores);
@@ -17,7 +19,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
             }
 
             setFormData(formData);
-
+            setIsReconnect(reconnect);
             SetShow(true);
         },
 
@@ -28,7 +30,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-
+    const [isReconnect, setIsReconnect] = useState(false);
 
     //fields
     let [formData, setFormData] = useState({});
@@ -87,7 +89,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Store Connected to Zatca Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(isReconnect ? "Successfully re-connected to ZATCA!" : "Store Connected to Zatca Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -109,10 +111,10 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true} className="zatca-connect-modal" backdropClassName="zatca-connect-backdrop">
                 <Modal.Header>
                     <Modal.Title>
-                        {"Connect to Zatca"}
+                        {t('Connect to Zatca')}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -124,12 +126,18 @@ const ZatcaConnect = forwardRef((props, ref) => {
                         ></button>
                     </div>
                 </Modal.Header>
+                {isReconnect && (
+                    <Alert variant="warning" className="mb-0 rounded-0 border-start-0 border-end-0" style={{ borderRadius: 0 }}>
+                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>{t('Re-connection required.')}</strong> {t('One or more ZATCA-sensitive fields (such as company name, branch name, VAT number, business category, registration number (CRN), or national address) were changed. You must reconnect to ZATCA before reporting any invoice.')}
+                    </Alert>
+                )}
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleConnect}>
 
 
                         <div className="col-md-6">
-                            <label className="form-label">OTP from Zatca*</label>
+                            <label className="form-label">{t('OTP from Zatca*')}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -156,7 +164,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> : "Connect"}
+                                    /> : t('Connect')}
                                 </Button>
 
                             </div>
@@ -169,7 +177,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
                             {formData.otp && !errors.otp && (
                                 <div style={{ color: "green" }}>
                                     <i className="bi bi-check-lg"> </i>
-                                    Looks good!
+                                    {t('Looks good!')}
                                 </div>
                             )}
                         </div>
@@ -177,7 +185,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('Close')}
                             </Button>
                         </Modal.Footer>
                     </form>

@@ -18,8 +18,11 @@ import { fetchStore } from '../utils/storeUtils.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import ZatcaConnect from '../store/zatca_connect.js';
+import { useTranslation } from "react-i18next";
 
 function CustomerDepositIndex(props) {
+    const { t } = useTranslation('common');
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
     let [selectedDate, setSelectedDate] = useState(new Date());
@@ -98,8 +101,13 @@ function CustomerDepositIndex(props) {
                 const data = await response.json();
                 setReportingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
                 if (!response.ok || !data.status) {
-                    const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
-                    if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                    if (data?.errors?.zatca_reconnect) {
+                        setStore(prev => ({ ...prev, zatca: { ...prev.zatca, zatca_reconnect_required: true } }));
+                        zatcaConnectRef.current?.open(localStorage.getItem("store_id"), true);
+                    } else {
+                        const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
+                        if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                    }
                     return;
                 }
                 if (data.result) {
@@ -579,6 +587,7 @@ function CustomerDepositIndex(props) {
     const customerSearchRef = useRef();
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
+    const zatcaConnectRef = useRef();
 
     const idSearchRef = useRef();
     const netTotalSearchRef = useRef();
@@ -610,7 +619,7 @@ function CustomerDepositIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Customer Deposit Settings"
+                title={t("Customer Deposit Settings")}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -646,17 +655,17 @@ function CustomerDepositIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Receivables Summary"
+                                title={t("Receivables Summary")}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
-                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
-                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
-                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
-                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
-                                    ...(selectedCreatedByCustomerDeposits.length > 0 ? { 'Created By': selectedCreatedByCustomerDeposits.map(u => u.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(createdAtValue ? { [t('Created At')]: createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { [t('Created From')]: createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { [t('Created To')]: createdAtToValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedVendors.length > 0 ? { [t('Vendor')]: selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...(selectedCreatedByCustomerDeposits.length > 0 ? { [t('Created By')]: selectedCreatedByCustomerDeposits.map(u => u.name).join(', ') } : {}),
                                     ...Object.fromEntries(
                                         Object.entries(fieldFilters)
                                             .filter(([, v]) => v)
@@ -667,13 +676,13 @@ function CustomerDepositIndex(props) {
                                     ),
                                 }}
                                 stats={{
-                                    "Total": totalReceivables,
-                                    "Cash": totalCashReceivables,
-                                    "Bank": totalBankReceivables,
-                                    "Purchase Fund": totalPurchaseFundReceivables,
-                                    "Receivable from Customers (Unpaid Sales)": totalUnPaidSalesRcv,
-                                    "Receivable from Vendors (Purchase Return)": totalUnPaidPurchaseReturnRcv,
-                                    "Net Receivables": (totalUnPaidSalesRcv || 0) + (totalUnPaidPurchaseReturnRcv || 0),
+                                    [t("Total")]: totalReceivables,
+                                    [t("Cash")]: totalCashReceivables,
+                                    [t("Bank")]: totalBankReceivables,
+                                    [t("Purchase Fund")]: totalPurchaseFundReceivables,
+                                    [t("Receivable from Customers (Unpaid Sales)")]: totalUnPaidSalesRcv,
+                                    [t("Receivable from Vendors (Purchase Return)")]: totalUnPaidPurchaseReturnRcv,
+                                    [t("Net Receivables")]: (totalUnPaidSalesRcv || 0) + (totalUnPaidPurchaseReturnRcv || 0),
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -683,7 +692,7 @@ function CustomerDepositIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3"> Receivables</h1>
+                        <h1 className="h3"> {t("Receivables")}</h1>
                     </div>
                     <div className="col text-end">
                         <Button
@@ -692,7 +701,7 @@ function CustomerDepositIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button>
                     </div>
                 </div>
@@ -712,7 +721,7 @@ function CustomerDepositIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No CustomerDeposit to display</p>
+                                            <p className="text-start">{t("No CustomerDeposit to display")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -736,7 +745,7 @@ function CustomerDepositIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t("Loading...")}</span>
                                     </Button>
                                     <PaginationControls
                                         totalPages={totalPages}
@@ -753,7 +762,7 @@ function CustomerDepositIndex(props) {
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => setShowSettings(!showSettings)}
                                     >
-                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t("Table Settings")} />
                                     </button>
                                 </div>
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}
@@ -780,12 +789,12 @@ function CustomerDepositIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => (
                                                     <th key={col.key}>
-                                                        {(col.key === "actions" || col.key === "actions_end") ? col.label : (
+                                                        {(col.key === "actions" || col.key === "actions_end") ? t(col.label) : (
                                                             <b
                                                                 style={{ textDecoration: "underline", cursor: "pointer" }}
                                                                 onClick={() => sort(col.fieldName)}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortCustomerDeposit === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -843,15 +852,15 @@ function CustomerDepositIndex(props) {
                                                                     }}
                                                                 />
                                                                 <small style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }} onClick={() => setShowDateRange(!showDateRange)}>
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t("Less..") : t("More..")}
                                                                 </small>
                                                                 {showDateRange && (
                                                                     <span className="text-left">
-                                                                        From: <DatePicker id="receivable_from_date" value={fromDateValue} selected={selectedFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("From:")}{" "}<DatePicker id="receivable_from_date" value={fromDateValue} selected={selectedFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setFromDateValue(""); searchByDateField("from_date", ""); return; } searchByDateField("from_date", date); selectedFromDate = date; setSelectedFromDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setFromDateValue(""); searchByDateField("from_date", ""); }, 100); } }}
                                                                         />
-                                                                        To: <DatePicker id="receivable_to_date" value={toDateValue} selected={selectedToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("To:")}{" "}<DatePicker id="receivable_to_date" value={toDateValue} selected={selectedToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setToDateValue(""); searchByDateField("to_date", ""); return; } searchByDateField("to_date", date); selectedToDate = date; setSelectedToDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setToDateValue(""); searchByDateField("to_date", ""); }, 100); } }}
                                                                         />
@@ -861,9 +870,9 @@ function CustomerDepositIndex(props) {
                                                         )}
                                                         {col.key === "type" && (
                                                             <select onChange={(e) => searchByFieldValue("type", e.target.value)}>
-                                                                <option value="">All</option>
-                                                                <option value="customer">Customer</option>
-                                                                <option value="vendor">Vendor</option>
+                                                                <option value="">{t("All")}</option>
+                                                                <option value="customer">{t("Customer")}</option>
+                                                                <option value="vendor">{t("Vendor")}</option>
                                                             </select>
                                                         )}
                                                         {col.key === "customer" && (
@@ -875,7 +884,7 @@ function CustomerDepositIndex(props) {
                                                                 onChange={(selectedItems) => { searchByMultipleValuesField("customer_id", selectedItems); setOpenCustomerSearchResult(false); }}
                                                                 open={openCustomerSearchResult}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t("Customer Name / Mob / VAT # / ID")}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -893,7 +902,7 @@ function CustomerDepositIndex(props) {
                                                                 onChange={(selectedItems) => { searchByMultipleValuesField("vendor_id", selectedItems); setOpenVendorSearchResult(false); }}
                                                                 options={vendorOptions}
                                                                 open={openVendorSearchResult}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t("Vendor Name / Mob / VAT # / ID")}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 ref={vendorSearchRef}
@@ -922,7 +931,7 @@ function CustomerDepositIndex(props) {
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => searchByMultipleValuesField("payment_methods", selectedItems)}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -949,7 +958,7 @@ function CustomerDepositIndex(props) {
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => searchByMultipleValuesField("created_by", selectedItems)}
                                                                 options={customerdepositOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByCustomerDeposits}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm) => suggestUsers(searchTerm)}
@@ -974,15 +983,15 @@ function CustomerDepositIndex(props) {
                                                                     onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtValue(""); searchByDateField("created_at", ""); }, 100); } }}
                                                                 />
                                                                 <small style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }} onClick={() => setShowCreatedAtDateRange(!showCreatedAtDateRange)}>
-                                                                    {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                    {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                                 </small>
                                                                 {showCreatedAtDateRange && (
                                                                     <span className="text-left">
-                                                                        From: <DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedCreatedAtFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("From:")}{" "}<DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedCreatedAtFromDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setCreatedAtFromValue(""); searchByDateField("created_at_from", ""); return; } searchByDateField("created_at_from", date); selectedCreatedAtFromDate = date; setSelectedCreatedAtFromDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtFromValue(""); searchByDateField("created_at_from", ""); }, 100); } }}
                                                                         />
-                                                                        To: <DatePicker id="created_at_to" value={createdAtToValue} selected={selectedCreatedAtToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
+                                                                        {t("To:")}{" "}<DatePicker id="created_at_to" value={createdAtToValue} selected={selectedCreatedAtToDate} isClearable={true} className="form-control" dateFormat="MMM dd yyyy"
                                                                             onChange={(date) => { if (!date) { setCreatedAtToValue(""); searchByDateField("created_at_to", ""); return; } searchByDateField("created_at_to", date); selectedCreatedAtToDate = date; setSelectedCreatedAtToDate(date); }}
                                                                             onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Escape") { timerRef.current = setTimeout(() => { setCreatedAtToValue(""); searchByDateField("created_at_to", ""); }, 100); } }}
                                                                         />
@@ -1026,25 +1035,25 @@ function CustomerDepositIndex(props) {
                                                                         {!customerdeposit.zatca?.reporting_passed && (
                                                                             <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
                                                                                 {(customerdeposit.zatca?.reporting_failed_count > 0) && (
-                                                                                    <span className="badge bg-danger">Failed</span>
+                                                                                    <span className="badge bg-danger">{t("Failed")}</span>
                                                                                 )}
                                                                                 <Button
                                                                                     className={`btn btn-sm ${customerdeposit.zatca?.reporting_failed_count > 0 ? "btn-outline-warning" : "btn-warning"}`}
                                                                                     disabled={reportingIds.has(customerdeposit.id)}
-                                                                                    onClick={() => ReportDepositToZatca(customerdeposit.id, index)}
+                                                                                    onClick={() => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } ReportDepositToZatca(customerdeposit.id, index); }}
                                                                                 >
                                                                                     {reportingIds.has(customerdeposit.id)
                                                                                         ? <Spinner animation="border" size="sm" />
                                                                                         : customerdeposit.zatca?.reporting_failed_count > 0
-                                                                                            ? <><i className="bi bi-arrow-clockwise"></i> Retry</>
-                                                                                            : <><i className="bi bi-cloud-upload"></i> Report</>
+                                                                                            ? <><i className="bi bi-arrow-clockwise"></i> {t("Retry")}</>
+                                                                                            : <><i className="bi bi-cloud-upload"></i> {t("Report")}</>
                                                                                     }
                                                                                 </Button>
                                                                             </div>
                                                                         )}
                                                                         {customerdeposit.zatca?.reporting_passed && (
                                                                             <>
-                                                                                <span className="badge bg-success">Reported</span>&nbsp;
+                                                                                <span className="badge bg-success">{t("Reported")}</span>&nbsp;
                                                                                 <a href={`/zatca/${customerdeposit.store_id}/receivables/xml/${customerdeposit.code}.xml`} target="_blank" rel="noreferrer" className="btn btn-outline-secondary btn-sm"><i className="bi bi-file-earmark-code"></i> XML</a>
                                                                             </>
                                                                         )}
@@ -1069,6 +1078,7 @@ function CustomerDepositIndex(props) {
                     </div>
                 </div>
             </div>
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem("store_id"))} />
         </>
     );
 }

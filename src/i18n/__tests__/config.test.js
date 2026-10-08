@@ -37,17 +37,14 @@ describe('i18n config', () => {
     expect(Array.isArray(RTL_LANGUAGES)).toBe(true);
   });
 
-  // Test 4: RTL_LANGUAGES currently ships empty (RTL support intentionally
-  // disabled in src/i18n/config.js — see commented-out ['ar', 'ur'] line).
-  test('RTL_LANGUAGES is currently empty (RTL support disabled)', () => {
-    expect(RTL_LANGUAGES).toEqual([]);
+  // Test 4: RTL_LANGUAGES contains 'ar' (Arabic RTL support is enabled).
+  test('RTL_LANGUAGES contains ar', () => {
+    expect(RTL_LANGUAGES).toContain('ar');
   });
 
-  // Test 5: 'ar' and 'ur' remain selectable in LANGUAGE_OPTIONS even though
-  // RTL layout switching is disabled.
-  test("'ar' and 'ur' are not (currently) in RTL_LANGUAGES", () => {
-    expect(RTL_LANGUAGES).not.toContain('ar');
-    expect(RTL_LANGUAGES).not.toContain('ur');
+  // Test 5: 'ar' is in RTL_LANGUAGES; 'ur' remains selectable but is not listed.
+  test("'ar' is in RTL_LANGUAGES", () => {
+    expect(RTL_LANGUAGES).toContain('ar');
   });
 
   // Test 6: i18n default export is not null

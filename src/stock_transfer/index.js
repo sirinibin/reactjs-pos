@@ -22,10 +22,12 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { useTranslation } from "react-i18next";
 
 
 const StockTransferIndex = forwardRef((props, ref) => {
     //deploy to master
+    const { t } = useTranslation('common');
     let [enableSelection, setEnableSelection] = useState(false);
 
     const { lastMessage } = useContext(WebSocketContext);
@@ -587,7 +589,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t("Successfully restored to default settings!"));
     }
 
 
@@ -608,7 +610,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Stock Transfer Settings"
+                title={t("Stock Transfer Settings")}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -623,7 +625,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -637,7 +639,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -653,7 +655,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -669,15 +671,15 @@ const StockTransferIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="StockTransfer Summary"
+                                title={t("StockTransfer Summary")}
                                 filters={{
-                                    ...(dateValue ? { 'Date': dateValue } : {}),
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
-                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
-                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
-                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(dateValue ? { [t('Date')]: dateValue } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(createdAtValue ? { [t('Created At')]: createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { [t('Created From')]: createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { [t('Created To')]: createdAtToValue } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { [t('Created By')]: selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
                                     ...Object.fromEntries(
                                         Object.entries(fieldFilters)
                                             .filter(([, v]) => v)
@@ -688,8 +690,8 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                     ),
                                 }}
                                 stats={{
-                                    "Total Amount": totalStockTransferAmount,
-                                    "Total Quantity": totalStockTransferQuantity,
+                                    [t("Total Amount")]: totalStockTransferAmount,
+                                    [t("Total Quantity")]: totalStockTransferQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -698,7 +700,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                 </div>
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Stock Transfers</h1>
+                        <h1 className="h3">{t("Stock Transfers")}</h1>
                     </div>
 
 
@@ -720,7 +722,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                 openCreateForm();
                             }}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button>
                     </div>
                 </div>
@@ -737,7 +739,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Stock Transfers to display</p>
+                                            <p className="text-start">{t("No Stock Transfers to display")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -752,7 +754,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t("Loading...")}</span>
                                     </Button>
 
                                     <PaginationControls
@@ -771,7 +773,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => { setShowSettings(!showSettings); }}
                                     >
-                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t("Table Settings")} />
                                     </button>
                                 </div>
 
@@ -797,8 +799,8 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                             <tr className="text-center main-header">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
 
                                                         {col.key !== "actions" && col.key !== "select" && <th>
                                                             <b
@@ -810,7 +812,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortStockTransfer === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -856,7 +858,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -897,13 +899,13 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t("From:")}{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         autoComplete="off"
@@ -923,7 +925,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t("To:")}{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         autoComplete="off"
@@ -978,13 +980,13 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t("Less..") : t("More..")}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t("From:")}{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             autoComplete="off"
@@ -1004,7 +1006,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t("To:")}{" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             autoComplete="off"
@@ -1070,7 +1072,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(stocktransfer);
                                                                     }}>
-                                                                        Select
+                                                                        {t("Select")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -1080,10 +1082,10 @@ const StockTransferIndex = forwardRef((props, ref) => {
                                                                     {format(new Date(stocktransfer[col.key]), "MMM dd yyyy h:mma")}
                                                                 </td>}
                                                                 {(col.fieldName === "from_warehouse_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {stocktransfer.from_warehouse_code ? stocktransfer.from_warehouse_code : "Main Store"}
+                                                                    {stocktransfer.from_warehouse_code ? stocktransfer.from_warehouse_code : t("Main Store")}
                                                                 </td>}
                                                                 {(col.fieldName === "to_warehouse_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {stocktransfer.to_warehouse_code ? stocktransfer.to_warehouse_code : "Main Store"}
+                                                                    {stocktransfer.to_warehouse_code ? stocktransfer.to_warehouse_code : t("Main Store")}
                                                                 </td>}
                                                                 {(col.fieldName === "total_quantity") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(stocktransfer.total_quantity)} />

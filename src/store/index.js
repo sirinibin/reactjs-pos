@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import StoreCreate from "./create.js";
 import ZatcaConnect from "./zatca_connect.js";
 import StoreView from "./view.js";
@@ -22,7 +23,7 @@ import PaginationControls from '../utils/PaginationControls.js';
 
 
 function StoreIndex(props) {
-
+    const { t } = useTranslation('common');
 
     function selectStore(store) {
         localStorage.setItem("store_name", store.name);
@@ -252,7 +253,7 @@ function StoreIndex(props) {
     const [clearingStoreId, setClearingStoreId] = useState(null);
 
     async function clearWhatsAppContacts(store) {
-        if (!window.confirm(`Clear all synced WhatsApp contacts for "${store.name}"?\nYou can re-sync them anytime.`)) return;
+        if (!window.confirm(t('Clear all synced WhatsApp contacts for "{{name}}"?\nYou can re-sync them anytime.', { name: store.name }))) return;
         setClearingStoreId(store.id);
         try {
             const res = await fetch(`/v1/whatsapp/contacts?store_id=${store.id}`, {
@@ -262,12 +263,12 @@ function StoreIndex(props) {
             const data = await res.json().catch(() => ({}));
             if (data.success) {
                 setContactCounts(prev => ({ ...prev, [store.id]: 0 }));
-                if (props.showToastMessage) props.showToastMessage(`Cleared ${data.deleted} contacts from DB`, 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Cleared {{count}} contacts from DB', { count: data.deleted }), 'success');
             } else {
-                if (props.showToastMessage) props.showToastMessage(data.error || 'Clear failed', 'danger');
+                if (props.showToastMessage) props.showToastMessage(data.error || t('Clear failed'), 'danger');
             }
         } catch (e) {
-            if (props.showToastMessage) props.showToastMessage('Clear failed: ' + e.message, 'danger');
+            if (props.showToastMessage) props.showToastMessage(t('Clear failed') + ': ' + e.message, 'danger');
         } finally {
             setClearingStoreId(null);
         }
@@ -303,19 +304,19 @@ function StoreIndex(props) {
             const data = await res.json().catch(() => ({}));
             if (data.success) {
                 setContactCounts(prev => ({ ...prev, [store.id]: data.count }));
-                if (props.showToastMessage) props.showToastMessage(`Synced ${data.count} contacts`, 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Synced {{count}} contacts', { count: data.count }), 'success');
             } else {
-                if (props.showToastMessage) props.showToastMessage(data.error || 'Sync failed', 'danger');
+                if (props.showToastMessage) props.showToastMessage(data.error || t('Sync failed'), 'danger');
             }
         } catch (e) {
-            if (props.showToastMessage) props.showToastMessage('Sync failed: ' + e.message, 'danger');
+            if (props.showToastMessage) props.showToastMessage(t('Sync failed') + ': ' + e.message, 'danger');
         } finally {
             setSyncingStoreId(null);
         }
     }
 
     async function disconnectWhatsApp(store) {
-        if (!window.confirm(`Disconnect WhatsApp from "${store.name}"? This will delete the Evolution API instance.`)) return;
+        if (!window.confirm(t('Disconnect WhatsApp from "{{name}}"? This will delete the Evolution API instance.', { name: store.name }))) return;
         setDisconnectingStoreId(store.id);
         try {
             const res = await fetch(`/v1/whatsapp/disconnect?store_id=${store.id}`, {
@@ -324,13 +325,13 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.success) {
-                if (props.showToastMessage) props.showToastMessage('WhatsApp disconnected successfully', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('WhatsApp disconnected successfully'), 'success');
                 list();
             } else {
-                if (props.showToastMessage) props.showToastMessage(data.error || 'Disconnect failed', 'danger');
+                if (props.showToastMessage) props.showToastMessage(data.error || t('Disconnect failed'), 'danger');
             }
         } catch (e) {
-            if (props.showToastMessage) props.showToastMessage('Disconnect failed: ' + e.message, 'danger');
+            if (props.showToastMessage) props.showToastMessage(t('Disconnect failed') + ': ' + e.message, 'danger');
         } finally {
             setDisconnectingStoreId(null);
         }
@@ -372,7 +373,7 @@ function StoreIndex(props) {
     }
 
     async function softDeleteStore(store) {
-        if (!window.confirm(`Delete "${store.name}"? It can be recovered later.`)) return;
+        if (!window.confirm(t('Delete "{{name}}"? It can be recovered later.', { name: store.name }))) return;
         try {
             const res = await fetch(`/v1/store/${store.id}`, {
                 method: 'DELETE',
@@ -380,10 +381,10 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.status) {
-                if (props.showToastMessage) props.showToastMessage('Store deleted', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Store deleted'), 'success');
                 list();
             } else {
-                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Delete failed';
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : t('Delete failed');
                 if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
             }
         } catch (e) {
@@ -392,7 +393,7 @@ function StoreIndex(props) {
     }
 
     async function restoreStore(store) {
-        if (!window.confirm(`Restore "${store.name}"?`)) return;
+        if (!window.confirm(t('Restore "{{name}}"?', { name: store.name }))) return;
         setRestoringStoreId(store.id);
         try {
             const res = await fetch(`/v1/store/${store.id}/restore`, {
@@ -401,10 +402,10 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.status) {
-                if (props.showToastMessage) props.showToastMessage('Store restored successfully', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Store restored successfully'), 'success');
                 list();
             } else {
-                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Restore failed';
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : t('Restore failed');
                 if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
             }
         } catch (e) {
@@ -415,7 +416,7 @@ function StoreIndex(props) {
     }
 
     async function abortPermanentDeletion(store) {
-        if (!window.confirm(`Abort permanent deletion of "${store.name}"?`)) return;
+        if (!window.confirm(t('Abort permanent deletion of "{{name}}"?', { name: store.name }))) return;
         setAbortingStoreId(store.id);
         try {
             const res = await fetch(`/v1/store/${store.id}/abort-permanent-deletion`, {
@@ -424,10 +425,10 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.status) {
-                if (props.showToastMessage) props.showToastMessage('Permanent deletion aborted', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Permanent deletion aborted'), 'success');
                 list();
             } else {
-                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : t('Failed');
                 if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
             }
         } catch (e) {
@@ -439,7 +440,7 @@ function StoreIndex(props) {
 
     async function markForPermanentDeletion(store) {
         const days = parseInt(permanentDeletionDays[store.id]) > 0 ? parseInt(permanentDeletionDays[store.id]) : 14;
-        if (!window.confirm(`Mark "${store.name}" for permanent deletion after ${days} day(s)?`)) return;
+        if (!window.confirm(t('Mark "{{name}}" for permanent deletion after {{days}} day(s)?', { name: store.name, days }))) return;
         setMarkingStoreId(store.id);
         try {
             const res = await fetch(`/v1/store/${store.id}/mark-permanent-deletion`, {
@@ -449,10 +450,10 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.status) {
-                if (props.showToastMessage) props.showToastMessage(`Marked for permanent deletion after ${days} day(s)`, 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Marked for permanent deletion after {{days}} day(s)', { days }), 'success');
                 list();
             } else {
-                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : t('Failed');
                 if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
             }
         } catch (e) {
@@ -463,7 +464,7 @@ function StoreIndex(props) {
     }
 
     async function permanentlyDeleteStore(store) {
-        if (!window.confirm(`PERMANENTLY DELETE "${store.name}"?\n\nThis will:\n• Drop the store database\n• Delete all images\n• Delete all ZATCA files\n\nThis CANNOT be undone!`)) return;
+        if (!window.confirm(t('PERMANENTLY DELETE "{{name}}"?\n\nThis will:\n• Drop the store database\n• Delete all images\n• Delete all ZATCA files\n\nThis CANNOT be undone!', { name: store.name }))) return;
         setPermDeletingStoreId(store.id);
         try {
             const res = await fetch(`/v1/store/${store.id}/permanent`, {
@@ -472,10 +473,10 @@ function StoreIndex(props) {
             });
             const data = await res.json().catch(() => ({}));
             if (data.status) {
-                if (props.showToastMessage) props.showToastMessage('Store permanently deleted', 'success');
+                if (props.showToastMessage) props.showToastMessage(t('Store permanently deleted'), 'success');
                 list();
             } else {
-                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : t('Failed');
                 if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
             }
         } catch (e) {
@@ -503,7 +504,7 @@ function StoreIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Stores</h1>
+                        <h1 className="h3">{t('Stores')}</h1>
                     </div>
 
                     {localStorage.getItem('user_role') === "Admin" ? <div className="col text-end">
@@ -513,7 +514,7 @@ function StoreIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div> : ""}
                 </div>
@@ -545,7 +546,7 @@ function StoreIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Stores to display</p>
+                                            <p className="text-start">{t('No Stores to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -570,7 +571,7 @@ function StoreIndex(props) {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -581,7 +582,7 @@ function StoreIndex(props) {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -625,7 +626,7 @@ function StoreIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Select</th>
+                                                <th>{t('Select')}</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -636,7 +637,7 @@ function StoreIndex(props) {
                                                             sort("name");
                                                         }}
                                                     >
-                                                        Name
+                                                        {t('Name')}
                                                         {sortField === "name" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -655,7 +656,7 @@ function StoreIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        Branch Code
+                                                        {t('Branch Code')}
                                                         {sortField === "code" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -674,7 +675,7 @@ function StoreIndex(props) {
                                                             sort("branch_name");
                                                         }}
                                                     >
-                                                        Branch Name
+                                                        {t('Branch Name')}
                                                         {sortField === "branch_name" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -693,7 +694,7 @@ function StoreIndex(props) {
                                                             sort("zatca.phase");
                                                         }}
                                                     >
-                                                        Zatca phase
+                                                        {t('Zatca phase')}
                                                         {sortField === "zatca.phase" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -702,8 +703,8 @@ function StoreIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
-                                                <th>Deleted</th>
+                                                <th>{t('Actions')}</th>
+                                                <th>{t('Deleted')}</th>
                                             </tr>
                                         </thead>
 
@@ -764,9 +765,9 @@ function StoreIndex(props) {
                                                         }}
                                                         style={{ width: "75px", height: "28px", padding: "2px 4px", fontSize: "12px" }}
                                                     >
-                                                        <option value="no">NO</option>
-                                                        <option value="yes">YES</option>
-                                                        <option value="all">ALL</option>
+                                                        <option value="no">{t('NO')}</option>
+                                                        <option value="yes">{t('YES')}</option>
+                                                        <option value="all">{t('ALL')}</option>
                                                     </select>
                                                 </th>
                                             </tr>
@@ -782,8 +783,8 @@ function StoreIndex(props) {
                                                                     selectStore(store);
                                                                 }}>
                                                                     <i className="bi bi-select"></i>
-                                                                    SELECT
-                                                                </Button> : <span className="badge bg-success">SELECTED</span>}
+                                                                    {t('SELECT')}
+                                                                </Button> : <span className="badge bg-success">{t('SELECTED')}</span>}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={store.name} maxWidth={300} />
@@ -793,19 +794,19 @@ function StoreIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {store.zatca.phase === "1" ?
                                                                 <span className="badge bg-warning">
-                                                                    {"Phase 1"}
+                                                                    {t('Phase 1')}
                                                                 </span> : ""}
 
                                                             {store.zatca.phase === "2" && store.zatca.connected ?
                                                                 <span>
                                                                     <span className="badge bg-success">
-                                                                        {"Connected to Phase2 "}<TimeAgo date={store.zatca.last_connected_at} />
+                                                                        {t('Connected to Phase2')} <TimeAgo date={store.zatca.last_connected_at} />
                                                                     </span> </span> : ""}
                                                             {store.zatca.phase === "2" && !store.zatca.connected ? <span><Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
                                                                 openZatcaConnectForm(store.id);
                                                             }}>
                                                                 <i className="bi bi-power"></i>&nbsp;
-                                                                Connect to Zatca
+                                                                {t('Connect to Zatca')}
                                                             </Button></span> : ""}
 
                                                             {store.zatca.phase === "2" && store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
@@ -818,48 +819,48 @@ function StoreIndex(props) {
                                                             {/* Actions dropdown */}
                                                             <Dropdown className="d-inline-block me-1">
                                                                 <Dropdown.Toggle variant="outline-secondary" size="sm" id={`actions-${store.id}`}>
-                                                                    <i className="bi bi-three-dots-vertical"></i> Actions
+                                                                    <i className="bi bi-three-dots-vertical"></i> {t('Actions')}
                                                                 </Dropdown.Toggle>
                                                                 <Dropdown.Menu>
                                                                     <Dropdown.Item onClick={() => openDetailsView(store.id)}>
-                                                                        <i className="bi bi-eye me-2"></i>View
+                                                                        <i className="bi bi-eye me-2"></i>{t('View')}
                                                                     </Dropdown.Item>
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openUpdateForm(store.id)}>
-                                                                            <i className="bi bi-pencil me-2"></i>Edit
+                                                                            <i className="bi bi-pencil me-2"></i>{t('Edit')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicate(store)}>
-                                                                            <i className="bi bi-files me-2"></i>Duplicate
+                                                                            <i className="bi bi-files me-2"></i>{t('Duplicate')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicateWithProducts(store)}>
-                                                                            <i className="bi bi-box-seam me-2"></i>Duplicate with Products
+                                                                            <i className="bi bi-box-seam me-2"></i>{t('Duplicate with Products')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicateWithProductsNoImages(store)}>
-                                                                            <i className="bi bi-box-seam me-2"></i>Duplicate with Products (without images)
+                                                                            <i className="bi bi-box-seam me-2"></i>{t('Duplicate with Products (without images)')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicateWithoutData(store)}>
-                                                                            <i className="bi bi-shop me-2"></i>Duplicate without Data
+                                                                            <i className="bi bi-shop me-2"></i>{t('Duplicate without Data')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     <Dropdown.Divider />
                                                                     {localStorage.getItem('user_role') === "Admin" && (
                                                                         <Dropdown.Item onClick={() => openBackup(store)}>
-                                                                            <i className="bi bi-archive me-2"></i>Backup Data
+                                                                            <i className="bi bi-archive me-2"></i>{t('Backup Data')}
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <>
                                                                             <Dropdown.Divider />
                                                                             <Dropdown.Item className="text-danger" onClick={() => softDeleteStore(store)}>
-                                                                                <i className="bi bi-trash me-2"></i>Delete
+                                                                                <i className="bi bi-trash me-2"></i>{t('Delete')}
                                                                             </Dropdown.Item>
                                                                         </>
                                                                     )}
@@ -873,7 +874,7 @@ function StoreIndex(props) {
                                                                             >
                                                                                 {restoringStoreId === store.id
                                                                                     ? <Spinner size="sm" animation="border" />
-                                                                                    : <><i className="bi bi-arrow-counterclockwise me-2"></i>Restore</>
+                                                                                    : <><i className="bi bi-arrow-counterclockwise me-2"></i>{t('Restore')}</>
                                                                                 }
                                                                             </Dropdown.Item>
                                                                             {!store.marked_for_permanent_deletion ? (
@@ -894,7 +895,7 @@ function StoreIndex(props) {
                                                                                                 className="form-control form-control-sm"
                                                                                                 style={{ width: "65px" }}
                                                                                             />
-                                                                                            <span className="small text-muted">days</span>
+                                                                                            <span className="small text-muted">{t('days')}</span>
                                                                                         </div>
                                                                                         <Button
                                                                                             size="sm"
@@ -905,7 +906,7 @@ function StoreIndex(props) {
                                                                                         >
                                                                                             {markingStoreId === store.id
                                                                                                 ? <Spinner size="sm" animation="border" />
-                                                                                                : <><i className="bi bi-clock me-1"></i>Mark for Permanent Deletion after {permanentDeletionDays[store.id] ?? "14"} days</>
+                                                                                                : <><i className="bi bi-clock me-1"></i>{t('Mark for Permanent Deletion after {{days}} days', { days: permanentDeletionDays[store.id] ?? "14" })}</>
                                                                                             }
                                                                                         </Button>
                                                                                     </div>
@@ -917,7 +918,7 @@ function StoreIndex(props) {
                                                                                         >
                                                                                             {permDeletingStoreId === store.id
                                                                                                 ? <Spinner size="sm" animation="border" />
-                                                                                                : <><i className="bi bi-trash3-fill me-1"></i>Delete Permanently</>
+                                                                                                : <><i className="bi bi-trash3-fill me-1"></i>{t('Delete Permanently')}</>
                                                                                             }
                                                                                         </Dropdown.Item>
                                                                                     )}
@@ -926,7 +927,7 @@ function StoreIndex(props) {
                                                                                 <div className="px-3 py-1">
                                                                                     <div className="small text-warning mb-1">
                                                                                         <i className="bi bi-clock me-1"></i>
-                                                                                        Permanent Deletion in {store.permanent_deletion_after_days || 14}d
+                                                                                        {t('Permanent Deletion in {{days}}d', { days: store.permanent_deletion_after_days || 14 })}
                                                                                     </div>
                                                                                     <Button
                                                                                         size="sm"
@@ -937,7 +938,7 @@ function StoreIndex(props) {
                                                                                     >
                                                                                         {abortingStoreId === store.id
                                                                                             ? <Spinner size="sm" animation="border" />
-                                                                                            : <><i className="bi bi-x-circle me-1"></i>Abort Permanent Deletion</>
+                                                                                            : <><i className="bi bi-x-circle me-1"></i>{t('Abort Permanent Deletion')}</>
                                                                                         }
                                                                                     </Button>
                                                                                 </div>
@@ -958,8 +959,8 @@ function StoreIndex(props) {
                                                                     >
                                                                         <i className="bi bi-whatsapp me-1"></i>
                                                                         {contactCounts[store.id] != null
-                                                                            ? `${contactCounts[store.id]} contacts`
-                                                                            : 'Connected'
+                                                                            ? `${contactCounts[store.id]} ${t('contacts')}`
+                                                                            : t('Connected')
                                                                         }
                                                                     </span>
 
@@ -1020,15 +1021,15 @@ function StoreIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {store.deleted ? (
                                                                 <>
-                                                                    <span className="badge bg-danger me-1">YES</span>
+                                                                    <span className="badge bg-danger me-1">{t('YES')}</span>
                                                                     {store.marked_for_permanent_deletion && (
                                                                         <span className="badge bg-warning text-dark">
-                                                                            Permanent Deletion in {store.permanent_deletion_after_days || 14}d
+                                                                            {t('Permanent Deletion in {{days}}d', { days: store.permanent_deletion_after_days || 14 })}
                                                                         </span>
                                                                     )}
                                                                 </>
                                                             ) : (
-                                                                <span className="badge bg-success">NO</span>
+                                                                <span className="badge bg-success">{t('NO')}</span>
                                                             )}
                                                         </td>
                                                     </tr>

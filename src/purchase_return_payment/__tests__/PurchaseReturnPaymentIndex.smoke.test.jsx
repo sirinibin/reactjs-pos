@@ -129,6 +129,6 @@ describe('PurchaseReturnPaymentIndex smoke test', () => {
         <PurchaseReturnPaymentIndex showToastMessage={jest.fn()} />
       </MemoryRouter>
     );
-    expect(getByText('Purchase Return Payments')).toBeTruthy();
+    expect(getByText('purchase_return_payments')).toBeTruthy();
   });
 });

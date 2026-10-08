@@ -1,9 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { LANGUAGE_OPTIONS } from './i18n/config';
 import eventEmitter from './utils/eventEmitter';
+import StoreSettingsModal from './store/StoreSettingsModal';
+import ChangePasswordModal from './user/ChangePasswordModal';
+import ManageUsersModal from './user/ManageUsersModal';
+import AdminSettingsModal from './AdminSettingsModal';
+import ServerStatusModal from './ServerStatusModal';
+import EmailDetailModal from './store/EmailDetailModal';
+import { ExtractModal } from './store/ProcurementEmailsTab';
+import RFQCreate from './rfq_received/create.js';
+import { RFQSendModal } from './rfq_received/index.js';
+import { WhatsAppNotificationModal } from './store/ConversationModal';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -40,6 +50,26 @@ function saveDismissedMap(map) {
     localStorage.setItem('dn_dismissed', JSON.stringify(map));
 }
 
+const MAX_NOTIF_HISTORY = 100;
+
+function loadEmailHistory() {
+    try { return JSON.parse(localStorage.getItem('_email_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveEmailHistory(items) {
+    try { localStorage.setItem('_email_notif_history', JSON.stringify(items)); }
+    catch (_) {}
+}
+
+function loadWaHistory() {
+    try { return JSON.parse(localStorage.getItem('_wa_notif_history') || '[]'); }
+    catch (_) { return []; }
+}
+function saveWaHistory(items) {
+    try { localStorage.setItem('_wa_notif_history', JSON.stringify(items)); }
+    catch (_) {}
+}
+
 function Topbar(props) {
     const { t, i18n } = useTranslation('common');
     const [notifications, setNotifications] = useState([]);
@@ -52,23 +82,50 @@ function Topbar(props) {
         try { dismissedPrIds.current = new Set(JSON.parse(localStorage.getItem('dismissed_pr_ids') || '[]')); }
         catch (_) { dismissedPrIds.current = new Set(); }
     }
+    const [waUnreadTotal, setWaUnreadTotal] = useState(0);
+    const [waHistory, setWaHistory] = useState(loadWaHistory);
+    const [waNotifModal, setWaNotifModal] = useState(null); // { storeId, phone, pendingUnread }
+    const [emailUnreadItems, setEmailUnreadItems] = useState([]);
+    const [emailUnreadTotal, setEmailUnreadTotal] = useState(0);
+    const [emailHistory, setEmailHistory] = useState(loadEmailHistory);
+    const emailUnreadCountRef = useRef(null);
+    const [pendingEmailUnreadId, setPendingEmailUnreadId] = useState(null);
+    const [topbarEmailMsg, setTopbarEmailMsg] = useState(null);
+    const [topbarEmailShow, setTopbarEmailShow] = useState(false);
+    const [topbarExtractMsg, setTopbarExtractMsg] = useState(null);
+    const [topbarRfqForSend, setTopbarRfqForSend] = useState(null);
+    const [topbarShowSendModal, setTopbarShowSendModal] = useState(false);
+    const topbarRfqCreateRef = useRef(null);
+
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
     const storeName = localStorage.getItem("store_name") || "";
+    const storeNameArabic = localStorage.getItem("store_name_in_arabic") || "";
     const branchName = localStorage.getItem("branch_name") || "";
     const [stores, setStores] = useState([]);
     const [storesLoading, setStoresLoading] = useState(false);
     const [storeCode, setStoreCode] = useState("");
     const [storeZatca, setStoreZatca] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
+    const [adminSettingsOpen, setAdminSettingsOpen] = useState(false);
+    const [serverStatusOpen, setServerStatusOpen] = useState(false);
+    const [, setDirTick] = useState(0);
+    const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+    const changePwRef = useRef(null);
+    const manageUsersRef = useRef(null);
+    const userRole = localStorage.getItem('user_role');
+    const isAdminFlag = localStorage.getItem('admin') === 'true';
+    const canManageUsers = userRole === 'Admin' || userRole === 'Manager' || isAdminFlag;
+    const canAccessStoreSettings = userRole === 'Admin' || userRole === 'Manager';
 
     async function fetchStores() {
         if (stores.length > 0) return;
         setStoresLoading(true);
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch('/v1/store?select=id,name,code,branch_name,zatca&limit=10000', { headers: { Authorization: "Bearer " + token } });
+            const res = await fetch('/v1/store?select=id,name,name_in_arabic,code,branch_name,zatca&limit=10000', { headers: { Authorization: "Bearer " + token } });
             const data = res.ok && await res.json();
             if (data && Array.isArray(data.result)) setStores(data.result);
         } catch (_) {}
@@ -79,6 +136,7 @@ function Topbar(props) {
         const token = localStorage.getItem("access_token");
         localStorage.setItem("store_id", store.id);
         localStorage.setItem("store_name", store.name);
+        localStorage.setItem("store_name_in_arabic", store.name_in_arabic || "");
         const userId = localStorage.getItem("user_id");
         if (userId) localStorage.setItem("last_store_" + userId, store.id);
         try {
@@ -98,7 +156,7 @@ function Topbar(props) {
         const storeId = localStorage.getItem("store_id");
         const token = localStorage.getItem("access_token");
         if (!storeId || !token) return;
-        fetch(`/v1/store/${storeId}?select=id,code,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
+        fetch(`/v1/store/${storeId}?select=id,code,name_in_arabic,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
             .then(async res => {
                 const data = res.ok && await res.json();
                 if (data && data.result) {
@@ -108,10 +166,137 @@ function Topbar(props) {
                     }
                     if (data.result.code) setStoreCode(data.result.code);
                     if (data.result.zatca) setStoreZatca(data.result.zatca);
+                    if (data.result.name_in_arabic !== undefined) {
+                        localStorage.setItem("store_name_in_arabic", data.result.name_in_arabic || "");
+                    }
                 }
             })
             .catch(() => { });
     }, []);
+
+    // Fetch WhatsApp unread summary (event-driven via WebSocket + 30s fallback poll)
+    const fetchWaUnread = useCallback(() => {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        fetch(`/v1/rfq-whatsapp-unread?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                const freshItems = (data.items || []).slice().sort((a, b) =>
+                    new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0)
+                );
+                setWaUnreadTotal(data.total_unread || 0);
+                // Merge into history: keep last 100, update unread_count for existing entries
+                setWaHistory(prev => {
+                    const freshByPhone = Object.fromEntries(freshItems.map(i => [i.phone, i]));
+                    const merged = prev.map(h =>
+                        freshByPhone[h.phone]
+                            ? { ...h, ...freshByPhone[h.phone] }
+                            : { ...h, unread_count: 0 }
+                    );
+                    const existingPhones = new Set(merged.map(h => h.phone));
+                    for (const item of freshItems) {
+                        if (!existingPhones.has(item.phone)) merged.unshift(item);
+                    }
+                    const trimmed = merged.slice(0, MAX_NOTIF_HISTORY);
+                    saveWaHistory(trimmed);
+                    return trimmed;
+                });
+            })
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        // Initial fetch
+        fetchWaUnread();
+        // Fallback poll every 30 s in case WebSocket event is missed
+        const id = setInterval(fetchWaUnread, 30 * 1000);
+        // Real-time: re-fetch when backend pushes wa_unread_changed
+        eventEmitter.on('wa_unread_changed', fetchWaUnread);
+        // Re-fetch on WebSocket reconnect
+        eventEmitter.on('socket_connection_open', fetchWaUnread);
+        return () => {
+            clearInterval(id);
+            eventEmitter.off('wa_unread_changed', fetchWaUnread);
+            eventEmitter.off('socket_connection_open', fetchWaUnread);
+        };
+    }, [fetchWaUnread]);
+
+    const playNewEmailSound = useCallback(() => {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = ctx.currentTime;
+            [880, 1100].forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0, t + i * 0.15);
+                gain.gain.linearRampToValueAtTime(0.12, t + i * 0.15 + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.15 + 0.3);
+                osc.start(t + i * 0.15);
+                osc.stop(t + i * 0.15 + 0.35);
+            });
+        } catch (_) {}
+    }, []);
+
+    const fetchEmailUnread = useCallback(() => {
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        fetch(`/v1/email-unread?store_id=${storeId}`, { headers: { Authorization: token } })
+            .then(r => r.json())
+            .then(data => {
+                const newTotal = data.total_unread || 0;
+                if (emailUnreadCountRef.current !== null && newTotal > emailUnreadCountRef.current) {
+                    playNewEmailSound();
+                }
+                emailUnreadCountRef.current = newTotal;
+                const freshItems = data.items || [];
+                setEmailUnreadItems(freshItems);
+                setEmailUnreadTotal(newTotal);
+                // Merge into history: add new items at top, update existing, keep last 100
+                setEmailHistory(prev => {
+                    const freshById = Object.fromEntries(freshItems.map(i => [i.id, i]));
+                    const merged = prev.map(h =>
+                        freshById[h.id] ? { ...h, ...freshById[h.id] } : h
+                    );
+                    const existingIds = new Set(merged.map(h => h.id));
+                    for (const item of freshItems) {
+                        if (!existingIds.has(item.id)) merged.unshift(item);
+                    }
+                    const trimmed = merged.slice(0, MAX_NOTIF_HISTORY);
+                    saveEmailHistory(trimmed);
+                    return trimmed;
+                });
+            })
+            .catch(() => {});
+    }, [playNewEmailSound]);
+
+    useEffect(() => {
+        fetchEmailUnread();
+        const id = setInterval(fetchEmailUnread, 30 * 1000);
+        eventEmitter.on('email_unread_changed', fetchEmailUnread);
+        eventEmitter.on('socket_connection_open', fetchEmailUnread);
+        return () => {
+            clearInterval(id);
+            eventEmitter.off('email_unread_changed', fetchEmailUnread);
+            eventEmitter.off('socket_connection_open', fetchEmailUnread);
+        };
+    }, [fetchEmailUnread]);
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => setDirTick(n => n + 1));
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
+        return () => observer.disconnect();
+    }, []);
+
+    const ZATCA_ENV_AR = { Production: 'إنتاج', NonProduction: 'غير إنتاج', Simulation: 'محاكاة' };
+    function zatcaEnvLabel(env) {
+        return (isRTL && ZATCA_ENV_AR[env]) ? ZATCA_ENV_AR[env] : env;
+    }
 
     function onTrigger(event) {
         props.parentCallback();
@@ -128,7 +313,8 @@ function Topbar(props) {
         localStorage.removeItem("branch_name");
         localStorage.removeItem("store_id");
         localStorage.removeItem("admin");
-        window.location = "/";
+        const isWorkshop = window.location.hostname === 'workshop.gulfunionozone.com';
+        window.location = isWorkshop ? '/login.html' : '/';
     }
 
     // Add a notification, avoiding duplicates by id.
@@ -241,33 +427,21 @@ function Topbar(props) {
             if (!storeId || !token || !userId) return;
             const base = `/v1/purchase-request?search[store_id]=${storeId}&search[limit]=20`;
             try {
-                // PRs assigned to me that are still pending (P.R Received)
-                const r1 = await fetch(`${base}&search[assigned_to]=${userId}&search[status]=pending`, { headers: { Authorization: token } });
-                const d1 = await r1.json();
-                if (d1.status && Array.isArray(d1.result)) {
-                    d1.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Received: ${pr.code}`, code: pr.code });
-                    });
-                }
-                // PRs I created that were accepted (P.R Status: accepted)
-                const r2 = await fetch(`${base}&search[created_by]=${userId}&search[status]=accepted`, { headers: { Authorization: token } });
-                const d2 = await r2.json();
-                if (d2.status && Array.isArray(d2.result)) {
-                    d2.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Accepted: ${pr.code}`, code: pr.code });
-                    });
-                }
-                // PRs I created that were rejected (P.R Status: rejected)
-                const r3 = await fetch(`${base}&search[created_by]=${userId}&search[status]=rejected`, { headers: { Authorization: token } });
-                const d3 = await r3.json();
-                if (d3.status && Array.isArray(d3.result)) {
-                    d3.result.forEach(pr => {
-                        if (dismissedPrIds.current.has(pr.id)) return;
-                        addPrNotification({ id: pr.id, message: `P.R Rejected: ${pr.code}`, code: pr.code });
-                    });
-                }
+                const h = { headers: { Authorization: token } };
+                const [d1, d2, d3] = await Promise.all([
+                    fetch(`${base}&search[assigned_to]=${userId}&search[status]=pending`, h).then(r => r.json()),
+                    fetch(`${base}&search[created_by]=${userId}&search[status]=accepted`, h).then(r => r.json()),
+                    fetch(`${base}&search[created_by]=${userId}&search[status]=rejected`, h).then(r => r.json()),
+                ]);
+                const labels = ['P.R Received', 'P.R Accepted', 'P.R Rejected'];
+                [d1, d2, d3].forEach((d, idx) => {
+                    if (d.status && Array.isArray(d.result)) {
+                        d.result.forEach(pr => {
+                            if (dismissedPrIds.current.has(pr.id)) return;
+                            addPrNotification({ id: pr.id, message: `${labels[idx]}: ${pr.code}`, code: pr.code });
+                        });
+                    }
+                });
             } catch (_) {}
         };
         fetchPRNotifications();
@@ -327,7 +501,7 @@ function Topbar(props) {
                     <i className="hamburger align-self-center"></i>
                 </a>
 
-                <div className="navbar-collapse collapse">
+                <div className="navbar-collapse collapse" style={isRTL ? { direction: 'ltr', flexDirection: 'row-reverse', justifyContent: 'space-between' } : { direction: 'ltr' }}>
                     <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2" style={{ flex: "0 1 auto", minWidth: 0 }}>
                         <Dropdown.Toggle
                             as="span"
@@ -343,7 +517,7 @@ function Topbar(props) {
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                                 flexShrink: 1,
-                            }}>{storeName}</span>
+                            }}>{(isRTL && storeNameArabic) ? storeNameArabic : storeName}</span>
                             {storeCode && (
                                 <span className="d-none d-sm-inline text-muted" style={{ fontWeight: 400, fontSize: "12px", flexShrink: 0 }}>({storeCode})</span>
                             )}
@@ -355,7 +529,7 @@ function Topbar(props) {
                                     fontSize: "11px", fontWeight: 600, padding: "1px 6px",
                                     borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
                                     flexShrink: 0, whiteSpace: "nowrap",
-                                }}>{storeZatca.env}</span>
+                                }}>{zatcaEnvLabel(storeZatca.env)}</span>
                             )}
                             <i className="bi bi-chevron-down" style={{ fontSize: "11px", flexShrink: 0 }}></i>
                         </Dropdown.Toggle>
@@ -374,14 +548,14 @@ function Topbar(props) {
                                             active={isActive}
                                             onClick={() => switchStore(s)}
                                         >
-                                            <strong>{s.name}</strong>
+                                            <strong>{(isRTL && s.name_in_arabic) ? s.name_in_arabic : s.name}</strong>
                                             {s.code && <span style={{ fontSize: "12px", marginLeft: "4px", color: mutedColor }}>({s.code})</span>}
                                             {s.branch_name && <span style={{ marginLeft: "4px", color: mutedColor }}>· {s.branch_name}</span>}
                                             {s.zatca?.phase === "2" && s.zatca?.env && (
                                                 <span style={{
                                                     fontSize: "11px", fontWeight: 600, padding: "1px 6px", marginLeft: "6px",
                                                     borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
-                                                }}>{s.zatca.env}</span>
+                                                }}>{zatcaEnvLabel(s.zatca.env)}</span>
                                             )}
                                         </Dropdown.Item>
                                     );
@@ -401,7 +575,7 @@ function Topbar(props) {
                     </button>
 
                     {/* Desktop nav items — hidden on mobile */}
-                    <ul className="navbar-nav navbar-align d-none d-sm-flex">
+                    <ul className="navbar-nav navbar-align d-none d-sm-flex" style={{ columnGap: '12px', ...(isRTL ? { marginLeft: 0 } : {}) }}>
 
                         {(storeSettings?.enable_notification === true || storeSettings?.enable_purchase_request_module === true || prNotifications.length > 0) && (
                             <li className="nav-item dropdown me-2">
@@ -497,6 +671,224 @@ function Topbar(props) {
                             </li>
                         )}
 
+                        {storeSettings?.enable_rfq_module && (
+                            <li className="nav-item me-1">
+                                <span
+                                    title="RFQ History"
+                                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                    onClick={() => { window.location.href = '/dashboard/rfq-received'; }}
+                                >
+                                    <i className="bi bi-clipboard2-check" style={{ fontSize: 20, color: '#0d6efd' }}></i>
+                                </span>
+                            </li>
+                        )}
+
+                        {storeSettings?.enable_rfq_module && (
+                            <li className="nav-item dropdown me-1">
+                                <Dropdown align="end">
+                                    <Dropdown.Toggle
+                                        as="span"
+                                        bsPrefix="wa-unread-toggle"
+                                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                        id="wa-unread-toggle"
+                                    >
+                                        <i className="bi bi-whatsapp" style={{ fontSize: 20, color: '#25D366' }}></i>
+                                        <span style={{
+                                            position: 'absolute', top: -4, right: 2,
+                                            background: waUnreadTotal > 0 ? '#dc3545' : '#6c757d',
+                                            color: '#fff', borderRadius: '50%',
+                                            fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                                        }}>{waUnreadTotal}</span>
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu style={{ minWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-whatsapp text-success me-1"></i>WhatsApp Notifications</span>
+                                            {waHistory.length > 0 && (
+                                                <span
+                                                    style={{ fontSize: 10, color: '#adb5bd', cursor: 'pointer', fontWeight: 400 }}
+                                                    onClick={() => { setWaHistory([]); saveWaHistory([]); }}
+                                                >Clear all</span>
+                                            )}
+                                        </Dropdown.ItemText>
+                                        {waHistory.length === 0 && (
+                                            <div style={{ padding: '16px 14px', color: '#6c757d', fontSize: 12, textAlign: 'center' }}>No notifications</div>
+                                        )}
+                                        {[...waHistory].sort((a, b) => {
+                                            if ((a.unread_count > 0) !== (b.unread_count > 0)) return b.unread_count > 0 ? 1 : -1;
+                                            return new Date(b.last_message_date || 0) - new Date(a.last_message_date || 0);
+                                        }).map((item, idx) => {
+                                            const hasUnread = item.unread_count > 0;
+                                            const handleClick = () => {
+                                                setWaNotifModal({ storeId: localStorage.getItem('store_id'), phone: item.phone, pendingUnread: hasUnread ? item.unread_count : 0 });
+                                            };
+                                            return (
+                                            <div
+                                                key={item.phone || idx}
+                                                style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', opacity: hasUnread ? 1 : 0.6 }}
+                                                onClick={handleClick}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                    <div style={{
+                                                        width: 34, height: 34, borderRadius: '50%',
+                                                        background: item.phone_type === 'customer' ? '#0d6efd' : '#25D366',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: '#fff', flexShrink: 0, fontSize: 15,
+                                                    }}>
+                                                        <i className={`bi ${item.phone_type === 'customer' ? 'bi-person-fill' : 'bi-whatsapp'}`}></i>
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontSize: 13, fontWeight: hasUnread ? 600 : 400, lineHeight: 1.3 }}>
+                                                            {item.contact_name || item.phone}
+                                                            <span style={{ fontSize: 10, fontWeight: 400, color: '#6c757d', marginLeft: 6 }}>
+                                                                {item.phone_type === 'customer' ? 'Customer' : 'Supplier'}
+                                                            </span>
+                                                        </div>
+                                                        <div style={{ fontSize: 11, color: hasUnread ? '#198754' : '#adb5bd', fontWeight: hasUnread ? 500 : 400 }}>
+                                                            {hasUnread ? `${item.unread_count} new message${item.unread_count !== 1 ? 's' : ''}` : 'No new messages'} for {item.rfq_code || 'RFQ'}
+                                                        </div>
+                                                        {item.last_message_text && (
+                                                            <div style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240, marginTop: 1 }}>
+                                                                {item.last_message_text}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                                                        {hasUnread && (
+                                                            <span style={{ background: '#dc3545', color: '#fff', borderRadius: 10, fontSize: 10, padding: '2px 7px', fontWeight: 700 }}>
+                                                                {item.unread_count}
+                                                            </span>
+                                                        )}
+                                                        {item.last_message_date && (
+                                                            <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
+                                                                {formatTimeAgo(item.last_message_date)}
+                                                            </span>
+                                                        )}
+                                                        {item.last_message_date && (
+                                                            <span style={{ fontSize: 10, color: '#adb5bd', textAlign: 'right' }}>
+                                                                {new Date(item.last_message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            );
+                                        })}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </li>
+                        )}
+
+                        {(storeSettings?.rfq_email_connected || (storeSettings?.rfq_email_accounts && storeSettings.rfq_email_accounts.length > 0)) && (
+                            <li className="nav-item dropdown me-1">
+                                <Dropdown align="end">
+                                    <Dropdown.Toggle
+                                        as="span"
+                                        bsPrefix="email-unread-toggle"
+                                        style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', padding: '0 8px' }}
+                                        id="email-unread-toggle"
+                                    >
+                                        <i className="bi bi-envelope-fill" style={{ fontSize: 20, color: '#0d6efd' }}></i>
+                                        <span style={{
+                                            position: 'absolute', top: -4, right: 2,
+                                            background: emailUnreadTotal > 0 ? '#dc3545' : '#6c757d',
+                                            color: '#fff', borderRadius: '50%',
+                                            fontSize: 11, fontWeight: 'bold', minWidth: 18, height: 18,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+                                        }}>{emailUnreadTotal}</span>
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu style={{ minWidth: 340, maxWidth: 340, maxHeight: 450, overflowY: 'auto' }}>
+                                        <Dropdown.ItemText style={{ fontWeight: 600, fontSize: 12, color: '#555', borderBottom: '1px solid #eee', paddingBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span><i className="bi bi-envelope-fill text-primary me-1"></i>Email Notifications</span>
+                                            {emailHistory.length > 0 && (
+                                                <span
+                                                    style={{ fontSize: 10, color: '#adb5bd', cursor: 'pointer', fontWeight: 400 }}
+                                                    onClick={() => { setEmailHistory([]); saveEmailHistory([]); }}
+                                                >Clear all</span>
+                                            )}
+                                        </Dropdown.ItemText>
+                                        {emailHistory.length === 0 && (
+                                            <div style={{ padding: '16px 14px', color: '#6c757d', fontSize: 12, textAlign: 'center' }}>
+                                                No notifications
+                                            </div>
+                                        )}
+                                        {[...emailHistory].sort((a, b) => {
+                                            const aU = emailUnreadItems.some(u => u.id === a.id);
+                                            const bU = emailUnreadItems.some(u => u.id === b.id);
+                                            if (aU !== bU) return bU ? 1 : -1;
+                                            return new Date(b.message_date || 0) - new Date(a.message_date || 0);
+                                        }).map((item, idx) => {
+                                            const isUnread = emailUnreadItems.some(u => u.id === item.id);
+                                            const handleEmailClick = () => {
+                                                const storeId = localStorage.getItem('store_id');
+                                                const token = localStorage.getItem('access_token');
+                                                fetch(`/v1/procurement-messages/${item.id}?store_id=${storeId}`, { headers: { Authorization: token } })
+                                                    .then(r => r.json())
+                                                    .then(msg => {
+                                                        if (msg?.id) {
+                                                            setTopbarEmailMsg(msg);
+                                                            setTopbarEmailShow(true);
+                                                            if (isUnread) setPendingEmailUnreadId(item.id);
+                                                        }
+                                                    })
+                                                    .catch(() => {});
+                                            };
+                                            return (
+                                                <div
+                                                    key={item.id || idx}
+                                                    style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', opacity: isUnread ? 1 : 0.6 }}
+                                                    onClick={handleEmailClick}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                        <div style={{
+                                                            width: 34, height: 34, borderRadius: '50%',
+                                                            background: '#0d6efd',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: '#fff', flexShrink: 0, fontSize: 15,
+                                                        }}>
+                                                            <i className="bi bi-envelope-fill"></i>
+                                                        </div>
+                                                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                                            <div style={{ fontSize: 13, fontWeight: isUnread ? 600 : 400, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {item.subject || '(No Subject)'}
+                                                            </div>
+                                                            <div style={{ fontSize: 11, color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {item.from}
+                                                            </div>
+                                                            {item.snippet && (
+                                                                <div style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
+                                                                    {item.snippet}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                                                            {isUnread && (
+                                                                <span style={{ background: '#0d6efd', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>New</span>
+                                                            )}
+                                                            {item.message_date && (
+                                                                <span style={{ fontSize: 10, color: '#6c757d', textAlign: 'right' }}>
+                                                                    {formatTimeAgo(item.message_date)}
+                                                                </span>
+                                                            )}
+                                                            {item.message_date && (
+                                                                <span style={{ fontSize: 10, color: '#adb5bd', textAlign: 'right' }}>
+                                                                    {new Date(item.message_date).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            </li>
+                        )}
+
                         <li className="nav-item dropdown">
                             <LanguageSwitcher />
                         </li>
@@ -517,6 +909,39 @@ function Topbar(props) {
                                     <Dropdown.ItemText style={{ fontWeight: 600, color: "#333" }}>
                                         <i className="bi bi-person me-2"></i>{localStorage.getItem("user_name")}
                                     </Dropdown.ItemText>
+                                    <Dropdown.Divider />
+                                    {canAccessStoreSettings && (
+                                    <Dropdown.Item onClick={() => setStoreSettingsOpen(true)}>
+                                        <i className="bi bi-gear me-2"></i>Store Settings
+                                    </Dropdown.Item>
+                                    )}
+                                    <Dropdown.Item onClick={() => changePwRef.current?.open(
+                                        localStorage.getItem('user_id'),
+                                        localStorage.getItem('user_name'),
+                                        false
+                                    )}>
+                                        <i className="bi bi-shield-lock me-2"></i>Change Password
+                                    </Dropdown.Item>
+                                    {canManageUsers && (
+                                        <>
+                                            <Dropdown.Divider />
+                                            <Dropdown.Item onClick={() => manageUsersRef.current?.open()}>
+                                                <i className="bi bi-people me-2"></i>Manage Users
+                                            </Dropdown.Item>
+                                        </>
+                                    )}
+                                    {(isAdminFlag || userRole === 'Admin') && (
+                                        <>
+                                            <Dropdown.Divider />
+                                            <Dropdown.Item onClick={() => setAdminSettingsOpen(true)}>
+                                                <i className="bi bi-gear-wide-connected me-2"></i>Admin Settings
+                                            </Dropdown.Item>
+                                        </>
+                                    )}
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => setServerStatusOpen(true)}>
+                                        <i className="bi bi-activity me-2" style={{ color: '#2563eb' }}></i>Server Status
+                                    </Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={(e) => { logOut(e); }}>
                                         <i className="bi bi-box-arrow-right me-2"></i>{t('buttons.logout')}
@@ -607,6 +1032,53 @@ function Topbar(props) {
 
                         {/* Drawer actions */}
                         <div style={{ flex: 1, padding: "8px 0" }}>
+                            {canAccessStoreSettings && (
+                            <button
+                                onClick={() => { setMobileMenuOpen(false); setStoreSettingsOpen(true); }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: "10px",
+                                    width: "100%", padding: "13px 18px",
+                                    background: "none", border: "none", cursor: "pointer",
+                                    fontSize: "14px", color: "#333", textAlign: "left",
+                                }}
+                            >
+                                <i className="bi bi-gear" style={{ fontSize: "18px" }}></i>
+                                Store Settings
+                            </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    changePwRef.current?.open(
+                                        localStorage.getItem('user_id'),
+                                        localStorage.getItem('user_name'),
+                                        false
+                                    );
+                                }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: "10px",
+                                    width: "100%", padding: "13px 18px",
+                                    background: "none", border: "none", cursor: "pointer",
+                                    fontSize: "14px", color: "#333", textAlign: "left",
+                                }}
+                            >
+                                <i className="bi bi-shield-lock" style={{ fontSize: "18px" }}></i>
+                                Change Password
+                            </button>
+                            {canManageUsers && (
+                                <button
+                                    onClick={() => { setMobileMenuOpen(false); manageUsersRef.current?.open(); }}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: "10px",
+                                        width: "100%", padding: "13px 18px",
+                                        background: "none", border: "none", cursor: "pointer",
+                                        fontSize: "14px", color: "#333", textAlign: "left",
+                                    }}
+                                >
+                                    <i className="bi bi-people" style={{ fontSize: "18px" }}></i>
+                                    Manage Users
+                                </button>
+                            )}
                             <button
                                 onClick={() => { setMobileMenuOpen(false); logOut({ preventDefault: () => {} }); }}
                                 style={{
@@ -622,6 +1094,79 @@ function Topbar(props) {
                         </div>
                     </div>
                 </>
+            )}
+
+            <StoreSettingsModal show={storeSettingsOpen} onHide={() => setStoreSettingsOpen(false)} />
+            <AdminSettingsModal show={adminSettingsOpen} onHide={() => setAdminSettingsOpen(false)} />
+            <ServerStatusModal show={serverStatusOpen} onHide={() => setServerStatusOpen(false)} />
+            <ChangePasswordModal ref={changePwRef} showToastMessage={props.showToastMessage} />
+            <ManageUsersModal ref={manageUsersRef} showToastMessage={props.showToastMessage} />
+            {topbarEmailMsg && (
+                <EmailDetailModal
+                    msg={topbarEmailMsg}
+                    show={topbarEmailShow}
+                    onClose={() => {
+                        if (pendingEmailUnreadId) {
+                            setEmailUnreadItems(prev => prev.filter(e => e.id !== pendingEmailUnreadId));
+                            setEmailUnreadTotal(prev => Math.max(0, prev - 1));
+                            setPendingEmailUnreadId(null);
+                        }
+                        fetchEmailUnread();
+                        setTopbarEmailShow(false);
+                        setTopbarEmailMsg(null);
+                    }}
+                    storeId={localStorage.getItem('store_id')}
+                    token={localStorage.getItem('access_token')}
+                    onExtract={msg => { setTopbarEmailShow(false); setTopbarEmailMsg(null); setTopbarExtractMsg(msg); }}
+                />
+            )}
+            {topbarExtractMsg && (
+                <ExtractModal
+                    msg={topbarExtractMsg}
+                    storeId={localStorage.getItem('store_id')}
+                    token={localStorage.getItem('access_token')}
+                    onClose={() => setTopbarExtractMsg(null)}
+                    onCreateRFQ={data => {
+                        const msgId = topbarExtractMsg?.id;
+                        const msgCode = topbarExtractMsg?.code;
+                        setTopbarExtractMsg(null);
+                        topbarRfqCreateRef.current?.openFromExtraction(data, msgId, msgCode);
+                    }}
+                />
+            )}
+            <RFQCreate
+                ref={topbarRfqCreateRef}
+                showToastMessage={() => {}}
+                onCreated={newRfq => {
+                    if (newRfq?.id) { setTopbarRfqForSend(newRfq); setTopbarShowSendModal(true); }
+                }}
+            />
+            {topbarRfqForSend && (
+                <RFQSendModal
+                    key={topbarRfqForSend.id}
+                    rfq={topbarRfqForSend}
+                    storeId={localStorage.getItem('store_id')}
+                    show={topbarShowSendModal}
+                    onHide={() => { setTopbarShowSendModal(false); setTopbarRfqForSend(null); }}
+                />
+            )}
+            {waNotifModal && (
+                <WhatsAppNotificationModal
+                    show={!!waNotifModal}
+                    storeId={waNotifModal.storeId}
+                    phone={waNotifModal.phone}
+                    onHide={() => {
+                        if (waNotifModal?.pendingUnread > 0) {
+                            setWaUnreadTotal(prev => Math.max(0, prev - waNotifModal.pendingUnread));
+                            setWaHistory(prev => {
+                                const updated = prev.map(h => h.phone === waNotifModal.phone ? { ...h, unread_count: 0 } : h);
+                                saveWaHistory(updated);
+                                return updated;
+                            });
+                        }
+                        setWaNotifModal(null);
+                    }}
+                />
             )}
         </>
     );

@@ -43,7 +43,7 @@ describe('Footer', () => {
         expect(container.querySelector('footer.footer')).toBeInTheDocument();
 
         // link to startuptech.uk present with correct attributes
-        const link = container.querySelector('a[href="https://www.startuptech.uk/"]');
+        const link = container.querySelector('a[href="https://www.gulfunionozone.com/"]');
         expect(link).toBeInTheDocument();
         expect(link).toHaveAttribute('target', '_blank');
         expect(link).toHaveAttribute('rel', 'noreferrer');

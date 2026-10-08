@@ -36,6 +36,8 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { useTranslation } from "react-i18next";
+import * as XLSX from "xlsx";
 
 const columnStyle = {
     width: '20%',
@@ -47,6 +49,7 @@ const columnStyle = {
 
 function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
+    const { t } = useTranslation('common');
 
     let [enableSelection, setEnableSelection] = useState(false);
 
@@ -125,6 +128,50 @@ function ProductIndex(props) {
             const data = await fetchStore(id);
             setStore({ ...data });
         } catch (error) { }
+    }
+
+    const [exportingExcel, setExportingExcel] = useState(false);
+
+    async function exportToExcel() {
+        setExportingExcel(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const token = localStorage.getItem("access_token");
+            const select = `select=id,prefix_part_number,part_number,name,name_in_arabic,ean_12,category_name,brand_name,country_name,rack,unit,product_stores,created_at`;
+            const exportParams = { ...searchParams.current, store_id: storeId };
+            const queryParams = ObjectToSearchQueryParams(exportParams);
+            const res = await fetch(`/v1/product?${select}&${queryParams}&sort=-created_at&page=1&limit=5000`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const items = data.result || [];
+            const rows = items.map((p, i) => {
+                const ps = p.product_stores?.[storeId] || {};
+                const partNo = p.prefix_part_number ? `${p.prefix_part_number}-${p.part_number}` : (p.part_number || "");
+                return {
+                    "#": i + 1,
+                    "Name": p.name || "",
+                    "Name (Arabic)": p.name_in_arabic || "",
+                    "Part Number": partNo,
+                    "Barcode": p.ean_12 || "",
+                    "Category": Array.isArray(p.category_name) ? p.category_name.join(", ") : (p.category_name || ""),
+                    "Brand": p.brand_name || "",
+                    "Country": p.country_name || "",
+                    "Rack": p.rack || "",
+                    "Unit": p.unit || "",
+                    "Purchase Price": ps.purchase_unit_price ?? "",
+                    "Wholesale Price": ps.wholesale_unit_price ?? "",
+                    "Retail Price": ps.retail_unit_price ?? "",
+                    "Stock": ps.stock ?? "",
+                    "Created At": p.created_at ? new Date(p.created_at).toLocaleDateString() : "",
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Products");
+            XLSX.writeFile(wb, `products_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (e) { console.error("Export error:", e); }
+        setExportingExcel(false);
     }
 
     //Search params
@@ -1020,7 +1067,7 @@ function ProductIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Product restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t('Product restored successfully!'), "success");
                 list();
             })
             .catch((error) => {
@@ -1061,7 +1108,7 @@ function ProductIndex(props) {
                     return Promise.reject(error);
                 }
 
-                if (props.showToastMessage) props.showToastMessage("Product deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t('Product deleted successfully!'), "success");
                 list();
             })
             .catch((error) => {
@@ -1072,7 +1119,7 @@ function ProductIndex(props) {
 
     const confirmDelete = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to delete this product?');
+        const result = await confirm(t('Are you sure, you want to delete this product?'));
         console.log(result);
         if (result) {
             deleteProduct(id);
@@ -1081,7 +1128,7 @@ function ProductIndex(props) {
 
     const confirmRestore = async (id) => {
         console.log(id);
-        const result = await confirm('Are you sure, you want to restore this product?');
+        const result = await confirm(t('Are you sure, you want to restore this product?'));
         console.log(result);
         if (result) {
             restoreProduct(id);
@@ -1501,7 +1548,7 @@ function ProductIndex(props) {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -1605,7 +1652,7 @@ function ProductIndex(props) {
         setSearchProductsColumns(clonedDefaults);
 
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -1798,7 +1845,7 @@ function ProductIndex(props) {
             <TableSettingsModal
                 show={showProductSearchSettings}
                 onHide={() => setShowProductSearchSettings(false)}
-                title="Product Search Settings"
+                title={t('Product Search Settings')}
                 columns={searchProductsColumns}
                 onToggleColumn={handleSearchToggleColumn}
                 onDragEnd={onDragEndSearch}
@@ -1809,7 +1856,7 @@ function ProductIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Products Settings"
+                title={t('Products Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -1839,18 +1886,18 @@ function ProductIndex(props) {
 
             <Modal show={showBiHistoryModal} onHide={() => setShowBiHistoryModal(false)} size="xl" centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>BI History{biHistoryProduct ? ` — ${biHistoryProduct}` : ""}</Modal.Title>
+                    <Modal.Title>{t('BI History')}{biHistoryProduct ? ` — ${biHistoryProduct}` : ""}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <ul className="nav nav-tabs mb-3">
                         <li className="nav-item">
                             <button className={"nav-link" + (biHistoryTab === "velocity" ? " active" : "")} onClick={() => setBiHistoryTab("velocity")}>
-                                Sales Velocity Trend
+                                {t('Sales Velocity Trend')}
                             </button>
                         </li>
                         <li className="nav-item">
                             <button className={"nav-link" + (biHistoryTab === "abcxyz" ? " active" : "")} onClick={() => setBiHistoryTab("abcxyz")}>
-                                ABC-XYZ Classification
+                                {t('ABC-XYZ Classification')}
                             </button>
                         </li>
                     </ul>
@@ -1860,14 +1907,14 @@ function ProductIndex(props) {
                             <table className="table table-sm table-bordered">
                                 <thead className="table-light">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Trend</th>
-                                        <th>Slope %/Mo</th>
-                                        <th>Momentum % / 3Mo</th>
-                                        <th>Avg Mo Qty</th>
-                                        <th>Recent 3Mo Qty</th>
-                                        <th>Revenue</th>
-                                        <th>Reason</th>
+                                        <th>{t('Date')}</th>
+                                        <th>{t('Trend')}</th>
+                                        <th>{t('Slope %/Mo')}</th>
+                                        <th>{t('Momentum % / 3Mo')}</th>
+                                        <th>{t('Avg Mo Qty')}</th>
+                                        <th>{t('Recent 3Mo Qty')}</th>
+                                        <th>{t('Revenue')}</th>
+                                        <th>{t('Reason')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1890,7 +1937,7 @@ function ProductIndex(props) {
                                             <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.sales_velocity_trend_reason || ""}</td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={8} className="text-center text-muted">No velocity history found</td></tr>
+                                        <tr><td colSpan={8} className="text-center text-muted">{t('No velocity history found')}</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1901,11 +1948,11 @@ function ProductIndex(props) {
                             <table className="table table-sm table-bordered">
                                 <thead className="table-light">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Class</th>
-                                        <th>Class Reason</th>
+                                        <th>{t('Date')}</th>
+                                        <th>{t('Class')}</th>
+                                        <th>{t('Class Reason')}</th>
                                         <th>
-                                            ABC Tier
+                                            {t('ABC Tier')}
                                             <OverlayTrigger placement="top" overlay={
                                                 <Tooltip id="abc-tier-history-info">
                                                     <strong>ABC Tier</strong> classifies products by revenue contribution (Pareto principle):<br />
@@ -1918,7 +1965,7 @@ function ProductIndex(props) {
                                             </OverlayTrigger>
                                         </th>
                                         <th>
-                                            XYZ Tier
+                                            {t('XYZ Tier')}
                                             <OverlayTrigger placement="top" overlay={
                                                 <Tooltip id="xyz-tier-history-info">
                                                     <strong>XYZ Tier</strong> classifies products by demand predictability:<br />
@@ -1930,9 +1977,9 @@ function ProductIndex(props) {
                                                 <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
                                             </OverlayTrigger>
                                         </th>
-                                        <th>CV (Coefficient of Variation)</th>
-                                        <th>Active Months</th>
-                                        <th>Stocking Strategy</th>
+                                        <th>{t('CV (Coefficient of Variation)')}</th>
+                                        <th>{t('Active Months')}</th>
+                                        <th>{t('Stocking Strategy')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1956,7 +2003,7 @@ function ProductIndex(props) {
                                             <td style={{ fontSize: "0.8em" }}>{row.stocking_strategy || "—"}</td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={8} className="text-center text-muted">No ABC-XYZ history found</td></tr>
+                                        <tr><td colSpan={8} className="text-center text-muted">{t('No ABC-XYZ history found')}</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1964,7 +2011,7 @@ function ProductIndex(props) {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowBiHistoryModal(false)}>Close</Button>
+                    <Button variant="secondary" onClick={() => setShowBiHistoryModal(false)}>{t('Close')}</Button>
                 </Modal.Footer>
             </Modal>
 
@@ -1993,7 +2040,7 @@ function ProductIndex(props) {
                             marginBottom: "0px",
                             whiteSpace: "nowrap",
                         }}>
-                            Store/Warehouse:
+                            {t('Store/Warehouse:')}
                         </label>
                     </div>
                     <div className="col-auto" style={{
@@ -2043,8 +2090,8 @@ function ProductIndex(props) {
 
                             }}
                         >
-                            <option value="">All</option>
-                            <option value="main_store">Main Store</option>
+                            <option value="">{t('All')}</option>
+                            <option value="main_store">{t('Main Store')}</option>
                             {warehouseList.map((warehouse) => (
                                 <option key={warehouse.id} value={warehouse.id}>
                                     {warehouse.name} ({warehouse.code})
@@ -2059,7 +2106,7 @@ function ProductIndex(props) {
                             disabled={isMigratingRack}
                             onClick={migrateRackToWarehouseRacks}
                         >
-                            {isMigratingRack ? "Migrating..." : "Migrate Rack → Main Store"}
+                            {isMigratingRack ? t('Migrating...') : t('Migrate Rack → Main Store')}
                         </button>
                     </div>}
                 </div>}
@@ -2104,23 +2151,23 @@ function ProductIndex(props) {
                             </div>*/}
 
                             <StatsSummary
-                                title="Products Summary"
+                                title={t('Products Summary')}
                                 filters={{
-                                    ...(createdAtValue ? { 'Date': createdAtValue } : {}),
-                                    ...(createdAtFromValue ? { 'From Date': createdAtFromValue } : {}),
-                                    ...(createdAtToValue ? { 'To Date': createdAtToValue } : {}),
-                                    ...(selectedProductCategories.length > 0 ? { 'Category': selectedProductCategories.map(c => c.name).join(', ') } : {}),
-                                    ...(selectedProductBrands.length > 0 ? { 'Brand': selectedProductBrands.map(b => b.name).join(', ') } : {}),
+                                    ...(createdAtValue ? { [t('Date')]: createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { [t('From Date')]: createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { [t('To Date')]: createdAtToValue } : {}),
+                                    ...(selectedProductCategories.length > 0 ? { [t('Category')]: selectedProductCategories.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedProductBrands.length > 0 ? { [t('Brand')]: selectedProductBrands.map(b => b.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Stock": stock,
-                                    "Retail stock value": retailStockValue,
-                                    "Wholesale stock value": wholesaleStockValue,
-                                    "Purchase stock value": purchaseStockValue,
-                                    "Sales": sales,
-                                    "Sales Return": salesReturn,
-                                    "Sales Profit": salesProfit,
-                                    "Sales Return Profit": salesReturnProfit,
+                                    [t('Stock')]: stock,
+                                    [t('Retail stock value')]: retailStockValue,
+                                    [t('Wholesale stock value')]: wholesaleStockValue,
+                                    [t('Purchase stock value')]: purchaseStockValue,
+                                    [t('Sales')]: sales,
+                                    [t('Sales Return')]: salesReturn,
+                                    [t('Sales Profit')]: salesProfit,
+                                    [t('Sales Return Profit')]: salesReturnProfit,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -2130,17 +2177,29 @@ function ProductIndex(props) {
 
                 <div className="row mb-1">
                     <div className="col">
-                        <h1 className="h3 mb-0">Products</h1>
+                        <h1 className="h3 mb-0">{t('Products')}</h1>
                     </div>
 
-                    <div className="col-auto">
+                    <div className="col-auto d-flex gap-2 align-items-center">
+                        <Button
+                            variant="success"
+                            className="btn btn-success mb-1"
+                            onClick={exportToExcel}
+                            disabled={exportingExcel}
+                            title="Export all products matching current filters to Excel"
+                        >
+                            {exportingExcel
+                                ? <Spinner as="span" animation="border" size="sm" className="me-1" />
+                                : <i className="bi bi-file-earmark-excel me-1"></i>}
+                            Export Excel
+                        </Button>
                         <Button
                             hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -2174,7 +2233,7 @@ function ProductIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Producs to display</p>
+                                            <p className="text-start">{t('No Producs to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -2189,12 +2248,12 @@ function ProductIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
 
                                     {totalItems > 0 && (
                                         <>
-                                            <label className="form-label mb-0">Size:&nbsp;</label>
+                                            <label className="form-label mb-0">{t('Size:')}&nbsp;</label>
                                             <select
                                                 value={pageSize}
                                                 onChange={(e) => { changePageSize(e.target.value); }}
@@ -2227,7 +2286,7 @@ function ProductIndex(props) {
                                             filterBy={() => true}
                                             size="lg"
                                             labelKey="search_label"
-                                            emptyLabel="No products found"
+                                            emptyLabel={t('No products found')}
                                             clearButton={true}
                                             open={openProductSearchResult}
                                             isLoading={false}
@@ -2261,7 +2320,7 @@ function ProductIndex(props) {
                                             }}
                                             options={productOptions}
                                             selected={selectedProducts}
-                                            placeholder="Part No. | Name | Name in Arabic | Brand | Country"
+                                            placeholder={t('Part No. | Name | Name in Arabic | Brand | Country')}
                                             highlightOnlyResult={true}
                                             onInputChange={(searchTerm, e) => {
                                                 const requestId = Date.now();
@@ -2443,7 +2502,7 @@ function ProductIndex(props) {
                                                                                     </div>
                                                                                 }
                                                                                 {col.key === "stock" &&
-                                                                                    <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                                    <div style={{ ...columnStyle, width: getColumnWidth(col), textAlign: 'center', justifyContent: 'center' }}>
                                                                                         {(() => {
                                                                                             const storeId = localStorage.getItem("store_id");
                                                                                             const productStore = option.product_stores?.[storeId];
@@ -2581,7 +2640,7 @@ function ProductIndex(props) {
 
                                     {totalItems > 0 && enableSelection && (
                                         <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
-                                            Select {choosenProducts.length} products
+                                            {t('Select')} {choosenProducts.length} {t('products')}
                                         </Button>
                                     )}
                                     <button
@@ -2613,8 +2672,8 @@ function ProductIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "deleted" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key === "select" && enableSelection && <th key={col.key}>
                                                             <input
                                                                 type="checkbox"
@@ -2632,7 +2691,7 @@ function ProductIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -3475,7 +3534,7 @@ function ProductIndex(props) {
                                                                 size="lg"
                                                                 ref={productSearchByPartNoRef}
                                                                 labelKey="search_label"
-                                                                emptyLabel="No products found"
+                                                                emptyLabel={t('No products found')}
                                                                 open={openProductSearchResultByPartNo}
                                                                 isLoading={false}
                                                                 onKeyDown={(e) => {
@@ -3517,7 +3576,7 @@ function ProductIndex(props) {
                                                                 filterBy={() => true}
                                                                 style={{ minWidth: "300px" }}
                                                                 labelKey="search_label"
-                                                                emptyLabel="No products found"
+                                                                emptyLabel={t('No products found')}
                                                                 clearButton={true}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Escape") {
@@ -3941,7 +4000,7 @@ function ProductIndex(props) {
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
-                                                        emptyLabel="No products found"
+                                                        emptyLabel={t('No products found')}
                                                         open={openProductSearchResultByPartNo}
                                                         isLoading={false}
                                                         onKeyDown={(e) => {
@@ -3985,7 +4044,7 @@ function ProductIndex(props) {
                                                         filterBy={() => true}
                                                         style={{ minWidth: "300px" }}
                                                         labelKey="search_label"
-                                                        emptyLabel="No products found"
+                                                        emptyLabel={t('No products found')}
                                                         clearButton={true}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
@@ -4600,7 +4659,7 @@ function ProductIndex(props) {
                                                     <tr key={product.id}>
                                                         {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                             return (<React.Fragment key={col.key}>
-                                                                {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "deleted") && <td style={{ textAlign: 'center' }}>{product.deleted ? <i className="bi bi-trash-fill text-danger" title="Deleted" /> : ""}</td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <input
                                                                         type="checkbox"
@@ -4609,7 +4668,7 @@ function ProductIndex(props) {
                                                                     />
                                                                 </td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
-                                                                    <span style={{ marginLeft: "-40px" }}>
+                                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                                                                         {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
                                                                             confirmDelete(product.id);
                                                                         }}>
@@ -4625,13 +4684,13 @@ function ProductIndex(props) {
                                                                             openUpdateForm(product.id);
                                                                         }}>
                                                                             <i className="bi bi-pencil"></i>
-                                                                        </Button>&nbsp;
+                                                                        </Button>
 
                                                                         <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                             openDetailsView(product.id);
                                                                         }} style={{}}>
                                                                             <i className="bi bi-eye"></i>
-                                                                        </Button>&nbsp;
+                                                                        </Button>
                                                                         <Button className="btn btn-outline-primary btn-sm" onClick={(e) => {
                                                                             e.preventDefault();
                                                                             e.stopPropagation();
@@ -4640,7 +4699,7 @@ function ProductIndex(props) {
                                                                             <i className="bi bi-images"></i>
                                                                         </Button>
 
-                                                                        <Dropdown drop="down" style={{ marginLeft: "130px", marginTop: "-27px" }} >
+                                                                        <Dropdown drop="down" style={{}} >
                                                                             <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ height: "27px" }}>
 
                                                                             </Dropdown.Toggle>
@@ -4736,7 +4795,7 @@ function ProductIndex(props) {
                                                                         </b>
                                                                     </td>}
                                                                 {col.key === "stock" &&
-                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
                                                                         {(() => {
                                                                             const storeId = localStorage.getItem("store_id");
                                                                             const productStore = product.product_stores?.[storeId];

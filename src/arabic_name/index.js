@@ -4,8 +4,10 @@ import { Modal, Spinner } from "react-bootstrap";
 import { confirm } from 'react-bootstrap-confirmation';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { useTranslation } from "react-i18next";
 
 const ArabicNameIndex = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     const [show, setShow] = useState(false);
     const isModal = !!ref; // rendered as modal when a ref is attached
@@ -89,8 +91,8 @@ const ArabicNameIndex = forwardRef((props, ref) => {
     }
 
     async function deleteArabicName(id) {
-        const ok = await confirm('Delete this Arabic Name entry?', {
-            okText: 'Delete', cancelText: 'Cancel',
+        const ok = await confirm(t('delete_arabic_name_confirm'), {
+            okText: t('delete'), cancelText: t('cancel'),
             okButtonStyle: 'danger',
         });
         if (!ok) return;
@@ -102,7 +104,7 @@ const ArabicNameIndex = forwardRef((props, ref) => {
             method: 'DELETE',
             headers: { Authorization: localStorage.getItem("access_token") },
         });
-        showToastMessage("Deleted successfully", "success");
+        showToastMessage(t('deleted_successfully'), "success");
         list();
     }
 
@@ -126,16 +128,16 @@ const ArabicNameIndex = forwardRef((props, ref) => {
                     <div>
                         <h2 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '20px', fontWeight: 700, color: '#191c1e', margin: 0 }}>
                             <i className="bi bi-translate" style={{ marginRight: '8px', color: '#004ac6' }}></i>
-                            Arabic Names
+                            {t('arabic_names')}
                         </h2>
                         <div style={{ fontSize: '13px', color: '#6b7280', fontFamily: '"Inter", sans-serif', marginTop: '2px' }}>
-                            Predefined Arabic name list for product search &amp; selection
+                            {t('arabic_names_subtitle')}
                         </div>
                     </div>
                     <button
                         style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         onClick={() => ArabicNameCreateRef.current?.open()}>
-                        <i className="bi bi-plus-lg"></i> Add New
+                        <i className="bi bi-plus-lg"></i> {t('add_new')}
                     </button>
                 </div>
             )}
@@ -147,7 +149,7 @@ const ArabicNameIndex = forwardRef((props, ref) => {
                     type="text"
                     value={nameSearch}
                     onChange={e => { setNameSearch(e.target.value); searchByName(e.target.value); }}
-                    placeholder="Search in English or Arabic…"
+                    placeholder={t('search_english_arabic')}
                     style={{ ...INPUT, flex: 1, border: 'none', padding: '0', outline: 'none' }}
                 />
                 {nameSearch && (
@@ -162,23 +164,23 @@ const ArabicNameIndex = forwardRef((props, ref) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', fontFamily: '"Inter", sans-serif' }}>
                     <thead>
                         <tr style={{ background: '#f2f4f6', borderBottom: '1px solid #c3c6d7' }}>
-                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#434655', width: '42%' }}>Name in English</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: '#434655', width: '42%' }}>{t('name_in_english_label')}</th>
                             <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600, color: '#434655', width: '42%' }}>الاسم بالعربية</th>
-                            <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: '#434655', width: '16%' }}>Actions</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: '#434655', width: '16%' }}>{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {isListLoading ? (
                             <tr>
                                 <td colSpan={3} style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>
-                                    <Spinner animation="border" size="sm" style={{ marginRight: '8px' }} />Loading…
+                                    <Spinner animation="border" size="sm" style={{ marginRight: '8px' }} />{t('loading')}
                                 </td>
                             </tr>
                         ) : arabicNameList.length === 0 ? (
                             <tr>
                                 <td colSpan={3} style={{ padding: '32px', textAlign: 'center', color: '#6b7280' }}>
                                     <i className="bi bi-translate" style={{ fontSize: '28px', display: 'block', marginBottom: '8px', color: '#c3c6d7' }}></i>
-                                    No Arabic names found. Click <strong>Add New</strong> to create one.
+                                    {t('no_arabic_names_found_click')} <strong>{t('add_new')}</strong> {t('to_create_one')}
                                 </td>
                             </tr>
                         ) : arabicNameList.map((item, idx) => (
@@ -194,13 +196,13 @@ const ArabicNameIndex = forwardRef((props, ref) => {
                                         <button
                                             onClick={() => ArabicNameCreateRef.current?.open(item.id)}
                                             style={{ background: '#e8f0fe', color: '#1a5fb4', border: 'none', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
-                                            title="Edit">
+                                            title={t('edit')}>
                                             <i className="bi bi-pencil"></i>
                                         </button>
                                         <button
                                             onClick={() => deleteArabicName(item.id)}
                                             style={{ background: '#fde8e8', color: '#c0392b', border: 'none', borderRadius: '4px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
-                                            title="Delete">
+                                            title={t('delete')}>
                                             <i className="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -213,7 +215,7 @@ const ArabicNameIndex = forwardRef((props, ref) => {
                 {totalItems > 0 && (
                     <div style={{ borderTop: '1px solid #e8eaed', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafbfc' }}>
                         <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: '"Inter", sans-serif' }}>
-                            Showing {offset + 1}–{offset + currentPageItemsCount} of {totalItems}
+                            {t('showing_range', { from: offset + 1, to: offset + currentPageItemsCount, total: totalItems })}
                         </div>
                         <PaginationControls
                             page={page} totalPages={totalPages}
@@ -227,24 +229,24 @@ const ArabicNameIndex = forwardRef((props, ref) => {
 
     if (isModal) {
         return (
-            <Modal show={show} fullscreen onHide={() => setShow(false)} animation={false} backdrop="static" dialogClassName="pw-modal">
+            <Modal show={show} fullscreen onHide={() => setShow(false)} animation={false} backdrop="static" dialogClassName="pw-modal" className="above-pw-modal-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={() => setShow(false)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', flex: 1 }}>
                         <i className="bi bi-translate" style={{ marginRight: '8px', color: '#004ac6' }}></i>
-                        Arabic Names
+                        {t('arabic_names')}
                     </Modal.Title>
                     <button
                         style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '4px', padding: '6px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         onClick={() => ArabicNameCreateRef.current?.open()}>
-                        <i className="bi bi-plus-lg"></i> Add New
+                        <i className="bi bi-plus-lg"></i> {t('add_new')}
                     </button>
-                    <button type="button" className="btn-close ms-1" onClick={() => setShow(false)} aria-label="Close" />
+                    <button type="button" className="btn-close ms-1" onClick={() => setShow(false)} aria-label={t('close')} />
                 </Modal.Header>
                 <Modal.Body style={{ padding: 0, overflow: 'auto', background: '#f7f9fb' }}>
                     {content}

@@ -77,9 +77,11 @@ export default function WhatsAppAPIModal({
         stopConnectPoll();
         connectPollRef.current = setInterval(async () => {
             try {
-                const statusData = await fetch(`/v1/whatsapp/status?store_id=${sid}`, {
-                    headers: { Authorization: localStorage.getItem('access_token') },
-                }).then(r => r.json());
+                const h = { Authorization: localStorage.getItem('access_token') };
+                const [statusData, qrData] = await Promise.all([
+                    fetch(`/v1/whatsapp/status?store_id=${sid}`, { headers: h }).then(r => r.json()),
+                    fetch(`/v1/whatsapp/qr?store_id=${sid}`, { headers: h }).then(r => r.json()),
+                ]);
                 if (statusData.connected) {
                     stopConnectPoll();
                     setConnectPhase('connected');
@@ -90,9 +92,6 @@ export default function WhatsAppAPIModal({
                     }, 1500);
                     return;
                 }
-                const qrData = await fetch(`/v1/whatsapp/qr?store_id=${sid}`, {
-                    headers: { Authorization: localStorage.getItem('access_token') },
-                }).then(r => r.json());
                 if (qrData.base64 && qrData.count !== qrCountRef.current) {
                     qrCountRef.current = qrData.count;
                     setQrBase64(qrData.base64);
@@ -239,8 +238,7 @@ export default function WhatsAppAPIModal({
         if (!valid.length || !pdfBlob) return;
         setSendingCustomer(true);
         setCustomerResult(null);
-        const results = [];
-        for (const num of valid) {
+        const results = await Promise.all(valid.map(async num => {
             const fd = new FormData();
             fd.append('file', pdfBlob, pdfFileName || 'invoice.pdf');
             fd.append('phone', num.formatted);
@@ -254,11 +252,11 @@ export default function WhatsAppAPIModal({
                     body: fd,
                 });
                 const d = await res.json().catch(() => ({}));
-                results.push({ phone: num.raw, success: res.ok && d.success, error: d.error });
+                return { phone: num.raw, success: res.ok && d.success, error: d.error };
             } catch (e) {
-                results.push({ phone: num.raw, success: false, error: e.message });
+                return { phone: num.raw, success: false, error: e.message };
             }
-        }
+        }));
         setSendingCustomer(false);
         setCustomerResult(results);
     }, [numbers, pdfBlob, pdfFileName, caption, storeId]);
@@ -376,8 +374,7 @@ export default function WhatsAppAPIModal({
         setSendingContacts(true);
         setContactsResult(null);
         const targets = contacts.filter(c => selected.has(c.jid));
-        const results = [];
-        for (const contact of targets) {
+        const results = await Promise.all(targets.map(async contact => {
             // Regular contacts: bare phone number (e.g. 966501234567).
             // Groups (@g.us) and @lid: pass the full JID — Evolution API requires it.
             const phone = contact.jid?.endsWith('@s.whatsapp.net')
@@ -397,11 +394,11 @@ export default function WhatsAppAPIModal({
                     body: fd,
                 });
                 const d = await res.json().catch(() => ({}));
-                results.push({ name: displayName, success: res.ok && d.success, error: d.error, detail: d.detail });
+                return { name: displayName, success: res.ok && d.success, error: d.error, detail: d.detail };
             } catch (e) {
-                results.push({ name: displayName, success: false, error: e.message });
+                return { name: displayName, success: false, error: e.message };
             }
-        }
+        }));
         setSendingContacts(false);
         setContactsResult(results);
         setTimeout(() => setContactsResult(null), 5000);

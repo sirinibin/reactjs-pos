@@ -18,8 +18,10 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { acquireFormOverHistory, releaseFormOverHistory } from '../utils/formOverHistoryCounter.js';
+import { useTranslation } from "react-i18next";
 
 const QuotationSalesReturnHistory = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [statsOpen, setStatsOpen] = useState(false);
     const [show, setShow] = useState(false);
 
@@ -454,7 +456,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     function RestoreDefaultSettings() {
         restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t('Successfully restored to default settings!'));
     }
 
 
@@ -477,7 +479,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Qtn. Sales Return History Settings"
+                title={t('Qtn. Sales Return History Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
@@ -531,18 +533,18 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title={`Quotation Sales Return History Summary`}
+                                title={t('Quotation Sales Return History Summary')}
                                 filters={{
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(fromDateValue ? { [t('From Date')]: fromDateValue } : {}),
+                                    ...(toDateValue ? { [t('To Date')]: toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { [t('Customer')]: selectedCustomers.map(c => c.name).join(', ') } : {}),
                                 }}
                                 stats={{
-                                    "Qtn. Sales Return": totalQuotationSalesReturn,
-                                    "Net Profit": totalProfit,
-                                    "Total Loss": totalLoss,
-                                    "VAT Returned": totalVatReturn,
-                                    "Total Quantity": totalQuantity,
+                                    [t('Qtn. Sales Return')]: totalQuotationSalesReturn,
+                                    [t('Net Profit')]: totalProfit,
+                                    [t('Total Loss')]: totalLoss,
+                                    [t('VAT Returned')]: totalVatReturn,
+                                    [t('Total Quantity')]: totalQuantity,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -562,7 +564,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Qtn. Sales Return History to display</p>
+                                            <p className="text-start">{t('No Qtn. Sales Return History to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -587,7 +589,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t('Loading...')}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -598,7 +600,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size:')}&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -669,14 +671,13 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t('showing {{from}}-{{to}} of {{total}}', { from: offset + 1, to: offset + currentPageItemsCount, total: totalItems })}
                                                 </p>
                                             </div>
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t('page {{page}} of {{totalPages}}', { page, totalPages })}
                                                 </p>
                                             </div>
                                         </>
@@ -698,7 +699,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1002,7 +1003,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}
@@ -1082,13 +1083,13 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1107,7 +1108,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1163,13 +1164,13 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                         setShowDateRange(!showDateRange)
                                                                     }
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="date_from"
                                                                             value={fromDateValue}
@@ -1188,7 +1189,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="date_to"
                                                                             value={toDateValue}
@@ -1253,7 +1254,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name | Mob | VAT # | ID"
+                                                                placeholder={t('Customer Name | Mob | VAT # | ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 ref={customerSearchRef}

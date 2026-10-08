@@ -1,4 +1,5 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button } from 'react-bootstrap';
 import DeliveryNotePrintContent from './printContent.js';
 
@@ -9,6 +10,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 
 const DeliveryNotePrint = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(modelObj) {
@@ -292,16 +294,16 @@ const DeliveryNotePrint = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header>
-                <Modal.Title>DeliveryNote Preview</Modal.Title>
+                <Modal.Title>{t('DeliveryNote Preview')}</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
                     <button
                         type="button"
                         className="btn-close"
                         onClick={handleClose}
-                        aria-label="Close"
+                        aria-label={t('Close')}
                     ></button>
 
                 </div>

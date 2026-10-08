@@ -9,8 +9,10 @@ import { format } from "date-fns";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const DividentCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     //Store Auto Suggestion
 
@@ -237,7 +239,7 @@ const DividentCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Divident Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(t("Divident Created Successfully!"), "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -259,7 +261,7 @@ const DividentCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating Divident!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Error Creating Divident!"), "danger");
             });
     }
 
@@ -311,26 +313,26 @@ const DividentCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? 'Update Drawing' : 'Create New Drawing'}
+                        {formData.id ? t('Update Drawing') : t('Create New Drawing')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
                     </div>
                 </Modal.Header>
                 <style>{`
@@ -377,7 +379,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                 <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
                                     <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
                                         <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
-                                        {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                        {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                     </div>
                                     <ul style={{ margin: 0, paddingLeft: "18px" }}>
                                         {allErrors.map(([k, v]) => (
@@ -389,11 +391,11 @@ const DividentCreate = forwardRef((props, ref) => {
 
                             {/* Section 1: Drawing Details */}
                             <div className="pw-card" style={CARD}>
-                                <SectionTitle icon="bi-piggy-bank">Drawing Details</SectionTitle>
+                                <SectionTitle icon="bi-piggy-bank">{t('Drawing Details')}</SectionTitle>
 
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <Label required>Withdrawn By User</Label>
+                                        <Label required>{t('Withdrawn By User')}</Label>
                                         <div className="input-group mb-1">
                                             <Typeahead
                                                 id="withdrawn_by_user_id"
@@ -404,7 +406,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                                     errors.withdrawn_by_user_id = "";
                                                     setErrors(errors);
                                                     if (selectedItems.length === 0) {
-                                                        errors.withdrawn_by_user_id = "Invalid User selected";
+                                                        errors.withdrawn_by_user_id = t("Invalid User selected");
                                                         setErrors(errors);
                                                         formData.withdrawn_by_user_id = "";
                                                         setFormData({ ...formData });
@@ -416,14 +418,14 @@ const DividentCreate = forwardRef((props, ref) => {
                                                     setSelectedWithdrawnByUsers(selectedItems);
                                                 }}
                                                 options={withdrawnbyuserOptions}
-                                                placeholder="Select WithdrawnByUser"
+                                                placeholder={t("Select WithdrawnByUser")}
                                                 selected={selectedWithdrawnByUsers}
                                                 highlightOnlyResult={true}
                                                 onInputChange={(searchTerm, e) => {
                                                     suggestUsers(searchTerm);
                                                 }}
                                             />
-                                            <Button hide={true.toString()} onClick={props.openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                            <Button hide={true.toString()} onClick={props.openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
                                         </div>
                                         {errors.withdrawn_by_user_id && (
                                             <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.withdrawn_by_user_id}</ErrMsg>
@@ -431,7 +433,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                     </div>
 
                                     <div className="col-md-6">
-                                        <Label required>Amount</Label>
+                                        <Label required>{t('Amount')}</Label>
                                         <input
                                             value={formData.amount ? formData.amount : ""}
                                             type="number"
@@ -444,7 +446,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                             }}
                                             style={INPUT}
                                             id="amount"
-                                            placeholder="Amount"
+                                            placeholder={t("Amount")}
                                         />
                                         {errors.amount && (
                                             <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.amount}</ErrMsg>
@@ -452,7 +454,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                     </div>
 
                                     <div className="col-md-6">
-                                        <Label required>Description</Label>
+                                        <Label required>{t('Description')}</Label>
                                         <textarea
                                             value={formData.description ? formData.description : ""}
                                             onChange={(e) => {
@@ -465,7 +467,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                             style={{ ...INPUT, resize: 'vertical', minHeight: '80px' }}
                                             className="description"
                                             id="description"
-                                            placeholder="Description"
+                                            placeholder={t("Description")}
                                         />
                                         {errors.description && (
                                             <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.description}</ErrMsg>
@@ -473,7 +475,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                     </div>
 
                                     <div className="col-md-6">
-                                        <Label required>Date Time</Label>
+                                        <Label required>{t('Date Time')}</Label>
                                         <div className="input-group mb-1">
                                             <DatePicker
                                                 id="date_str"
@@ -499,7 +501,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                     </div>
 
                                     <div className="col-md-6">
-                                        <Label required>Payment Method</Label>
+                                        <Label required>{t('Payment Method')}</Label>
                                         <select
                                             value={formData.payment_method}
                                             onChange={(e) => {
@@ -520,13 +522,13 @@ const DividentCreate = forwardRef((props, ref) => {
                                             }}
                                             style={INPUT}
                                         >
-                                            <option value="">Select</option>
-                                            <option value="cash">Cash</option>
-                                            <option value="debit_card">Debit Card</option>
-                                            <option value="credit_card">Credit Card</option>
-                                            <option value="bank_card">Bank Card</option>
-                                            <option value="bank_transfer">Bank Transfer</option>
-                                            <option value="bank_cheque">Bank Cheque</option>
+                                            <option value="">{t('Select')}</option>
+                                            <option value="cash">{t('Cash')}</option>
+                                            <option value="debit_card">{t('Debit Card')}</option>
+                                            <option value="credit_card">{t('Credit Card')}</option>
+                                            <option value="bank_card">{t('Bank Card')}</option>
+                                            <option value="bank_transfer">{t('Bank Transfer')}</option>
+                                            <option value="bank_cheque">{t('Bank Cheque')}</option>
                                         </select>
                                         {errors.payment_method && (
                                             <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.payment_method}</ErrMsg>
@@ -537,11 +539,11 @@ const DividentCreate = forwardRef((props, ref) => {
 
                             {/* Section 2: Attachments */}
                             <div className="pw-card" style={CARD}>
-                                <SectionTitle icon="bi-paperclip">Attachments</SectionTitle>
+                                <SectionTitle icon="bi-paperclip">{t('Attachments')}</SectionTitle>
 
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <Label>Image (Optional)</Label>
+                                        <Label>{t('Image (Optional)')}</Label>
                                         <label
                                             style={{
                                                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -573,8 +575,8 @@ const DividentCreate = forwardRef((props, ref) => {
                                             {selectedImage
                                                 ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e' }}>{selectedImage.split(/[/\\]/).pop()}</span>
                                                 : <>
-                                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>Click or drag image here</span>
-                                                    <span style={{ fontSize: '12px', color: '#737686' }}>JPG, PNG, GIF, WebP</span>
+                                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>{t('Click or drag image here')}</span>
+                                                    <span style={{ fontSize: '12px', color: '#737686' }}>{t('JPG, PNG, GIF, WebP')}</span>
                                                 </>
                                             }
                                             <input

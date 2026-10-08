@@ -63,6 +63,8 @@ function RepairJobIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
+    const [store, setStore] = useState({});
+
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortDir, setSortDir] = useState("-");
@@ -104,7 +106,7 @@ function RepairJobIndex(props) {
     }, []);
 
     async function getStore(id) {
-        try { await fetchStore(id); } catch (error) { }
+        try { const result = await fetchStore(id); setStore(result || {}); } catch (error) { }
     }
 
     function searchByFieldValue(field, value) {
@@ -569,7 +571,7 @@ function RepairJobIndex(props) {
                 showToastMessage={props.showToastMessage}
                 onCreateSalesInvoice={handleCreateSalesInvoice}
                 onCreateQuotation={handleCreateQuotation}
-                onCreateNonVatInvoice={handleCreateNonVatInvoice}
+                onCreateNonVatInvoice={store.settings?.non_vat_sales ? handleCreateNonVatInvoice : undefined}
                 onOpenSalesInvoice={(orderId) => orderCreateRef.current?.openAsType5(orderId)}
                 onOpenQuotation={(quotationId) => qt3FormRef.current?.open(quotationId)}
                 onOpenNonVatInvoice={(id) => nonVatSalesFormRef.current?.open(id, null)}
@@ -597,7 +599,7 @@ function RepairJobIndex(props) {
                     onListsChange={handleKanbanListsChange}
                     onCreateSalesInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'invoice')}
                     onCreateQuotation={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'quotation')}
-                    onCreateNonVatInvoice={(jobs, customer) => handleCreateFromJobs(jobs, customer, 'non_vat_invoice')}
+                    onCreateNonVatInvoice={store.settings?.non_vat_sales ? (jobs, customer) => handleCreateFromJobs(jobs, customer, 'non_vat_invoice') : undefined}
                     showToastMessage={props.showToastMessage}
                 />
             )}

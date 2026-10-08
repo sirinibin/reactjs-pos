@@ -48,6 +48,7 @@ import { getDateLocale } from "../i18n/dateLocales";
 import '../order/style.css';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import ZatcaConnect from '../store/zatca_connect.js';
 const SalesReturnCreate = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
@@ -716,9 +717,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     useEffect(() => {
         if (!show || props.fromHistory) return;
         document.body.classList.add('sales-return-form-open');
-        return () => document.body.classList.remove('sales-return-form-open');
+        if (props.modalClass === 'above-pending-modal') {
+            document.body.classList.add('sales-return-form-pending-open');
+        }
+        return () => {
+            document.body.classList.remove('sales-return-form-open');
+            document.body.classList.remove('sales-return-form-pending-open');
+        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [show, props.fromHistory]);
+    }, [show, props.fromHistory, props.modalClass]);
 
     function handleClose() {
         selectedProducts = [];
@@ -1368,10 +1375,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
-                //console.log("Inside catch");
+                if (error?.zatca_reconnect) {
+                    zatcaConnectRef.current?.open(store.id, true);
+                    return;
+                }
                 console.log(error);
                 setErrors({ ...error });
-                //console.error("There was an error!", error);
                 if (props.showToastMessage) props.showToastMessage(t("Failed to process sales return!"), "danger");
             });
     }
@@ -1882,6 +1891,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
     const DetailsViewRef = useRef();
+    const zatcaConnectRef = useRef();
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
     }
@@ -2448,9 +2458,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
-            <ImageViewerModal ref={imageViewerRef} images={productImages} />
+            <ImageViewerModal ref={imageViewerRef} images={productImages} modalClassName={props.modalClass === 'above-pending-modal' ? 'above-pending-form-sub' : ''} />
             <ProductView ref={ProductDetailsViewRef} />
-            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
 
@@ -2487,7 +2497,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         )}
                         {store.zatca?.phase === "2" && store.zatca?.connected && !formData.id && (
                             <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#434655', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', marginLeft: '8px' }}>
-                                <input type="checkbox" className="form-check-input m-0" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px' }} />
+                                <input type="checkbox" className="form-check-input m-0" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; } formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px' }} />
                                 {t("Report to Zatca")}
                             </label>
                         )}
@@ -5777,6 +5787,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </Modal.Title>
                     {store.zatca?.phase === "2" && store.zatca?.connected && !formData.id && < div style={{ marginLeft: "20px" }}>
                         <input type="checkbox" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
+                            if (store?.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });
                         }} /> {t("Report to Zatca")} <br />
@@ -8488,7 +8499,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                         <input type="checkbox" className="form-check-input mt-0"
                                                             checked={col.visible} onChange={() => handleToggleSPType3Column(col.key)} />
-                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                        <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                     </li>
                                                 )}
                                             </Draggable>
@@ -8524,7 +8535,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     <span {...provided.dragHandleProps} style={{ cursor: 'grab', color: '#888' }}>&#9776;</span>
                                                     <input type="checkbox" className="form-check-input mt-0"
                                                         checked={col.visible} onChange={() => handleToggleSPColumn(i)} />
-                                                    <span className="ms-1" style={{ fontSize: '0.85rem' }}>{col.label}</span>
+                                                    <span className="ms-1" style={{ fontSize: '0.85rem' }}>{t(col.label)}</span>
                                                 </li>
                                             )}
                                         </Draggable>
@@ -8570,6 +8581,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             </div>,
             document.body
         )}
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(localStorage.getItem('store_id'))} />
         </>
     );
 });

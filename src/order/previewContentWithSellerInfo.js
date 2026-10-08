@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words'
 //import { QRCodeCanvas } from "qrcode.react";
@@ -97,6 +97,13 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         {props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? < div className="row">
                             <div className="col">
                                 <ul className="list-unstyled text-left">
+                                    {props.model.store?.store_name && (
+                                        <li>
+                                            <h4 style={{ fontSize: "18px", fontWeight: 700 }}>
+                                                {props.model.store.store_name}
+                                            </h4>
+                                        </li>
+                                    )}
                                     <li>
                                         <h4 className="clickable-text" onClick={() => {
                                             props.selectText("storeName");
@@ -118,11 +125,18 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                             </div>
                             <div className="col">
                                 <div className="invoice-logo text-center">
-                                    {props.model?.store?.logo ? <img width="70" height="70" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
+                                    {props.model?.store?.logo ? <img width="70" height="70" style={{ objectFit: 'contain', objectPosition: 'center' }} src={storeLogoUrl(props.model.store)} alt="Invoice logo" /> : null}
                                 </div>
                             </div>
                             <div className="col">
                                 <ul className="list-unstyled text-end">
+                                    {props.model.store?.store_name_in_arabic && (
+                                        <li>
+                                            <h4 style={{ fontSize: "18px", fontWeight: 700 }}>
+                                                <strong>{props.model.store.store_name_in_arabic}</strong>
+                                            </h4>
+                                        </li>
+                                    )}
                                     <li>
                                         <h4 className="clickable-text" onClick={() => {
                                             props.selectText("storeNameArabic");
@@ -886,7 +900,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </tr>
                                             {page.products && page.products.map((product, index) => (
                                                 <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code ?? index} className="text-center"  >
-                                                    <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
+                                                    <td style={{ padding: "7px", borderRight: tableBorderThickness, textAlign: 'center' }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                     <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                     <th dir="ltr" style={{
                                                         unicodeBidi: 'isolate',
@@ -928,7 +942,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                             }}>{product.name_in_arabic}</span></>}
                                                         </span>}
                                                     </th>
-                                                    <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {!product.is_service && product.unit ? product.unit : ""}</td>
+                                                    <td style={{ borderRight: tableBorderThickness, marginRight: "2px", textAlign: 'center' }}>{product.quantity ? product.quantity : ""}  {!product.is_service && product.unit ? product.unit : ""}</td>
                                                     {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                         <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                             {props.model.hideVAT
@@ -1136,14 +1150,28 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                     Remarks ملاحظات:
                                                 </th>
-                                                <td
+                                                {props.model.store?.settings?.show_created_by_in_invoice_preview ? <>
+                                                    <td
+                                                        className="text-start print-value"
+                                                        colSpan="3"
+                                                        style={{ padding: "5px", borderRight: tableBorderThickness, width: "50%" }}
+                                                    >
+                                                        {props.model.remarks ? props.model.remarks : ""}
+                                                    </td>
+                                                    <td
+                                                        colSpan="4"
+                                                        style={{ padding: "5px", borderRight: tableBorderThickness, width: "50%" }}
+                                                    >
+                                                        <span className="print-label">Created By: </span>
+                                                        <span className="print-value">{props.model.created_by_name || ""}</span>
+                                                    </td>
+                                                </> : <td
                                                     className="text-start print-value"
                                                     colSpan="7"
                                                     style={{ padding: "5px", borderRight: tableBorderThickness }}
-
                                                 >
                                                     {props.model.remarks ? props.model.remarks : ""}
-                                                </td>
+                                                </td>}
                                             </tr>
                                             {props.modelName === "quotation" && props.model.type === "quotation" && <>
                                                 <tr>
@@ -1167,7 +1195,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         style={{ padding: "5px" }}
 
                                                     >
-                                                        <span dir="ltr"> Within {props.model.delivery_days} days from the date of payment | خلال {props.model.delivery_days} أيام من تاريخ الدفع</span>
+                                                        <span dir="ltr"> Within {props.model.delivery_days} days from the date of {props.model.delivery_from || "Payment"} | خلال {props.model.delivery_days} أيام من تاريخ {(props.model.delivery_from || "Payment") === "Approval" ? "الموافقة" : "الدفع"}</span>
                                                     </th>
                                                 </tr>
                                                 {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account && props.model.store?.bank_account?.bank_name ? <tr >
@@ -1300,16 +1328,25 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 <th colSpan="2" className="text-end print-label" style={{ padding: "2px", width: "30%", height: "50px" }}>
                                                     Remarks ملاحظات:
                                                 </th>
-                                                <th
+                                                {props.model.store?.settings?.show_created_by_in_invoice_preview ? <>
+                                                    <th
+                                                        colSpan="1"
+                                                        className="print-value"
+                                                        style={{ padding: "2px", width: "35%" }}
+                                                    >
+                                                        {props.model.remarks ? props.model.remarks : ""}
+                                                    </th>
+                                                    <th colSpan="1" style={{ padding: "2px", width: "35%" }}>
+                                                        <span className="print-label">Created By: </span>
+                                                        <span className="print-value">{props.model.created_by_name || ""}</span>
+                                                    </th>
+                                                </> : <th
                                                     colSpan="2"
                                                     className="print-value"
                                                     style={{ padding: "2px", width: "70%" }}
-
                                                 >
                                                     {props.model.remarks ? props.model.remarks : ""}
-                                                </th>
-
-
+                                                </th>}
                                             </tr>}
                                             {props.model?.store?.settings?.show_received_by_footer_in_invoice && <tr>
                                                 <th className="text-end print-label" style={{ width: "20%", padding: "2px" }}>
@@ -1365,12 +1402,12 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                     <ul className="list-unstyled mb0 text-center">
                                         <li>
                                             <b
-                                            > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
+                                            > {props.model.store?.national_address ? [props.model.store.national_address.building_no_arabic, props.model.store.national_address.street_name_arabic, props.model.store.national_address.district_name_arabic, props.model.store.national_address.city_name_arabic].filter(Boolean).join('، ') : "<STORE_ADDRESS_ARABIC>"}
                                             </b>
                                         </li>
                                         <li>
                                             <strong
-                                            >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
+                                            >{props.model.store?.national_address ? [props.model.store.national_address.building_no, props.model.store.national_address.street_name, props.model.store.national_address.district_name, props.model.store.national_address.city_name].filter(Boolean).join(', ') : "<STORE_ADDRESS>"}
                                             </strong>
                                         </li>
 
@@ -1383,7 +1420,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </strong>
                                         </li>
                                         <li>
-                                            <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
+                                            <strong>الرمز البريدي:</strong>{props.model.store ? (props.model.store.national_address?.zipcode_arabic || props.model.store.national_address?.zipcode || '') : "<STORE_ZIPCODE_ARABIC>"},
                                             <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
 
                                         </li>

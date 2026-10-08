@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import QuotationSalesReturnCreate from "./create.js";
 import QuotationSalesReturnView from "./view.js";
 import CustomerCreate from "./../customer/create.js";
@@ -35,6 +36,7 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
 function QuotationSalesReturnIndex(props) {
+    const { t } = useTranslation('common');
 
     let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
@@ -1296,12 +1298,13 @@ function QuotationSalesReturnIndex(props) {
             <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                title="Qtn. Sales Return Settings"
+                title={t('Qtn. Sales Return Settings')}
                 columns={columns}
                 onToggleColumn={handleToggleColumn}
                 onDragEnd={onDragEnd}
                 onRestoreDefaults={RestoreDefaultSettings}
                 enableSelection={enableSelection}
+                className={props.pendingView ? "above-pending-modal" : ""}
             />
 
             <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
@@ -1312,7 +1315,7 @@ function QuotationSalesReturnIndex(props) {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered className={pendingView ? "above-pending-modal-dialog" : ""}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t('Select Print Type')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1326,7 +1329,7 @@ function QuotationSalesReturnIndex(props) {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1342,7 +1345,7 @@ function QuotationSalesReturnIndex(props) {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1361,7 +1364,7 @@ function QuotationSalesReturnIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Quotation Sales Return Summary"
+                                title={t('Quotation Sales Return Summary')}
                                 filters={{
                                     ...(dateValue ? { 'Date': dateValue } : {}),
                                     ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
@@ -1407,7 +1410,7 @@ function QuotationSalesReturnIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Quotation Sales Returns</h1>
+                        <h1 className="h3">{t('Quotation Sales Returns')}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -1415,14 +1418,14 @@ function QuotationSalesReturnIndex(props) {
                             openReportPreview();
                         }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t('Print Report')}
                         </Button>
 
-                        <ExcelFile filename={quotationsalesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >Download QuotationSales Return Report</Button> : ""}>
+                        <ExcelFile filename={quotationsalesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download QuotationSales Return Report')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={quotationsalesReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllQuotationSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Quotation Sales Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllQuotationSalesReturns} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Quotation Sales Return Report')}</Button> : ""}
                         &nbsp;&nbsp;
 
 
@@ -1444,7 +1447,7 @@ function QuotationSalesReturnIndex(props) {
                             className="btn btn-primary mb-1"
                             onClick={openQuotationSales}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
 
                     </div>
@@ -1462,7 +1465,7 @@ function QuotationSalesReturnIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No QuotationSalesReturns to display</p>
+                                            <p className="text-start">{t('No QuotationSalesReturns to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1477,7 +1480,7 @@ function QuotationSalesReturnIndex(props) {
                                         ) : (
                                             <i className="fa fa-refresh"></i>
                                         )}
-                                        <span className="visually-hidden">Loading...</span>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
 
                                     <PaginationControls
@@ -1496,11 +1499,12 @@ function QuotationSalesReturnIndex(props) {
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => { setShowSettings(!showSettings); }}
                                     >
-                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t('Table Settings')} />
                                     </button>
                                 </div>
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
                                     if (!el) return;
+                                    if (pendingView) return;
                                     const fit = () => {
                                         const top = el.getBoundingClientRect().top;
                                         el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
@@ -1521,8 +1525,8 @@ function QuotationSalesReturnIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<React.Fragment key={col.key}>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key !== "actions" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
@@ -1533,7 +1537,7 @@ function QuotationSalesReturnIndex(props) {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1857,7 +1861,7 @@ function QuotationSalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t('Select payment methods')}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -1876,7 +1880,7 @@ function QuotationSalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1915,13 +1919,13 @@ function QuotationSalesReturnIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From:')}{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
@@ -1940,7 +1944,7 @@ function QuotationSalesReturnIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To:')}{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
@@ -1973,7 +1977,7 @@ function QuotationSalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t('Select Payment Status')}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -1992,7 +1996,7 @@ function QuotationSalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2042,13 +2046,13 @@ function QuotationSalesReturnIndex(props) {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From:')}{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             value={fromDateValue}
@@ -2067,7 +2071,7 @@ function QuotationSalesReturnIndex(props) {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To:')}{" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             value={toDateValue}
@@ -2469,7 +2473,7 @@ function QuotationSalesReturnIndex(props) {
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(quotationSalesReturn);
                                                                         }}>
-                                                                            Select
+                                                                            {t('Select')}
                                                                         </Button>
                                                                     </td>
                                                                 </td>}
@@ -2504,15 +2508,15 @@ function QuotationSalesReturnIndex(props) {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {quotationSalesReturn.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t('Paid')}
                                                                         </span> : ""}
                                                                     {quotationSalesReturn.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t('Paid Partially')}
                                                                         </span> : ""}
                                                                     {quotationSalesReturn.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t('Not Paid')}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2662,14 +2666,14 @@ function QuotationSalesReturnIndex(props) {
 
             <Modal show={showQuotationSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Payment history of Qtn. Sales Return #{selectedQuotationSalesReturn.code}</Modal.Title>
+                    <Modal.Title>{t('Payment history of Qtn. Sales Return #')}{selectedQuotationSalesReturn.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handlePaymentHistoryClose}
-                            aria-label="Close"
+                            aria-label={t('Close')}
                         ></button>
 
                     </div>

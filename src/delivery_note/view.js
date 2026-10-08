@@ -1,4 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
@@ -10,6 +11,7 @@ import { formatInStoreTimezone } from '../utils/dateUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 
 const DeliveryNoteView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -108,7 +110,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                     type="button"
                     className="btn-close"
                     onClick={handleClose}
-                    aria-label="Close"
+                    aria-label={t('Close')}
                     style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
                 ></button>
 
@@ -118,15 +120,15 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                                 <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
-                                Back
+                                {t('Back')}
                             </button>
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
-                                Details of Delivery Note #{model.code}
+                                {t('Details of Delivery Note')} #{model.code}
                             </h1>
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Delivered on {formatInStoreTimezone(model.date, store?.country_code)}
+                                {t('Delivered on')} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -135,26 +137,26 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
                             </svg>
-                            Share
+                            {t('Share')}
                         </button>
                         <button onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
                             <i className="bi bi-file-earmark-pdf" style={{ fontSize: '18px' }}></i>
-                            Print A4
+                            {t('Print A4')}
                         </button>
                         <button onClick={openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                             <i className="bi bi-printer" style={{ fontSize: '18px' }}></i>
-                            Print
+                            {t('Print')}
                         </button>
                         {props.openCreateForm && (
                             <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                                 <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
-                                Create
+                                {t('Create')}
                             </button>
                         )}
                         {props.openUpdateForm && (
                             <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                                 <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
-                                Edit
+                                {t('Edit')}
                             </button>
                         )}
                     </div>
@@ -168,9 +170,9 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
                         {/* Invoiced */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Invoiced</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Invoiced')}</span>
                             <span style={{ fontSize: '24px', fontWeight: 700, lineHeight: '32px', color: model.order_id ? '#15803d' : '#ba1a1a', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                {model.order_id ? 'YES' : 'NO'}
+                                {model.order_id ? t('YES') : t('NO')}
                             </span>
                             {model.order_id && model.order_code && (
                                 <div style={{ marginTop: '4px', fontSize: '12px', color: '#004ac6', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -182,18 +184,18 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
                         {/* Item Count */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Items</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Items')}</span>
                             <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
                                 {model.products?.length || 0}
                             </span>
                             <div style={{ marginTop: '4px', fontSize: '12px', color: '#434655' }}>
-                                product(s) in this note
+                                {t('product(s) in this note')}
                             </div>
                         </div>
 
                         {/* Customer */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Customer</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Customer')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-person" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: '24px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -204,7 +206,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
                         {/* Delivery Date */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Delivery Date</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t('Delivery Date')}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '15px', fontWeight: 600, lineHeight: '22px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -217,21 +219,21 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                     {/* Full-width Products Section — OUTSIDE the grid, ABOVE it */}
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '32px' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Delivered Items</h3>
-                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} Item(s)</span>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Delivered Items')}</h3>
+                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} {t('Item(s)')}</span>
                                 </div>
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
                                         <thead style={{ backgroundColor: '#f1f5f9' }}>
                                             <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>SI No.</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>Part No.</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>Product Name</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>Qty</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Price</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Disc %</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>VAT</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Total Price</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('SI No.')}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('Part No.')}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t('Product Name')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t('Qty')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Unit Price')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Disc %')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('VAT')}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t('Total Price')}</th>
                                             </tr>
                                         </thead>
                                         <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -268,25 +270,25 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
                                         <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>Total (without VAT)</span>
+                                                <span style={{ color: '#434655' }}>{t('Total (without VAT)')}</span>
                                                 <span>{model.total ? model.total.toFixed(2) : "0.00"}</span>
                                             </div>
                                             {model.total_with_vat > 0 && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                    <span style={{ color: '#434655' }}>Total (with VAT)</span>
+                                                    <span style={{ color: '#434655' }}>{t('Total (with VAT)')}</span>
                                                     <span>{model.total_with_vat.toFixed(2)}</span>
                                                 </div>
                                             )}
                                             {model.shipping_handling_fees > 0 && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                    <span style={{ color: '#434655' }}>Shipping / Handling</span>
+                                                    <span style={{ color: '#434655' }}>{t('Shipping / Handling')}</span>
                                                     <span>{model.shipping_handling_fees.toFixed(2)}</span>
                                                 </div>
                                             )}
                                             {model.discount > 0 && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
                                                     <span style={{ color: '#434655' }}>
-                                                        Discount (without VAT){model.discount_percent > 0 ? ` (${model.discount_percent}%)` : ""}
+                                                        {t('Discount (without VAT)')}{model.discount_percent > 0 ? ` (${model.discount_percent}%)` : ""}
                                                     </span>
                                                     <span style={{ color: '#ba1a1a' }}>-{model.discount.toFixed(2)}</span>
                                                 </div>
@@ -294,23 +296,23 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                             {model.discount_with_vat > 0 && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
                                                     <span style={{ color: '#434655' }}>
-                                                        Discount (with VAT){model.discount_percent_with_vat > 0 ? ` (${model.discount_percent_with_vat}%)` : ""}
+                                                        {t('Discount (with VAT)')}{model.discount_percent_with_vat > 0 ? ` (${model.discount_percent_with_vat}%)` : ""}
                                                     </span>
                                                     <span style={{ color: '#ba1a1a' }}>-{model.discount_with_vat.toFixed(2)}</span>
                                                 </div>
                                             )}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>VAT {model.vat_percent ? `(${model.vat_percent}%)` : ""}</span>
+                                                <span style={{ color: '#434655' }}>{t('VAT')} {model.vat_percent ? `(${model.vat_percent}%)` : ""}</span>
                                                 <span>{model.vat_price ? model.vat_price.toFixed(2) : "0.00"}</span>
                                             </div>
                                             {model.rounding_amount !== 0 && model.rounding_amount !== undefined && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                    <span style={{ color: '#434655' }}>Rounding Amount</span>
+                                                    <span style={{ color: '#434655' }}>{t('Rounding Amount')}</span>
                                                     <span>{model.rounding_amount ? model.rounding_amount.toFixed(2) : "0.00"}</span>
                                                 </div>
                                             )}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                                <span>Net Total (with VAT)</span>
+                                                <span>{t('Net Total (with VAT)')}</span>
                                                 <span style={{ color: '#004ac6' }}>{model.net_total.toFixed(2)}</span>
                                             </div>
                                         </div>
@@ -321,13 +323,13 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                     {/* Metadata */}
                     <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                         <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t('Metadata')}</h3>
                         </div>
                                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                                     {/* Created By with avatar */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created By')}</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
                                                 {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
@@ -338,57 +340,57 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
                                     {model.customer_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Customer</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Customer')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.customer_name}</span>
                                         </div>
                                     )}
 
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                        <span style={{ fontSize: '14px', color: '#434655' }}>Invoiced</span>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t('Invoiced')}</span>
                                         <span style={{ fontSize: '14px', fontWeight: 700, color: model.order_id ? '#15803d' : '#ba1a1a' }}>
-                                            {model.order_id ? 'YES' : 'NO'}
+                                            {model.order_id ? t('YES') : t('NO')}
                                         </span>
                                     </div>
 
                                     {model.order_id && model.order_code && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Sales ID</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Sales ID')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 600, color: '#004ac6', fontFamily: 'monospace' }}>{model.order_code}</span>
                                         </div>
                                     )}
 
                                     {model.delivered_by_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Delivered By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Delivered By')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.delivered_by_name}</span>
                                         </div>
                                     )}
 
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Delivery Date</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Delivery Date')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date, store?.country_code)}</span>
                                         </div>
                                     )}
 
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Created At')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
 
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t('Last Updated')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
 
                                     {model.updated_by_name && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t('Updated By')}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
                                         </div>
                                     )}
@@ -399,10 +401,10 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
             <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                 <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-                    Cancel
+                    {t('Cancel')}
                 </button>
                 <button onClick={openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-                    Print
+                    {t('Print')}
                 </button>
             </Modal.Footer>
         </Modal>

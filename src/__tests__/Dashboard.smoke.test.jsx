@@ -61,6 +61,10 @@ jest.mock('../Footer', () => () => null);
 jest.mock('../Sidebar', () => () => null);
 jest.mock('../Topbar', () => () => null);
 jest.mock('../user/login.js', () => () => null);
+jest.mock('../quotation/create.js', () => {
+  const React = require('react');
+  return { __esModule: true, default: React.forwardRef((_props, _ref) => null) };
+});
 
 // ── Domain index components ────────────────────────────────────────────────
 jest.mock('../posting/index.js', () => () => null);
@@ -113,6 +117,7 @@ jest.mock('../employee/index.js', () => () => null);
 jest.mock('../employee/salaryIndex.js', () => () => null);
 jest.mock('../vehicle/index.js', () => () => null);
 jest.mock('../repair_job/index.js', () => () => null);
+jest.mock('../purchase_bill_images/index.js', () => () => null);
 
 // ── Global fetch stub ──────────────────────────────────────────────────────
 global.fetch = jest.fn().mockResolvedValue({

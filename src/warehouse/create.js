@@ -5,6 +5,7 @@ import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const WarehouseCreate = forwardRef((props, ref) => {
 
@@ -27,6 +28,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
     }));
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -120,19 +122,19 @@ const WarehouseCreate = forwardRef((props, ref) => {
         errors = {};
         setErrors({ ...errors });
 
-        if (!formData.name) { errors["name"] = "Name is required"; haveErrors = true; }
-        if (formData.phone && !validateSaudiPhone(formData.phone)) { errors["phone"] = "Invalid phone no."; haveErrors = true; }
-        if (formData.email && !validateEmail(formData.email)) { errors["email"] = "E-mail is not valid"; haveErrors = true; }
+        if (!formData.name) { errors["name"] = t("Name is required"); haveErrors = true; }
+        if (formData.phone && !validateSaudiPhone(formData.phone)) { errors["phone"] = t("Invalid phone no."); haveErrors = true; }
+        if (formData.email && !validateEmail(formData.email)) { errors["email"] = t("E-mail is not valid"); haveErrors = true; }
         if (formData.national_address?.building_no && !isValidNDigitNumber(formData.national_address?.building_no, 4)) {
-            errors["national_address_building_no"] = "Building number should be 4 digits"; haveErrors = true;
+            errors["national_address_building_no"] = t("Building number should be 4 digits"); haveErrors = true;
         }
         if (formData.national_address?.zipcode && !isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
-            errors["national_address_zipcode"] = "Zip code should be 5 digits"; haveErrors = true;
+            errors["national_address_zipcode"] = t("Zip code should be 5 digits"); haveErrors = true;
         }
 
         if (haveErrors) {
             setErrors({ ...errors });
-            showFlash("Please fix the errors before saving.", "danger");
+            showFlash(t("Please fix the errors before saving."), "danger");
             return;
         }
 
@@ -163,7 +165,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
                 setErrors({});
                 formData.id = data.result?.id;
                 setFormData({ ...formData });
-                const msg = wasNew ? "Warehouse created successfully!" : "Warehouse updated successfully!";
+                const msg = wasNew ? t("Warehouse created successfully!") : t("Warehouse updated successfully!");
                 showFlash(msg, "success");
                 if (props.showToastMessage) props.showToastMessage(msg, "success");
 
@@ -181,8 +183,8 @@ const WarehouseCreate = forwardRef((props, ref) => {
             .catch(error => {
                 setProcessing(false);
                 setErrors({ ...(error || {}) });
-                showFlash("Failed to save warehouse. Please fix the errors and try again.", "danger");
-                if (props.showToastMessage) props.showToastMessage("Failed to process warehouse!", "danger");
+                showFlash(t("Failed to save warehouse. Please fix the errors and try again."), "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process warehouse!"), "danger");
             });
     }
 
@@ -243,26 +245,26 @@ const WarehouseCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Warehouse — ${formData.name}` : 'Create New Warehouse'}
+                        {formData.id ? `${t('Update Warehouse')} — ${formData.name}` : t('Create New Warehouse')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
                     </div>
                 </Modal.Header>
                 <style>{`
@@ -289,7 +291,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                 <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
                                     <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                        {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                        {totalErrors} {totalErrors > 1 ? t('errors') : t('error')} — {t('please fix before saving:')}
                                     </div>
                                     {allErrors.map(([k, v]) => (
                                         <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
@@ -300,10 +302,10 @@ const WarehouseCreate = forwardRef((props, ref) => {
                             {/* General Info */}
                             <div className="pw-tab-wrap">
                                 <div className="pw-card" style={CARD}>
-                                    <SectionTitle icon="bi-building">Warehouse Identity</SectionTitle>
+                                    <SectionTitle icon="bi-building">{t('Warehouse Identity')}</SectionTitle>
                                     <div className="row g-3">
                                         <div className="col-md-6">
-                                            <Label required>Name</Label>
+                                            <Label required>{t('Name')}</Label>
                                             <input
                                                 value={formData.name || ""}
                                                 type="text"
@@ -311,12 +313,12 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     errors["name"] = ""; setErrors({ ...errors });
                                                     formData.name = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Warehouse name"
+                                                style={INPUT} placeholder={t('Warehouse name')}
                                             />
                                             {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
                                         </div>
                                         <div className="col-md-6">
-                                            <Label>Name in Arabic</Label>
+                                            <Label>{t('Name in Arabic')}</Label>
                                             <input
                                                 value={formData.name_in_arabic || ""}
                                                 type="text"
@@ -329,7 +331,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                             {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
                                         </div>
                                         <div className="col-md-4">
-                                            <Label>Phone (05.. / +966..)</Label>
+                                            <Label>{t('Phone (05.. / +966..)')}</Label>
                                             <input
                                                 value={formData.phone || ""}
                                                 type="text"
@@ -337,12 +339,12 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     errors["phone"] = ""; setErrors({ ...errors });
                                                     formData.phone = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Phone"
+                                                style={INPUT} placeholder={t('Phone')}
                                             />
                                             {errors.phone && <ErrMsg>{errors.phone}</ErrMsg>}
                                         </div>
                                         <div className="col-md-4">
-                                            <Label>Email</Label>
+                                            <Label>{t('Email')}</Label>
                                             <input
                                                 value={formData.email || ""}
                                                 type="text"
@@ -350,12 +352,12 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     errors["email"] = ""; setErrors({ ...errors });
                                                     formData.email = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Email"
+                                                style={INPUT} placeholder={t('Email')}
                                             />
                                             {errors.email && <ErrMsg>{errors.email}</ErrMsg>}
                                         </div>
                                         <div className="col-md-4">
-                                            <Label>Country</Label>
+                                            <Label>{t('Country')}</Label>
                                             <Typeahead
                                                 id="country_code"
                                                 labelKey="label"
@@ -370,7 +372,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     formData.country_name = selectedItems[0].label;
                                                     setFormData({ ...formData }); setSelectedCountries(selectedItems);
                                                 }}
-                                                options={countryOptions} placeholder="Country name"
+                                                options={countryOptions} placeholder={t('Country name')}
                                                 selected={selectedCountries} highlightOnlyResult={true}
                                                 ref={countrySearchRef}
                                                 onKeyDown={(e) => { if (e.key === "Escape") { countrySearchRef.current?.clear(); } }}
@@ -385,21 +387,21 @@ const WarehouseCreate = forwardRef((props, ref) => {
                             {/* National Address */}
                             <div className="pw-tab-wrap">
                                 <div className="pw-card" style={CARD}>
-                                    <SectionTitle icon="bi-geo-alt">National Address</SectionTitle>
+                                    <SectionTitle icon="bi-geo-alt">{t('National Address')}</SectionTitle>
                                     <div className="row g-3">
                                         <div className="col-md-3">
-                                            <Label>Short Code</Label>
+                                            <Label>{t('Short Code')}</Label>
                                             <input
                                                 value={formData.national_address?.short_code || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.short_code = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Short code"
+                                                style={INPUT} placeholder={t('Short code')}
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Building Number (4 digits)</Label>
+                                            <Label>{t('Building Number (4 digits)')}</Label>
                                             <input
                                                 value={formData.national_address?.building_no || ""}
                                                 type="text"
@@ -407,23 +409,23 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     errors["national_address_building_no"] = "";
                                                     formData.national_address.building_no = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Building Number"
+                                                style={INPUT} placeholder={t('Building Number')}
                                             />
                                             {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Street Name</Label>
+                                            <Label>{t('Street Name')}</Label>
                                             <input
                                                 value={formData.national_address?.street_name || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.street_name = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Street Name"
+                                                style={INPUT} placeholder={t('Street Name')}
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Street Name (Arabic)</Label>
+                                            <Label>{t('Street Name (Arabic)')}</Label>
                                             <input
                                                 value={formData.national_address?.street_name_arabic || ""}
                                                 type="text"
@@ -434,18 +436,18 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>District Name</Label>
+                                            <Label>{t('District Name')}</Label>
                                             <input
                                                 value={formData.national_address?.district_name || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.district_name = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="District Name"
+                                                style={INPUT} placeholder={t('District Name')}
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>District Name (Arabic)</Label>
+                                            <Label>{t('District Name (Arabic)')}</Label>
                                             <input
                                                 value={formData.national_address?.district_name_arabic || ""}
                                                 type="text"
@@ -456,18 +458,18 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>City Name</Label>
+                                            <Label>{t('City Name')}</Label>
                                             <input
                                                 value={formData.national_address?.city_name || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.city_name = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="City Name"
+                                                style={INPUT} placeholder={t('City Name')}
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>City Name (Arabic)</Label>
+                                            <Label>{t('City Name (Arabic)')}</Label>
                                             <input
                                                 value={formData.national_address?.city_name_arabic || ""}
                                                 type="text"
@@ -478,7 +480,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Zipcode (5 digits)</Label>
+                                            <Label>{t('Zipcode (5 digits)')}</Label>
                                             <input
                                                 value={formData.national_address?.zipcode || ""}
                                                 type="text"
@@ -486,30 +488,30 @@ const WarehouseCreate = forwardRef((props, ref) => {
                                                     errors["national_address_zipcode"] = "";
                                                     formData.national_address.zipcode = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Zipcode"
+                                                style={INPUT} placeholder={t('Zipcode')}
                                             />
                                             {errors.national_address_zipcode && <ErrMsg>{errors.national_address_zipcode}</ErrMsg>}
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Additional Number</Label>
+                                            <Label>{t('Additional Number')}</Label>
                                             <input
                                                 value={formData.national_address?.additional_no || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.additional_no = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Additional Number"
+                                                style={INPUT} placeholder={t('Additional Number')}
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <Label>Unit Number</Label>
+                                            <Label>{t('Unit Number')}</Label>
                                             <input
                                                 value={formData.national_address?.unit_no || ""}
                                                 type="text"
                                                 onChange={(e) => {
                                                     formData.national_address.unit_no = e.target.value; setFormData({ ...formData });
                                                 }}
-                                                style={INPUT} placeholder="Unit Number"
+                                                style={INPUT} placeholder={t('Unit Number')}
                                             />
                                         </div>
                                     </div>

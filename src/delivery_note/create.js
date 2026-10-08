@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Preview from "./../order/preview.js";
 import { Modal, Button, OverlayTrigger, Popover } from "react-bootstrap";
 import CustomerCreate from "../customer/create.js";
@@ -56,6 +57,7 @@ const columnStyle = {
 };
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
+  const { t } = useTranslation('common');
   const [enableProductSelection, setEnableProductSelection] = useState(false);
   useImperativeHandle(ref, () => ({
     open(id, operationType) {
@@ -162,9 +164,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   function checkError(i) {
     if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
-      errors["quantity_" + i] = "Quantity should be > 0";
+      errors["quantity_" + i] = t("Quantity should be > 0");
     } else if (!selectedProducts[i].quantity) {
-      errors["quantity_" + i] = "Quantity is required";
+      errors["quantity_" + i] = t("Quantity is required");
     } else {
       delete errors["quantity_" + i];
     }
@@ -223,7 +225,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       if (!p?.product_stores?.[storeId]?.stock) return;
       const stock = p.product_stores[storeId].stock;
       if (sp.quantity > stock) {
-        newWarnings["quantity_" + i] = "Warning: Available stock is " + stock;
+        newWarnings["quantity_" + i] = t("Warning: Available stock is") + " " + stock;
       } else {
         delete newWarnings["quantity_" + i];
       }
@@ -280,7 +282,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
     if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
       if (!formData.id) {
-        warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+        warnings["quantity_" + i] = t("Warning: Available stock is") + " " + (stock);
       }
     } else {
       delete warnings["quantity_" + i];
@@ -1308,9 +1310,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log("Response:");
         console.log(data);
         if (formData.id) {
-          if (props.showToastMessage) props.showToastMessage("Delivery note updated successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage(t("Delivery note updated successfully!"), "success");
         } else {
-          if (props.showToastMessage) props.showToastMessage("Delivery note created successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage(t("Delivery note created successfully!"), "success");
         }
         if (props.refreshList) {
           props.refreshList();
@@ -1325,7 +1327,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        if (props.showToastMessage) props.showToastMessage("Failed to process delivery note!", "danger");
+        if (props.showToastMessage) props.showToastMessage(t("Failed to process delivery note!"), "danger");
       });
   }
 
@@ -1375,7 +1377,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   function addProduct(product) {
     console.log("Inside Add product");
     if (!formData.store_id) {
-      errors.product_id = "Please Select a Store and try again";
+      errors.product_id = t("Please Select a Store and try again");
       setErrors({ ...errors });
       return false;
     }
@@ -1384,7 +1386,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     delete errors["product_id"];
 
     if (!product) {
-      errors.product_id = "Invalid Product";
+      errors.product_id = t("Invalid Product");
       setErrors({ ...errors });
       return false;
     }
@@ -1801,14 +1803,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     return (
       <Popover id="dn-taxable-tooltip" style={_dnPopoverStyle}>
         <Popover.Header style={_dnPopoverHeaderStyle}>
-          <span>Taxable Amount (ex. VAT)</span>{_dnCloseBtn()}
+          <span>{t('Taxable Amount (ex. VAT)')}</span>{_dnCloseBtn()}
         </Popover.Header>
         <Popover.Body style={_dnPopoverBodyStyle}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
-            {_dnRow('Total (ex. VAT)', total)}
-            {_dnRow('+ Shipping', shipping)}
-            {_dnRow('− Discount (ex. VAT)', discount)}
-            {_dnRow('= Taxable Amount', `SAR ${result}`, true, true, '#74c0fc')}
+            {_dnRow(t('Total (ex. VAT)'), total)}
+            {_dnRow(t('+ Shipping'), shipping)}
+            {_dnRow(t('− Discount (ex. VAT)'), discount)}
+            {_dnRow(t('= Taxable Amount'), `SAR ${result}`, true, true, '#74c0fc')}
           </tbody></table>
         </Popover.Body>
       </Popover>
@@ -1822,13 +1824,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     return (
       <Popover id="dn-net-before-rounding-tooltip" style={_dnPopoverStyle}>
         <Popover.Header style={_dnPopoverHeaderStyle}>
-          <span>Net Total Before Rounding</span>{_dnCloseBtn()}
+          <span>{t('Net Total Before Rounding')}</span>{_dnCloseBtn()}
         </Popover.Header>
         <Popover.Body style={_dnPopoverBodyStyle}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
-            {_dnRow('Taxable Amount', taxable)}
+            {_dnRow(t('Taxable Amount'), taxable)}
             {_dnRow(`+ VAT (${formData.vat_percent || 0}%)`, vat)}
-            {_dnRow('= Before Rounding', `SAR ${result}`, true, true, '#74c0fc')}
+            {_dnRow(t('= Before Rounding'), `SAR ${result}`, true, true, '#74c0fc')}
           </tbody></table>
         </Popover.Body>
       </Popover>
@@ -1843,14 +1845,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     return (
       <Popover id="dn-net-total-tooltip" style={_dnPopoverStyle}>
         <Popover.Header style={_dnPopoverHeaderStyle}>
-          <span>Net Total (inc. VAT)</span>{_dnCloseBtn()}
+          <span>{t('Net Total (inc. VAT)')}</span>{_dnCloseBtn()}
         </Popover.Header>
         <Popover.Body style={_dnPopoverBodyStyle}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
-            {_dnRow('Taxable Amount', taxable)}
+            {_dnRow(t('Taxable Amount'), taxable)}
             {_dnRow(`+ VAT (${formData.vat_percent || 0}%)`, vat)}
-            {_dnRow(`${rounding >= 0 ? '+ ' : '− '}Rounding`, trimTo2Decimals(Math.abs(rounding)))}
-            {_dnRow('= Net Total (inc. VAT)', `SAR ${net}`, true, true, '#69db7c')}
+            {_dnRow(`${rounding >= 0 ? '+ ' : '− '}${t('Rounding')}`, trimTo2Decimals(Math.abs(rounding)))}
+            {_dnRow(t('= Net Total (inc. VAT)'), `SAR ${net}`, true, true, '#69db7c')}
           </tbody></table>
         </Popover.Body>
       </Popover>
@@ -1885,17 +1887,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   // Initial column config
 
   const defaultSearchProductsColumns = useMemo(() => [
-    { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
-    { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
-    { key: "name", label: "Name", fieldName: "name", width: 26, visible: true },
-    { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 10, visible: true },
-    { key: "stock", label: "Stock", fieldName: "stock", width: 13, visible: true },
-    { key: "photos", label: "Photos", fieldName: "photos", width: 5, visible: true },
-    { key: "brand", label: "Brand", fieldName: "brand", width: 8, visible: true },
-    { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 10, visible: true },
-    { key: "country", label: "Country", fieldName: "country", width: 8, visible: true },
-    { key: "rack", label: "Rack", fieldName: "rack", width: 5, visible: true },
-  ], []);
+    { key: "select", label: t("Select"), fieldName: "select", width: 3, visible: true },
+    { key: "part_number", label: t("Part Number"), fieldName: "part_number", width: 12, visible: true },
+    { key: "name", label: t("Name"), fieldName: "name", width: 26, visible: true },
+    { key: "unit_price", label: t("S.Unit Price"), fieldName: "unit_price", width: 10, visible: true },
+    { key: "stock", label: t("Stock"), fieldName: "stock", width: 13, visible: true },
+    { key: "photos", label: t("Photos"), fieldName: "photos", width: 5, visible: true },
+    { key: "brand", label: t("Brand"), fieldName: "brand", width: 8, visible: true },
+    { key: "purchase_price", label: t("P.Unit Price"), fieldName: "purchase_price", width: 10, visible: true },
+    { key: "country", label: t("Country"), fieldName: "country", width: 8, visible: true },
+    { key: "rack", label: t("Rack"), fieldName: "rack", width: 5, visible: true },
+  ], [t]);
 
 
 
@@ -2008,7 +2010,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const [showDNSPSettings, setShowDNSPSettings] = useState(false);
 
   const _dnSummaryDefaultOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_without_vat', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding'];
-  const _dnSummaryLabels = { total_without_vat: 'Total (ex. VAT)', total_with_vat: 'Total (inc. VAT)', shipping: 'Shipping & Handling', discount_without_vat: 'Discount (ex. VAT)', discount_with_vat: 'Discount (inc. VAT)', taxable_amount: 'Taxable Amount (ex. VAT)', vat: 'VAT', net_before_rounding: 'Before Rounding', rounding: 'Rounding' };
+  const _dnSummaryLabels = { total_without_vat: t('Total (ex. VAT)'), total_with_vat: t('Total (inc. VAT)'), shipping: t('Shipping & Handling'), discount_without_vat: t('Discount (ex. VAT)'), discount_with_vat: t('Discount (inc. VAT)'), taxable_amount: t('Taxable Amount (ex. VAT)'), vat: t('VAT'), net_before_rounding: t('Before Rounding'), rounding: t('Rounding') };
   const [dnSummaryVisible, setDnSummaryVisible] = useState(() => {
     try { const s = localStorage.getItem('dn_summary_visible'); if (s) return JSON.parse(s); } catch {}
     return Object.fromEntries(_dnSummaryDefaultOrder.map(k => [k, true]));
@@ -2199,7 +2201,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <TableSettingsModal
           show={showProductSearchSettings}
           onHide={() => setShowProductSearchSettings(false)}
-          title="Product Search Settings"
+          title={t("Product Search Settings")}
           columns={searchProductsColumns}
           onToggleColumn={handleToggleColumn}
           onDragEnd={onDragEnd}
@@ -2208,7 +2210,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <TableSettingsModal
           show={showCustomerSearchSettings}
           onHide={() => setShowCustomerSearchSettings(false)}
-          title="Customer Search Settings"
+          title={t("Customer Search Settings")}
           columns={customerSearchColumns}
           onToggleColumn={handleToggleCustomerCol}
           onDragEnd={handleCustomerColDragEnd}
@@ -2268,29 +2270,29 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
           </button>
           <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-            {formData.id ? 'Update Delivery Note' : 'Create New Delivery Note'}
+            {formData.id ? t('Update Delivery Note') : t('Create New Delivery Note')}
           </Modal.Title>
           <div className="d-flex align-items-center gap-2 dn-hdr-actions">
             <Button variant="light" size="sm" onClick={openPreview} style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>
-              <i className="bi bi-display me-1"></i>Preview
+              <i className="bi bi-display me-1"></i>{t('Preview')}
             </Button>
             {formData.id && (
               <button type="button"
                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                 onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
-                <i className="bi bi-eye me-1"></i>View Detail
+                <i className="bi bi-eye me-1"></i>{t('View Detail')}
               </button>
             )}
             <button type="button"
               style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               onClick={handleCreate} disabled={isProcessing || enableProductSelection}>
               {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-              {formData.id ? 'Update' : 'Create'}
+              {formData.id ? t('Update') : t('Create')}
             </button>
-            <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+            <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('Close')} />
           </div>
         </Modal.Header>
         <style>{`
@@ -2460,7 +2462,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   setSelectedCustomers(selectedItems);
                 }}
                 options={customerOptions}
-                placeholder="Customer Name / Mob / VAT # / ID"
+                placeholder={t("Customer Name / Mob / VAT # / ID")}
                 selected={selectedCustomers}
                 highlightOnlyResult={true}
                 ref={customerSearchRef}
@@ -2504,12 +2506,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                           {visCols.map(col => (
                             <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
-                              {col.key === 'code' && 'Code'}
-                              {col.key === 'name' && 'Name'}
-                              {col.key === 'phone' && 'Phone'}
-                              {col.key === 'vat_no' && 'VAT No.'}
-                              {col.key === 'credit_balance' && 'Credit Balance'}
-                              {col.key === 'credit_limit' && 'Credit Limit'}
+                              {col.key === 'code' && t('Code')}
+                              {col.key === 'name' && t('Name')}
+                              {col.key === 'phone' && t('Phone')}
+                              {col.key === 'vat_no' && t('VAT No.')}
+                              {col.key === 'credit_balance' && t('Credit Balance')}
+                              {col.key === 'credit_limit' && t('Credit Limit')}
                               {resizeHandle(col.key)}
                             </div>
                           ))}
@@ -2554,7 +2556,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   <i className="bi bi-plus-lg"></i>
                 </Button>
                 {formData.customer_id && (
-                  <Button className="btn" title="Edit Customer" onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)}
+                  <Button className="btn" title={t("Edit Customer")} onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)}
                     style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                     <i className="bi bi-pencil"></i>
                   </Button>
@@ -2569,7 +2571,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     dateFormat="MMMM d, yyyy h:mm aa"
                     showTimeSelect
                     timeIntervals="1"
-                    placeholderText="Date"
+                    placeholderText={t("Date")}
                     customInput={<input style={INPUT} />}
                     onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
                   />
@@ -2577,7 +2579,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   </div>{/* end customer sub-row */}
               {store.settings?.enable_notification === true && (
                 <div>
-                  <Label>Notify At (Sales Reminder)</Label>
+                  <Label>{t('Notify At (Sales Reminder)')}</Label>
                   <DatePicker
                     id="notify_at"
                     selected={formData.notify_at ? new Date(formData.notify_at) : null}
@@ -2612,7 +2614,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       onChangeTriggeredRef.current = true;
                       setTimeout(() => { onChangeTriggeredRef.current = false; }, 300);
                       if (selectedItems.length === 0) {
-                        errors["product_id"] = "Invalid Product selected";
+                        errors["product_id"] = t("Invalid Product selected");
                         setErrors(errors);
                         return;
                       }
@@ -2624,7 +2626,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     }}
                     options={productOptions}
                     selected={selectedProduct}
-                    placeholder="Part No. | Name | Brand"
+                    placeholder={t("Part No. | Name | Brand")}
                     highlightOnlyResult={true}
                     onInputChange={(searchTerm, e) => {
                       const requestId = Date.now();
@@ -2764,8 +2766,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   }}
                                 >
                                   {isLoadingMoreProducts
-                                    ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> Loading...</>
-                                    : <>Load {productSearchTotalCount - results.length} more</>
+                                    ? <><span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" /> {t('Loading...')}</>
+                                    : <>{t('Load')} {productSearchTotalCount - results.length} {t('more')}</>
                                   }
                                 </button>
                               </div>
@@ -2784,19 +2786,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                   <i className="bi bi-plus-lg"></i>
                 </Button>
-                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
+                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end' }}><i className="bi bi-file-earmark-arrow-down" />{t('From P.O.')}</button>}
                 <div className="dn-barcode-input" style={{ flex: '0 1 160px', minWidth: '100px' }}>
-                  <DebounceInput minLength={3} debounceTimeout={500} placeholder="Scan Barcode" style={INPUT} value={formData.barcode} onChange={event => getProductByBarCode(event.target.value)} />
+                  <DebounceInput minLength={3} debounceTimeout={500} placeholder={t("Scan Barcode")} style={INPUT} value={formData.barcode} onChange={event => getProductByBarCode(event.target.value)} />
                 </div>
                 {enableProductSelection && (
                   <button className="btn btn-success btn-sm" style={{ flexShrink: 0 }} disabled={selectedIds.length === 0} onClick={handleSendSelected}>
-                    Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+                    {t('Select')} {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
                   </button>
                 )}
                   </div>{/* end product sub-row */}
                   </div>{/* end stacked rows */}
                   <div className="dn-remarks" style={{ display: 'flex', flexDirection: 'column', alignSelf: 'stretch', maxHeight: '76px' }}>
-                    <textarea value={formData.remarks} onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.remarks = e.target.value; setFormData({ ...formData }); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }} style={{ ...INPUT, resize: 'none', flex: 1 }} id="remarks" placeholder="Remarks" />
+                    <textarea value={formData.remarks} onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.remarks = e.target.value; setFormData({ ...formData }); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }} style={{ ...INPUT, resize: 'none', flex: 1 }} id="remarks" placeholder={t("Remarks")} />
                   </div>
                 </div>{/* end left column */}
                 {/* Right 50%: selected customer details */}
@@ -2847,18 +2849,18 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       if (col.key === 'delete') return <th key="delete" style={{ ...thStyle, padding: 0 }}><button type="button" title="Table Settings" onClick={() => setShowDNSPSettings(true)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color='#191c1e'} onMouseLeave={e => e.currentTarget.style.color='#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button>{resizeHandle}</th>;
                       if (col.key === 'si_no') return <th key="si_no" style={thStyle}>#&nbsp;{resizeHandle}</th>;
                       if (col.key === 'select') return enableProductSelection ? <th key="select" style={thStyle}><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /><br /><span style={{ fontSize: '10px' }}>All</span>{resizeHandle}</th> : null;
-                      if (col.key === 'part_number') return <th key="part_number" style={thStyle}>Part No.{resizeHandle}</th>;
-                      if (col.key === 'name') return <th key="name" style={thStyle}>Name{resizeHandle}</th>;
-                      if (col.key === 'info') return <th key="info" style={thStyle}>Info{resizeHandle}</th>;
-                      if (col.key === 'qty') return <th key="qty" style={{ ...thStyle, textAlign: 'center' }}>Qty{resizeHandle}</th>;
-                      if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price" style={{ ...thStyle, textAlign: 'right' }}>U. Price (ex. VAT){resizeHandle}</th>;
-                      if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>U. Price (inc. VAT){resizeHandle}</th>;
-                      if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price" style={{ ...thStyle, textAlign: 'right' }}>P. U.Price{resizeHandle}</th>;
-                      if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>P. U.Price (inc. VAT){resizeHandle}</th>;
-                      if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount" style={{ ...thStyle, textAlign: 'right' }}>U. Dsc. (ex. VAT){resizeHandle}</th>;
-                      if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>L. Disc. (incl. VAT){resizeHandle}</th>;
-                      if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return <th key="price" style={{ ...thStyle, textAlign: 'right' }}>Total (ex. VAT){resizeHandle}</th>;
-                      if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>Total (inc. VAT){resizeHandle}</th>;
+                      if (col.key === 'part_number') return <th key="part_number" style={thStyle}>{t('Part No.')}{resizeHandle}</th>;
+                      if (col.key === 'name') return <th key="name" style={thStyle}>{t('Name')}{resizeHandle}</th>;
+                      if (col.key === 'info') return <th key="info" style={thStyle}>{t('Info')}{resizeHandle}</th>;
+                      if (col.key === 'qty') return <th key="qty" style={{ ...thStyle, textAlign: 'center' }}>{t('Qty')}{resizeHandle}</th>;
+                      if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price" style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (ex. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (inc. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price" style={{ ...thStyle, textAlign: 'right' }}>{t('P. U.Price')}{resizeHandle}</th>;
+                      if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>{t('P. U.Price (inc. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount" style={{ ...thStyle, textAlign: 'right' }}>{t('U. Dsc. (ex. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount_with_vat" style={{ ...thStyle, textAlign: 'right' }}>{t('L. Disc. (incl. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return <th key="price" style={{ ...thStyle, textAlign: 'right' }}>{t('Total (ex. VAT)')}{resizeHandle}</th>;
+                      if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="price_with_vat" style={{ ...thStyle, textAlign: 'right' }}>{t('Total (inc. VAT)')}{resizeHandle}</th>;
                       return null;
                     })}
                   </tr>
@@ -2875,7 +2877,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           <div
                             style={{ color: '#ba1a1a', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}
                             onClick={() => { removeProduct(product); }}
-                            title="Remove"
+                            title={t('Remove')}
                           >
                             <i className="bi bi-trash3"></i>
                           </div>
@@ -3003,39 +3005,39 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             </Dropdown.Toggle>
                             <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
-                                <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>Linked Products <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
+                                <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t('Linked Products')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
-                                <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>Images <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
+                                <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>{t('Images')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
                               </Dropdown.Item>
                               <Dropdown.Divider style={{ margin: '4px 0' }} />
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductHistory(product)}>
-                                <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>Product History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
+                                <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>{t('Product History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesHistory(product)}>
-                                <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>Sales History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
+                                <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t('Sales History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesReturnHistory(product)}>
-                                <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>Sales Return History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
+                                <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>{t('Sales Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
-                                <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>Purchase History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
+                                <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>{t('Purchase History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
-                                <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>Purchase Return History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
+                                <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>{t('Purchase Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
-                                <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>Delivery Note History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
+                                <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t('Delivery Note History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Divider style={{ margin: '4px 0' }} />
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
-                                <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>Quotation History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
+                                <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>{t('Quotation History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
-                                <i className="bi bi-file-earmark-check me-2" style={{ color: '#059669' }}></i>Qtn. Sales History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
+                                <i className="bi bi-file-earmark-check me-2" style={{ color: '#059669' }}></i>{t('Qtn. Sales History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
                               </Dropdown.Item>
                               <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
-                                <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>Qtn. Sales Return History <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
+                                <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t('Qtn. Sales Return History')} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
                               </Dropdown.Item>
                             </Dropdown.Menu>
                           </Dropdown>
@@ -3056,7 +3058,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                 value={product.quantity}
                                 className="form-control"
 
-                                placeholder="Quantity"
+                                placeholder={t("Quantity")}
 
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -3161,7 +3163,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price}
                             className="form-control"
-                            placeholder="Unit Price"
+                            placeholder={t("Unit Price")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3195,7 +3197,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price_with_vat}
                             className="form-control"
-                            placeholder="Unit Price(with VAT)"
+                            placeholder={t("Unit Price(with VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3225,7 +3227,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price}
                             className="form-control"
-                            placeholder="Purchase Unit Price"
+                            placeholder={t("Purchase Unit Price")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3251,7 +3253,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price_with_vat}
                             className="form-control"
-                            placeholder="Purchase Unit Price(with VAT)"
+                            placeholder={t("Purchase Unit Price(with VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3277,7 +3279,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "100px" }}
                             value={product.unit_discount}
                             className="form-control"
-                            placeholder="Disc.(without VAT)"
+                            placeholder={t("Disc.(without VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3306,7 +3308,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "100px" }}
                             value={product.line_discount_with_vat != null ? product.line_discount_with_vat : (product.unit_discount_with_vat ? parseFloat(trimTo2Decimals((product.unit_discount_with_vat || 0) * (product.quantity || 1))) : product.unit_discount_with_vat)}
                             className="form-control"
-                            placeholder="L. Disc.(incl. VAT)"
+                            placeholder={t("L. Disc.(incl. VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3336,7 +3338,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.line_total !== undefined ? product.line_total : trimTo2Decimals(((product.unit_price || 0) - (product.unit_discount || 0)) * (product.quantity || 0))}
                             className="form-control"
-                            placeholder="Price(without VAT)"
+                            placeholder={t("Price(without VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3372,7 +3374,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.line_total_with_vat !== undefined ? product.line_total_with_vat : trimTo2Decimals(((product.unit_price_with_vat || 0) - (product.unit_discount_with_vat || 0)) * (product.quantity || 0))}
                             className="form-control"
-                            placeholder="Price(with VAT)"
+                            placeholder={t("Price(with VAT)")}
                             onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
                               if (e.key === "Backspace") {
@@ -3417,10 +3419,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 {showDNSummarySettings && (
                   <div className="dn-summary-popup" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1060, background: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.22)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <strong style={{ fontSize: '13px' }}>Customize Summary</strong>
+                      <strong style={{ fontSize: '13px' }}>{t('Customize Summary')}</strong>
                       <button type="button" className="btn-close" style={{ fontSize: '10px' }} onClick={() => setShowDNSummarySettings(false)}></button>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px' }}>Toggle visibility or drag to reorder</div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px' }}>{t('Toggle visibility or drag to reorder')}</div>
                     {dnSummaryOrder.map((key, idx) => (
                       <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '3px 0', borderBottom: '1px solid #f5f5f5', cursor: 'grab' }}
                         draggable
@@ -3437,13 +3439,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       setDnSummaryVisible(Object.fromEntries(_dnSummaryDefaultOrder.map(k => [k, true])));
                       localStorage.removeItem('dn_summary_visible');
                       localStorage.removeItem('dn_summary_order');
-                    }}>Reset to Default</button>
+                    }}>{t('Reset to Default')}</button>
                   </div>
                 )}
                 <div className="dn-summary-card" style={{ display: 'flex', flexDirection: 'column', gap: '0', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                   <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>Summary</span>
-                    <button type="button" title="Customize Summary" onClick={() => setShowDNSummarySettings(v => !v)}
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t('Summary')}</span>
+                    <button type="button" title={t('Customize Summary')} onClick={() => setShowDNSummarySettings(v => !v)}
                       style={{ background: 'none', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '1px 5px', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }}
                       onMouseEnter={e => e.currentTarget.style.color='#191c1e'}
                       onMouseLeave={e => e.currentTarget.style.color='#6b7280'}>
@@ -3455,19 +3457,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       switch (key) {
                         case 'total_without_vat': return (
                           <div key="total_without_vat" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Total (ex. VAT)</span>
+                            <span style={{ color: '#434655' }}>{t('Total (ex. VAT)')}</span>
                             <span style={{ fontWeight: 500 }}><Amount amount={trimTo2Decimals(formData.total || 0)} /></span>
                           </div>
                         );
                         case 'total_with_vat': return (
                           <div key="total_with_vat" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Total (inc. VAT)</span>
+                            <span style={{ color: '#434655' }}>{t('Total (inc. VAT)')}</span>
                             <span style={{ fontWeight: 500 }}><Amount amount={trimTo2Decimals(formData.total_with_vat || 0)} /></span>
                           </div>
                         );
                         case 'shipping': return (
                           <div key="shipping" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Shipping &amp; Handling</span>
+                            <span style={{ color: '#434655' }}>{t('Shipping & Handling')}</span>
                             <input type="number" className="form-control form-control-sm text-end" style={{ width: '110px' }}
                               value={formData.shipping_handling_fees}
                               onWheel={(e) => e.target.blur()}
@@ -3480,7 +3482,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         );
                         case 'discount_without_vat': return (
                           <div key="discount_without_vat" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Discount (ex. VAT)&nbsp;<span style={{ fontSize: '11px', color: '#888' }}>{discountPercent}%</span></span>
+                            <span style={{ color: '#434655' }}>{t('Discount (ex. VAT)')}&nbsp;<span style={{ fontSize: '11px', color: '#888' }}>{discountPercent}%</span></span>
                             <input type="number" className="form-control form-control-sm text-end" style={{ width: '110px' }}
                               value={formData.discount}
                               onWheel={(e) => e.target.blur()}
@@ -3494,7 +3496,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         );
                         case 'discount_with_vat': return (
                           <div key="discount_with_vat" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Discount (inc. VAT)&nbsp;<span style={{ fontSize: '11px', color: '#888' }}>{discountPercentWithVAT}%</span></span>
+                            <span style={{ color: '#434655' }}>{t('Discount (inc. VAT)')}&nbsp;<span style={{ fontSize: '11px', color: '#888' }}>{discountPercentWithVAT}%</span></span>
                             <input type="number" className="form-control form-control-sm text-end" style={{ width: '110px' }}
                               value={formData.discount_with_vat}
                               onWheel={(e) => e.target.blur()}
@@ -3508,14 +3510,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         );
                         case 'taxable_amount': return (
                           <div key="taxable_amount" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Taxable Amount (ex. VAT)&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'taxable'} overlay={renderTaxableAmountTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'taxable' ? null : 'taxable'); }}>ℹ️</span></OverlayTrigger></span>
+                            <span style={{ color: '#434655' }}>{t('Taxable Amount (ex. VAT)')}&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'taxable'} overlay={renderTaxableAmountTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'taxable' ? null : 'taxable'); }}>ℹ️</span></OverlayTrigger></span>
                             <span style={{ fontWeight: 500 }}><Amount amount={trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))} /></span>
                           </div>
                         );
                         case 'vat': return (
                           <div key="vat" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
                             <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              VAT
+                              {t('VAT')}
                               <input type="number" className="form-control form-control-sm text-end d-inline" style={{ width: '54px' }}
                                 value={formData.vat_percent || 0}
                                 onWheel={(e) => e.target.blur()}
@@ -3527,17 +3529,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         );
                         case 'net_before_rounding': return (
                           <div key="net_before_rounding" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
-                            <span style={{ color: '#434655' }}>Before Rounding&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'before_rounding'} overlay={renderNetTotalBeforeRoundingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'before_rounding' ? null : 'before_rounding'); }}>ℹ️</span></OverlayTrigger></span>
+                            <span style={{ color: '#434655' }}>{t('Before Rounding')}&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'before_rounding'} overlay={renderNetTotalBeforeRoundingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'before_rounding' ? null : 'before_rounding'); }}>ℹ️</span></OverlayTrigger></span>
                             <span style={{ fontWeight: 500 }}><Amount amount={trimTo2Decimals((formData.net_total || 0) - (formData.rounding_amount || 0))} /></span>
                           </div>
                         );
                         case 'rounding': return (
                           <div key="rounding" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' }}>
                             <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              Rounding
+                              {t('Rounding')}
                               <label style={{ fontSize: '11px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', marginBottom: 0 }}>
                                 <input type="checkbox" checked={formData.auto_rounding_amount || false} onChange={(e) => { formData.auto_rounding_amount = e.target.checked; setFormData({ ...formData }); reCalculate(); }} />
-                                Auto
+                                {t('Auto')}
                               </label>
                             </span>
                             <input type="number" className="form-control form-control-sm text-end" style={{ width: '110px' }}
@@ -3556,7 +3558,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     })}
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', fontWeight: 700, paddingTop: '10px', borderTop: '1px solid #c3c6d7', color: '#191c1e', marginTop: '2px' }}>
-                      <span>Net Total (inc. VAT)&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'net_total'} overlay={renderNetTotalTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', fontSize: '13px', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'net_total' ? null : 'net_total'); }}>ℹ️</span></OverlayTrigger></span>
+                      <span>{t('Net Total (inc. VAT)')}&nbsp;<OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'net_total'} overlay={renderNetTotalTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', fontSize: '13px', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'net_total' ? null : 'net_total'); }}>ℹ️</span></OverlayTrigger></span>
                       <span style={{ color: '#004ac6' }}><Amount amount={trimTo2Decimals(formData.net_total || 0)} /></span>
                     </div>
                   </div>
@@ -3575,7 +3577,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       {/* DN SP Table Settings Modal */}
       < Modal show={showDNSPSettings} onHide={() => setShowDNSPSettings(false)} size="md" >
         <Modal.Header closeButton>
-          <Modal.Title>Table Settings</Modal.Title>
+          <Modal.Title>{t('Table Settings')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <DragDropContext onDragEnd={onDragEndDNSP}>
@@ -3591,7 +3593,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           {...provided.dragHandleProps}>
                           <input type="checkbox" checked={col.visible}
                             onChange={() => handleToggleDNSPColumn(col.key)} />
-                          {col.label}
+                          {t(col.label)}
                         </li>
                       )}
                     </Draggable>
@@ -3603,8 +3605,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           </DragDropContext>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={restoreDefaultDNSPSettings}>Restore Defaults</Button>
-          <Button variant="primary" onClick={() => setShowDNSPSettings(false)}>Close</Button>
+          <Button variant="secondary" onClick={restoreDefaultDNSPSettings}>{t('Restore Defaults')}</Button>
+          <Button variant="primary" onClick={() => setShowDNSPSettings(false)}>{t('Close')}</Button>
         </Modal.Footer>
       </Modal >
 

@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words';
 import { trimTo2Decimals } from "../utils/numberUtils";
@@ -233,6 +233,11 @@ const PreviewContentType3 = forwardRef((props, ref) => {
                                 }}>
                                     {/* Left — English */}
                                     <div>
+                                        {st?.store_name && (
+                                            <div style={{ color: C.white, fontSize: "19px", fontWeight: 800, lineHeight: "1.2" }}>
+                                                {st.store_name}
+                                            </div>
+                                        )}
                                         <div className="clickable-text"
                                             onClick={() => props.selectText("storeName")}
                                             style={{
@@ -270,7 +275,7 @@ const PreviewContentType3 = forwardRef((props, ref) => {
                                     <div style={{ textAlign: "center" }}>
                                         {st?.logo ? (
                                             <img
-                                                src={resolveImageUrl(st.logo, st.id, "store") + "?" + Date.now()}
+                                                src={storeLogoUrl(st)}
                                                 alt="logo"
                                                 style={{
                                                     width: "64px", height: "64px", objectFit: "contain",
@@ -298,6 +303,11 @@ const PreviewContentType3 = forwardRef((props, ref) => {
                                         alignItems: "flex-start",
                                         gap: "2px",
                                     }}>
+                                        {st?.store_name_in_arabic && (
+                                            <div style={{ color: C.white, fontSize: "19px", fontWeight: 800, lineHeight: "1.2", fontFamily: arFont }}>
+                                                {st.store_name_in_arabic}
+                                            </div>
+                                        )}
                                         <div className="clickable-text"
                                             onClick={() => props.selectText("storeNameArabic")}
                                             style={{

@@ -5,11 +5,11 @@ import BalanceSheetPrintPreviewContentType2 from './printPreviewContentType2.js'
 import { format } from "date-fns";
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
-import MBDIInvoiceBackground from './../INVOICE.jpg';
-import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+
 import { PDFDocument } from 'pdf-lib';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import { resolveImageUrl } from '../utils/imageUtils.js';
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
@@ -46,10 +46,8 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
 
                 InvoiceBackground = "";
-                if (model.store?.code === "MBDI") {
-                    InvoiceBackground = MBDIInvoiceBackground;
-                } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
-                    InvoiceBackground = LGKInvoiceBackground;
+                if (model.store?.invoice_background) {
+                    InvoiceBackground = resolveImageUrl(model.store.invoice_background, model.store.id, "store");
                 }
                 setInvoiceBackground(InvoiceBackground);
 
@@ -936,11 +934,29 @@ const handlePrint = useCallback(async () => {
 
     const saveToLocalStorage = useCallback((key, obj) => {
         localStorage.setItem(key, JSON.stringify(obj));
-    }, []);
+        if (key === "fontSizes") savePrintSettingsToServerDebounced(obj);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const getFromLocalStorage = useCallback((key) => {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : null;
+    }, []);
+
+    const printSettingsSaveTimer = useRef(null);
+    const savePrintSettingsToServerDebounced = useCallback((fontSizesData) => {
+        const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+        if (!storeSettings?.save_print_settings_to_server) return;
+        const storeId = localStorage.getItem('store_id');
+        const token = localStorage.getItem('access_token');
+        if (!storeId || !token) return;
+        if (printSettingsSaveTimer.current) clearTimeout(printSettingsSaveTimer.current);
+        printSettingsSaveTimer.current = setTimeout(() => {
+            fetch('/v1/store/' + storeId + '/print-settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                body: JSON.stringify({ print_settings: fontSizesData }),
+            }).catch(() => {});
+        }, 1500);
     }, []);
 
 
@@ -969,6 +985,24 @@ const handlePrint = useCallback(async () => {
         setFontSizes({ ...storedFontSizes });
         saveToLocalStorage("fontSizes", storedFontSizes);
 
+        // Load from server if flag is enabled (server wins, falls back to local)
+        const _storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+        if (_storeSettings?.save_print_settings_to_server) {
+            const _storeId = localStorage.getItem('store_id');
+            const _token = localStorage.getItem('access_token');
+            if (_storeId && _token) {
+                fetch('/v1/store/' + _storeId, { headers: { 'Authorization': _token } })
+                    .then(r => r.json())
+                    .then(data => {
+                        const serverPS = data?.result?.settings?.print_settings;
+                        if (serverPS && Object.keys(serverPS).length > 0) {
+                            const merged = { ...storedFontSizes, ...serverPS };
+                            setFontSizes({ ...merged });
+                            localStorage.setItem('fontSizes', JSON.stringify(merged));
+                        }
+                    }).catch(() => {});
+            }
+        }
 
     }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
@@ -1095,7 +1129,7 @@ const handlePrint = useCallback(async () => {
             defaultNumber={defaultNumber}
             defaultMessage={defaultMessage}
         />
-        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false} dir="ltr">
             {model?.store?.settings?.balance_sheet_header_design === 'type2' ? (
                 /* ── TYPE 2: Modern grouped toolbar ── */
                 <div style={{ background: 'linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%)', borderBottom: '1px solid #15304e', flexShrink: 0 }}>

@@ -1,5 +1,5 @@
 import { React, forwardRef } from "react";
-import { resolveImageUrl } from '../utils/imageUtils';
+import { storeLogoUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words';
 import Amount from "../utils/amount.js";
@@ -213,6 +213,11 @@ const BalanceSheetPrintPreviewContentType2 = forwardRef((props, ref) => {
 
                                     {/* ── LEFT: English ─────────────────────── */}
                                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                        {store?.store_name && (
+                                            <div style={{ color: C.white, fontSize: "20px", fontWeight: 800, lineHeight: "1.2" }}>
+                                                {store.store_name}
+                                            </div>
+                                        )}
                                         {/* Store name */}
                                         <div style={{
                                             color: C.white,
@@ -293,7 +298,7 @@ const BalanceSheetPrintPreviewContentType2 = forwardRef((props, ref) => {
                                     }}>
                                         {store?.logo ? (
                                             <img
-                                                src={resolveImageUrl(store.logo, store.id, "store") + "?" + Date.now()}
+                                                src={storeLogoUrl(store)}
                                                 alt="Logo"
                                                 style={{
                                                     width: "72px", height: "72px",
@@ -325,6 +330,11 @@ const BalanceSheetPrintPreviewContentType2 = forwardRef((props, ref) => {
                                         textAlign: "right",
                                         direction: "rtl",
                                     }}>
+                                        {store?.store_name_in_arabic && (
+                                            <div style={{ color: C.white, fontSize: "20px", fontWeight: 800, lineHeight: "1.2", fontFamily: arFont }}>
+                                                {store.store_name_in_arabic}
+                                            </div>
+                                        )}
                                         {/* Store name Arabic */}
                                         <div style={{
                                             color: C.white,
@@ -937,8 +947,8 @@ const BalanceSheetPrintPreviewContentType2 = forwardRef((props, ref) => {
                                 className="clickable-text"
                                 onClick={() => props.selectText("footer")}
                             >
-                                {store?.address_in_arabic && <div style={{ fontFamily: arFont }}>{store.address_in_arabic}</div>}
-                                {store?.address && <div>{store.address}</div>}
+                                {store?.national_address && [store.national_address.building_no_arabic, store.national_address.street_name_arabic, store.national_address.district_name_arabic, store.national_address.city_name_arabic].filter(Boolean).length > 0 && <div style={{ fontFamily: arFont }}>{[store.national_address.building_no_arabic, store.national_address.street_name_arabic, store.national_address.district_name_arabic, store.national_address.city_name_arabic].filter(Boolean).join('، ')}</div>}
+                                {store?.national_address && [store.national_address.building_no, store.national_address.street_name, store.national_address.district_name, store.national_address.city_name].filter(Boolean).length > 0 && <div>{[store.national_address.building_no, store.national_address.street_name, store.national_address.district_name, store.national_address.city_name].filter(Boolean).join(', ')}</div>}
                                 {(store?.phone || store?.phone_in_arabic) && (
                                     <div>
                                         {store?.phone_in_arabic && <span style={{ fontFamily: arFont }}>{`هاتف: ${store.phone_in_arabic}  `}</span>}

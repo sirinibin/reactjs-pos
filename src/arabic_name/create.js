@@ -2,8 +2,10 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from "rea
 import { Modal, Spinner } from "react-bootstrap";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import { useTranslation } from "react-i18next";
 
 const ArabicNameCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -103,7 +105,7 @@ const ArabicNameCreate = forwardRef((props, ref) => {
 
                 setErrors({});
                 setProcessing(false);
-                if (props.showToastMessage) props.showToastMessage(formData.id ? "Arabic Name Updated!" : "Arabic Name Created!", "success");
+                if (props.showToastMessage) props.showToastMessage(formData.id ? t('arabic_name_updated') : t('arabic_name_created'), "success");
                 if (props.refreshList) props.refreshList();
                 if (props.onSelect) props.onSelect(data.result);
                 handleClose();
@@ -111,7 +113,7 @@ const ArabicNameCreate = forwardRef((props, ref) => {
             .catch(error => {
                 setProcessing(false);
                 setErrors({ ...(error || {}) });
-                if (props.showToastMessage) props.showToastMessage("Error saving Arabic Name!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t('error_saving_arabic_name'), "danger");
             });
     }
 
@@ -132,25 +134,25 @@ const ArabicNameCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal" className="above-pw-modal-wrap">
                 <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button type="button" onClick={handleClose}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Arabic Name — ${formData.name_in_english}` : 'Add Arabic Name'}
+                        {formData.id ? `${t('update_arabic_name')} — ${formData.name_in_english}` : t('add_arabic_name')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('update') : t('create')}
                         </button>
-                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label={t('close')} />
                     </div>
                 </Modal.Header>
                 <style>{`
@@ -165,7 +167,7 @@ const ArabicNameCreate = forwardRef((props, ref) => {
                                 <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px", marginBottom: '16px' }}>
                                     <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px" }}>
                                         <i className="bi bi-exclamation-circle-fill" style={{ marginRight: '6px' }}></i>
-                                        {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                        {totalErrors} {t('errors_fix_before_saving')}
                                     </div>
                                     <ul style={{ margin: 0, paddingLeft: "18px" }}>
                                         {allErrors.map(([k, v]) => (
@@ -178,11 +180,11 @@ const ArabicNameCreate = forwardRef((props, ref) => {
                             <div style={CARD}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                     <i className="bi bi-translate" style={{ fontSize: '18px', color: '#004ac6' }}></i>
-                                    <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Arabic Name Entry</h3>
+                                    <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{t('arabic_name_entry')}</h3>
                                 </div>
 
                                 <div style={{ marginBottom: '16px' }}>
-                                    <Label required>Name in English</Label>
+                                    <Label required>{t('name_in_english_label')}</Label>
                                     <input
                                         id="arabic_name_english"
                                         type="text"
@@ -194,14 +196,14 @@ const ArabicNameCreate = forwardRef((props, ref) => {
                                             setFormData({ ...formData });
                                         }}
                                         style={INPUT}
-                                        placeholder="e.g. Red Apple"
+                                        placeholder={t('placeholder_english_name')}
                                         autoFocus
                                     />
                                     {errors.name_in_english && <ErrMsg>{errors.name_in_english}</ErrMsg>}
                                 </div>
 
                                 <div style={{ marginBottom: '4px' }}>
-                                    <Label required>Name in Arabic</Label>
+                                    <Label required>{t('name_in_arabic_label')}</Label>
                                     <input
                                         id="arabic_name_arabic"
                                         type="text"

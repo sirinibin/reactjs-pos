@@ -1,17 +1,35 @@
 /* RTL-specific overrides */
 
-/* Sidebar positioning for RTL */
+/* Bootstrap .row is a flex container. Browsers don't auto-reverse flex main-axis
+   from the dir attribute alone, so we force row-reverse explicitly for all Bootstrap
+   grid rows — this puts the first DOM column on the RIGHT in RTL (correct). */
+[dir="rtl"] .row {
+  flex-direction: row-reverse;
+}
+
+/* Rows inside an explicitly LTR container (e.g. invoice/receipt/balance-sheet
+   preview modals that carry dir="ltr") must stay in normal order.
+   Both rules have the same specificity, so placing this one AFTER the rtl rule
+   means it wins for descendants of any dir="ltr" element. */
+[dir="ltr"] .row {
+  flex-direction: row;
+}
+
+/* Sidebar: fixed at 260px, no shrink/grow. */
 [dir="rtl"] .sidebar {
-  left: auto;
-  right: 0;
+  flex: 0 0 260px !important;
   width: 260px !important;
   max-width: 260px !important;
   min-width: 260px !important;
+  overflow: hidden;
 }
 
+/* .main: use flex: 1 so it reliably fills the remaining space in the RTL flex container
+   instead of relying on width:100% which can misbehave with direction:rtl on the parent. */
 [dir="rtl"] .main {
-  margin-right: 260px;
-  margin-left: 0;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
 }
 
 /* Sidebar content wrapper */
@@ -26,13 +44,6 @@
   margin-left: 0;
 }
 
-/* Main content adjustment when sidebar is collapsed in RTL */
-[dir="rtl"] .sidebar.collapsed ~ .main,
-[dir="rtl"] .sidebar.collapsed + .main {
-  margin-right: 0;
-  margin-left: 0;
-}
-
 /* Mobile RTL - sidebar hidden by default, shown when collapsed class is present */
 @media (min-width: 1px) and (max-width: 991.98px) {
   [dir="rtl"] .sidebar {
@@ -41,11 +52,6 @@
   }
 
   [dir="rtl"] .sidebar.collapsed {
-    margin-right: 0;
-    margin-left: 0;
-  }
-
-  [dir="rtl"] .main {
     margin-right: 0;
     margin-left: 0;
   }
@@ -66,17 +72,26 @@
   transform: translateY(-50%);
 }
 
-[dir="rtl"] .navbar-collapse {
-  margin-left: 0;
-  margin-right: 0;
+/* Reorder navbar in RTL by reversing the collapse flex container.
+   [dir="rtl"] .navbar-expand .navbar-collapse has specificity [0,3,0] which
+   beats Bootstrap's .navbar-expand .navbar-collapse at [0,2,0], so this wins.
+   DOM order [store, mobile-btn, nav] becomes visual [nav, mobile-btn, store]. */
+[dir="rtl"] .navbar-expand .navbar-collapse {
+  flex-direction: row-reverse;
+  justify-content: space-between;
 }
 
-/* Sidebar menu items - reverse icon and text order */
+/* Sidebar menu items — flex in both LTR and RTL for consistent icon-text alignment */
+.sidebar-link {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* RTL: reverse icon and text order */
 [dir="rtl"] .sidebar-link {
-  display: flex;
   flex-direction: row-reverse;
   justify-content: flex-start;
-  align-items: center;
 }
 
 /* Sidebar icons spacing in RTL */
@@ -90,20 +105,36 @@
   margin-left: 0.75rem;
 }
 
-/* Navbar adjustments */
+/* Navbar adjustments — no auto-margin needed; collapse reversal handles positioning */
 [dir="rtl"] .navbar-nav {
-  margin-left: auto;
+  margin-left: 0;
   margin-right: 0;
 }
 
 [dir="rtl"] .navbar-align {
-  flex-direction: row-reverse;
+  margin-left: 0;
 }
 
-/* Dropdown menu positioning */
-[dir="rtl"] .dropdown-menu {
-  left: auto;
-  right: 0;
+/* Navbar dropdown positioning in RTL.
+   Popper.js positions via transform: translate(...) inline style; CSS left/right alone cannot
+   override it even with !important. We nullify the transform and use plain absolute CSS instead.
+   Bootstrap's .dropdown is already position:relative, so top:100% lands correctly. */
+[dir="rtl"] .navbar .dropdown-menu {
+  transform: none !important;
+  top: 100% !important;
+}
+
+/* Store switcher (right side of navbar) — right-anchored */
+[dir="rtl"] .navbar-collapse > .ms-2 .dropdown-menu {
+  right: 0 !important;
+  left: auto !important;
+}
+
+/* Nav dropdowns (lang / user / bell on left side) — left-anchored */
+[dir="rtl"] .navbar-nav .dropdown-menu {
+  left: 0 !important;
+  right: auto !important;
+  text-align: left;
 }
 
 /* Form labels and inputs */
@@ -158,3 +189,51 @@
 [dir="rtl"] .text-start {
   text-align: right !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LTR RESET — undo every RTL override for content inside a dir="ltr"
+   element (invoice / receipt / balance-sheet preview modals).
+   All selectors below have the same specificity as their [dir="rtl"]
+   counterpart; placing them AFTER ensures they win for LTR subtrees.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[dir="ltr"] {
+  text-align: initial;
+}
+[dir="ltr"] .form-label {
+  text-align: initial;
+}
+[dir="ltr"] .input-group {
+  flex-direction: row;
+}
+[dir="ltr"] .modal-header .btn-close {
+  margin: initial;
+}
+[dir="ltr"] .modal-footer {
+  flex-direction: row;
+}
+[dir="ltr"] table {
+  text-align: initial;
+}
+[dir="ltr"] th,
+[dir="ltr"] td {
+  text-align: initial;
+}
+[dir="ltr"] .bi {
+  margin-left: initial;
+  margin-right: initial;
+}
+[dir="ltr"] .text-end {
+  text-align: right !important;
+}
+[dir="ltr"] .text-start {
+  text-align: left !important;
+}
+[dir="ltr"] .navbar-expand .navbar-collapse {
+  flex-direction: row;
+  justify-content: initial;
+}
+[dir="ltr"] .navbar-align {
+  flex-direction: row;
+}
+/* No transform reset needed for LTR — Popper.js works correctly when [dir="rtl"] rules are inactive */

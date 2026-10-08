@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, ProgressBar, Table, Form, Alert } from "react-bootstrap";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const STEP_ICON = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const [show, setShow] = useState(false);
     const [store, setStore] = useState(null);
 
@@ -242,7 +244,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
             <Modal.Header closeButton>
                 <Modal.Title>
                     <i className="bi bi-box-seam me-2"></i>
-                    Duplicate Store with Products (no images) — {store?.name}
+                    {t('Duplicate Store with Products (no images)')} — {store?.name}
                 </Modal.Title>
             </Modal.Header>
 
@@ -251,20 +253,20 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                 {!duplicating && !duplicateDone && (
                     <div className="mb-4">
                         <h6 className="fw-semibold mb-3">
-                            <i className="bi bi-pencil me-2"></i>New Store Name
+                            <i className="bi bi-pencil me-2"></i>{t('New Store Name')}
                         </h6>
                         <Form.Group className="mb-3">
-                            <Form.Label>Store Name <span className="text-danger">*</span></Form.Label>
+                            <Form.Label>{t('Store Name')} <span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="text"
                                 value={newName}
                                 onChange={e => setNewName(e.target.value)}
-                                placeholder="Enter new store name"
+                                placeholder={t('Enter new store name')}
                                 disabled={duplicating}
                             />
                         </Form.Group>
                         <Form.Group>
-                            <Form.Label>Store Name (Arabic)</Form.Label>
+                            <Form.Label>{t('Store Name (Arabic)')}</Form.Label>
                             <Form.Control
                                 type="text"
                                 value={newNameInArabic}
@@ -282,7 +284,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                         {loadingSize && (
                             <div className="text-center py-3 text-muted">
                                 <Spinner animation="border" size="sm" className="me-2" />
-                                Calculating data size…
+                                {t('Calculating data size…')}
                             </div>
                         )}
 
@@ -295,20 +297,18 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                         {sizeData && !loadingSize && (
                             <div className="mb-4">
                                 <h6 className="fw-semibold mb-2">
-                                    <i className="bi bi-pie-chart me-2"></i>Data to Copy
+                                    <i className="bi bi-pie-chart me-2"></i>{t('Data to Copy')}
                                 </h6>
                                 <Alert variant="info" className="py-2 mb-3">
                                     <i className="bi bi-info-circle me-2"></i>
-                                    Only <strong>products, product brands, and product categories</strong> will be
-                                    copied. <strong>Product images are not included.</strong> Customers, vendors,
-                                    sales, purchases, and all transaction history are <strong>not</strong> included.
+                                    {t('Only products, product brands, and product categories will be copied. Product images are not included. Customers, vendors, sales, purchases, and all transaction history are not included.')}
                                 </Alert>
                                 <Table size="sm" bordered className="mb-0">
                                     <tbody>
                                         <tr>
                                             <td>
                                                 <i className="bi bi-file-earmark-code me-2 text-primary"></i>
-                                                Store document (main DB)
+                                                {t('Store document (main DB)')}
                                             </td>
                                             <td className="text-end fw-semibold" style={{ width: 120 }}>
                                                 {formatBytes(sizeData.store_doc_size)}
@@ -317,7 +317,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                                         <tr>
                                             <td>
                                                 <i className="bi bi-database me-2 text-primary"></i>
-                                                Products, brands &amp; categories
+                                                {t('Products, brands & categories')}
                                             </td>
                                             <td className="text-end fw-semibold" style={{ width: 120 }}>
                                                 {formatBytes(sizeData.catalog_collections_size)}
@@ -326,15 +326,15 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                                         <tr>
                                             <td>
                                                 <i className="bi bi-images me-2 text-muted"></i>
-                                                Product images
+                                                {t('Product images')}
                                             </td>
                                             <td className="text-end text-muted">
-                                                <s>not copied</s>
+                                                <s>{t('not copied')}</s>
                                             </td>
                                         </tr>
                                         <tr className="table-primary">
                                             <td className="fw-bold">
-                                                <i className="bi bi-hdd me-2"></i>Total Estimated Size
+                                                <i className="bi bi-hdd me-2"></i>{t('Total Estimated Size')}
                                             </td>
                                             <td className="text-end fw-bold">
                                                 {formatBytes(sizeData.total_size)}
@@ -346,10 +346,8 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                                 {store?.zatca?.phase === "2" && (
                                     <Alert variant="warning" className="mt-3 py-2 mb-0">
                                         <i className="bi bi-shield-exclamation me-2"></i>
-                                        <strong>ZATCA Phase 2 notice:</strong> The duplicated store will keep the
-                                        Production environment but will be marked as{" "}
-                                        <strong>Not Connected</strong> and all ZATCA credentials will be cleared.
-                                        You must reconnect manually before new invoices can be reported to ZATCA.
+                                        <strong>{t('ZATCA Phase 2 notice:')}</strong> {t('The duplicated store will keep the')} {t('Production')} {t('environment but will be marked as')}{" "}
+                                        <strong>{t('Not Connected')}</strong> {t('and all ZATCA credentials will be cleared. You must reconnect manually before new invoices can be reported to ZATCA.')}
                                     </Alert>
                                 )}
                             </div>
@@ -360,7 +358,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                 {(duplicating || duplicateDone || steps.length > 0) && (
                     <div className="mb-3">
                         <h6 className="fw-semibold mb-3">
-                            <i className="bi bi-list-check me-2"></i>Duplication Progress
+                            <i className="bi bi-list-check me-2"></i>{t('Duplication Progress')}
                         </h6>
 
                         {(duplicating || duplicateDone) && (
@@ -370,14 +368,14 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                             >
                                 <span style={{ fontSize: "0.9em" }}>
                                     <i className="bi bi-stopwatch me-1 text-secondary"></i>
-                                    <strong>Elapsed:</strong>{" "}
+                                    <strong>{t('Elapsed:')}</strong>{" "}
                                     <span className="font-monospace">{formatDuration(elapsed)}</span>
                                 </span>
 
                                 {eta != null && !duplicateDone && (
                                     <span style={{ fontSize: "0.9em" }}>
                                         <i className="bi bi-hourglass-split me-1 text-secondary"></i>
-                                        <strong>ETA:</strong>{" "}
+                                        <strong>{t('ETA:')}</strong>{" "}
                                         <span className="font-monospace">~{formatDuration(eta)}</span>
                                     </span>
                                 )}
@@ -385,7 +383,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                                 {duplicateDone && !duplicateError && (
                                     <span className="text-success" style={{ fontSize: "0.9em" }}>
                                         <i className="bi bi-check-circle-fill me-1"></i>
-                                        Completed in {formatDuration(elapsed)}
+                                        {t('Completed in')} {formatDuration(elapsed)}
                                     </span>
                                 )}
                             </div>
@@ -482,7 +480,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
 
                         <div className="mt-3 pt-2 border-top">
                             <div className="d-flex justify-content-between align-items-center mb-1">
-                                <span className="fw-semibold" style={{ fontSize: "0.85em" }}>Overall</span>
+                                <span className="fw-semibold" style={{ fontSize: "0.85em" }}>{t('Overall')}</span>
                                 <span className="text-muted" style={{ fontSize: "0.85em" }}>
                                     {Math.round(overallProgress)}%
                                 </span>
@@ -509,13 +507,13 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                 {duplicateDone && !duplicateError && (
                     <Alert variant="success" className="py-2 mb-0">
                         <i className="bi bi-check-circle-fill me-2"></i>
-                        <strong>Store duplicated with products (without images) successfully!</strong>
+                        <strong>{t('Store duplicated with products (without images) successfully!')}</strong>
                         {newStoreName && (
-                            <span className="ms-2">New store <strong>{newStoreName}</strong> is ready.</span>
+                            <span className="ms-2">{t('New store')} <strong>{newStoreName}</strong> {t('is ready.')}</span>
                         )}
                         {newStoreID && (
                             <div className="mt-1" style={{ fontSize: "0.85em" }}>
-                                New Store ID: <code>{newStoreID}</code>
+                                {t('New Store ID:')} <code>{newStoreID}</code>
                             </div>
                         )}
                     </Alert>
@@ -525,7 +523,7 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
 
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose} disabled={duplicating}>
-                    {duplicateDone ? "Close" : "Cancel"}
+                    {duplicateDone ? t('Close') : t('Cancel')}
                 </Button>
                 {!duplicateDone && (
                     <Button
@@ -536,11 +534,11 @@ const StoreDuplicateProductsNoImages = forwardRef((props, ref) => {
                         {duplicating ? (
                             <>
                                 <Spinner size="sm" animation="border" className="me-2" />
-                                Duplicating… {elapsed > 0 && `(${formatDuration(elapsed)})`}
+                                {t('Duplicating…')} {elapsed > 0 && `(${formatDuration(elapsed)})`}
                             </>
                         ) : (
                             <>
-                                <i className="bi bi-box-seam me-2"></i>Duplicate with Products (no images)
+                                <i className="bi bi-box-seam me-2"></i>{t('Duplicate with Products (no images)')}
                             </>
                         )}
                     </Button>

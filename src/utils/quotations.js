@@ -3,9 +3,11 @@ import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import QuotationIndex from "./../quotation/index.js";
+import { useTranslation } from 'react-i18next';
 
 
 const Quotations = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const dragRef = useRef(null);
     let [type, setType] = useState("");
     let [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -81,7 +83,7 @@ const Quotations = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Quotation" : "Quotations"}</Modal.Title>
+                    <Modal.Title>{enableSelection ? t("Select Quotation") : t("Quotations")}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { createPortal } from "react-dom";
 import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -50,7 +51,7 @@ function vehicleLabel(v) {
 
 function makePayment() { return { date_str: new Date().toISOString(), amount: 0, method: "", deleted: false }; }
 function makeFormData() {
-    return { type: "quotation", status: "created", price_type: "retail", vat_percent: 15, discount: 0, discount_percent: 0, discount_with_vat: 0, discount_percent_with_vat: 0, shipping_handling_fees: 0, cash_discount: 0, rounding_amount: 0, auto_rounding_amount: true, total: 0, total_with_vat: 0, vat_price: 0, net_total: 0, balance_amount: 0, delivery_days: 7, validity_days: 2, date_str: new Date().toISOString(), payments_input: [makePayment()], products: [], exclude_service_tax: true, exclude_product_tax: false };
+    return { type: "quotation", status: "created", price_type: "retail", vat_percent: 15, discount: 0, discount_percent: 0, discount_with_vat: 0, discount_percent_with_vat: 0, shipping_handling_fees: 0, cash_discount: 0, rounding_amount: 0, auto_rounding_amount: true, total: 0, total_with_vat: 0, vat_price: 0, net_total: 0, balance_amount: 0, delivery_days: 7, delivery_from: "Payment", validity_days: 2, date_str: new Date().toISOString(), payments_input: [makePayment()], products: [], exclude_service_tax: true, exclude_product_tax: false };
 }
 
 function PortalDropdown({ renderMenu }) {
@@ -258,6 +259,34 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 }
                 if (prefill?.vehicle_id) {
                     setVehicleReloadKey(k => k + 1);
+                }
+                // Apply Sales→Quotation switch prefill if present
+                const switchData = takeSwitchPayload(SALES_TO_QUOTATION_KEY);
+                if (switchData) {
+                    try {
+                        const fields = switchFields(switchData);
+                        const fd = { ...fields };
+                        if (fields.vehicle_id) setVehicleReloadKey(k => k + 1);
+                        if (fields.discount !== undefined) setDiscount(fields.discount);
+                        if (fields.discount_with_vat !== undefined) setDiscountWithVAT(fields.discount_with_vat);
+                        if (fields.shipping_handling_fees !== undefined) setShipping(fields.shipping_handling_fees);
+                        if (switchData.products?.length) {
+                            setSelectedProducts([...switchData.products]);
+                            setTimeout(() => reCalculateRef.current?.(switchData.products), 300);
+                        }
+                        if (switchData.customer_id) {
+                            fd.customer_id = switchData.customer_id;
+                            fd.customer_name = switchData.customer_name || '';
+                            const customerSelect2 = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,search_label,stores";
+                            fetch(`/v1/customer/${switchData.customer_id}?search[store_id]=${storeId}&select=${customerSelect2}`, { headers })
+                                .then(cr => cr.json())
+                                .then(data => setSelectedCustomers(data?.result ? [data.result] : []))
+                                .catch(() => {});
+                        } else if (switchData.customers?.length) {
+                            setSelectedCustomers([...switchData.customers]);
+                        }
+                        setFormData(prev => ({ ...prev, ...fd }));
+                    } catch (_) {}
                 }
             }
             setShow(true);
@@ -881,6 +910,20 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                 <i className="bi bi-tools" style={{ fontSize: "13px" }}></i> {t("View Job Card")}
                             </button>
                         ) : null)}
+                        {!isUpdateForm && props.onSwitchToSales && apiBase === '/v1/quotation' && (
+                            <button type="button" onClick={() => {
+                                saveSwitchPayload(QUOTATION_TO_SALES_KEY, buildSwitchPayload({
+                                    formData,
+                                    products: selectedProducts,
+                                    customers: selectedCustomers,
+                                    amounts: { discount, discount_with_vat: discountWithVAT, shipping_handling_fees: shipping },
+                                }));
+                                setShow(false);
+                                props.onSwitchToSales();
+                            }} style={{ display: "flex", alignItems: "center", gap: "4px", border: `1px solid ${borderColor}`, backgroundColor: "#f7f9fb", color: "#434655", padding: "6px 10px", borderRadius: "4px", fontSize: "12px", fontWeight: 500, cursor: "pointer" }}>
+                                <i className="bi bi-arrow-left-right" style={{ fontSize: "13px" }}></i> {t("Switch to Sales")}
+                            </button>
+                        )}
                         <button type="button" onClick={(e) => handleCreate(e)} style={{ display: "flex", alignItems: "center", gap: "4px", backgroundColor: "#004ac6", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "4px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                             {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : <><i className="bi bi-check2"></i> {isUpdateForm ? t("Update") : (apiBase === '/v1/non-vat-sales-return' ? t("Create Non VAT Sales Return") : apiBase !== '/v1/quotation' ? t("Create Non VAT Sale") : (isInvoice ? t("Create Invoice") : t("Create Quotation")))}</>}
                         </button>
@@ -1057,7 +1100,6 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         <Button variant="light" size="sm" className="border" type="button" onClick={openServicesModal}>
                                             <i className="bi bi-list me-1"></i>{t("Services")}
                                         </Button>
-                                        {apiBase === '/v1/quotation' && (
                                         <Dropdown>
                                             <Dropdown.Toggle bsPrefix="btn" data-testid="import-dropdown-btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
                                                 <i className="bi bi-file-earmark-arrow-down" />{t('Import')}
@@ -1067,11 +1109,10 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                                 <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
                                                 <Dropdown.Item onClick={openImportFromSales} data-testid="import-from-sales-btn"><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
                                                 {store?.settings?.enable_purchase_order_module && (
-                                                    <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} data-testid="import-from-po-btn"><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From Purchase Order')}</Dropdown.Item>
+                                                    <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} data-testid="import-from-po-btn"><i className="bi bi-file-earmark-arrow-down me-1"></i>{t('From P.O.')}</Dropdown.Item>
                                                 )}
                                             </Dropdown.Menu>
                                         </Dropdown>
-                                        )}
                                         {apiBase !== '/v1/quotation' && (
                                             <div className="qt3-tax-flags" style={{ display: "flex", gap: "20px", marginLeft: "auto" }}>
                                                 <div className="form-check mb-0">
@@ -1644,6 +1685,38 @@ const QuotationType3Form = forwardRef((props, ref) => {
                                         )}
                                     </div>
 
+                                    {formData.type === "quotation" && (
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "10px", borderTop: "1px solid #e5e7eb", paddingTop: "10px" }}>
+                                            <div>
+                                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Delivery (# of Days)")}</label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    className="form-control form-control-sm"
+                                                    value={formData.delivery_days || 7}
+                                                    onChange={e => {
+                                                        formData.delivery_days = parseInt(e.target.value) || 7;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="form-label fw-semibold" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("Delivery From the Date of")}</label>
+                                                <select
+                                                    className="form-control form-control-sm"
+                                                    value={formData.delivery_from || "Payment"}
+                                                    onChange={e => {
+                                                        formData.delivery_from = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                >
+                                                    <option value="Payment">{t("Payment")}</option>
+                                                    <option value="Approval">{t("Approval")}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div style={{ display: "grid", gap: "6px", marginTop: "12px" }}>
                                         <button type="submit" disabled={isSubmitting} style={{ background: "#004ac6", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 14px", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                                             {isSubmitting ? <Spinner as="span" animation="border" size="sm" /> : (isUpdateForm ? t("Update") : (isInvoice ? t("Create Invoice") : t("Create Quotation")))}
@@ -1712,6 +1785,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
             <OrderPreview ref={previewRef} />
             <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
             <QuotationImportPicker ref={QuotationImportPickerRef} modalClassName="above-sales-modal qt3-import-modal" showToastMessage={props.showToastMessage} />
+
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />

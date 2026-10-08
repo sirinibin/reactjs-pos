@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import ServiceCreate from "./create.js";
 import ServiceView from "./view.js";
 import { Button, Spinner } from "react-bootstrap";
@@ -10,6 +11,7 @@ import { highlightWords } from "../utils/search.js";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import * as XLSX from "xlsx";
 
 const columnStyle = {
     overflow: "hidden",
@@ -19,6 +21,7 @@ const columnStyle = {
 };
 
 function ServiceIndex(props) {
+    const { t } = useTranslation('common');
     const [serviceList, setServiceList]         = useState([]);
     let [pageSize, setPageSize]                 = useState(() => parseInt(localStorage.getItem("service_pageSize") || "10"));
     let [page, setPage]                         = useState(1);
@@ -53,13 +56,13 @@ function ServiceIndex(props) {
 
     // ── Search dropdown column config ──
     const defaultSearchServiceColumns = useMemo(() => [
-        { key: "name",          label: "Name",         fieldName: "name",                  width: 30, visible: true  },
-        { key: "category",      label: "Category",     fieldName: "service_category_name", width: 20, visible: true  },
-        { key: "unit",          label: "Unit",         fieldName: "unit",                  width: 12, visible: true  },
-        { key: "retail_price",  label: "Retail Price", fieldName: "retail_price",          width: 13, visible: true  },
-        { key: "duration",      label: "Duration",     fieldName: "duration_minutes",      width: 10, visible: true  },
-        { key: "delivery_mode", label: "Delivery",     fieldName: "delivery_mode",         width: 15, visible: true  },
-    ], []);
+        { key: "name",          label: t("Name"),         fieldName: "name",                  width: 30, visible: true  },
+        { key: "category",      label: t("Category"),     fieldName: "service_category_name", width: 20, visible: true  },
+        { key: "unit",          label: t("Unit"),         fieldName: "unit",                  width: 12, visible: true  },
+        { key: "retail_price",  label: t("Retail Price"), fieldName: "retail_price",          width: 13, visible: true  },
+        { key: "duration",      label: t("Duration"),     fieldName: "duration_minutes",      width: 10, visible: true  },
+        { key: "delivery_mode", label: t("Delivery"),     fieldName: "delivery_mode",         width: 15, visible: true  },
+    ], [t]);
 
     const {
         columns: searchServiceColumns,
@@ -167,7 +170,7 @@ function ServiceIndex(props) {
     // ── Delete / Restore ──
 
     async function handleDelete(id) {
-        if (!await confirm("Delete this service? It can be restored later from the Deleted view.")) return;
+        if (!await confirm(t("Delete this service? It can be restored later from the Deleted view."))) return;
         const storeId = localStorage.getItem("store_id");
         const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
         await fetch(`/v1/product/${id}?search[store_id]=${storeId}`, { method: "DELETE", headers });
@@ -175,11 +178,58 @@ function ServiceIndex(props) {
     }
 
     async function handleRestore(id) {
-        if (!await confirm("Restore this service?")) return;
+        if (!await confirm(t("Restore this service?"))) return;
         const storeId = localStorage.getItem("store_id");
         const headers = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
         await fetch(`/v1/product/restore/${id}?search[store_id]=${storeId}`, { method: "POST", headers });
         list();
+    }
+
+    const [exportingExcel, setExportingExcel] = useState(false);
+
+    async function exportToExcel() {
+        setExportingExcel(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const token = localStorage.getItem("access_token");
+            const select = `select=id,name,service_category_name,unit,product_stores,duration_minutes,delivery_mode,created_at`;
+            const exportParams = { ...searchParams.current, store_id: storeId, is_service: "1" };
+            const queryParams = ObjectToSearchQueryParams(exportParams);
+            const res = await fetch(`/v1/product?${select}&${queryParams}&sort=-created_at&page=1&limit=5000`, {
+                headers: { Authorization: token },
+            });
+            const data = await res.json();
+            const items = data.result || [];
+
+            const deliveryModeLabel = (mode) => {
+                const m = { onsite: "On-Site", remote: "Remote", pickup: "Pickup" };
+                return m[mode] || mode || "";
+            };
+
+            const unitLabel = (unit) => {
+                const u = { nos: "Nos", kg: "Kg", ltr: "Ltr", pcs: "Pcs", hr: "Hour", day: "Day" };
+                return u[unit] || unit || "";
+            };
+
+            const rows = items.map((svc, i) => {
+                const ps = svc.product_stores?.[storeId] || {};
+                return {
+                    "#": i + 1,
+                    "Name": svc.name || "",
+                    "Category": svc.service_category_name || "",
+                    "Unit": unitLabel(svc.unit),
+                    "Retail Price": ps.retail_unit_price ?? svc.retail_unit_price ?? "",
+                    "Duration (min)": svc.duration_minutes || "",
+                    "Delivery Mode": deliveryModeLabel(svc.delivery_mode),
+                    "Created At": svc.created_at ? new Date(svc.created_at).toLocaleDateString() : "",
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Services");
+            XLSX.writeFile(wb, `services_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (e) { console.error("Export error:", e); }
+        setExportingExcel(false);
     }
 
     // deletedFilter: "" = active only (default), "1" = deleted only, "2" = all
@@ -236,7 +286,7 @@ function ServiceIndex(props) {
             <TableSettingsModal
                 show={showSearchSettings}
                 onHide={() => setShowSearchSettings(false)}
-                title="Service Search Settings"
+                title={t("Service Search Settings")}
                 columns={searchServiceColumns}
                 onToggleColumn={toggleSearchColumn}
                 onDragEnd={onDragEndSearch}
@@ -248,11 +298,17 @@ function ServiceIndex(props) {
 
             <div className="row mb-1">
                 <div className="col d-flex align-items-center gap-2">
-                    <h1 className="h3 mb-0">Services</h1>
+                    <h1 className="h3 mb-0">{t('Services')}</h1>
                 </div>
-                <div className="col-auto">
+                <div className="col-auto d-flex gap-2 align-items-center">
+                    <Button variant="success" onClick={exportToExcel} disabled={exportingExcel} title="Export all services matching current filters to Excel">
+                        {exportingExcel
+                            ? <Spinner as="span" animation="border" size="sm" className="me-1" />
+                            : <i className="bi bi-file-earmark-excel me-1"></i>}
+                        Export Excel
+                    </Button>
                     <Button variant="primary" onClick={() => props.onOpenCreate ? props.onOpenCreate() : createFormRef.current?.open()}>
-                        <i className="bi bi-plus-lg"></i> Create
+                        <i className="bi bi-plus-lg"></i> {t('Create')}
                     </Button>
                 </div>
             </div>
@@ -273,11 +329,11 @@ function ServiceIndex(props) {
                                     <Button variant="success" onClick={() => {
                                         if (props.onSelectServices) props.onSelectServices(choosenServices);
                                     }}>
-                                        Use Selected ({choosenServices.length})
+                                        {t('Use Selected')} ({choosenServices.length})
                                     </Button>
                                 )}
                                 {totalItems > 0 && <>
-                                    <label className="form-label mb-0">Size:&nbsp;</label>
+                                    <label className="form-label mb-0">{t('Size:')} </label>
                                     <select
                                         value={pageSize}
                                         className="form-control"
@@ -303,11 +359,11 @@ function ServiceIndex(props) {
                                         filterBy={() => true}
                                         size="lg"
                                         labelKey="search_label"
-                                        emptyLabel="No services found"
+                                        emptyLabel={t("No services found")}
                                         clearButton={true}
                                         open={openSearchResult}
                                         multiple
-                                        placeholder="Name · Item Code · Category"
+                                        placeholder={t("Name · Item Code · Category")}
                                         highlightOnlyResult={true}
                                         ignoreDiacritics={true}
                                         selected={selectedServices}
@@ -348,7 +404,7 @@ function ServiceIndex(props) {
                                                             position: "relative",
                                                         }}>
                                                             {visibleCols.map(col => (
-                                                                <div key={col.key} style={{ width: getColWidth(col) }}>{col.label}</div>
+                                                                <div key={col.key} style={{ width: getColWidth(col) }}>{t(col.label)}</div>
                                                             ))}
                                                             {/* Settings gear */}
                                                             <div
@@ -404,8 +460,8 @@ function ServiceIndex(props) {
                                     {totalPages > 1 && (
                                         <ReactPaginate
                                             breakLabel="..."
-                                            nextLabel="next >"
-                                            previousLabel="< prev"
+                                            nextLabel={t("next >")}
+                                            previousLabel={t("< prev")}
                                             pageCount={totalPages}
                                             marginPagesDisplayed={1}
                                             pageRangeDisplayed={3}
@@ -425,13 +481,13 @@ function ServiceIndex(props) {
                                 </div>
                                 {totalItems > 0 && (
                                     <span className="text-muted small">
-                                        showing {offset + 1}–{offset + currentPageItemsCount} of {totalItems}
-                                        &nbsp;|&nbsp;page {page} of {totalPages}
+                                        {t('showing')} {offset + 1}–{offset + currentPageItemsCount} {t('of')} {totalItems}
+                                        &nbsp;|&nbsp;{t('page')} {page} {t('of')} {totalPages}
                                     </span>
                                 )}
                                 <button
                                     className="btn btn-sm btn-outline-secondary ms-auto"
-                                    title="Table Settings"
+                                    title={t("Table Settings")}
                                     onClick={() => setShowSearchSettings(true)}
                                 >
                                     <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} />
@@ -448,24 +504,24 @@ function ServiceIndex(props) {
                                 <table className="table table-striped table-sm table-bordered">
                                     <thead>
                                         <tr className="text-center">
-                                            {enableSelection && <th>Select</th>}
+                                            {enableSelection && <th>{t('Select')}</th>}
                                             <th>#</th>
-                                            <SortTh field="name"                  label="Name" />
-                                            <SortTh field="service_category_name" label="Category" />
-                                            <SortTh field="unit"                  label="Unit" />
-                                            <SortTh field="duration_minutes"      label="Duration" />
-                                            <SortTh field="delivery_mode"         label="Delivery" />
-                                            <th>Booking</th>
-                                            <SortTh field="retail_unit_price" label="Retail Price" align="right" />
-                                            {!enableSelection && <th>Deleted</th>}
-                                            {!enableSelection && <th>Actions</th>}
+                                            <SortTh field="name"                  label={t("Name")} />
+                                            <SortTh field="service_category_name" label={t("Category")} />
+                                            <SortTh field="unit"                  label={t("Unit")} />
+                                            <SortTh field="duration_minutes"      label={t("Duration")} />
+                                            <SortTh field="delivery_mode"         label={t("Delivery")} />
+                                            <th>{t('Booking')}</th>
+                                            <SortTh field="retail_unit_price" label={t("Retail Price")} align="right" />
+                                            {!enableSelection && <th>{t('Deleted')}</th>}
+                                            {!enableSelection && <th>{t('Actions')}</th>}
                                         </tr>
                                         {/* Filter row */}
                                         <tr>
                                             {enableSelection && <th></th>}
                                             <th></th>
                                             <th>
-                                                <input type="text" className="form-control form-control-sm" placeholder="Search name..."
+                                                <input type="text" className="form-control form-control-sm" placeholder={t("Search name...")}
                                                     onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                         const v = e.target.value;
@@ -482,7 +538,7 @@ function ServiceIndex(props) {
                                                     clearButton
                                                     options={categoryOptions}
                                                     selected={selectedCategories}
-                                                    placeholder="Category..."
+                                                    placeholder={t("Category...")}
                                                     highlightOnlyResult={true}
                                                     ref={categorySearchRef}
                                                     onInputChange={(term) => {
@@ -500,7 +556,7 @@ function ServiceIndex(props) {
                                                 />
                                             </th>
                                             <th>
-                                                <input type="text" className="form-control form-control-sm" placeholder="Unit..."
+                                                <input type="text" className="form-control form-control-sm" placeholder={t("Unit...")}
                                                     onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                         const v = e.target.value;
@@ -509,7 +565,7 @@ function ServiceIndex(props) {
                                                 />
                                             </th>
                                             <th>
-                                                <input type="number" className="form-control form-control-sm" placeholder="Min..."
+                                                <input type="number" className="form-control form-control-sm" placeholder={t("Min...")}
                                                     onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                         const v = e.target.value;
@@ -521,19 +577,19 @@ function ServiceIndex(props) {
                                                 <select className="form-select form-select-sm"
                                                     style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
                                                     onChange={(e) => searchByFieldValue("delivery_mode", e.target.value)}>
-                                                    <option value="">All</option>
-                                                    <option value="in_store">In Store</option>
-                                                    <option value="remote">Remote</option>
-                                                    <option value="at_customer_location">At Customer</option>
+                                                    <option value="">{t('All')}</option>
+                                                    <option value="in_store">{t('In Store')}</option>
+                                                    <option value="remote">{t('Remote')}</option>
+                                                    <option value="at_customer_location">{t('At Customer')}</option>
                                                 </select>
                                             </th>
                                             <th>
                                                 <select className="form-select form-select-sm"
                                                     style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
                                                     onChange={(e) => searchByFieldValue("booking_required", e.target.value)}>
-                                                    <option value="">All</option>
-                                                    <option value="1">Required</option>
-                                                    <option value="0">Not Required</option>
+                                                    <option value="">{t('All')}</option>
+                                                    <option value="1">{t('Required')}</option>
+                                                    <option value="0">{t('Not Required')}</option>
                                                 </select>
                                             </th>
                                             <th>
@@ -551,9 +607,9 @@ function ServiceIndex(props) {
                                                         style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
                                                         value={deletedFilter}
                                                         onChange={(e) => setDeletedFilter(e.target.value)}>
-                                                        <option value="">Active</option>
-                                                        <option value="1">Yes</option>
-                                                        <option value="2">All</option>
+                                                        <option value="">{t('Active')}</option>
+                                                        <option value="1">{t('Yes')}</option>
+                                                        <option value="2">{t('All')}</option>
                                                     </select>
                                                 </th>
                                             )}
@@ -563,7 +619,7 @@ function ServiceIndex(props) {
                                     <tbody>
                                         {!isListLoading && serviceList.length === 0 && (
                                             <tr><td colSpan={enableSelection ? 8 : 10} className="text-center py-4 text-muted">
-                                                No services found
+                                                {t('No services found')}
                                             </td></tr>
                                         )}
                                         {serviceList.map((svc, i) => {
@@ -619,7 +675,7 @@ function ServiceIndex(props) {
                                                     <td>{deliveryModeLabel(svc.delivery_mode)}</td>
                                                     <td className="text-center">
                                                         {svc.booking_required
-                                                            ? <span className="badge bg-info text-dark">Required</span>
+                                                            ? <span className="badge bg-info text-dark">{t('Required')}</span>
                                                             : <span style={{ color: "#aaa" }}>—</span>}
                                                     </td>
                                                     <td style={{ textAlign: "right" }}>
@@ -628,8 +684,8 @@ function ServiceIndex(props) {
                                                     {!enableSelection && (
                                                         <td className="text-center">
                                                             {isDeleted
-                                                                ? <span className="badge bg-danger">YES</span>
-                                                                : <span className="badge bg-success">NO</span>}
+                                                                ? <span className="badge bg-danger">{t('YES')}</span>
+                                                                : <span className="badge bg-success">{t('NO')}</span>}
                                                         </td>
                                                     )}
                                                     {!enableSelection && (
@@ -637,8 +693,8 @@ function ServiceIndex(props) {
                                                             {isDeleted ? (
                                                                 <button className="btn btn-sm btn-outline-success"
                                                                     onClick={(e) => { e.stopPropagation(); handleRestore(svc.id); }}
-                                                                    title="Restore service">
-                                                                    <i className="bi bi-arrow-counterclockwise"></i> Restore
+                                                                    title={t("Restore service")}>
+                                                                    <i className="bi bi-arrow-counterclockwise"></i> {t('Restore')}
                                                                 </button>
                                                             ) : (
                                                                 <>

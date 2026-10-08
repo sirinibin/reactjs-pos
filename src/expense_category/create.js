@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from "react-bootstrap";
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -33,6 +34,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
     }
 
     useEnterKeyNavigation();
+    const { t } = useTranslation('common');
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -124,9 +126,9 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setIsExpenseCategoriesLoading(false);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Expense category updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Expense category updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Expense category created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Expense category created successfully!"), "success");
                 }
                 if (props.refreshList) props.refreshList();
                 handleClose();
@@ -136,7 +138,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setIsExpenseCategoriesLoading(false);
                 setErrors({ ...error });
-                if (props.showToastMessage) props.showToastMessage("Failed to process expense category!", "danger");
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process expense category!"), "danger");
             });
     }
 
@@ -194,24 +196,24 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
                         onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> {t('Back')}
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Expense Category — ${formData.name}` : 'Create New Expense Category'}
+                        {formData.id ? `${t('Update Expense Category')} — ${formData.name}` : t('Create New Expense Category')}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && props.openDetailsView && (
                             <button type="button"
                                 style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
                                 onClick={() => { handleClose(); props.openDetailsView(formData.id); }}>
-                                <i className="bi bi-eye me-1"></i>View Detail
+                                <i className="bi bi-eye me-1"></i>{t('View Detail')}
                             </button>
                         )}
                         <button type="button"
                             style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             onClick={handleCreate} disabled={isProcessing}>
                             {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
+                            {formData.id ? t('Update') : t('Create')}
                         </button>
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
@@ -246,10 +248,10 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                             </div>
 
                             <div style={CARD} className="pw-card">
-                                <SectionTitle icon="bi-folder2-open">Category Details</SectionTitle>
+                                <SectionTitle icon="bi-folder2-open">{t('Category Details')}</SectionTitle>
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <Label required>Name</Label>
+                                        <Label required>{t('Name')}</Label>
                                         <input
                                             value={formData.name || ''}
                                             type="text"
@@ -261,13 +263,13 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                                             }}
                                             style={INPUT}
                                             id="name"
-                                            placeholder="Category name"
+                                            placeholder={t('Category name')}
                                         />
                                         <ErrMsg>{errors.name}</ErrMsg>
                                     </div>
 
                                     <div className="col-md-6">
-                                        <Label>Parent Category (Optional)</Label>
+                                        <Label>{t('Parent Category (Optional)')}</Label>
                                         <Typeahead
                                             id="parent_id"
                                             labelKey="name"
@@ -288,7 +290,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                                                 setSelectedParentCategories([...selectedItems]);
                                             }}
                                             options={parentCategoryOptions}
-                                            placeholder="Search parent category..."
+                                            placeholder={t('Search parent category...')}
                                             selected={selectedParentCategories}
                                             highlightOnlyResult={true}
                                             onInputChange={(searchTerm) => { suggestCategories(searchTerm); }}

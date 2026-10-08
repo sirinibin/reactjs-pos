@@ -211,13 +211,25 @@ describe('Quotation form type 3: Import dropdown (integration)', () => {
     fireEvent.click(await screen.findByTestId('import-from-po-btn'));
     expect(global.__poPickerOpen).toHaveBeenCalledWith(expect.any(Function));
   });
-
-  test('non-VAT sales form (same component) has no Import dropdown', async () => {
-    const ref = createRef();
-    render(<MemoryRouter><QuotationType3Form ref={ref} apiBase="/v1/non-vat-sales" showToastMessage={jest.fn()} /></MemoryRouter>);
-    await act(async () => { ref.current.open(); });
-    await screen.findByText('Services');
-    expect(screen.queryByTestId('import-dropdown-btn')).toBeNull();
+  // master only: the non-VAT sales form (same component) also shows the Import dropdown.
+  test('non-VAT sales form: an imported service line drops VAT while service tax is excluded', async () => {
+    const svcSale = { ...SALE, products: [
+      { product_id: 's-wash', name: 'Car Wash', is_service: true, quantity: 1, unit_price: 40, unit_price_with_vat: 46 },
+      { product_id: 'p-plug', name: 'Spark Plug', quantity: 2, unit_price: 3, unit_price_with_vat: 3.45 },
+    ] };
+    global.fetch = jest.fn((url, options) => (/\/v1\/order\?/.test(decodeURIComponent(String(url)))
+      ? jsonResponse({ status: true, result: [svcSale], total_count: 1 })
+      : mockFetch(url, options)));
+    await openForm({ apiBase: '/v1/non-vat-sales' });
+    await importFrom('import-from-sales-btn', 'SI-SRC-001');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(2), { timeout: 3000 });
+    const wash = lastCalcProducts().find(p => p.product_id === 's-wash');
+    const plug = lastCalcProducts().find(p => p.product_id === 'p-plug');
+    expect([wash.unit_price, wash.unit_price_with_vat]).toEqual([40, 40]);
+    expect([plug.unit_price, plug.unit_price_with_vat]).toEqual([3, 3.45]);
+    expect(calcBodies.some(b => b.products?.length)).toBe(true);
+    expect(global.fetch.mock.calls.some(c => String(c[0]).startsWith('/v1/non-vat-sales/calculate-net-total'))).toBe(true);
   });
   test('"Allow duplicates" products get a separate line on top when imported again', async () => {
     allowDup = new Set(['p-oil']);

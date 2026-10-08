@@ -111,7 +111,7 @@ describe('SignatureIndex — smoke', () => {
         </MemoryRouter>
       ));
     });
-    expect(getByText('Signatures')).toBeTruthy();
+    expect(getByText('signatures')).toBeTruthy();
   });
 
   it('renders the Create button', async () => {

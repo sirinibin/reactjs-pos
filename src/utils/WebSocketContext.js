@@ -134,6 +134,10 @@ export const WebSocketProvider = ({ userId, children }) => {
                     eventEmitter.emit("purchase_request_po_created", jsonMessage.data);
                 } else if (jsonMessage.event === "purchase_request_updated") {
                     eventEmitter.emit("purchase_request_updated", jsonMessage.data);
+                } else if (jsonMessage.event === "wa_unread_changed") {
+                    eventEmitter.emit("wa_unread_changed");
+                } else if (jsonMessage.event === "email_unread_changed") {
+                    eventEmitter.emit("email_unread_changed");
                 }
             },
             onError: (errorEvent) => {
