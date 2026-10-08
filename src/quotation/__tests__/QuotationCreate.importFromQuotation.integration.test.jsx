@@ -1,5 +1,5 @@
 /**
- * Integration test: Quotation form -> Import -> From Quotations / From Purchases.
+ * Integration test: Quotation form -> Import -> From Quotations / From Purchases / From Sales.
  *
  * Renders the real quotation form with the real SourceDocumentPicker and
  * QuotationImportPicker; only the network (fetch) and unrelated heavy child
@@ -58,6 +58,19 @@ const SOURCE_PURCHASE = {
     { product_id: 'p-belt', part_number: 'BT-9', name: 'Fan Belt', quantity: 2, unit: 'pcs', purchase_unit_price: 7, purchase_unit_price_with_vat: 8.05 },
   ],
 };
+const SOURCE_SALE = {
+  id: 'so-src-1',
+  code: 'SI-SRC-001',
+  date: '2026-09-28T10:00:00Z',
+  customer_name: 'ACME Trading',
+  net_total: 80,
+  products: [
+    { product_id: 'p-oil', part_number: 'OF-1', name: 'Oil Filter', quantity: 5, unit: 'pcs', unit_price: 9, unit_price_with_vat: 10.35, unit_discount: 0.5, unit_discount_with_vat: 0.58, purchase_unit_price: 4 },
+    { product_id: 'p-plug', part_number: 'SP-4', name: 'Spark Plug', quantity: 8, unit: 'pcs', unit_price: 3, unit_price_with_vat: 3.45 },
+    { name: 'Labour (no product)', quantity: 1, unit_price: 50 },
+  ],
+};
+let salesListUrls;
 const RETAIL = { 'p-oil': [10, 11.5], 'p-belt': [15, 17.25] };
 
 let calcBodies;
@@ -80,6 +93,10 @@ function mockFetch(url, options = {}) {
     quotationListUrls.push(u);
     return jsonResponse({ status: true, result: [SOURCE_QUOTATION], total_count: 1 });
   }
+  if (/\/v1\/order\?/.test(u)) {
+    salesListUrls.push(u);
+    return jsonResponse({ status: true, result: [SOURCE_SALE], total_count: 1 });
+  }
   if (/\/v1\/purchase\?/.test(u)) {
     return jsonResponse({ status: true, result: [SOURCE_PURCHASE], total_count: 1 });
   }
@@ -101,6 +118,7 @@ beforeEach(() => {
   priceUrls = [];
   failPrices = false;
   quotationListUrls = [];
+  salesListUrls = [];
   localStorage.setItem('store_id', STORE_ID);
   localStorage.setItem('access_token', 'test-token');
   localStorage.setItem('quotation_form_type', 'type1');
@@ -252,6 +270,52 @@ describe('Quotation form: Import > From Quotations (integration)', () => {
       // Oil Filter: 2 from the quotation + 6 from the purchase, keeping the quotation's price.
       const oil = products.find(p => p.product_id === 'p-oil');
       expect(oil.quantity).toBe(8);
+      expect(oil.unit_price).toBe(10);
+    }, { timeout: 3000 });
+  });
+  async function importFromSalesDropdown() {
+    fireEvent.click(await screen.findByTestId('import-dropdown-btn'));
+    fireEvent.click(await screen.findByTestId('import-from-sales-btn'));
+    fireEvent.click(await screen.findByText('SI-SRC-001'));
+    await screen.findByText('Select Products to Import');
+  }
+
+  test('From Sales searches orders newest first for the store', async () => {
+    await openForm();
+    await importFromSalesDropdown();
+    const url = decodeURIComponent(salesListUrls[salesListUrls.length - 1]);
+    expect(url).toContain(`search[store_id]=${STORE_ID}`);
+    expect(url).toContain('sort=-created_at');
+    expect(screen.queryByText('Labour (no product)')).toBeNull();
+    expect(priceUrls).toHaveLength(0);
+  });
+
+  test('From Sales imports the sale lines with their own prices and discounts', async () => {
+    await openForm();
+    await importFromSalesDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts().map(p => p.product_id).sort()).toEqual(['p-oil', 'p-plug']), { timeout: 3000 });
+    const oil = lastCalcProducts().find(p => p.product_id === 'p-oil');
+    expect(oil.quantity).toBe(5);
+    expect(oil.unit_price).toBe(9);
+    expect(oil.unit_discount).toBe(0.5);
+    const plug = lastCalcProducts().find(p => p.product_id === 'p-plug');
+    expect(plug.quantity).toBe(8);
+    expect(plug.unit_price).toBe(3);
+  });
+
+  test('From Quotations then From Sales adds the shared product quantity', async () => {
+    await openForm();
+    await importFromQuotationDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => expect(lastCalcProducts()).toHaveLength(3), { timeout: 3000 });
+    await importFromSalesDropdown();
+    fireEvent.click(screen.getByTestId('qip-import'));
+    await waitFor(() => {
+      const products = lastCalcProducts();
+      expect(products).toHaveLength(4);
+      const oil = products.find(p => p.product_id === 'p-oil');
+      expect(oil.quantity).toBe(7);
       expect(oil.unit_price).toBe(10);
     }, { timeout: 3000 });
   });

@@ -218,3 +218,34 @@ describe('SourceDocumentPicker (purchase mode)', () => {
     });
 });
 
+
+describe('SourceDocumentPicker (sales mode)', () => {
+    function lastSalesUrl() {
+        const calls = global.fetch.mock.calls.filter(c => String(c[0]).startsWith('/v1/order?'));
+        return decodeURIComponent(String(calls[calls.length - 1][0]));
+    }
+
+    it('searches sales (orders) newest first with products, filtered by customer', async () => {
+        const ref = createRef();
+        render(<SourceDocumentPicker ref={ref} />);
+        act(() => { ref.current.open(jest.fn(), 'sales', [{ id: 'c1' }, { id: 'c2' }]); });
+        await waitFor(() => expect(global.fetch.mock.calls.some(c => String(c[0]).startsWith('/v1/order?'))).toBe(true));
+        const url = lastSalesUrl();
+        expect(url).toContain('search[store_id]=store123');
+        expect(url).toContain('search[customer_id]=c1,c2');
+        expect(url).not.toContain('search[vendor_id]');
+        expect(url).toContain('sort=-created_at');
+        expect(url).toMatch(/select=[^&]*products/);
+        expect(screen.getByText('Import from Sales')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('SI-...')).toBeInTheDocument();
+    });
+
+    it('calls back with the sale and its type', async () => {
+        const ref = createRef();
+        const cb = jest.fn();
+        render(<SourceDocumentPicker ref={ref} />);
+        act(() => { ref.current.open(cb, 'sales'); });
+        fireEvent.click(await screen.findByText('QT-001'));
+        expect(cb).toHaveBeenCalledWith(QUOTATIONS[0], 'sales');
+    });
+});

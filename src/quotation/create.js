@@ -1420,6 +1420,15 @@ const QuotationCreate = forwardRef((props, ref) => {
     });
   }
 
+  function openImportFromSales() {
+    QuotationImportPickerRef.current?.open({
+      docType: 'sales',
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      defaultParties: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
+    });
+  }
+
   function openImportFromPurchase() {
     QuotationImportPickerRef.current?.open({
       docType: 'purchase',
@@ -4244,6 +4253,7 @@ async function checkWarning(i) {
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
                     <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text"></i>&nbsp;From Quotations</Dropdown.Item>
                     <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag"></i>&nbsp;From Purchases</Dropdown.Item>
+                    <Dropdown.Item onClick={openImportFromSales} data-testid="import-from-sales-btn"><i className="bi bi-receipt"></i>&nbsp;From Sales</Dropdown.Item>
                     {store?.settings?.enable_purchase_order_module && (
                       <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down"></i>&nbsp;From Purchase Order</Dropdown.Item>
                     )}
