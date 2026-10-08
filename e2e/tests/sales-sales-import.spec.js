@@ -18,7 +18,7 @@ const SALE = {
   ],
 };
 
-async function setup(page, context, { sales = [SALE] } = {}) {
+async function setup(page, context, { sales = [SALE], storeSettings = {} } = {}) {
   const api = { calcBodies: [], pickerUrls: [] };
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: 24.7, longitude: 46.7 });
@@ -37,7 +37,7 @@ async function setup(page, context, { sales = [SALE] } = {}) {
       return json({ status: true, result: sales, total_count: sales.length });
     }
     if (url.includes(`/v1/store/${STORE_ID}`)) {
-      return json({ status: true, result: { id: STORE_ID, name: "E2E Store", code: "E2E", vat_percent: 15, country_code: "SA", zatca: { phase: "1" }, settings: {} } });
+      return json({ status: true, result: { id: STORE_ID, name: "E2E Store", code: "E2E", vat_percent: 15, country_code: "SA", zatca: { phase: "1" }, settings: storeSettings } });
     }
     return json({ status: true, result: [], total_count: 0 });
   });
@@ -141,4 +141,18 @@ test("empty sales search shows a message", async ({ page, context }) => {
   await page.getByTestId("sales-import-dropdown-btn").click();
   await page.getByTestId("import-from-sales-btn").click();
   await expect(page.getByText("No documents found.")).toBeVisible();
+});
+
+test("all import sources are grouped under the single Import dropdown", async ({ page, context }) => {
+  await setup(page, context, { storeSettings: { enable_purchase_order_module: true } });
+  const form = page.locator("#sales_create_form");
+  await expect(form.getByTestId("sales-import-dropdown-btn")).toHaveCount(1);
+  for (const label of ["From Quotations", "From Delivery Notes", "From Sales", "From Purchase", "From P.O."]) {
+    await expect(form.getByText(label, { exact: true })).toBeHidden();
+  }
+  await form.getByTestId("sales-import-dropdown-btn").click();
+  const menu = form.locator(".dropdown-menu.show");
+  await expect(menu).toHaveCount(1);
+  await expect(menu.locator(".dropdown-item")).toHaveText(["From Quotations", "From Delivery Notes", "From Sales", "From Purchase", "From P.O."].map((l) => new RegExp(l.replace(/\./g, "\\."))));
+  await page.screenshot({ path: "test-results/sales-import-dropdown.png" });
 });

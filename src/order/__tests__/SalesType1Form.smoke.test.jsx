@@ -648,3 +648,29 @@ describe("SalesType1Body — Import dropdown: From Sales", () => {
         expect(screen.queryByTestId("import-from-sales-btn")).toBeNull();
     });
 });
+
+describe("SalesType1Body — every import source lives in the one Import dropdown", () => {
+    const poStore = { ...baseStore, settings: { ...baseStore.settings, enable_purchase_order_module: true } };
+    const handlers = () => ({ openImportFromSales: jest.fn(), openImportFromPurchase: jest.fn(), openImportFromPO: jest.fn() });
+
+    it("lists From P.O. when the purchase order module is on, and opens it", () => {
+        const h = handlers();
+        render(<MemoryRouter><SalesType1Body {...bodyProps} {...h} store={poStore} /></MemoryRouter>);
+        fireEvent.click(screen.getByTestId("import-from-po-btn"));
+        expect(h.openImportFromPO).toHaveBeenCalledTimes(1);
+    });
+
+    it("hides From P.O. when the purchase order module is off", () => {
+        render(<MemoryRouter><SalesType1Body {...bodyProps} {...handlers()} /></MemoryRouter>);
+        expect(screen.queryByTestId("import-from-po-btn")).toBeNull();
+    });
+
+    it("has a single Import toggle holding all five sources in order", () => {
+        render(<MemoryRouter><SalesType1Body {...bodyProps} {...handlers()} store={poStore} /></MemoryRouter>);
+        const toggle = screen.getAllByText("Import");
+        expect(toggle).toHaveLength(1);
+        const menu = screen.getByTestId("import-from-sales-btn").parentElement;
+        const labels = Array.from(menu.children).map(el => el.textContent.trim());
+        expect(labels).toEqual(["From Quotations", "From Delivery Notes", "From Sales", "From Purchase", "From P.O."]);
+    });
+});

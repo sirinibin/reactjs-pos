@@ -254,6 +254,7 @@ export function SalesType1Body({
     openDeliveryNotes,
     openImportFromPurchase,
     openImportFromSales,
+    openImportFromPO,
     openReferenceUpdateForm,
     addNewPayment,
     removePayment,
@@ -1168,6 +1169,11 @@ export function SalesType1Body({
                                         {openImportFromPurchase && (
                                             <Dropdown.Item onClick={() => { openImportFromPurchase(); }} data-testid="import-from-purchase-btn">
                                                 <i className="bi bi-bag"></i>&nbsp;{t('From Purchase')}
+                                            </Dropdown.Item>
+                                        )}
+                                        {openImportFromPO && store?.settings?.enable_purchase_order_module && (
+                                            <Dropdown.Item onClick={() => { openImportFromPO(); }} data-testid="import-from-po-btn">
+                                                <i className="bi bi-file-earmark-arrow-down"></i>&nbsp;{t('From P.O.')}
                                             </Dropdown.Item>
                                         )}
                                     </Dropdown.Menu>

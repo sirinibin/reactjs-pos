@@ -9046,6 +9046,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         openDeliveryNotes={openDeliveryNotes}
                         openImportFromPurchase={openImportFromPurchase}
                         openImportFromSales={openImportFromSales}
+                        openImportFromPO={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}
                         openReferenceUpdateForm={openReferenceUpdateForm}
                         addNewPayment={addNewPayment}
                         removePayment={removePayment}
