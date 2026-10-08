@@ -141,3 +141,18 @@ export async function fetchAllowDuplicateIds(productIds, storeId, fetchFn = fetc
   }
   return found;
 }
+
+// Ids of picked products that would be merged into another line: already on the form
+// (ignoring deleted lines) or picked more than once. Only these need the
+// "Allow duplicates" lookup, so an import of new products makes no extra request.
+export function productIdsToCheckForDuplicates(existing, picked) {
+  const onForm = new Set((existing || []).filter((p) => p && !p.deleted && p.product_id).map((p) => p.product_id));
+  const seen = new Set();
+  const ids = new Set();
+  (picked || []).forEach((p) => {
+    if (!p || !p.product_id) return;
+    if (onForm.has(p.product_id) || seen.has(p.product_id)) ids.add(p.product_id);
+    seen.add(p.product_id);
+  });
+  return [...ids];
+}

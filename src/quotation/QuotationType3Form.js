@@ -25,7 +25,7 @@ import ProductNonVATSalesReturnHistory from "../utils/product_non_vat_sales_retu
 import CustomerPending from "../utils/customer_pending.js";
 import PurchaseOrderPicker from "../purchase_order/PurchaseOrderPicker.js";
 import QuotationImportPicker from "./QuotationImportPicker.js";
-import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines } from "./quotationImport.js";
+import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines, fetchAllowDuplicateIds, productIdsToCheckForDuplicates } from "./quotationImport.js";
 
 const pageBg = "#f8fafc";
 const borderColor = "#c3c6d7";
@@ -565,12 +565,15 @@ const QuotationType3Form = forwardRef((props, ref) => {
     }
 
     // Import > From Quotations / From Purchases / From Sales (two-step picker, same as form type 1).
-    function handleImportProducts(products) {
+    async function handleImportProducts(products) {
         if (!products || products.length === 0) return;
         const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
+        // Products marked "Allow duplicates" get their own line instead of adding to an existing one.
+        const allowDuplicateIds = await fetchAllowDuplicateIds(productIdsToCheckForDuplicates(selectedProducts, products), storeId);
         const updated = mergeImportedQuotationProducts(selectedProducts, products, {
             noTax,
             prepend: true,
+            allowDuplicateIds,
             vatExcluded: (p) => (excludeServiceVat && p.is_service) || (excludeProductVat && !p.is_service),
         });
         setSelectedProducts(updated);

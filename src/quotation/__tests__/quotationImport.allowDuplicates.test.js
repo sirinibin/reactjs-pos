@@ -1,5 +1,5 @@
 // "Allow duplicates" products are imported as separate lines instead of merged.
-import { mergeImportedQuotationProducts, fetchAllowDuplicateIds } from '../quotationImport';
+import { mergeImportedQuotationProducts, fetchAllowDuplicateIds, productIdsToCheckForDuplicates } from '../quotationImport';
 
 describe('mergeImportedQuotationProducts with allowDuplicateIds', () => {
   const existing = [{ product_id: 'p1', quantity: 2, unit_price: 10 }, { product_id: 'p2', quantity: 1, unit_price: 5 }];
@@ -65,5 +65,28 @@ describe('fetchAllowDuplicateIds', () => {
   it('treats an error response or a bad payload as no duplicates', async () => {
     expect(await fetchAllowDuplicateIds(['p1'], 's1', () => Promise.resolve({ ok: false, json: () => Promise.resolve({}) }))).toEqual([]);
     expect(await fetchAllowDuplicateIds(['p1'], 's1', () => ok(null))).toEqual([]);
+  });
+});
+
+describe('allowDuplicateIds with prepend (quotation form type 3)', () => {
+  it('puts the separate line on top and leaves the existing one alone', () => {
+    const existing = [{ product_id: 'dup', quantity: 2 }, { product_id: 'plain', quantity: 1 }];
+    const out = mergeImportedQuotationProducts(existing, [{ product_id: 'dup', quantity: 3 }, { product_id: 'plain', quantity: 1 }], { allowDuplicateIds: ['dup'], prepend: true });
+    expect(out.map(p => [p.product_id, p.quantity])).toEqual([['dup', 3], ['dup', 2], ['plain', 2]]);
+  });
+});
+
+describe('productIdsToCheckForDuplicates', () => {
+  it('returns picked products already on the form or picked twice, once each', () => {
+    const ids = productIdsToCheckForDuplicates(
+      [{ product_id: 'a' }, { product_id: 'gone', deleted: true }, { product_id: 'b' }],
+      [{ product_id: 'a' }, { product_id: 'gone' }, { product_id: 'c' }, { product_id: 'c' }, { product_id: 'a' }, { name: 'no id' }, null],
+    );
+    expect(ids.sort()).toEqual(['a', 'c']);
+  });
+
+  it('returns nothing for new products only, or empty inputs', () => {
+    expect(productIdsToCheckForDuplicates([{ product_id: 'a' }], [{ product_id: 'b' }])).toEqual([]);
+    expect(productIdsToCheckForDuplicates(null, undefined)).toEqual([]);
   });
 });
