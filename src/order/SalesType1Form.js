@@ -246,6 +246,7 @@ export function SalesType1Body({
     openQuotationSalesReturnHistory,
     openQuotations,
     openDeliveryNotes,
+    openImportFromPurchase,
     openReferenceUpdateForm,
     addNewPayment,
     removePayment,
@@ -1094,7 +1095,7 @@ export function SalesType1Body({
                                 )}
                                 </div>
                                 <Dropdown>
-                                    <Dropdown.Toggle variant="success" size="sm" id="dropdown-basic">
+                                    <Dropdown.Toggle variant="success" size="sm" id="dropdown-basic" data-testid="sales-import-dropdown-btn">
                                         <i className="bi bi-download"></i> {t('Import')}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
@@ -1104,6 +1105,11 @@ export function SalesType1Body({
                                         <Dropdown.Item onClick={() => { openDeliveryNotes(); }}>
                                             <i className="bi bi-file-earmark-text"></i>&nbsp;{t('From Delivery Notes')}
                                         </Dropdown.Item>
+                                        {openImportFromPurchase && (
+                                            <Dropdown.Item onClick={() => { openImportFromPurchase(); }} data-testid="import-from-purchase-btn">
+                                                <i className="bi bi-bag"></i>&nbsp;{t('From Purchase')}
+                                            </Dropdown.Item>
+                                        )}
                                     </Dropdown.Menu>
                                 </Dropdown>
                                 </div>

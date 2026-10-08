@@ -22,7 +22,7 @@ jest.mock("react-bootstrap", () => {
     Dropdown.Toggle = ({ children }) => React.createElement("span", null, children || null);
     Dropdown.Menu = ({ children }) => React.createElement("div", null, children || null);
     Dropdown.ItemText = ({ children }) => React.createElement("span", null, children || null);
-    Dropdown.Item = ({ children }) => React.createElement("div", null, children || null);
+    Dropdown.Item = ({ children, onClick, "data-testid": testId }) => React.createElement("div", { onClick, "data-testid": testId }, children || null);
     return {
         Spinner: () => React.createElement("span", { role: "status" }, "loading"),
         Dropdown,
@@ -328,7 +328,7 @@ const bodyProps = {
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { SalesType1Header, SalesType1Body } from "../SalesType1Form";
 
@@ -609,5 +609,26 @@ describe("SalesType1Body — smoke", () => {
                 />
             </MemoryRouter>
         );
+    });
+});
+
+describe("SalesType1Body — Import dropdown: From Purchase", () => {
+    it("lists From Purchase next to the other import sources", () => {
+        render(<MemoryRouter><SalesType1Body {...bodyProps} openImportFromPurchase={jest.fn()} /></MemoryRouter>);
+        expect(screen.getByText("From Quotations")).toBeInTheDocument();
+        expect(screen.getByText("From Delivery Notes")).toBeInTheDocument();
+        expect(screen.getByTestId("import-from-purchase-btn")).toHaveTextContent("From Purchase");
+    });
+
+    it("opens the purchase import when clicked", () => {
+        const openImportFromPurchase = jest.fn();
+        render(<MemoryRouter><SalesType1Body {...bodyProps} openImportFromPurchase={openImportFromPurchase} /></MemoryRouter>);
+        fireEvent.click(screen.getByTestId("import-from-purchase-btn"));
+        expect(openImportFromPurchase).toHaveBeenCalledTimes(1);
+    });
+
+    it("hides From Purchase when the form does not provide the handler", () => {
+        render(<MemoryRouter><SalesType1Body {...bodyProps} /></MemoryRouter>);
+        expect(screen.queryByTestId("import-from-purchase-btn")).toBeNull();
     });
 });

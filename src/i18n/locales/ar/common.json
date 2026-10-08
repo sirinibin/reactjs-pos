@@ -385,6 +385,7 @@
   "VAT Price ( {{vatPercent}}% of Taxable Amount)": "سعر ضريبة القيمة المضافة ({{vatPercent}}٪ من المبلغ الخاضع للضريبة)",
   "From Quotations":"من عروض الأسعار",
   "From Delivery Notes":"من إشعارات التسليم",
+  "From Purchase": "من المشتريات",
   "VAT NO.":"رقم ضريبة القيمة المضافة",
   "Balance":"الرصيد",
   "Download Purchase Report":"تحميل تقرير الشراء",
