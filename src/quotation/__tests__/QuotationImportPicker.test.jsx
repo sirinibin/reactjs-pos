@@ -230,5 +230,98 @@ describe('QuotationImportPicker', () => {
     openWith(ref, { onImport: jest.fn() });
     expect(screen.getByTestId('qip-row-0').style.minWidth).toBe('16px');
   });
+
+  describe('purchase mode', () => {
+    const purchase = {
+      id: 'pu1', code: 'PI-001', vendor_name: 'Bolt Supplies', date: '2026-09-01T00:00:00Z',
+      products: [
+        { product_id: 'a', part_number: 'B1', name: 'Bolt', quantity: 10, purchase_unit_price: 2 },
+        { product_id: 'b', part_number: 'N1', name: 'Nut', quantity: 5, purchase_unit_price: 1 },
+      ],
+    };
+    const prepared = [
+      { product_id: 'a', part_number: 'B1', name: 'Bolt', quantity: 10, purchase_unit_price: 2, unit_price: 3, unit_price_with_vat: 3.45 },
+      { product_id: 'b', part_number: 'N1', name: 'Nut', quantity: 5, purchase_unit_price: 1, unit_price: 1.5, unit_price_with_vat: 1.73 },
+    ];
+
+    function openPurchase(ref, opts) {
+      act(() => { ref.current.open({ docType: 'purchase', ...opts }); });
+      const [cb, type, parties] = mockDocPickerOpen.mock.calls[mockDocPickerOpen.mock.calls.length - 1];
+      expect(type).toBe('purchase');
+      return { cb, parties };
+    }
+
+    it('searches purchases with the vendor filter passed in', () => {
+      const ref = createRef();
+      render(<QuotationImportPicker ref={ref} />);
+      const vendors = [{ id: 'v1' }];
+      const { parties } = openPurchase(ref, { onImport: jest.fn(), defaultParties: vendors });
+      expect(parties).toBe(vendors);
+    });
+
+    it('shows a loading row while prices load, then the prepared lines with a purchase price column', async () => {
+      const ref = createRef();
+      let resolve;
+      const prepareProducts = jest.fn(() => new Promise(r => { resolve = r; }));
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openPurchase(ref, { onImport: jest.fn(), prepareProducts });
+      act(() => { cb(purchase); });
+      expect(screen.getByTestId('qip-loading')).toBeInTheDocument();
+      expect(screen.getByTestId('qip-import')).toBeDisabled();
+      expect(prepareProducts).toHaveBeenCalledWith(purchase.products, purchase);
+      await act(async () => { resolve(prepared); });
+      expect(screen.queryByTestId('qip-loading')).toBeNull();
+      expect(screen.getByText('Purchase Price')).toBeInTheDocument();
+      expect(screen.getByText('Bolt Supplies', { exact: false })).toBeInTheDocument();
+      expect(screen.getByText('3.45')).toBeInTheDocument();
+      expect(screen.getByText(/Choose another purchase/)).toBeInTheDocument();
+    });
+
+    it('imports the prepared lines', async () => {
+      const ref = createRef();
+      const onImport = jest.fn();
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openPurchase(ref, { onImport, prepareProducts: async () => prepared });
+      await act(async () => { cb(purchase); });
+      fireEvent.click(screen.getByTestId('qip-row-1'));
+      fireEvent.click(screen.getByTestId('qip-import'));
+      expect(onImport.mock.calls[0][0]).toEqual([{ ...prepared[0], quantity: 10 }]);
+      expect(onImport.mock.calls[0][1]).toBe(purchase);
+    });
+
+    it('warns and still lists the lines when preparing fails', async () => {
+      const ref = createRef();
+      const toast = jest.fn();
+      render(<QuotationImportPicker ref={ref} showToastMessage={toast} />);
+      const { cb } = openPurchase(ref, { onImport: jest.fn(), prepareProducts: async () => { throw new Error('boom'); } });
+      await act(async () => { cb(purchase); });
+      expect(toast).toHaveBeenCalledWith(expect.stringContaining('prices'), 'warning');
+      expect(screen.getByText('Bolt')).toBeInTheDocument();
+    });
+
+    it('ignores a slow answer for a purchase the user already moved away from', async () => {
+      const ref = createRef();
+      const resolvers = [];
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openPurchase(ref, { onImport: jest.fn(), prepareProducts: () => new Promise(r => resolvers.push(r)) });
+      act(() => { cb(purchase); });
+      act(() => { cb({ ...purchase, id: 'pu2', code: 'PI-002' }); });
+      await act(async () => { resolvers[1]([prepared[1]]); });
+      await act(async () => { resolvers[0](prepared); });
+      expect(screen.getByText('PI-002')).toBeInTheDocument();
+      expect(screen.queryByText('Bolt')).toBeNull();
+      expect(screen.getByText('Nut')).toBeInTheDocument();
+    });
+
+    it('skips preparing when the purchase has no products', async () => {
+      const ref = createRef();
+      const prepareProducts = jest.fn();
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openPurchase(ref, { onImport: jest.fn(), prepareProducts });
+      await act(async () => { cb({ id: 'pu3', code: 'PI-EMPTY', products: [] }); });
+      expect(prepareProducts).not.toHaveBeenCalled();
+      expect(screen.getByText('No products found.')).toBeInTheDocument();
+    });
+  });
 });
 

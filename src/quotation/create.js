@@ -61,7 +61,7 @@ import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from './QuotationImportPicker.js';
-import { mergeImportedQuotationProducts } from './quotationImport.js';
+import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines } from './quotationImport.js';
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -1417,6 +1417,24 @@ const QuotationCreate = forwardRef((props, ref) => {
       existingProductIds: selectedProducts.map(p => p.product_id),
       defaultCustomers: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
       excludeId: formData.id,
+    });
+  }
+
+  function openImportFromPurchase() {
+    QuotationImportPickerRef.current?.open({
+      docType: 'purchase',
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      // Purchases only hold cost prices, so selling prices come from the product master.
+      prepareProducts: async (products) => {
+        let prices = {};
+        try {
+          prices = await fetchRetailPrices(products.map(p => p.product_id), localStorage.getItem('store_id'));
+        } catch (e) {
+          if (props.showToastMessage) props.showToastMessage('Could not load current selling prices; they will be 0.', 'warning');
+        }
+        return purchaseLinesToQuotationLines(products, prices);
+      },
     });
   }
 
@@ -4225,6 +4243,7 @@ async function checkWarning(i) {
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
                     <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text"></i>&nbsp;From Quotations</Dropdown.Item>
+                    <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag"></i>&nbsp;From Purchases</Dropdown.Item>
                     {store?.settings?.enable_purchase_order_module && (
                       <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down"></i>&nbsp;From Purchase Order</Dropdown.Item>
                     )}
