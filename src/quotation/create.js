@@ -4219,8 +4219,17 @@ async function checkWarning(i) {
                   </Button>
                 )}
                 </div>
-                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
-                <button type="button" onClick={openImportFromQuotation} data-testid="import-from-quotation-btn" title="Import products from another quotation" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}><i className="bi bi-file-earmark-arrow-down" />From Quotation</button>
+                <Dropdown>
+                  <Dropdown.Toggle bsPrefix="btn" type="button" data-testid="import-dropdown-btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
+                    <i className="bi bi-file-earmark-arrow-down" />Import
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu style={{ zIndex: 9999 }}>
+                    <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text me-1"></i>From Quotations</Dropdown.Item>
+                    {store?.settings?.enable_purchase_order_module && (
+                      <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}><i className="bi bi-file-earmark-arrow-down me-1"></i>From P.O.</Dropdown.Item>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
                 </div>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
