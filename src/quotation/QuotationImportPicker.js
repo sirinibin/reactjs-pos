@@ -10,6 +10,9 @@ import SourceDocumentPicker from "../purchase_order/SourceDocumentPicker.js";
 //   2. pick which of its products to import
 // open({ onImport, existingProductIds, defaultCustomers, excludeId })
 // onImport(products, quotation) receives the chosen quotation product lines (with edited quantities).
+// Fixed size: index.css gives every `.table thead input` min-width: 120px, which stretched the select-all box.
+const CHECKBOX_STYLE = { width: "16px", minWidth: "16px", maxWidth: "16px", height: "16px", padding: 0, margin: 0, float: "none", display: "inline-block", verticalAlign: "middle" };
+
 const QuotationImportPicker = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
     const [quotation, setQuotation] = useState(null);
@@ -136,7 +139,7 @@ const QuotationImportPicker = forwardRef((props, ref) => {
                                 <thead style={{ background: "#f8f9fa", position: "sticky", top: 0, zIndex: 1 }}>
                                     <tr>
                                         <th style={{ ...th, width: "36px", textAlign: "center" }}>
-                                            <input type="checkbox" className="form-check-input" checked={allVisibleChecked} onChange={toggleAllVisible} aria-label="Select all" data-testid="qip-select-all" />
+                                            <input type="checkbox" className="form-check-input" checked={allVisibleChecked} onChange={toggleAllVisible} aria-label="Select all" data-testid="qip-select-all" style={CHECKBOX_STYLE} />
                                         </th>
                                         <th style={th}>#</th>
                                         <th style={th}>Part No.</th>
@@ -159,7 +162,7 @@ const QuotationImportPicker = forwardRef((props, ref) => {
                                         return (
                                             <tr key={r.key} style={{ cursor: "pointer", background: r.checked ? "#f0f6ff" : undefined }} onClick={() => toggleRow(r.key)}>
                                                 <td style={{ ...td, textAlign: "center" }} onClick={e => e.stopPropagation()}>
-                                                    <input type="checkbox" className="form-check-input" checked={r.checked} onChange={() => toggleRow(r.key)} data-testid={"qip-row-" + idx} />
+                                                    <input type="checkbox" className="form-check-input" checked={r.checked} onChange={() => toggleRow(r.key)} data-testid={"qip-row-" + idx} style={CHECKBOX_STYLE} />
                                                 </td>
                                                 <td style={td}>{idx + 1}</td>
                                                 <td style={{ ...td, fontFamily: "monospace" }}>

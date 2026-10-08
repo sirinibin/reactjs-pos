@@ -101,4 +101,13 @@ describe('QuotationImportPicker', () => {
     expect(screen.queryByTestId('modal')).toBeNull();
     expect(mockDocPickerOpen).toHaveBeenCalledTimes(2);
   });
+
+  it('keeps the select-all checkbox checkbox-sized (not stretched by thead input min-width)', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport: jest.fn() });
+    const box = screen.getByTestId('qip-select-all');
+    expect(box.style.minWidth).toBe('16px');
+    expect(box.style.width).toBe('16px');
+  });
 });
