@@ -50,25 +50,8 @@ jobs:
             exit 1
           fi
 
-      # ── Time window: only deploy test between 10 PM and 6 AM Saudi time ───────
-      # Matches deploy.sh: Saudi Arabia is UTC+3; allowed hours are 22-23, 0-5.
-      - name: Check test-deploy window (10 PM – 6 AM Saudi time)
-        id: window
-        run: |
-          SA_HOUR=$(TZ='Asia/Riyadh' date +%H)
-          SA_HOUR=$((10#$SA_HOUR))
-          SA_TIME=$(TZ='Asia/Riyadh' date '+%H:%M')
-          if [ "$SA_HOUR" -ge 6 ] && [ "$SA_HOUR" -lt 22 ]; then
-            echo "in_window=false" >> "$GITHUB_OUTPUT"
-            echo "Outside test deploy window (current Saudi time: $SA_TIME). Deploy skipped."
-          else
-            echo "in_window=true" >> "$GITHUB_OUTPUT"
-            echo "Within test deploy window ($SA_TIME Saudi time). Proceeding with deploy."
-          fi
-
       # ── Deploy: rsync to staging dir, then atomic swap (near-zero downtime) ───
       - name: Deploy to AWS (atomic swap)
-        if: steps.window.outputs.in_window == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           AWS_HOST: ${{ secrets.AWS_HOST }}
