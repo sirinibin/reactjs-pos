@@ -9,7 +9,7 @@ import SourceDocumentPicker from "../purchase_order/SourceDocumentPicker.js";
 //   1. pick a document (SourceDocumentPicker in quotation or purchase mode)
 //   2. pick which of its products to import
 // open({ docType, onImport, existingProductIds, defaultParties, excludeId, prepareProducts })
-//   docType: "quotation" (default) or "purchase"
+//   docType: "quotation" (default), "purchase" or "sales"
 //   defaultParties: customers (quotation) / vendors (purchase) to pre-filter the search
 //   prepareProducts(products, doc): optional async step that turns the document's lines into
 //     quotation lines (e.g. looks up selling prices for purchase lines) before they are listed
@@ -46,7 +46,7 @@ const QuotationImportPicker = forwardRef((props, ref) => {
         if (!selected) return;
         const o = optsRef.current;
         if (o.excludeId && selected.id === o.excludeId) {
-            if (props.showToastMessage) props.showToastMessage("This is the quotation you are editing. Choose another one.", "warning");
+            if (props.showToastMessage) props.showToastMessage(`This is the ${DOC_LABELS[o.docType || "quotation"] || "document"} you are editing. Choose another one.`, "warning");
             openDocPicker();
             return;
         }
@@ -204,7 +204,7 @@ const QuotationImportPicker = forwardRef((props, ref) => {
                                                 <td style={td}>
                                                     {p.name}{p.name_in_arabic ? " - " + p.name_in_arabic : ""}
                                                     {inQuotation && (
-                                                        <span title="Already in this quotation; quantity will be added" style={{ marginLeft: "6px", background: "#fef3c7", color: "#92400e", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", fontWeight: 600 }}>
+                                                        <span title="Already in this form; quantity will be added" style={{ marginLeft: "6px", background: "#fef3c7", color: "#92400e", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", fontWeight: 600 }}>
                                                             Already added
                                                         </span>
                                                     )}

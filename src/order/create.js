@@ -2769,9 +2769,9 @@ const OrderCreate = forwardRef((props, ref) => {
         fetchAllProductStocks([...selectedProducts]);
     }
 
-    //Import products from a purchase, using the quotation form's two-step picker
-    const PurchaseImportPickerRef = useRef();
-    function handleImportFromPurchase(products) {
+    //Import products from a purchase or another sale, using the two-step picker shared with the quotation form
+    const DocumentImportPickerRef = useRef();
+    function handleImportFromDocument(products) {
         if (!products || products.length === 0) return;
         selectedProducts = mergeImportedQuotationProducts(selectedProducts, products);
         setSelectedProducts([...selectedProducts]);
@@ -2789,9 +2789,9 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function openImportFromPurchase() {
-        PurchaseImportPickerRef.current?.open({
+        DocumentImportPickerRef.current?.open({
             docType: 'purchase',
-            onImport: handleImportFromPurchase,
+            onImport: handleImportFromDocument,
             existingProductIds: selectedProducts.map(p => p.product_id),
             // Purchases only hold cost prices, so selling prices come from the product master.
             prepareProducts: async (products) => {
@@ -2803,6 +2803,17 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
                 return purchaseLinesToQuotationLines(products, prices);
             },
+        });
+    }
+
+    //Import products from another sale, with that sale's prices and discounts
+    function openImportFromSales() {
+        DocumentImportPickerRef.current?.open({
+            docType: 'sales',
+            onImport: handleImportFromDocument,
+            existingProductIds: selectedProducts.map(p => p.product_id),
+            defaultParties: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
+            excludeId: formData.id,
         });
     }
 
@@ -5867,7 +5878,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} />
             <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
-            <QuotationImportPicker ref={PurchaseImportPickerRef} showToastMessage={props.showToastMessage} />
+            <QuotationImportPicker ref={DocumentImportPickerRef} showToastMessage={props.showToastMessage} />
             <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
             <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -8824,6 +8835,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         openQuotations={openQuotations}
                         openDeliveryNotes={openDeliveryNotes}
                         openImportFromPurchase={openImportFromPurchase}
+                        openImportFromSales={openImportFromSales}
                         openReferenceUpdateForm={openReferenceUpdateForm}
                         addNewPayment={addNewPayment}
                         removePayment={removePayment}
