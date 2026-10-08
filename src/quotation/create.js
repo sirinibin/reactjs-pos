@@ -4771,8 +4771,8 @@ async function checkWarning(i) {
                 )}
                 </div>
                 <Dropdown>
-                  <Dropdown.Toggle bsPrefix="btn" style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <i className="bi bi-file-earmark-arrow-down" />{t('Import')}
+                  <Dropdown.Toggle variant="success" size="sm" id="quotation-dropdown-import" data-testid="import-dropdown-btn">
+                    <i className="bi bi-download"></i> {t('Import')}
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
                     <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
