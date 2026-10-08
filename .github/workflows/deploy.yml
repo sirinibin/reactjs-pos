@@ -34,7 +34,7 @@ jobs:
         run: |
           NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
             --watchAll=false --runInBand \
-            --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|deployTimeWindow|workshopI18n|PdfPriceExtraction"
+            --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|workshopI18n|PdfPriceExtraction"
 
       # ── Build — abort on "Compiled with warnings" (matches deploy.sh gate) ────
       - name: Build
