@@ -41,17 +41,17 @@ const QuotationImportPicker = forwardRef((props, ref) => {
             return;
         }
         setQuotation(doc);
-        setRows((doc.products || []).map((p, i) => ({
+        // Lines without a product_id can't be added to a quotation, so they aren't offered.
+        setRows((doc.products || []).filter(p => p && p.product_id).map((p, i) => ({
             key: (p.product_id || "") + "_" + i,
             product: p,
             checked: true,
-            quantity: parseFloat(p.quantity) || 1,
+            quantity: parseFloat(p.quantity) > 0 ? parseFloat(p.quantity) : 1,
         })));
         setSearch("");
         setExistingIds(new Set(optsRef.current.existingProductIds || []));
         setShow(true);
     }
-
 
     const visibleRows = useMemo(() => {
         const q = search.trim().toLowerCase();

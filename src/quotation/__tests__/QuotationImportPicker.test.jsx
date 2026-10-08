@@ -110,4 +110,125 @@ describe('QuotationImportPicker', () => {
     expect(box.style.minWidth).toBe('16px');
     expect(box.style.width).toBe('16px');
   });
+
+  it('passes the form customer to the quotation search', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    const customers = [{ id: 'c1', name: 'ACME' }];
+    act(() => { ref.current.open({ onImport: jest.fn(), defaultCustomers: customers }); });
+    expect(mockDocPickerOpen.mock.calls[0][2]).toBe(customers);
+  });
+
+  it('back button reopens the quotation search with the same customer', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    const customers = [{ id: 'c1' }];
+    openWith(ref, { onImport: jest.fn(), defaultCustomers: customers });
+    fireEvent.click(screen.getByText(/Choose another quotation/));
+    expect(screen.queryByTestId('modal')).toBeNull();
+    expect(mockDocPickerOpen).toHaveBeenCalledTimes(2);
+    expect(mockDocPickerOpen.mock.calls[1][2]).toBe(customers);
+  });
+
+  it('shows an empty state and disables import for a quotation without products', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    act(() => { ref.current.open({ onImport: jest.fn() }); });
+    act(() => { mockDocPickerOpen.mock.calls[0][0]({ id: 'q2', code: 'QT-EMPTY', products: [] }); });
+    expect(screen.getByText('No products found.')).toBeInTheDocument();
+    expect(screen.getByTestId('qip-import')).toBeDisabled();
+    expect(screen.getByTestId('qip-select-all')).not.toBeChecked();
+  });
+
+  it('hides lines without a product_id', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    act(() => { ref.current.open({ onImport: jest.fn() }); });
+    act(() => { mockDocPickerOpen.mock.calls[0][0]({ id: 'q3', code: 'QT-X', products: [{ name: 'Free text line' }, null, { product_id: 'p9', name: 'Real Item', quantity: 1 }] }); });
+    expect(screen.queryByText('Free text line')).toBeNull();
+    expect(screen.getByText('Real Item')).toBeInTheDocument();
+    expect(screen.getByTestId('qip-import')).toHaveTextContent('Import 1 Product');
+  });
+
+  it.each([['', 1], ['0', 1], ['-3', 1], ['abc', 1], ['2.5', 2.5]])('quantity %p is imported as %p', (typed, expected) => {
+    const ref = createRef();
+    const onImport = jest.fn();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport });
+    fireEvent.click(screen.getByTestId('qip-row-1'));
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: typed } });
+    fireEvent.click(screen.getByTestId('qip-import'));
+    expect(onImport.mock.calls[0][0][0].quantity).toBe(expected);
+  });
+
+  it('defaults a source line with zero or missing quantity to 1', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    act(() => { ref.current.open({ onImport: jest.fn() }); });
+    act(() => { mockDocPickerOpen.mock.calls[0][0]({ id: 'q4', products: [{ product_id: 'a', name: 'A', quantity: 0 }, { product_id: 'b', name: 'B' }] }); });
+    screen.getAllByRole('spinbutton').forEach(el => expect(el.value).toBe('1'));
+  });
+
+  it('select-all only affects rows matching the filter', () => {
+    const ref = createRef();
+    const onImport = jest.fn();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport });
+    fireEvent.change(screen.getByTestId('qip-filter'), { target: { value: 'air' } });
+    fireEvent.click(screen.getByTestId('qip-select-all'));
+    fireEvent.change(screen.getByTestId('qip-filter'), { target: { value: '' } });
+    expect(screen.getByTestId('qip-import')).toHaveTextContent('Import 1 Product');
+    fireEvent.click(screen.getByTestId('qip-import'));
+    expect(onImport.mock.calls[0][0].map(p => p.product_id)).toEqual(['p1']);
+  });
+
+  it('filters by part number, Arabic name and several words, and shows a no-match state', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    act(() => { ref.current.open({ onImport: jest.fn() }); });
+    act(() => { mockDocPickerOpen.mock.calls[0][0]({ id: 'q5', products: [
+      { product_id: 'a', prefix_part_number: 'AB', part_number: '100', name: 'Oil Filter', name_in_arabic: 'فلتر زيت' },
+      { product_id: 'b', part_number: 'XY-9', name: 'Brake Pad' },
+    ] }); });
+    const filter = screen.getByTestId('qip-filter');
+    fireEvent.change(filter, { target: { value: 'xy-9' } });
+    expect(screen.getByText('Brake Pad')).toBeInTheDocument();
+    expect(screen.queryByText(/Oil Filter/)).toBeNull();
+    fireEvent.change(filter, { target: { value: 'زيت' } });
+    expect(screen.getByText(/Oil Filter/)).toBeInTheDocument();
+    fireEvent.change(filter, { target: { value: '  oil   filter ' } });
+    expect(screen.getByText(/Oil Filter/)).toBeInTheDocument();
+    fireEvent.change(filter, { target: { value: 'nothing here' } });
+    expect(screen.getByText('No products found.')).toBeInTheDocument();
+  });
+
+  it('clicking a row toggles it, but typing a quantity does not', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport: jest.fn() });
+    fireEvent.click(screen.getByText('Oil Filter'));
+    expect(screen.getByTestId('qip-row-0')).not.toBeChecked();
+    fireEvent.click(screen.getAllByRole('spinbutton')[1]);
+    expect(screen.getByTestId('qip-row-1')).toBeChecked();
+  });
+
+  it('a new quotation selection resets the filter and ticks', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport: jest.fn() });
+    fireEvent.change(screen.getByTestId('qip-filter'), { target: { value: 'air' } });
+    fireEvent.click(screen.getByTestId('qip-row-0'));
+    fireEvent.click(screen.getByText(/Choose another quotation/));
+    act(() => { mockDocPickerOpen.mock.calls[1][0](quotation); });
+    expect(screen.getByTestId('qip-filter').value).toBe('');
+    expect(screen.getByTestId('qip-import')).toHaveTextContent('Import 2 Products');
+  });
+
+  it('row checkboxes are also fixed at 16px', () => {
+    const ref = createRef();
+    render(<QuotationImportPicker ref={ref} />);
+    openWith(ref, { onImport: jest.fn() });
+    expect(screen.getByTestId('qip-row-0').style.minWidth).toBe('16px');
+  });
 });
+
