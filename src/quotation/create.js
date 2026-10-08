@@ -509,8 +509,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [linkedEmailObj, setLinkedEmailObj] = useState(null);
   const [showLinkedEmail, setShowLinkedEmail] = useState(false);
   const [rfqDetailModal, setRfqDetailModal] = useState(null);
-  const [importPickerData, setImportPickerData] = useState(null); // {source:'sale'|'purchase', code, products[]}
-  const [importPickerSelected, setImportPickerSelected] = useState({});
 
   useEffect(() => {
     if (!show || !props.zIndex) return;
@@ -1615,79 +1613,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     fetchAllProductStocks([...selectedProducts]);
   }
 
-  async function handleImportFromSales(sale) {
-    if (!sale || !sale.id) return;
-    try {
-      const url = '/v1/order/' + sale.id + '?search[store_id]=' + localStorage.getItem('store_id');
-      const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
-      });
-      const data = res.ok ? await res.json() : null;
-      if (!res.ok || !data) {
-        if (props.showToastMessage) props.showToastMessage('Failed to load sale details', 'danger');
-        return;
-      }
-      const products = data?.result?.products;
-      if (!products || products.length === 0) {
-        if (props.showToastMessage) props.showToastMessage('No products found in the selected sale', 'warning');
-        return;
-      }
-      const initSel = {};
-      products.forEach(p => { if (p.product_id) initSel[p.product_id] = true; });
-      setImportPickerSelected(initSel);
-      setImportPickerData({ source: 'sale', code: data.result.code || sale.code, products });
-    } catch (e) {
-      if (props.showToastMessage) props.showToastMessage('Failed to load sale details', 'danger');
-    }
-  }
-
-  function confirmImportPicker() {
-    const src = importPickerData;
-    if (!src) return;
-    src.products.forEach(p => {
-      if (!importPickerSelected[p.product_id]) return;
-      const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
-      if (already >= 0) {
-        selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
-        const sp = selectedProducts[already];
-        sp.line_total = parseFloat(trimTo2Decimals((sp.unit_price - (sp.unit_discount || 0)) * sp.quantity));
-        sp.line_total_with_vat = parseFloat(trimTo2Decimals((sp.unit_price_with_vat - (sp.unit_discount_with_vat || 0)) * sp.quantity));
-      } else {
-        const unitPrice = src.source === 'sale' ? (parseFloat(p.unit_price) || 0) : (parseFloat(p.retail_unit_price) || 0);
-        const unitPriceWithVat = src.source === 'sale' ? (parseFloat(p.unit_price_with_vat) || 0) : (parseFloat(p.retail_unit_price_with_vat) || 0);
-        const unitDiscount = src.source === 'sale' ? (parseFloat(p.unit_discount) || 0) : 0;
-        const unitDiscountWithVat = src.source === 'sale' ? (parseFloat(p.unit_discount_with_vat) || 0) : 0;
-        const qty = parseFloat(p.quantity) || 1;
-        selectedProducts.push({
-          product_id: p.product_id,
-          code: p.item_code || p.code || "",
-          part_number: p.part_number || "",
-          name: p.name || "",
-          name_in_arabic: p.name_in_arabic || "",
-          quantity: qty,
-          unit: p.unit || "",
-          unit_price: unitPrice,
-          unit_price_with_vat: unitPriceWithVat,
-          purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
-          purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
-          unit_discount: unitDiscount,
-          unit_discount_with_vat: unitDiscountWithVat,
-          unit_discount_percent: src.source === 'sale' ? (parseFloat(p.unit_discount_percent) || 0) : 0,
-          line_total: parseFloat(trimTo2Decimals((unitPrice - unitDiscount) * qty)),
-          line_total_with_vat: parseFloat(trimTo2Decimals((unitPriceWithVat - unitDiscountWithVat) * qty)),
-          stock: 0,
-          product_stores: {},
-        });
-      }
-    });
-    setSelectedProducts([...selectedProducts]);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => reCalculate(), 100);
-    fetchAllProductStocks([...selectedProducts]);
-    setImportPickerData(null);
-    setImportPickerSelected({});
-  }
-
   function handleImportFromQuotation(products) {
     if (!products || products.length === 0) return;
     const noTax = !!(store?.settings?.no_tax_for_quotation_invoice && formData.type === 'invoice');
@@ -1712,6 +1637,15 @@ const QuotationCreate = forwardRef((props, ref) => {
       existingProductIds: selectedProducts.map(p => p.product_id),
       defaultCustomers: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
       excludeId: formData.id,
+    });
+  }
+
+  function openImportFromSales() {
+    QuotationImportPickerRef.current?.open({
+      docType: 'sales',
+      onImport: handleImportFromQuotation,
+      existingProductIds: selectedProducts.map(p => p.product_id),
+      defaultParties: formData.customer_id && selectedCustomers.length > 0 ? selectedCustomers : [],
     });
   }
 
@@ -2163,7 +2097,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   const ProductCreateFormRef = useRef();
   const PurchaseOrderPickerRef = useRef();
   const QuotationImportPickerRef = useRef();
-  const SalesImportRef = useRef();
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
     const hasProducts = store?.settings?.enable_products;
@@ -2823,10 +2756,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.order_code = selectedSale.code;
     setFormData({ ...formData });
   };
-
-  function openSalesForImport() {
-    SalesImportRef?.current?.open(true, selectedCustomers);
-  }
 
   let [showInfo, setShowInfo] = useState(false);
   let [infoMessage, setInfoMessage] = useState("");
@@ -3717,7 +3646,6 @@ async function checkWarning(i) {
         onClose={() => setShowInfo(false)}
       />
       <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
-      <Sales ref={SalesImportRef} onSelectSale={handleImportFromSales} showToastMessage={props.showToastMessage} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} pendingView={props.modalClass === 'above-pending-modal'} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} extraClass={props.fromHistory ? "order-inner-history-modal" : ""} />
@@ -3762,130 +3690,6 @@ async function checkWarning(i) {
       <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
       <QuotationImportPicker ref={QuotationImportPickerRef} showToastMessage={props.showToastMessage} />
 
-      {/* Product picker modal for Import from Sales / Import from Purchases */}
-      {importPickerData && (() => {
-        const selectedCount = Object.values(importPickerSelected).filter(Boolean).length;
-        const allSelected = importPickerData.products.every(p => importPickerSelected[p.product_id]);
-        const isSale = importPickerData.source === 'sale';
-        return (
-          <Modal show={true} size="xl" onHide={() => setImportPickerData(null)} animation={false} centered style={{ zIndex: 2000 }}>
-            <Modal.Header closeButton style={{ background: isSale ? '#f0f7ff' : '#f0fff4', borderBottom: '1px solid #dee2e6' }}>
-              <div className="d-flex align-items-center gap-2">
-                <span style={{ fontSize: '18px' }}>{isSale ? '🧾' : '📦'}</span>
-                <div>
-                  <Modal.Title style={{ fontSize: '16px', fontWeight: 600, marginBottom: 0 }}>
-                    {t('Select Products to Import')}
-                  </Modal.Title>
-                  <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '2px' }}>
-                    {isSale ? t('From Sale') : t('From Purchase')}: <strong>{importPickerData.code}</strong>
-                    &nbsp;·&nbsp;{importPickerData.products.length} {t('product(s)')}
-                  </div>
-                </div>
-              </div>
-            </Modal.Header>
-            <Modal.Body style={{ padding: 0 }}>
-              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                <table className="table table-sm mb-0" style={{ fontSize: '13px' }}>
-                  <thead style={{ position: 'sticky', top: 0, background: '#f8f9fa', zIndex: 1, boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
-                    <tr>
-                      <th style={{ width: '36px', padding: '8px 12px' }}>
-                        <input
-                          type="checkbox"
-                          checked={allSelected}
-                          onChange={e => {
-                            const s = {};
-                            importPickerData.products.forEach(p => { s[p.product_id] = e.target.checked; });
-                            setImportPickerSelected(s);
-                          }}
-                          title={allSelected ? t('Deselect all') : t('Select all')}
-                        />
-                      </th>
-                      <th style={{ padding: '8px 12px', whiteSpace: 'nowrap', color: '#495057' }}>{t('Part No.')}</th>
-                      <th style={{ padding: '8px 12px', color: '#495057' }}>{t('Product Name')}</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap', color: '#495057' }}>{t('Qty')}</th>
-                      <th style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap', color: '#495057' }}>
-                        {t('Retail Price')} <span style={{ fontWeight: 400, color: '#6c757d' }}>({t('excl. VAT')})</span>
-                      </th>
-                      <th style={{ width: '40px', padding: '8px 12px' }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {importPickerData.products.map((p, i) => {
-                      const checked = !!importPickerSelected[p.product_id];
-                      const price = isSale ? p.unit_price : (p.retail_unit_price ?? 0);
-                      return (
-                        <tr
-                          key={p.product_id || i}
-                          onClick={() => setImportPickerSelected(s => ({ ...s, [p.product_id]: !s[p.product_id] }))}
-                          style={{
-                            cursor: 'pointer',
-                            background: checked ? (isSale ? '#e8f4ff' : '#e8fff0') : 'transparent',
-                            transition: 'background 0.1s',
-                          }}
-                        >
-                          <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
-                            <input type="checkbox" checked={checked} onChange={() => {}} />
-                          </td>
-                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                            <span style={{ fontFamily: 'monospace', fontSize: '12px', background: '#f1f3f5', padding: '2px 6px', borderRadius: '4px' }}>
-                              {p.part_number || '—'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
-                            <div style={{ fontWeight: checked ? 600 : 400 }}>{p.name}</div>
-                            {p.name_in_arabic && (
-                              <div style={{ fontSize: '11px', color: '#6c757d', direction: 'rtl', textAlign: 'right' }}>{p.name_in_arabic}</div>
-                            )}
-                          </td>
-                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', textAlign: 'right', fontWeight: 500 }}>
-                            {p.quantity}
-                          </td>
-                          <td style={{ padding: '8px 12px', verticalAlign: 'middle', textAlign: 'right' }}>
-                            {price > 0
-                              ? <span style={{ fontWeight: 600, color: '#198754' }}>{price}</span>
-                              : <span style={{ color: '#adb5bd' }}>—</span>
-                            }
-                          </td>
-                          <td style={{ padding: '8px 8px', verticalAlign: 'middle' }} onClick={e => e.stopPropagation()}>
-                            <button
-                              type="button"
-                              className="btn btn-link btn-sm p-0"
-                              title={t('Edit product')}
-                              style={{ color: '#6c757d' }}
-                              onClick={() => openProductUpdateForm(p.product_id)}
-                            >
-                              <i className="bi bi-pencil-square"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </Modal.Body>
-            <Modal.Footer style={{ background: '#f8f9fa', justifyContent: 'space-between', padding: '10px 16px' }}>
-              <div style={{ fontSize: '13px', color: '#6c757d' }}>
-                {selectedCount > 0
-                  ? <><strong>{selectedCount}</strong> {t('of')} {importPickerData.products.length} {t('selected')}</>
-                  : t('No products selected')}
-              </div>
-              <div className="d-flex gap-2">
-                <Button variant="outline-secondary" size="sm" onClick={() => setImportPickerData(null)}>{t('Cancel')}</Button>
-                <Button
-                  variant={isSale ? 'primary' : 'success'}
-                  size="sm"
-                  disabled={selectedCount === 0}
-                  onClick={confirmImportPicker}
-                >
-                  <i className="bi bi-box-arrow-in-down me-1"></i>
-                  {t('Import')} {selectedCount > 0 ? `(${selectedCount})` : ''}
-                </Button>
-              </div>
-            </Modal.Footer>
-          </Modal>
-        );
-      })()}
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
       <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
@@ -4745,7 +4549,7 @@ async function checkWarning(i) {
                     <i className="bi bi-download"></i> {t('Import')}
                   </Dropdown.Toggle>
                   <Dropdown.Menu style={{ zIndex: 9999 }}>
-                    <Dropdown.Item onClick={openSalesForImport}><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
+                    <Dropdown.Item onClick={openImportFromSales} data-testid="import-from-sales-btn"><i className="bi bi-receipt me-1"></i>{t('From Sales')}</Dropdown.Item>
                     <Dropdown.Item onClick={openImportFromPurchase} data-testid="import-from-purchase-btn"><i className="bi bi-bag me-1"></i>{t('From Purchases')}</Dropdown.Item>
                     <Dropdown.Item onClick={openImportFromQuotation} data-testid="import-from-quotation-btn"><i className="bi bi-file-earmark-text me-1"></i>{t('From Quotations')}</Dropdown.Item>
                     {store?.settings?.enable_purchase_order_module && (

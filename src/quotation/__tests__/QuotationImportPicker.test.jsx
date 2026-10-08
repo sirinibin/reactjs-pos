@@ -323,5 +323,53 @@ describe('QuotationImportPicker', () => {
       expect(screen.getByText('No products found.')).toBeInTheDocument();
     });
   });
+  describe('sales mode', () => {
+    const sale = {
+      id: 's1', code: 'SI-001', customer_name: 'ACME', date: '2026-09-15T00:00:00Z',
+      products: [
+        { product_id: 'p1', part_number: 'A1', name: 'Oil Filter', quantity: 3, unit_price: 9, unit_price_with_vat: 10.35, unit_discount: 1 },
+        { product_id: 'p9', part_number: 'Z9', name: 'Spark Plug', quantity: 0, unit_price: 4, unit_price_with_vat: 4.6 },
+      ],
+    };
+
+    function openSale(ref, opts) {
+      act(() => { ref.current.open({ docType: 'sales', ...opts }); });
+      const [cb, type, parties] = mockDocPickerOpen.mock.calls[mockDocPickerOpen.mock.calls.length - 1];
+      expect(type).toBe('sales');
+      return { cb, parties };
+    }
+
+    it('searches sales with the customer filter passed in', () => {
+      const ref = createRef();
+      render(<QuotationImportPicker ref={ref} />);
+      const customers = [{ id: 'c1' }];
+      const { parties } = openSale(ref, { onImport: jest.fn(), defaultParties: customers });
+      expect(parties).toBe(customers);
+    });
+
+    it('lists the sale lines without a purchase price column and labels the back button', () => {
+      const ref = createRef();
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openSale(ref, { onImport: jest.fn() });
+      act(() => { cb(sale); });
+      expect(screen.getByText('Spark Plug')).toBeInTheDocument();
+      expect(screen.queryByText('Purchase Price')).toBeNull();
+      expect(screen.getByText(/Choose another sale/)).toBeInTheDocument();
+    });
+
+    it('imports the sale lines with their prices and discounts, zero quantity becoming 1', () => {
+      const ref = createRef();
+      const onImport = jest.fn();
+      render(<QuotationImportPicker ref={ref} />);
+      const { cb } = openSale(ref, { onImport });
+      act(() => { cb(sale); });
+      fireEvent.click(screen.getByTestId('qip-import'));
+      const imported = onImport.mock.calls[0][0];
+      expect(imported.map(p => [p.product_id, p.quantity, p.unit_price, p.unit_discount || 0])).toEqual([
+        ['p1', 3, 9, 1],
+        ['p9', 1, 4, 0],
+      ]);
+    });
+  });
 });
 

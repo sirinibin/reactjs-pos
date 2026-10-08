@@ -15,6 +15,8 @@ import SourceDocumentPicker from "../purchase_order/SourceDocumentPicker.js";
 //     quotation lines (e.g. looks up selling prices for purchase lines) before they are listed
 // onImport(products, doc) receives the chosen lines (with edited quantities).
 // Fixed size: index.css gives every `.table thead input` min-width: 120px, which stretched the select-all box.
+const DOC_LABELS = { quotation: "quotation", purchase: "purchase", sales: "sale" };
+
 const CHECKBOX_STYLE = { width: "16px", minWidth: "16px", maxWidth: "16px", height: "16px", padding: 0, margin: 0, float: "none", display: "inline-block", verticalAlign: "middle" };
 
 const QuotationImportPicker = forwardRef((props, ref) => {
@@ -117,7 +119,9 @@ const QuotationImportPicker = forwardRef((props, ref) => {
         openDocPicker();
     }
 
-    const isPurchase = (optsRef.current.docType || "quotation") === "purchase";
+    const docType = optsRef.current.docType || "quotation";
+    const isPurchase = docType === "purchase";
+    const docLabel = DOC_LABELS[docType] || "document";
     const colCount = isPurchase ? 10 : 9;
     const th = { padding: "8px 10px", fontWeight: 700, fontSize: "12px", color: "#374151", whiteSpace: "nowrap" };
     const td = { padding: "6px 10px", verticalAlign: "middle" };
@@ -240,7 +244,7 @@ const QuotationImportPicker = forwardRef((props, ref) => {
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px", gap: "8px" }}>
                         <button type="button" onClick={handleBack}
                             style={{ background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db", borderRadius: "4px", padding: "6px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-                            ‹ Choose another {isPurchase ? "purchase" : "quotation"}
+                            ‹ Choose another {docLabel}
                         </button>
                         <button type="button" onClick={handleImport} disabled={checkedCount === 0 || loading} data-testid="qip-import"
                             style={{ background: checkedCount === 0 ? "#9ca3af" : "#004ac6", color: "#fff", border: "none", borderRadius: "4px", padding: "6px 14px", fontSize: "12px", fontWeight: 600, cursor: checkedCount === 0 ? "default" : "pointer", display: "flex", alignItems: "center", gap: "4px" }}>

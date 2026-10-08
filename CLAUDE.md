@@ -51,7 +51,8 @@ The `v2` branch is a **completely separate product line** from `master`/`test`.
 ## Important rules
 - Never use `React.lazy(() => import('../order/create.js'))` inside quotation/create.js —
   creates an infinite render loop (order/create.js unconditionally renders Quotation).
-- For "Import from Sales" in Quotation: use a dedicated `<Sales ref={SalesImportRef}>` instance,
-  not a mode-flag hack on the shared SalesRef.
+- Quotation "Import > From Sales / From Purchases / From Quotations" all go through
+  `QuotationImportPicker` (search modal, then product selection modal). Don't reuse the shared
+  SalesRef for importing.
 - The working directory must match what's committed before deploying (deploy.sh checks this).
   If many files are uncommitted, commit them all — they're interdependent.
