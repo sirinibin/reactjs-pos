@@ -70,6 +70,8 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import QuotationImportPicker from '../quotation/QuotationImportPicker.js';
+import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts } from '../quotation/quotationImport.js';
 import ZatcaConnect from '../store/zatca_connect.js';
 
 function _dnFormatTimeAgo(isoString) {
@@ -2926,6 +2928,43 @@ const OrderCreate = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => reCalculate(), 100);
         fetchAllProductStocks([...selectedProducts]);
+    }
+
+    //Import products from a purchase, using the quotation form's two-step picker
+    const PurchaseImportPickerRef = useRef();
+    function handleImportFromPurchase(products) {
+        if (!products || products.length === 0) return;
+        selectedProducts = mergeImportedQuotationProducts(selectedProducts, products);
+        setSelectedProducts([...selectedProducts]);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            for (let i = 0; i < selectedProducts.length; i++) {
+                CalCulateLineTotals(i);
+                checkWarnings(i);
+                checkErrors(i);
+            }
+            reCalculate();
+        }, 100);
+        fetchAllProductStocks([...selectedProducts]);
+        if (props.showToastMessage) props.showToastMessage(`Imported ${products.length} product${products.length !== 1 ? "s" : ""}`, "success");
+    }
+
+    function openImportFromPurchase() {
+        PurchaseImportPickerRef.current?.open({
+            docType: 'purchase',
+            onImport: handleImportFromPurchase,
+            existingProductIds: selectedProducts.map(p => p.product_id),
+            // Purchases only hold cost prices, so selling prices come from the product master.
+            prepareProducts: async (products) => {
+                let prices = {};
+                try {
+                    prices = await fetchRetailPrices(products.map(p => p.product_id), localStorage.getItem('store_id'));
+                } catch (e) {
+                    if (props.showToastMessage) props.showToastMessage('Could not load current selling prices; they will be 0.', 'warning');
+                }
+                return purchaseLinesToQuotationLines(products, prices);
+            },
+        });
     }
 
     function addProduct(product) {
@@ -6002,6 +6041,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
+            <QuotationImportPicker ref={PurchaseImportPickerRef} showToastMessage={props.showToastMessage} />
             <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} modalClass={props.modalClass === 'above-pending-modal' ? 'above-pending-modal' : ''} />
             <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -8993,6 +9033,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         openQuotationSalesReturnHistory={openQuotationSalesReturnHistory}
                         openQuotations={openQuotations}
                         openDeliveryNotes={openDeliveryNotes}
+                        openImportFromPurchase={openImportFromPurchase}
                         openReferenceUpdateForm={openReferenceUpdateForm}
                         addNewPayment={addNewPayment}
                         removePayment={removePayment}
