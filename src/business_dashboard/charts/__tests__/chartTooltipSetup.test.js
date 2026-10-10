@@ -7,7 +7,7 @@ jest.mock('../../../utils/pdfGenerator', () => ({
     generateInfoPdf: jest.fn(() => ({
         save: jest.fn(),
         autoPrint: jest.fn(),
-        output: jest.fn(() => new Blob()),
+        output: jest.fn(() => new global.Blob()),
     })),
     safeName: jest.fn(s => s),
 }));

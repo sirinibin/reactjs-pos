@@ -190,8 +190,8 @@ test.describe('repair jobs', () => {
 
     const dialog = await openCreate(page, 'repair-jobs', 'Repair Job');
     await typeInto(page, dialog.getByPlaceholder('e.g. Engine overhaul, AC repair, Full service...'), title, 5);
-    // The form starts with the walk-in UNKNOWN customer; a user replaces it by typing over it.
-    await expect(dialog.getByPlaceholder('Search customer...')).toHaveValue(/UNKNOWN/i);
+    // The form starts with the store's walk-in UNKNOWN customer when it has one
+    // (a fresh store has none); a user replaces it by typing over it.
     await typeInto(page, dialog.getByPlaceholder('Search customer...'), customer.name, 10);
     await page.getByRole('option', { name: new RegExp(escapeRe(customer.name), 'i') }).first().click({ timeout: 8000 });
     await typeInto(page, dialog.getByPlaceholder('Search vehicle...'), plate, 10);
@@ -227,9 +227,15 @@ test.describe('repair jobs', () => {
   async function openBoardFor(page, customer) {
     await page.goto('/dashboard/repair-jobs-board');
     await typeInto(page, page.getByPlaceholder('Filter by customer...'), customer.name, 10);
-    const loaded = page.waitForResponse((r) => r.url().includes('/v1/repair-job?') && r.url().includes(customer.id));
-    await page.locator('div', { hasText: new RegExp(`^${escapeRe(customer.name)}$`) }).last().dispatchEvent('mousedown');
-    await loaded;
+    const option = page.locator('div', { hasText: new RegExp(`^${escapeRe(customer.name)}$`, 'i') }).last();
+    // The suggestion list re-renders while the type-ahead search settles, so a
+    // pick can land on a list that is about to be replaced: pick again until
+    // the board loads this customer's jobs.
+    await expect(async () => {
+      const loaded = page.waitForResponse((r) => r.url().includes('/v1/repair-job?') && r.url().includes(customer.id), { timeout: 5_000 });
+      await option.dispatchEvent('mousedown', undefined, { timeout: 5_000 });
+      await loaded;
+    }).toPass({ timeout: 30_000 });
   }
 
   async function boardJob(api, status = 'open') {
