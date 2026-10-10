@@ -58,3 +58,14 @@ creates a store through the API if the user has none.
 | `fullstack/auth.spec.js` | Login form, blank and wrong credentials, no account enumeration, client-side lockout, successful sign-in, signed-in redirect, corrupted token, logout |
 | `fullstack/navigation.spec.js` | Every sidebar screen opens without uncaught errors, API 5xx or live-API calls |
 | `fullstack/data.spec.js` | Customer created in the form is stored and listed; nameless customer refused; product created through the API is found by the products filter |
+
+## Role audit (`audit/`)
+
+A human-like audit run as six personas: owner, manager, salesman, cashier, accountant and viewer. The owner creates a fresh `ZZ AUDIT <run id>` store, RBAC roles and users through the UI. The personas then work through sign-in, permissions, catalog, customers, buying, selling, returns, expenses, stock, reports, language, keyboard and browsing. Each screen is checked for layout, Arabic gaps, axe-core issues, console errors, API errors and timing. The output is a findings report, not pass/fail tests. A store guard stops the run before anything touches another store or a live host. See [`audit/README.md`](audit/README.md).
+
+| Command | What |
+|---|---|
+| `npm run audit` | Standard matrix (phone/tablet/desktop × en/ar) against `http://localhost:2000`; report in `audit-reports/<run id>/index.html` |
+| `AUDIT_MATRIX=smoke npm run audit` | One cell per scenario |
+| `npm run audit:gate -- <report.json>` | CI verdict: fails on an aborted run, a guard violation or a persona run that could not finish; writes the GitHub job summary |
+| `npm run test:audit-unit` | node:test unit tests of the guard, gate, config, personas and report |

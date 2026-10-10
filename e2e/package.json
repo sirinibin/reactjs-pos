@@ -4,9 +4,13 @@
   "description": "Browser end-to-end tests for the StartPOS frontend. Kept separate from the app's package.json so the app's install and CI (Node 17) are unaffected.",
   "scripts": {
     "test": "playwright test",
-    "test:fullstack": "playwright test -c playwright.fullstack.config.js"
+    "test:fullstack": "playwright test -c playwright.fullstack.config.js",
+    "audit": "node audit/run.js",
+    "audit:gate": "node audit/gate.js",
+    "test:audit-unit": "node --test audit/test/*.test.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.56.1"
   }
 }

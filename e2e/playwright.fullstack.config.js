@@ -35,10 +35,15 @@ module.exports = defineConfig({
     video: 'retain-on-failure',
     launchOptions: process.env.E2E_CHROMIUM ? { executablePath: process.env.E2E_CHROMIUM } : {},
   },
+  // Every spec runs on a laptop screen. Specs tagged @devices also run on a
+  // large desktop, a tablet (portrait and landscape) and a phone, because the
+  // app must work on PCs, tablets and phones at every resolution.
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 800 } },
-    },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 800 } } },
+    { name: 'desktop-large', grep: /@devices/, use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } } },
+    { name: 'tablet', grep: /@devices/, use: { ...devices['Desktop Chrome'], viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 } },
+    { name: 'tablet-landscape', grep: /@devices/, use: { ...devices['Desktop Chrome'], viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 } },
+    { name: 'phone', grep: /@devices/, use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 3 } },
+    { name: 'phone-small', grep: /@devices/, use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 } },
   ],
 });
