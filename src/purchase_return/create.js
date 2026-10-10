@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
+import PriceInput from "../components/PriceInput";
+import { counterpartPrice } from "../utils/priceInput";
 import { createPortal } from "react-dom";
 import { Modal, Button } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -3058,15 +3060,15 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number" id={`${"purchase_return_product_unit_price_t3_" + index}`} name={`${"purchase_return_product_unit_price_t3_" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].purchase_unit_price} className="form-control text-end" placeholder={t('Unit Price')}
+                                                                <PriceInput id={`${"purchase_return_product_unit_price_t3_" + index}`} name={`${"purchase_return_product_unit_price_t3_" + index}`} value={selectedProducts[index].purchase_unit_price} className="form-control text-end" placeholder={t('Unit Price')}
                                                                     ref={(el) => { if (!inputRefs.current[index]) inputRefs.current[index] = {}; inputRefs.current[index][`${"purchase_return_product_unit_price_t3_" + index}`] = el; }}
-                                                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[index][`${"purchase_return_product_unit_price_t3_" + index}`].select(); }, 100); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         delete errors["purchasereturn_unit_price_" + index]; setErrors({ ...errors });
                                                                         if (parseFloat(e.target.value) === 0) { selectedProducts[index].purchase_unit_price = e.target.value; selectedProducts[index].purchase_unit_price_with_vat = e.target.value; setSelectedProducts([...selectedProducts]); timerRef.current = setTimeout(() => { checkWarnings(index); checkErrors(index); CalCulateLineTotals(index); reCalculate(index); }, 100); return; }
                                                                         if (!e.target.value) { selectedProducts[index].purchase_unit_price = ""; selectedProducts[index].purchase_unit_price_with_vat = ""; setSelectedProducts([...selectedProducts]); timerRef.current = setTimeout(() => { checkWarnings(index); checkErrors(index); CalCulateLineTotals(index); reCalculate(index); }, 100); return; }
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                                                         setSelectedProducts([...selectedProducts]);
                                                                         timerRef.current = setTimeout(() => { selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100))); selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100))); checkWarnings(index); checkErrors(index); CalCulateLineTotals(index); reCalculate(index); }, 100);
                                                                     }}
@@ -3090,16 +3092,16 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number" id={`${"purchase_return_product_unit_price_with_vat_t3_" + index}`} name={`${"purchase_return_product_unit_price_with_vat_t3_" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].purchase_unit_price_with_vat} className="form-control text-end"
+                                                                <PriceInput id={`${"purchase_return_product_unit_price_with_vat_t3_" + index}`} name={`${"purchase_return_product_unit_price_with_vat_t3_" + index}`} value={selectedProducts[index].purchase_unit_price_with_vat} className="form-control text-end"
                                                                     ref={(el) => { if (!inputRefs.current[index]) inputRefs.current[index] = {}; inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_t3_" + index}`] = el; }}
                                                                     placeholder={t('Unit Price(with VAT)')}
-                                                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_t3_" + index}`].select(); }, 100); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         delete errors["purchasereturn_unit_price_with_vat_" + index]; setErrors({ ...errors });
                                                                         if (parseFloat(e.target.value) === 0) { selectedProducts[index].purchase_unit_price_with_vat = e.target.value; selectedProducts[index].purchase_unit_price = e.target.value; setSelectedProducts([...selectedProducts]); timerRef.current = setTimeout(() => { checkErrors(index); checkWarnings(index); CalCulateLineTotals(index); reCalculate(index); }, 100); return; }
                                                                         if (!e.target.value) { selectedProducts[index].purchase_unit_price_with_vat = ""; selectedProducts[index].purchase_unit_price = ""; setSelectedProducts([...selectedProducts]); timerRef.current = setTimeout(() => { checkErrors(index); checkWarnings(index); CalCulateLineTotals(index); reCalculate(index); }, 100); return; }
                                                                         selectedProducts[index].purchase_unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price = counterpartPrice(selectedProducts[index].purchase_unit_price_with_vat, formData.vat_percent, "toWithoutVat");
                                                                         timerRef.current = setTimeout(() => { selectedProducts[index].purchase_unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100)))); selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100))); selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100))); setSelectedProducts([...selectedProducts]); checkErrors(index); checkWarnings(index); CalCulateLineTotals(index); reCalculate(index); }, 100);
                                                                     }}
                                                                     onBlur={() => {
@@ -3859,11 +3861,9 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input
-                                                                    type="number"
+                                                                <PriceInput
                                                                     id={`${"purchase_return_product_unit_price_" + index}`}
                                                                     name={`${"purchase_return_product_unit_price_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].purchase_unit_price}
                                                                     className="form-control text-end"
                                                                     placeholder={t('Unit Price')}
@@ -3871,27 +3871,11 @@ async function reCalculate(productIndex) {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`] = el;
                                                                     }}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].purchase_unit_price_with_vat = "";
-                                                                            selectedProducts[index].purchase_unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                checkWarnings(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`].focus();
                                                                             }, 100);
@@ -3938,6 +3922,7 @@ async function reCalculate(productIndex) {
                                                                         }
 
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
 
 
                                                                         // selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))));
@@ -3990,10 +3975,9 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"purchase_return_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"purchase_return_product_unit_price_with_vat_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].purchase_unit_price_with_vat}
                                                                     className="form-control text-end"
                                                                     ref={(el) => {
@@ -4001,28 +3985,12 @@ async function reCalculate(productIndex) {
                                                                         inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_" + index}`] = el;
                                                                     }}
                                                                     placeholder={t('Unit Price(with VAT)')}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].purchase_unit_price_with_vat = "";
-                                                                            selectedProducts[index].purchase_unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                checkWarnings(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 300);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].focus();
                                                                             }, 200);
@@ -4069,6 +4037,7 @@ async function reCalculate(productIndex) {
                                                                         }
 
                                                                         selectedProducts[index].purchase_unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price = counterpartPrice(selectedProducts[index].purchase_unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                         // Set new debounce timer
@@ -5179,11 +5148,9 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input
-                                                                    type="number"
+                                                                <PriceInput
                                                                     id={`${"purchase_return_product_unit_price_" + index}`}
                                                                     name={`${"purchase_return_product_unit_price_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].purchase_unit_price}
                                                                     className="form-control text-end"
                                                                     placeholder={t('Unit Price')}
@@ -5191,27 +5158,11 @@ async function reCalculate(productIndex) {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`] = el;
                                                                     }}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].purchase_unit_price_with_vat = "";
-                                                                            selectedProducts[index].purchase_unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                checkWarnings(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`].focus();
                                                                             }, 100);
@@ -5258,6 +5209,7 @@ async function reCalculate(productIndex) {
                                                                         }
 
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
 
 
                                                                         // selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))));
@@ -5310,10 +5262,9 @@ async function reCalculate(productIndex) {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"purchase_return_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"purchase_return_product_unit_price_with_vat_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].purchase_unit_price_with_vat}
                                                                     className="form-control text-end"
                                                                     ref={(el) => {
@@ -5321,28 +5272,12 @@ async function reCalculate(productIndex) {
                                                                         inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_" + index}`] = el;
                                                                     }}
                                                                     placeholder={t('Unit Price(with VAT)')}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].purchase_unit_price_with_vat = "";
-                                                                            selectedProducts[index].purchase_unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                checkWarnings(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 300);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].focus();
                                                                             }, 200);
@@ -5389,6 +5324,7 @@ async function reCalculate(productIndex) {
                                                                         }
 
                                                                         selectedProducts[index].purchase_unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price = counterpartPrice(selectedProducts[index].purchase_unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                         // Set new debounce timer

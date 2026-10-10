@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
+import PriceInput from "../components/PriceInput";
+import { counterpartPrice } from "../utils/priceInput";
 import StockTransferPreview from "./../order/preview.js";
 import { Modal, Button } from "react-bootstrap";
 
@@ -4204,10 +4206,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"stocktransfer_product_unit_price_" + index}`}
                                                                     name={`${"stocktransfer_product_unit_price_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price}
                                                                     disabled={true}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
@@ -4217,27 +4218,12 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         inputRefs.current[index][`${"stocktransfer_product_unit_price_" + index}`] = el;
                                                                     }}
 
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"stocktransfer_product_unit_price_" + index}`]?.select();
-                                                                        }, 20);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                CalCulateLineTotals(index);
-                                                                                checkErrors(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"stocktransfer_product_quantity_" + index}`]?.select();
                                                                             }, 100);
@@ -4279,6 +4265,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                                                         if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                                                             if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
                                                                                 errors["unit_price_" + index] = t("Unit price should not be less than Purchase Unit Price(without VAT)");
@@ -4322,10 +4309,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"stocktransfer_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"stocktransfer_product_unit_price_with_vat_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price_with_vat}
                                                                     className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     ref={(el) => {
@@ -4334,26 +4320,12 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                     placeholder={t("Unit Price(with VAT)")}
                                                                     disabled={true}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"stocktransfer_product_unit_price_with_vat_" + index}`]?.select();
-                                                                        }, 20);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"stocktransfer_product_unit_price_" + index}`]?.select();
                                                                             }, 50);
@@ -4402,6 +4374,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                         setSelectedProducts([...selectedProducts]);
