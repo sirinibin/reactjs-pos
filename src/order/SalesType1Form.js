@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useRef } from "react";
+import PriceInput from "../components/PriceInput";
+import { counterpartPrice } from "../utils/priceInput";
 import { Modal, Button } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
@@ -1443,36 +1445,21 @@ export function SalesType1Body({
 
                                                         if (col.key === 'purchase_unit_price') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div className="input-group">
-                                                                <input
-                                                                    type="number"
+                                                                <PriceInput
                                                                     id={`sales_product_purchase_unit_price_${index}`}
                                                                     name={`sales_product_purchase_unit_price_${index}`}
                                                                     className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={product.purchase_unit_price}
                                                                     placeholder={t("Purchase Unit Price")}
                                                                     ref={(el) => {
                                                                         if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                         inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`] = el;
                                                                     }}
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`]?.select();
-                                                                        }, 20);
-                                                                    }}
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].purchase_unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             if ((index + 1) === selectedProducts.length) {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     productSearchRef.current?.focus();
@@ -1510,6 +1497,7 @@ export function SalesType1Body({
 
                                                                         if (e.target.value) {
                                                                             selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                            selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                                                             setSelectedProducts([...selectedProducts]);
                                                                         }
 
@@ -1720,10 +1708,9 @@ export function SalesType1Body({
                                                         if (col.key === 'unit_price') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                    <input type="number"
+                                                                    <PriceInput
                                                                         id={`${"sales_product_unit_price_" + index}`}
                                                                         name={`${"sales_product_unit_price_" + index}`}
-                                                                        onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={selectedProducts[index].unit_price}
                                                                         className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
@@ -1733,27 +1720,12 @@ export function SalesType1Body({
                                                                             inputRefs.current[index][`${"sales_product_unit_price_" + index}`] = el;
                                                                         }}
 
-                                                                        onFocus={() => {
-                                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[index][`${"sales_product_unit_price_" + index}`]?.select();
-                                                                            }, 20);
-                                                                        }}
 
                                                                         onKeyDown={(e) => {
                                                                             RunKeyActions(e, product);
 
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                                            if (e.key === "Backspace") {
-                                                                                selectedProducts[index].unit_price_with_vat = "";
-                                                                                selectedProducts[index].unit_price = "";
-                                                                                setSelectedProducts([...selectedProducts]);
-                                                                                timerRef.current = setTimeout(() => {
-                                                                                    CalCulateLineTotals(index);
-                                                                                    checkErrors(index);
-                                                                                    reCalculate(index);
-                                                                                }, 100);
-                                                                            } else if (e.key === "ArrowLeft") {
+                                                                            if (e.key === "ArrowLeft") {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     inputRefs.current[index][`${"sales_product_quantity_" + index}`]?.select();
                                                                                 }, 100);
@@ -1795,6 +1767,7 @@ export function SalesType1Body({
                                                                             }
 
                                                                             selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                            selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                                                             setSelectedProducts([...selectedProducts]);
 
                                                                             timerRef.current = setTimeout(() => {
@@ -1833,10 +1806,9 @@ export function SalesType1Body({
                                                         if (col.key === 'unit_price_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                    <input type="number"
+                                                                    <PriceInput
                                                                         id={`${"sales_product_unit_price_with_vat_" + index}`}
                                                                         name={`${"sales_product_unit_price_with_vat_" + index}`}
-                                                                        onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={selectedProducts[index].unit_price_with_vat}
                                                                         className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
@@ -1846,27 +1818,12 @@ export function SalesType1Body({
                                                                         }}
                                                                         placeholder={t("Unit Price(with VAT)")}
 
-                                                                        onFocus={() => {
-                                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`]?.select();
-                                                                            }, 20);
-                                                                        }}
 
                                                                         onKeyDown={(e) => {
                                                                             RunKeyActions(e, product);
 
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                                            if (e.key === "Backspace") {
-                                                                                selectedProducts[index].unit_price_with_vat = "";
-                                                                                selectedProducts[index].unit_price = "";
-                                                                                setSelectedProducts([...selectedProducts]);
-                                                                                timerRef.current = setTimeout(() => {
-                                                                                    CalCulateLineTotals(index);
-                                                                                    reCalculate(index);
-                                                                                    checkErrors(index);
-                                                                                }, 100);
-                                                                            } else if (e.key === "ArrowLeft") {
+                                                                            if (e.key === "ArrowLeft") {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     inputRefs.current[index][`${"sales_product_unit_price_" + index}`]?.select();
                                                                                 }, 50);
@@ -1917,6 +1874,7 @@ export function SalesType1Body({
 
 
                                                                             selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                            selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                             setSelectedProducts([...selectedProducts]);

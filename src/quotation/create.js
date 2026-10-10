@@ -8,6 +8,8 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import PriceInput from "../components/PriceInput";
+import { counterpartPrice } from "../utils/priceInput";
 import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { useTranslation } from "react-i18next";
 import { useDraft } from '../utils/useDraft';
@@ -5049,36 +5051,21 @@ async function checkWarning(i) {
                           </td>);
                           if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="input-group">
-                              <input
-                                type="number"
+                              <PriceInput
                                 id={`quotation_product_purchase_unit_price_${index}`}
                                 name={`quotation_product_purchase_unit_price_${index}`}
                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                onWheel={(e) => e.target.blur()}
                                 value={product.purchase_unit_price}
                                 placeholder={t('Purchase Unit Price')}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                   inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`] = el;
                                 }}
-                                onFocus={() => {
-                                  if (timerRef.current) clearTimeout(timerRef.current);
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].select();
-                                  }, 20);
-                                }}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
                                   if (timerRef.current) clearTimeout(timerRef.current);
 
-                                  if (e.key === "Backspace") {
-                                    selectedProducts[index].purchase_unit_price = "";
-                                    setSelectedProducts([...selectedProducts]);
-                                    timerRef.current = setTimeout(() => {
-                                      checkErrors(index);
-                                      reCalculate(index);
-                                    }, 100);
-                                  } else if (e.key === "ArrowLeft") {
+                                  if (e.key === "ArrowLeft") {
                                     if ((index + 1) === selectedProducts.length) {
                                       timerRef.current = setTimeout(() => {
                                         productSearchRef.current?.focus();
@@ -5116,6 +5103,7 @@ async function checkWarning(i) {
 
                                   if (e.target.value) {
                                     selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                    selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                     setSelectedProducts([...selectedProducts]);
                                   }
 
@@ -5348,10 +5336,9 @@ async function checkWarning(i) {
                           if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                               <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                <input type="number"
+                                <PriceInput
                                   id={`${"quotation_product_unit_price_" + index}`}
                                   name={`${"quotation_product_unit_price_" + index}`}
-                                  onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price}
                                   className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                   placeholder={t('Unit Price(without VAT)')}
@@ -5360,27 +5347,12 @@ async function checkWarning(i) {
                                     inputRefs.current[index][`${"quotation_product_unit_price_" + index}`] = el;
                                   }}
 
-                                  onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
-                                    }, 20);
-                                  }}
 
                                   onKeyDown={(e) => {
                                     RunKeyActions(e, product);
 
                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                    if (e.key === "Backspace") {
-                                      selectedProducts[index].unit_price_with_vat = "";
-                                      selectedProducts[index].unit_price = "";
-                                      setSelectedProducts([...selectedProducts]);
-                                      timerRef.current = setTimeout(() => {
-                                        checkErrors(index);
-                                        CalCulateLineTotals(index);
-                                        reCalculate(index);
-                                      }, 100);
-                                    } else if (e.key === "ArrowLeft") {
+                                    if (e.key === "ArrowLeft") {
                                       timerRef.current = setTimeout(() => {
                                         inputRefs.current[index][`${"quotation_product_quantity_" + index}`].select();
                                       }, 100);
@@ -5422,6 +5394,7 @@ async function checkWarning(i) {
                                     }
 
                                     selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                    selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                     if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                       if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
                                         errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
@@ -5479,10 +5452,9 @@ async function checkWarning(i) {
                           if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                               <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                <input type="number"
+                                <PriceInput
                                   id={`${"quotation_product_unit_price_with_vat_" + index}`}
                                   name={`${"quotation_product_unit_price_with_vat_" + index}`}
-                                  onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price_with_vat}
                                   className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                   ref={(el) => {
@@ -5491,27 +5463,12 @@ async function checkWarning(i) {
                                   }}
                                   placeholder={t('Unit Price(with VAT)')}
 
-                                  onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].select();
-                                    }, 20);
-                                  }}
 
                                   onKeyDown={(e) => {
                                     RunKeyActions(e, product);
 
                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                    if (e.key === "Backspace") {
-                                      selectedProducts[index].unit_price_with_vat = "";
-                                      selectedProducts[index].unit_price = "";
-                                      setSelectedProducts([...selectedProducts]);
-                                      timerRef.current = setTimeout(() => {
-                                        CalCulateLineTotals(index);
-                                        reCalculate(index);
-                                        checkErrors(index);
-                                      }, 100);
-                                    } else if (e.key === "ArrowLeft") {
+                                    if (e.key === "ArrowLeft") {
                                       timerRef.current = setTimeout(() => {
                                         inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
                                       }, 200);
@@ -5562,6 +5519,7 @@ async function checkWarning(i) {
 
 
                                     selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                    selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                     setSelectedProducts([...selectedProducts]);
@@ -6567,36 +6525,21 @@ async function checkWarning(i) {
                           </td>);
                           if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="input-group">
-                              <input
-                                type="number"
+                              <PriceInput
                                 id={`quotation_product_purchase_unit_price_${index}`}
                                 name={`quotation_product_purchase_unit_price_${index}`}
                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                onWheel={(e) => e.target.blur()}
                                 value={product.purchase_unit_price}
                                 placeholder={t('Purchase Unit Price')}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                   inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`] = el;
                                 }}
-                                onFocus={() => {
-                                  if (timerRef.current) clearTimeout(timerRef.current);
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].select();
-                                  }, 20);
-                                }}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
                                   if (timerRef.current) clearTimeout(timerRef.current);
 
-                                  if (e.key === "Backspace") {
-                                    selectedProducts[index].purchase_unit_price = "";
-                                    setSelectedProducts([...selectedProducts]);
-                                    timerRef.current = setTimeout(() => {
-                                      checkErrors(index);
-                                      reCalculate(index);
-                                    }, 100);
-                                  } else if (e.key === "ArrowLeft") {
+                                  if (e.key === "ArrowLeft") {
                                     if ((index + 1) === selectedProducts.length) {
                                       timerRef.current = setTimeout(() => {
                                         productSearchRef.current?.focus();
@@ -6634,6 +6577,7 @@ async function checkWarning(i) {
 
                                   if (e.target.value) {
                                     selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                    selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                     setSelectedProducts([...selectedProducts]);
                                   }
 
@@ -6866,10 +6810,9 @@ async function checkWarning(i) {
                           if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                               <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                <input type="number"
+                                <PriceInput
                                   id={`${"quotation_product_unit_price_" + index}`}
                                   name={`${"quotation_product_unit_price_" + index}`}
-                                  onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price}
                                   className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                   placeholder={t('Unit Price(without VAT)')}
@@ -6878,27 +6821,12 @@ async function checkWarning(i) {
                                     inputRefs.current[index][`${"quotation_product_unit_price_" + index}`] = el;
                                   }}
 
-                                  onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
-                                    }, 20);
-                                  }}
 
                                   onKeyDown={(e) => {
                                     RunKeyActions(e, product);
 
                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                    if (e.key === "Backspace") {
-                                      selectedProducts[index].unit_price_with_vat = "";
-                                      selectedProducts[index].unit_price = "";
-                                      setSelectedProducts([...selectedProducts]);
-                                      timerRef.current = setTimeout(() => {
-                                        checkErrors(index);
-                                        CalCulateLineTotals(index);
-                                        reCalculate(index);
-                                      }, 100);
-                                    } else if (e.key === "ArrowLeft") {
+                                    if (e.key === "ArrowLeft") {
                                       timerRef.current = setTimeout(() => {
                                         inputRefs.current[index][`${"quotation_product_quantity_" + index}`].select();
                                       }, 100);
@@ -6940,6 +6868,7 @@ async function checkWarning(i) {
                                     }
 
                                     selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                    selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                     if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                       if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
                                         errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
@@ -6997,10 +6926,9 @@ async function checkWarning(i) {
                           if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                               <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                <input type="number"
+                                <PriceInput
                                   id={`${"quotation_product_unit_price_with_vat_" + index}`}
                                   name={`${"quotation_product_unit_price_with_vat_" + index}`}
-                                  onWheel={(e) => e.target.blur()}
                                   value={selectedProducts[index].unit_price_with_vat}
                                   className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                   ref={(el) => {
@@ -7009,27 +6937,12 @@ async function checkWarning(i) {
                                   }}
                                   placeholder={t('Unit Price(with VAT)')}
 
-                                  onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].select();
-                                    }, 20);
-                                  }}
 
                                   onKeyDown={(e) => {
                                     RunKeyActions(e, product);
 
                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                    if (e.key === "Backspace") {
-                                      selectedProducts[index].unit_price_with_vat = "";
-                                      selectedProducts[index].unit_price = "";
-                                      setSelectedProducts([...selectedProducts]);
-                                      timerRef.current = setTimeout(() => {
-                                        CalCulateLineTotals(index);
-                                        reCalculate(index);
-                                        checkErrors(index);
-                                      }, 100);
-                                    } else if (e.key === "ArrowLeft") {
+                                    if (e.key === "ArrowLeft") {
                                       timerRef.current = setTimeout(() => {
                                         inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
                                       }, 200);
@@ -7080,6 +6993,7 @@ async function checkWarning(i) {
 
 
                                     selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                    selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                     setSelectedProducts([...selectedProducts]);

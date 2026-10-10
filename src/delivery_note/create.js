@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
+import PriceInput from "../components/PriceInput";
 import { useTranslation } from "react-i18next";
 import Preview from "./../order/preview.js";
 import { Modal, Button, OverlayTrigger, Popover } from "react-bootstrap";
@@ -3159,20 +3160,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           </div>
                         </td>);
                         if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '4px 8px', borderLeft: '1px solid #e2e8f0' }}>
-                          <input type="number"
+                          <PriceInput
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price}
                             className="form-control"
                             placeholder={t("Unit Price")}
-                            onWheel={(e) => e.target.blur()}
                             onKeyDown={(e) => {
-                              if (e.key === "Backspace") {
-                                selectedProducts[index].unit_price = "";
-                                selectedProducts[index].unit_price_with_vat = "";
-                                setSelectedProducts([...selectedProducts]);
-                                CalCulateLineTotals(index);
-                                reCalculate();
-                              } else if (e.key === "Enter" && index === selectedProducts.length - 1) {
+                              if (e.key === "Enter" && index === selectedProducts.length - 1) {
                                 e.preventDefault();
                                 e.nativeEvent.stopImmediatePropagation();
                                 productSearchRef.current?.focus();
@@ -3193,21 +3187,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             }} />
                         </td>);
                         if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
-                          <input type="number"
+                          <PriceInput
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price_with_vat}
                             className="form-control"
                             placeholder={t("Unit Price(with VAT)")}
-                            onWheel={(e) => e.target.blur()}
-                            onKeyDown={(e) => {
-                              if (e.key === "Backspace") {
-                                selectedProducts[index].unit_price_with_vat = "";
-                                selectedProducts[index].unit_price = "";
-                                setSelectedProducts([...selectedProducts]);
-                                CalCulateLineTotals(index);
-                                reCalculate();
-                              }
-                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].unit_price_with_vat = "";
@@ -3223,19 +3207,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             }} />
                         </td>);
                         if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
-                          <input type="number"
+                          <PriceInput
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price}
                             className="form-control"
                             placeholder={t("Purchase Unit Price")}
-                            onWheel={(e) => e.target.blur()}
-                            onKeyDown={(e) => {
-                              if (e.key === "Backspace") {
-                                selectedProducts[index].purchase_unit_price = "";
-                                selectedProducts[index].purchase_unit_price_with_vat = "";
-                                setSelectedProducts([...selectedProducts]);
-                              }
-                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].purchase_unit_price = "";
@@ -3249,19 +3225,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             }} />
                         </td>);
                         if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
-                          <input type="number"
+                          <PriceInput
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price_with_vat}
                             className="form-control"
                             placeholder={t("Purchase Unit Price(with VAT)")}
-                            onWheel={(e) => e.target.blur()}
-                            onKeyDown={(e) => {
-                              if (e.key === "Backspace") {
-                                selectedProducts[index].purchase_unit_price_with_vat = "";
-                                selectedProducts[index].purchase_unit_price = "";
-                                setSelectedProducts([...selectedProducts]);
-                              }
-                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].purchase_unit_price_with_vat = "";

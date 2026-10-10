@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import PriceInput from "../components/PriceInput";
+import { counterpartPrice } from "../utils/priceInput";
 import { useTranslation } from "react-i18next";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -2745,36 +2747,21 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     </td>);
                                                     if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="input-group">
-                                                            <input
-                                                                type="number"
+                                                            <PriceInput
                                                                 id={`quotationsales_return_product_purchase_unit_price_${index}`}
                                                                 name={`quotationsales_return_product_purchase_unit_price_${index}`}
                                                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                onWheel={(e) => e.target.blur()}
                                                                 value={product.purchase_unit_price}
                                                                 placeholder={t('Purchase Unit Price')}
                                                                 ref={(el) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`] = el;
                                                                 }}
-                                                                onFocus={() => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`].select();
-                                                                    }, 100);
-                                                                }}
                                                                 onKeyDown={(e) => {
                                                                     RunKeyActions(e, product);
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                                    if (e.key === "Backspace") {
-                                                                        selectedProducts[index].purchase_unit_price = "";
-                                                                        setSelectedProducts([...selectedProducts]);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            checkErrors(index);
-                                                                            reCalculate(index);
-                                                                        }, 100);
-                                                                    } else if (e.key === "ArrowLeft") {
+                                                                    if (e.key === "ArrowLeft") {
                                                                         if ((index + 1) === selectedProducts.length) {
                                                                         } else {
                                                                             timerRef.current = setTimeout(() => {
@@ -2809,6 +2796,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                                                                     if (e.target.value) {
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                                                         setSelectedProducts([...selectedProducts]);
                                                                     }
 
@@ -3035,10 +3023,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"quotationsales_return_product_unit_price_" + index}`}
                                                                     name={`${"quotationsales_return_product_unit_price_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder={t('Unit Price(without VAT)')}
@@ -3047,27 +3034,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`] = el;
                                                                     }}
 
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"quotationsales_return_product_quantity_" + index}`].focus();
                                                                             }, 100);
@@ -3108,6 +3080,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                                                         if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                                                             if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
                                                                                 errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
@@ -3166,10 +3139,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"quotationsales_return_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"quotationsales_return_product_unit_price_with_vat_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price_with_vat}
                                                                     className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     ref={(el) => {
@@ -3178,27 +3150,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                     placeholder={t('Unit Price(with VAT)')}
 
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"quotationsales_return_product_unit_price_with_vat_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                                checkErrors(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`].focus();
                                                                             }, 200);
@@ -3249,6 +3206,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                         setSelectedProducts([...selectedProducts]);
@@ -4185,36 +4143,21 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     </td>);
                                                     if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="input-group">
-                                                            <input
-                                                                type="number"
+                                                            <PriceInput
                                                                 id={`quotationsales_return_product_purchase_unit_price_${index}`}
                                                                 name={`quotationsales_return_product_purchase_unit_price_${index}`}
                                                                 className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
-                                                                onWheel={(e) => e.target.blur()}
                                                                 value={product.purchase_unit_price}
                                                                 placeholder={t('Purchase Unit Price')}
                                                                 ref={(el) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`] = el;
                                                                 }}
-                                                                onFocus={() => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"quotationsales_return_product_purchase_unit_price_" + index}`].select();
-                                                                    }, 100);
-                                                                }}
                                                                 onKeyDown={(e) => {
                                                                     RunKeyActions(e, product);
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                                    if (e.key === "Backspace") {
-                                                                        selectedProducts[index].purchase_unit_price = "";
-                                                                        setSelectedProducts([...selectedProducts]);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            checkErrors(index);
-                                                                            reCalculate(index);
-                                                                        }, 100);
-                                                                    } else if (e.key === "ArrowLeft") {
+                                                                    if (e.key === "ArrowLeft") {
                                                                         if ((index + 1) === selectedProducts.length) {
                                                                         } else {
                                                                             timerRef.current = setTimeout(() => {
@@ -4249,6 +4192,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                                                                     if (e.target.value) {
                                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].purchase_unit_price_with_vat = counterpartPrice(selectedProducts[index].purchase_unit_price, formData.vat_percent, "toWithVat");
                                                                         setSelectedProducts([...selectedProducts]);
                                                                     }
 
@@ -4475,10 +4419,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"quotationsales_return_product_unit_price_" + index}`}
                                                                     name={`${"quotationsales_return_product_unit_price_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder={t('Unit Price(without VAT)')}
@@ -4487,27 +4430,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`] = el;
                                                                     }}
 
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"quotationsales_return_product_quantity_" + index}`].focus();
                                                                             }, 100);
@@ -4548,6 +4476,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price_with_vat = counterpartPrice(selectedProducts[index].unit_price, formData.vat_percent, "toWithVat");
                                                                         if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
                                                                             if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
                                                                                 errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
@@ -4606,10 +4535,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                                <input type="number"
+                                                                <PriceInput
                                                                     id={`${"quotationsales_return_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"quotationsales_return_product_unit_price_with_vat_" + index}`}
-                                                                    onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].unit_price_with_vat}
                                                                     className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     ref={(el) => {
@@ -4618,27 +4546,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                     placeholder={t('Unit Price(with VAT)')}
 
-                                                                    onFocus={() => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[index][`${"quotationsales_return_product_unit_price_with_vat_" + index}`].select();
-                                                                        }, 100);
-                                                                    }}
 
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
 
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") {
-                                                                            selectedProducts[index].unit_price_with_vat = "";
-                                                                            selectedProducts[index].unit_price = "";
-                                                                            setSelectedProducts([...selectedProducts]);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                CalCulateLineTotals(index);
-                                                                                reCalculate(index);
-                                                                                checkErrors(index);
-                                                                            }, 100);
-                                                                        } else if (e.key === "ArrowLeft") {
+                                                                        if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 inputRefs.current[index][`${"quotationsales_return_product_unit_price_" + index}`].focus();
                                                                             }, 200);
@@ -4686,6 +4599,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                        selectedProducts[index].unit_price = counterpartPrice(selectedProducts[index].unit_price_with_vat, formData.vat_percent, "toWithoutVat");
 
 
                                                                         setSelectedProducts([...selectedProducts]);

@@ -12221,3 +12221,10 @@ body.order-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z
   .purchase-create-wrap .pc-product-search-row { flex-wrap: wrap; }
   .purchase-create-wrap .pc-product-search-box { flex: 1 1 100% !important; }
 }
+
+/* Unit price boxes in the selected-products tables (src/components/PriceInput.js):
+   digits line up from row to row, and a price is never squeezed out of sight. */
+.price-input {
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5rem;
+}
