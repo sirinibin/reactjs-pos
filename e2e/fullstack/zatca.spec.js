@@ -255,9 +255,9 @@ test.describe.serial('ZATCA phase 2: with the ZATCA sandbox (E2E_ZATCA=1)', () =
     expect(status, `connect -> ${JSON.stringify(body.errors)}; store: ${connectionState(after)}`).toBe(200);
     expect(body.status, JSON.stringify(body.errors)).toBe(true);
 
-    // The dialog closes, and the Stores screen shows the store connected.
+    // The dialog closes, and the Stores screen shows the store connected (the app
+    // shows no success toast: Dashboard suppresses every "success" toast on purpose).
     await expect(dialog).toBeHidden();
-    await expect(page.getByText('Store Connected to Zatca Successfully!').first()).toBeVisible();
     const row = await storeRow(page, store);
     await expect(row).toContainText('Connected to Phase2');
     await expect(row.getByRole('button', { name: /Connect to Zatca/i })).toHaveCount(0);
