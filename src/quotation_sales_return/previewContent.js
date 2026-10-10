@@ -487,7 +487,7 @@ const QuotationSalesReturnPreviewContent = forwardRef((props, ref) => {
                                             {props.model.remarks ? props.model.remarks : ""}
                                         </th>
 
-                                    </tr> : ""}
+                                    </tr> : null}
                                     <tr>
 
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>

@@ -451,7 +451,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             {props.model.remarks ? props.model.remarks : ""}
                                         </th>
 
-                                    </tr> : ""}
+                                    </tr> : null}
                                     <tr>
 
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
@@ -604,7 +604,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             </table>
 
                                         </td>
-                                    </tr> : ""}
+                                    </tr> : null}
                                 </tfoot>
                             </table>
 

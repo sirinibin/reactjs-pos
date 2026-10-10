@@ -104,6 +104,17 @@ export function describeVatInvoicePreview(cfg) {
     const doc = (o) => makeDoc(o);
     const linesDoc = (line, o = {}) => makeDoc({ pages: [{ top: 0, lastPage: true, products: [line] }], ...o });
 
+    test('renders without React DOM-nesting warnings (e.g. text inside <tfoot>)', () => {
+        const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+            renderDoc(Component, doc({ remarks: '' }));
+            const nesting = spy.mock.calls.filter((args) => String(args[0]).includes('validateDOMNesting'));
+            expect(nesting).toEqual([]);
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
     test('store header shows English + Arabic name, VAT and C.R. numbers', () => {
         const { text } = renderDoc(Component, doc());
         expect(text).toContain('Gulf Union Ozone');
