@@ -9,8 +9,21 @@
 
 // i18n.js lives in StartPOSWorkShop/, two levels above frontend/src/__tests__/
 // jsdom provides localStorage and navigator.language.
-const i18n = require('../../../StartPOSWorkShop/i18n.js');
+//
+// StartPOSWorkShop is NOT part of this repo. When it is not checked out next to
+// the frontend (e.g. CI), the whole suite is skipped instead of failing.
+// Override the location with STARTPOS_WORKSHOP_DIR.
+const fs = require('fs');
+const path = require('path');
+const I18N_PATH = process.env.STARTPOS_WORKSHOP_DIR
+  ? path.resolve(process.env.STARTPOS_WORKSHOP_DIR, 'i18n.js')
+  : path.resolve(__dirname, '../../../StartPOSWorkShop/i18n.js');
+const HAVE_WORKSHOP = fs.existsSync(I18N_PATH);
+const i18n = HAVE_WORKSHOP ? require(I18N_PATH) : { T: {}, WORKSHOP_LANGS: [], RTL_LANGS: [] };
 const { T, WORKSHOP_LANGS, RTL_LANGS, detectLang, saveLang } = i18n;
+const describeWorkshop = HAVE_WORKSHOP ? describe : describe.skip;
+
+describeWorkshop('StartPOSWorkShop i18n.js', () => {
 
 // ── Required translation keys that every language must provide ────────────────
 const REQUIRED_KEYS = [
@@ -197,4 +210,5 @@ describe('cross-language consistency', () => {
       expect(T[lang].lockout_pre.length).toBeGreaterThan(0);
     }
   });
+});
 });

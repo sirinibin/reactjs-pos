@@ -301,7 +301,7 @@ function PurchaseReturnPaymentIndex(props) {
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        DetailsViewRef.current?.open(id);
     }
 
     const CreateFormRef = useRef();
@@ -505,7 +505,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bpurchasereturnpayment: "solid 1px",
                                                         bpurchasereturnpaymentColor: "silver",

@@ -682,7 +682,9 @@ const QuotationType3Form = forwardRef((props, ref) => {
                             }
                         }
                     }
-                    return { ...prev, ...r.result, products: prev.products, id: prev.id, date_str: prev.date_str, payments_input: paymentsInput };
+                    // The tax flags are the user's choice: a response to a request sent before the
+                    // box was (un)ticked must not flip it back.
+                    return { ...prev, ...r.result, products: prev.products, id: prev.id, date_str: prev.date_str, payments_input: paymentsInput, exclude_product_tax: prev.exclude_product_tax, exclude_service_tax: prev.exclude_service_tax };
                 });
             }
         } catch (e) { console.error(e); }
@@ -751,6 +753,9 @@ const QuotationType3Form = forwardRef((props, ref) => {
             unit_discount: parseFloat(p.unit_discount) || 0, unit_discount_with_vat: parseFloat(p.unit_discount_with_vat) || 0,
             unit_discount_percent: parseFloat(p.unit_discount_percent) || 0, unit_discount_percent_with_vat: parseFloat(p.unit_discount_percent_with_vat) || 0,
             unit: p.unit || "", warehouse_id: p.warehouse_id || null, warehouse_code: p.warehouse_code || null,
+            // A return only counts lines marked selected (pos-rest validateQuantities); every line
+            // left in this form is one being returned.
+            ...(apiBase === '/v1/non-vat-sales-return' ? { selected: true } : {}),
         }));
         if (formData.type === 'quotation') {
             formData.payment_status = "";
@@ -766,7 +771,15 @@ const QuotationType3Form = forwardRef((props, ref) => {
         setIsSubmitting(true);
         try {
             const r = await fetch(`${endpoint}?search[store_id]=${storeId}`, { method, headers, body: JSON.stringify(formData) }).then(r => r.json());
-            if (r.status === false) { setErrors(r.errors || {}); return; }
+            if (r.status === false) {
+                setErrors(r.errors || {});
+                const msgs = Object.values(r.errors || {}).filter(Boolean);
+                if (msgs.length) {
+                    setToastErrors(msgs);
+                    setTimeout(() => setToastErrors([]), 5000);
+                }
+                return;
+            }
             setErrors({});
             if (props.showToastMessage) {
                 const isNonVAT = apiBase !== '/v1/quotation';

@@ -1168,7 +1168,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             <select
                                                                 value={pageSize}
                                                                 onChange={(e) => changePageSize(e.target.value)}
-                                                                className="form-control pull-right"
+                                                                className="form-control pull-right" aria-label="Page size"
                                                                 style={{ width: "55px" }}
                                                             >
                                                                 {[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500].map(s => (

@@ -588,7 +588,7 @@ function StoreIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bstore: "solid 1px",
                                                         bstoreColor: "silver",
@@ -755,6 +755,7 @@ function StoreIndex(props) {
                                                 <th>
                                                     <select
                                                         className="form-select form-select-sm"
+                                                        aria-label={t('Deleted')}
                                                         value={deletedFilter}
                                                         onChange={(e) => {
                                                             deletedFilter = e.target.value;

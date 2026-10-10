@@ -11,9 +11,12 @@ const path = require('path');
 
 const CREATE_SRC = fs.readFileSync(path.join(__dirname, 'create.js'), 'utf8');
 const AI_PROVIDERS_SRC = fs.readFileSync(path.join(__dirname, '../utils/aiProviders.js'), 'utf8');
-const STORE_GO   = fs.readFileSync(path.join(__dirname, '../../../backend/models/store.go'), 'utf8');
-const MAIN_GO    = fs.readFileSync(path.join(__dirname, '../../../backend/main.go'), 'utf8');
-const PM_GO      = fs.readFileSync(path.join(__dirname, '../../../backend/controller/procurement_message.go'), 'utf8');
+// Backend (pos-rest) sources live outside this repo; the suites that need them
+// are skipped when the backend checkout is not found (see testHelpers/backendSource).
+const { readBackendFile, describeIfSources } = require('../testHelpers/backendSource');
+const STORE_GO   = readBackendFile('models/store.go');
+const MAIN_GO    = readBackendFile('main.go');
+const PM_GO      = readBackendFile('controller/procurement_message.go');
 
 // ── 1. Content Extraction Test section — heading ───────────────────────────────
 
@@ -289,7 +292,7 @@ describe('create.js — Populate RFQ Suppliers: LLM dropdown', () => {
 
 // ── 10. Backend: store.go — PopulateSuppliersLLM fields ──────────────────────
 
-describe('store.go — PopulateSuppliersLLM settings', () => {
+describeIfSources(STORE_GO)('store.go — PopulateSuppliersLLM settings', () => {
     test('10.1  PopulateSuppliersLLMProvider field exists in store.go', () => {
         expect(STORE_GO).toMatch(/PopulateSuppliersLLMProvider/);
     });
@@ -309,7 +312,7 @@ describe('store.go — PopulateSuppliersLLM settings', () => {
 
 // ── 11. Backend: main.go — /v1/procurement-extract-test route ─────────────────
 
-describe('main.go — ProcurementExtractTestHandler route', () => {
+describeIfSources(MAIN_GO)('main.go — ProcurementExtractTestHandler route', () => {
     test('11.1  route /v1/procurement-extract-test is registered', () => {
         expect(MAIN_GO).toMatch(/procurement-extract-test/);
     });
@@ -327,7 +330,7 @@ describe('main.go — ProcurementExtractTestHandler route', () => {
 
 // ── 12. Backend: procurement_message.go — ProcurementExtractTestHandler ────────
 
-describe('procurement_message.go — ProcurementExtractTestHandler', () => {
+describeIfSources(PM_GO)('procurement_message.go — ProcurementExtractTestHandler', () => {
     test('12.1  handler function is defined', () => {
         expect(PM_GO).toMatch(/ProcurementExtractTestHandler/);
     });
@@ -402,11 +405,9 @@ describe('procurement_message.go — ProcurementExtractTestHandler', () => {
 
 // ── 13. email_polling.go Zoho fixes (source-level) ────────────────────────────
 
-const EMAIL_POLLING = fs.readFileSync(
-    path.join(__dirname, '../../../backend/controller/email_polling.go'), 'utf8'
-);
+const EMAIL_POLLING = readBackendFile('controller/email_polling.go');
 
-describe('email_polling.go — Zoho fixes', () => {
+describeIfSources(EMAIL_POLLING)('email_polling.go — Zoho fixes', () => {
     test('13.1  hasZohoAttachment field in parsedEmail struct', () => {
         expect(EMAIL_POLLING).toMatch(/hasZohoAttachment/);
     });

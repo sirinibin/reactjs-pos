@@ -298,7 +298,7 @@ function QuotationSalesReturnPaymentIndex(props) {
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        DetailsViewRef.current?.open(id);
     }
 
     const CreateFormRef = useRef();
@@ -509,7 +509,7 @@ function QuotationSalesReturnPaymentIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bquotationsalesreturnpayment: "solid 1px",
                                                         bquotationsalesreturnpaymentColor: "silver",

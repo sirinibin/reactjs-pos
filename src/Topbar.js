@@ -497,7 +497,7 @@ function Topbar(props) {
     return (
         <>
             <nav className="navbar navbar-expand navbar-light navbar-bg">
-                <a href="/" onClick={onTrigger} className="sidebar-toggle js-sidebar-toggle collapsed">
+                <a href="/" onClick={onTrigger} className="sidebar-toggle js-sidebar-toggle collapsed" aria-label={t('Toggle sidebar')}>
                     <i className="hamburger align-self-center"></i>
                 </a>
 
@@ -506,6 +506,7 @@ function Topbar(props) {
                         <Dropdown.Toggle
                             as="span"
                             bsPrefix="store-switcher-toggle"
+                            role="button"
                             style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", userSelect: "none", maxWidth: "100%", overflow: "hidden" }}
                             id="store-switcher-toggle"
                         >
@@ -898,6 +899,7 @@ function Topbar(props) {
                                 <Dropdown.Toggle
                                     as="span"
                                     id="user-menu-toggle"
+                                    role="button"
                                     style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px", userSelect: "none" }}
                                 >
                                     <i className="bi bi-person-circle" style={{ fontSize: "20px" }}></i>

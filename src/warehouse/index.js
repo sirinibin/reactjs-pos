@@ -314,7 +314,7 @@ function WarehouseIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bwarehouse: "solid 1px",
                                                         bwarehouseColor: "silver",

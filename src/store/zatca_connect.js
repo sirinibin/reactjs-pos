@@ -144,11 +144,10 @@ const ZatcaConnect = forwardRef((props, ref) => {
                                     value={formData.otp ? formData.otp : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["code"] = "";
+                                        delete errors.otp;
                                         setErrors({ ...errors });
                                         formData.otp = e.target.value;
                                         setFormData({ ...formData });
-                                        console.log(formData);
                                     }}
                                     className="form-control"
                                     id="otp"

@@ -126,6 +126,10 @@ const SignatureCreate = forwardRef((props, ref) => {
 
         console.log("formData.logo:", formData.logo);
 
+        if (!formData.store_id && localStorage.getItem("store_id")) {
+            formData.store_id = localStorage.getItem("store_id");
+        }
+
         let endPoint = "/v1/signature";
         let method = "POST";
         if (formData.id) {
@@ -160,8 +164,8 @@ const SignatureCreate = forwardRef((props, ref) => {
                     ?.includes("application/json");
                 const data = isJson && (await response.json());
 
-                // check for error response
-                if (!response.ok) {
+                // check for error response (the API also answers some validation errors with 200 + status:false)
+                if (!response.ok || !data || data.status === false) {
                     // get error message from body or default to response status
                     const error = data && data.errors;
                     //const error = data.errors
@@ -179,14 +183,14 @@ const SignatureCreate = forwardRef((props, ref) => {
                 }
 
                 handleClose();
-                if (props.openDetailsView)
+                if (props.openDetailsView && data.result?.id)
                     props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
                 console.log("Inside catch");
                 console.log(error);
-                setErrors({ ...error });
+                setErrors(error && typeof error === "object" ? { ...error } : {});
                 console.error("There was an error!", error);
                 if (props.showToastMessage) props.showToastMessage(t('error_creating_signature'), "danger");
             });
@@ -245,6 +249,13 @@ const SignatureCreate = forwardRef((props, ref) => {
                 </Modal.Header >
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                        {Object.keys(errors).filter((k) => errors[k] && k !== "name" && k !== "signature_content").length > 0 && (
+                            <div className="alert alert-danger" role="alert" data-testid="signature-errors">
+                                {Object.keys(errors).filter((k) => errors[k] && k !== "name" && k !== "signature_content").map((k) => (
+                                    <div key={k}>{String(errors[k])}</div>
+                                ))}
+                            </div>
+                        )}
 
                         <div className="col-md-6">
                             <label className="form-label">{t('name')}*</label>

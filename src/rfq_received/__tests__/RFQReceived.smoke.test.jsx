@@ -46,8 +46,31 @@ jest.mock('react-bootstrap', () => {
     Modal.Title = ({ children }) => <div>{children}</div>;
     Modal.Body = ({ children }) => <div data-testid="modal-body">{children}</div>;
     Modal.Footer = ({ children }) => <div>{children}</div>;
-    return { Spinner, Badge, Button, Modal };
+    const Alert = ({ children, variant }) => <div role="alert" data-variant={variant}>{children}</div>;
+    return { Spinner, Badge, Button, Modal, Alert };
 });
+
+// The page always mounts heavy sibling forms (QuotationCreate, CustomerCreate,
+// RFQCreate, previews, conversation modals). They need the full react-bootstrap
+// (Dropdown, Form, ...) which the minimal mock above doesn't provide, so stub them —
+// this suite only exercises the RFQ list/detail behaviour.
+// Stubs are forwardRef components because the page attaches refs to them.
+jest.mock('../../quotation/create', () => require('react').forwardRef(() => null));
+jest.mock('../create', () => require('react').forwardRef(() => null));
+jest.mock('../../customer/create', () => require('react').forwardRef(() => null));
+jest.mock('../RFQPreview', () => require('react').forwardRef(() => null));
+jest.mock('../RFQPreviewContent', () => require('react').forwardRef(() => null));
+jest.mock('../../store/EmailDetailModal.js', () => require('react').forwardRef(() => null));
+jest.mock('../../rfq_suppliers/index.js', () => {
+    const { forwardRef } = require('react');
+    return { __esModule: true, default: forwardRef(() => null), SupplierForm: forwardRef(() => null) };
+});
+jest.mock('../../store/ConversationModal.js', () => {
+    const { forwardRef } = require('react');
+    return { __esModule: true, WhatsAppChatModal: forwardRef(() => null), EmailChatModal: forwardRef(() => null) };
+});
+jest.mock('../RFQWhatsAppConversationsPanel.js', () => require('react').forwardRef(() => null));
+jest.mock('../RFQEmailConversationsPanel.js', () => require('react').forwardRef(() => null));
 
 jest.mock('react-paginate', () => () => <div data-testid="paginate" />);
 
@@ -181,9 +204,11 @@ describe('RFQReceivedIndex smoke tests', () => {
     it('7. status filter select renders all four status options', async () => {
         await act(async () => { renderPage(); });
         await waitFor(() => {
-            const select = screen.getByRole('combobox');
-            const options = select.querySelectorAll('option');
-            expect(options.length).toBe(6); // "all" + 5 statuses
+            // The page also has a "Rows per page" select, so pick the status filter
+            // by its first option ("all_statuses").
+            const select = screen.getByRole('option', { name: 'all_statuses' }).closest('select');
+            const options = Array.from(select.querySelectorAll('option')).map(o => o.value);
+            expect(options).toEqual(['', 'received', 'processing', 'ready_to_send', 'forwarded', 'failed']);
         });
     });
 

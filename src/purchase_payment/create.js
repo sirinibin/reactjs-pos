@@ -208,8 +208,8 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshPurchaseList) {
                     props.refreshPurchaseList();
                 }
-                //if(props.openDetailsView)
-                props.openDetailsView(data.result.id);
+                // Null-guarded: the host may have no details view (or it is not mounted yet).
+                if (props.openDetailsView) props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);

@@ -1309,7 +1309,7 @@ const ReportPreview = forwardRef((props, ref) => {
                                 onChange={(e) => {
                                     changePageSize(e.target.value);
                                 }}
-                                className="form-control pull-right"
+                                className="form-control pull-right" aria-label="Page size"
                                 style={{
                                     border: "solid 1px",
                                     borderColor: "silver",

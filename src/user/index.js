@@ -393,7 +393,7 @@ function UserIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         buser: "solid 1px",
                                                         buserColor: "silver",

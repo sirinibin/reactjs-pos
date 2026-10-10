@@ -44,6 +44,30 @@ function PurchaseIndex(props) {
 
 
     const dragRef = useRef(null);
+    // The payment-history / returns dialogs. Must be a stable component: an inline
+    // `dialogAs={(...) => ...}` is a new component type on every render, so any
+    // re-render of this list (websocket refresh, a toast) unmounted and remounted
+    // the dialog's children, closing a half-filled payment form inside it.
+    const DraggableListDialog = useCallback(({ children, ...dialogProps }) => (
+        <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+            <div
+                ref={dragRef}
+                className="modal-dialog modal-lg"
+                {...dialogProps}
+                style={{
+                    position: "absolute",
+                    top: "10%",
+                    left: "20%",
+                    transform: "translate(-50%, -50%)",
+                    margin: "0",
+                    zIndex: 1055,
+                    width: "65%",
+                }}
+            >
+                <div className="modal-content">{children}</div>
+            </div>
+        </Draggable2>
+    ), []);
 
     let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
@@ -2494,26 +2518,7 @@ function PurchaseIndex(props) {
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
-                dialogAs={({ children, ...props }) => (
-                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
-                            {...props}
-                            style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
-                                margin: "0",
-                                zIndex: 1055,
-                                width: "65%",           // Full width inside container
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable2>
-                )}
+                dialogAs={DraggableListDialog}
             >
                 <Modal.Header>
                     <Modal.Title>{t('Payment history of Purchase')} #{selectedPurchase.code}</Modal.Title>
@@ -2538,26 +2543,7 @@ function PurchaseIndex(props) {
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
-                dialogAs={({ children, ...props }) => (
-                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
-                            {...props}
-                            style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
-                                margin: "0",
-                                zIndex: 1055,
-                                width: "65%",           // Full width inside container
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable2>
-                )}
+                dialogAs={DraggableListDialog}
             >
                 <Modal.Header>
                     <Modal.Title>{t('Purchase Returns of Purchase Order')} #{selectedPurchase.code}</Modal.Title>

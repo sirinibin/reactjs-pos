@@ -1,0 +1,24 @@
+/**
+ * Details modal (purchase_cash_discount/view.js): renders the record from GET /v1/purchase-cash-discount/:id,
+ * handles empty / error responses. Generic cases: testHelpers/viewModalHarness.
+ */
+import React from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import PurchaseCashDiscountView from '../view';
+import {
+    describeViewModal, openView, setupViewEnv, modalText, jsonResponse, flush, notFound,
+} from '../../testHelpers/viewModalHarness';
+
+const BASE = { id: 'id-1', code: 'C-001', created_by_name: 'Sara Ali', updated_by_name: 'Omar Z', created_at: '2026-03-01T10:00:00Z', updated_at: '2026-03-02T11:00:00Z', date: '2026-03-01T09:00:00Z', store_id: 'store-1', description: 'Desc text' };
+
+describe('PurchaseCashDiscountView', () => {
+    setupViewEnv();
+
+    describeViewModal({
+        Component: PurchaseCashDiscountView,
+        endpoint: '/v1/purchase-cash-discount',
+        model: { ...BASE, purchase_code: 'P-9', amount: 12.5, store_name: 'Main', method: 'cash' },
+        expectTexts: ['details_of_purchase_cash_discount_of_purchase #P-9', '12.5', 'Main', 'Sara Ali', 'Omar Z'],
+        emptyTexts: ['details_of_purchase_cash_discount_of_purchase'],
+    });
+});

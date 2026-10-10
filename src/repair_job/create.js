@@ -60,6 +60,9 @@ const RepairJobCreate = forwardRef((props, ref) => {
     const [customerOptions, setCustomerOptions] = useState([]);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     const customerSearchRef = useRef();
+    // The walk-in UNKNOWN customer the form starts with. It is a default, not a
+    // choice: vehicle search is not narrowed to it, and picking a vehicle replaces it.
+    const walkInCustomerIdRef = useRef(null);
 
     // Vehicle
     const [vehicleOptions, setVehicleOptions] = useState([]);
@@ -156,6 +159,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
             const d = await res.json();
             const c = d.result?.[0];
             if (c) {
+                walkInCustomerIdRef.current = c.id;
                 const cu = { ...c, label: c.name || 'UNKNOWN' };
                 selectedCustomers = [cu];
                 setSelectedCustomers([cu]);
@@ -209,6 +213,11 @@ const RepairJobCreate = forwardRef((props, ref) => {
             method = "PUT";
         } else if (localStorage.getItem("store_id")) {
             formData.store_id = localStorage.getItem("store_id");
+        }
+        // A customer cleared and not replaced falls back to the walk-in customer.
+        if (!formData.id && !formData.customer_id && walkInCustomerIdRef.current) {
+            formData.customer_id = walkInCustomerIdRef.current;
+            formData.customer_name = formData.customer_name || 'UNKNOWN';
         }
 
         formData = calculateTotals({ ...formData });
@@ -589,8 +598,15 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 errors.customer_id = "";
                                                 setErrors({ ...errors });
                                                 if (selectedItems.length === 0) {
+                                                    // Typing over the selection clears it: leave the input to the
+                                                    // search (putting UNKNOWN back here turned every search into
+                                                    // "UNKNOWN<key>").
                                                     setVehicleOptions([]);
-                                                    fetchAndSetUnknownCustomer();
+                                                    formData.customer_id = "";
+                                                    formData.customer_name = "";
+                                                    setFormData({ ...formData });
+                                                    selectedCustomers = [];
+                                                    setSelectedCustomers([]);
                                                     return;
                                                 }
                                                 const c = selectedItems[0];
@@ -691,7 +707,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                                 formData.brand = v.brand || "";
                                                 formData.model = v.model || "";
                                                 // Auto-set customer from vehicle if not already set
-                                                if (v.customer_id && !formData.customer_id) {
+                                                if (v.customer_id && (!formData.customer_id || formData.customer_id === walkInCustomerIdRef.current)) {
                                                     formData.customer_id = v.customer_id;
                                                     fetchCustomerById(v.customer_id);
                                                 }
@@ -703,7 +719,7 @@ const RepairJobCreate = forwardRef((props, ref) => {
                                             selected={selectedVehicles}
                                             highlightOnlyResult={true}
                                             onInputChange={(searchTerm) => {
-                                                const custId = selectedCustomer?.id || null;
+                                                const custId = selectedCustomer?.id && selectedCustomer.id !== walkInCustomerIdRef.current ? selectedCustomer.id : null;
                                                 suggestVehicles(searchTerm, custId);
                                             }}
                                             ref={vehicleSearchRef}

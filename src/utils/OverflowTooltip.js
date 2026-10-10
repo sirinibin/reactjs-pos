@@ -49,7 +49,7 @@ const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false }) => {
                 onMouseLeave={hideTooltip}
             >
                 {value}
-                {!hideCopyIcon && <button type="button" className="copy-btn" onClick={(e) => {
+                {!hideCopyIcon && <button type="button" className="copy-btn" aria-label="Copy" onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     copyToClipboard();

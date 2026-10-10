@@ -46,6 +46,7 @@ import SalesCreate from "../order/create.js";
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
 import '../order/style.css';
+import { capReturnPaymentPrefill } from './paymentPrefill.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import ZatcaConnect from '../store/zatca_connect.js';
@@ -1708,9 +1709,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
                     }
 
-                    if (formData.payments_input[0].amount > order?.total_payment_received) {
-                        formData.payments_input[0].amount = order.total_payment_received;
-                    }
+                    // Never more than the API will refund: what the sale received minus
+                    // what earlier returns already refunded (not a locally re-rounded total).
+                    formData.payments_input[0].amount = capReturnPaymentPrefill(formData.payments_input[0].amount, order);
                 }
             } else {
                 if (formData.payments_input?.length === 1 && formData.payment_status === "paid") {

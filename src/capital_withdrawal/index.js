@@ -875,7 +875,7 @@ function CapitalWithdrawalIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.amount.toFixed(2)} SAR</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.payment_method}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.description}</td>
-                                                        <td> style={{ width: "auto", whiteSpace: "nowrap" }}
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {capitalwithdrawal.withdrawn_by_user_name}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.created_by_name}</td>

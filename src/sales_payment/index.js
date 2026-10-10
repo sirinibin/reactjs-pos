@@ -312,7 +312,7 @@ function SalesPaymentIndex(props) {
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        DetailsViewRef.current?.open(id);
     }
 
     const CreateFormRef = useRef();
@@ -508,7 +508,7 @@ function SalesPaymentIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bsalespayment: "solid 1px",
                                                         bsalespaymentColor: "silver",

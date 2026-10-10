@@ -395,7 +395,7 @@ function ProductBrandIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bproductbrand: "solid 1px",
                                                         bproductbrandColor: "silver",

@@ -210,8 +210,8 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshSalesList) {
                     props.refreshSalesList();
                 }
-                //if(props.openDetailsView)
-                props.openDetailsView(data.result.id);
+                // Null-guarded: the host may have no details view (or it is not mounted yet).
+                if (props.openDetailsView) props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -396,9 +396,11 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                     </select>
 
                                 </div>
-                                {errors.payment_method && (
+                                {/* The API reports "Payment method is required" under `method`
+                                    and customer-account balance problems under `payment_method`. */}
+                                {(errors.payment_method || errors.method) && (
                                     <div style={{ color: "red" }}>
-                                        {errors.payment_method}
+                                        {errors.payment_method || errors.method}
                                     </div>
                                 )}
                                 {formData.payment_method && !errors.payment_method && (

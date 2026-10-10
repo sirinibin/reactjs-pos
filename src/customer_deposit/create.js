@@ -576,6 +576,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         event.preventDefault();
         console.log("Inside handle Create");
         if (!validatePaymentAmounts()) {
+            submittingRef.current = false; // allow a retry once the amount is corrected
             return;
         }
 

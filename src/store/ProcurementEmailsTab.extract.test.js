@@ -52,15 +52,12 @@ const TAB_SRC  = fs.readFileSync(path.join(__dirname, 'ProcurementEmailsTab.js')
 const STORE_SRC = fs.readFileSync(path.join(__dirname, 'create.js'), 'utf8');
 const AI_PROVIDERS_SRC = fs.readFileSync(path.join(__dirname, '../utils/aiProviders.js'), 'utf8');
 
-const MODEL_SRC = fs.readFileSync(
-    path.join(__dirname, '../../../backend/models/store.go'), 'utf8'
-);
-const CONTROLLER_SRC = fs.readFileSync(
-    path.join(__dirname, '../../../backend/controller/procurement_message.go'), 'utf8'
-);
-const MAIN_SRC = fs.readFileSync(
-    path.join(__dirname, '../../../backend/main.go'), 'utf8'
-);
+// Backend (pos-rest) sources live outside this repo; the suites that need them
+// are skipped when the backend checkout is not found (see testHelpers/backendSource).
+const { readBackendFile, describeIfSources } = require('../testHelpers/backendSource');
+const MODEL_SRC = readBackendFile('models/store.go');
+const CONTROLLER_SRC = readBackendFile('controller/procurement_message.go');
+const MAIN_SRC = readBackendFile('main.go');
 
 // ── 1. AI_PROVIDERS imported from shared utils ───────────────────────────────
 describe('1. AI_PROVIDERS imported from shared utils', () => {
@@ -318,7 +315,7 @@ describe('17. Actions column header', () => {
 });
 
 // ── 18. Route registered in main.go ──────────────────────────────────────────
-describe('18. Backend route registered', () => {
+describeIfSources(MAIN_SRC)('18. Backend route registered', () => {
     it('18.1 extract route registered in main.go', () => {
         expect(MAIN_SRC).toContain('/v1/procurement-messages/{id}/extract');
     });
@@ -332,7 +329,7 @@ describe('18. Backend route registered', () => {
 });
 
 // ── 19-22. Store model extraction API key fields ──────────────────────────────
-describe('19-22. Store model extraction API key fields', () => {
+describeIfSources(MODEL_SRC)('19-22. Store model extraction API key fields', () => {
     it('19. ExtractionOpenAIAPIKey field in store.go', () => {
         expect(MODEL_SRC).toContain('ExtractionOpenAIAPIKey');
     });
@@ -364,7 +361,7 @@ describe('23-26. API key fields are defined in aiProviders.js (AI Models tab)', 
 });
 
 // ── 27-34. Backend controller source checks ───────────────────────────────────
-describe('27-34. Backend controller source checks', () => {
+describeIfSources(CONTROLLER_SRC)('27-34. Backend controller source checks', () => {
     it('27. ExtractProcurementMessageHandler defined', () => {
         expect(CONTROLLER_SRC).toContain('func ExtractProcurementMessageHandler(');
     });

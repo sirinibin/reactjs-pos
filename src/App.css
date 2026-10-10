@@ -12173,3 +12173,51 @@ body.quotation-form-pending-open .above-pending-form-sub { z-index: 1096 !import
 /* Select Quotation / Delivery Notes / ImageViewer opened from within the Sales form in pending context.
    Sales form (order-create-wrap.above-pending-modal) sits at 1095; sub-modals need 1096 to appear on top. */
 body.order-form-pending-open .above-sales-modal:not(.customer-pending-modal) { z-index: 1096 !important; }
+
+/* Quotation Create form on phones: the header wraps (title on its own line, then
+   the buttons), the error/warning list flows at the top of the body instead of
+   being fixed over the header (it used to cover the Create button), and the
+   product search takes the full width instead of calc(100% - 360px). */
+@media (max-width: 575.98px) {
+  .quotation-create-wrap .modal-header { flex-wrap: wrap; row-gap: 6px; }
+  .quotation-create-wrap .modal-header > .modal-title { flex: 1 1 100%; }
+  .quotation-create-wrap .modal-header > .col {
+    flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px;
+  }
+  .quotation-create-wrap .sc-error-banner {
+    position: sticky !important; top: 0 !important; right: auto !important; width: auto !important;
+    z-index: 5 !important; margin-bottom: 8px;
+  }
+  .quotation-create-wrap .qc-product-search-row { flex-wrap: wrap; }
+  .quotation-create-wrap .qc-product-search-box { flex: 1 1 100% !important; }
+}
+
+/* Sales Create form (#sales_create_form) between phone and desktop (768–1199px):
+   the search rows share a 2-column grid whose second column (date + phone,
+   barcode + VAT) has a fixed width, so the customer and product search boxes
+   were squeezed to 22–58px. Stack each row like on phones so both searches get
+   the full width. 1200px and wider keep the grid. */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  #sales_create_form .sc-search-rows-grid { display: flex !important; flex-direction: column; gap: 4px; }
+  #sales_create_form .sc-search-rows-grid .sc-customer-row,
+  #sales_create_form .sc-search-rows-grid .sc-product-row { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; }
+  #sales_create_form .sc-customer-search-group,
+  #sales_create_form .sc-product-search-group { flex: 1 1 100% !important; }
+}
+
+/* Sales Create form below desktop: the error list ("No products added", ...)
+   flows at the top of the body instead of being fixed over the header and the
+   customer box (same fix as the Quotation form). */
+@media (max-width: 1199.98px) {
+  #sales_create_form .sc-error-banner {
+    position: sticky !important; top: 0 !important; right: auto !important; width: auto !important;
+    z-index: 5 !important;
+  }
+}
+
+/* Purchase Create form on phones: the product search wrapper is
+   calc(100% - 366px) wide, i.e. 0px on a 320/360px screen. Give it a full row. */
+@media (max-width: 767.98px) {
+  .purchase-create-wrap .pc-product-search-row { flex-wrap: wrap; }
+  .purchase-create-wrap .pc-product-search-box { flex: 1 1 100% !important; }
+}

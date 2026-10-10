@@ -147,3 +147,8 @@ test('disposes the tooltip instance on unmount', () => {
     unmount();
     expect(instance.dispose).toHaveBeenCalledTimes(1);
 });
+
+test('the icon-only copy button has an accessible name', () => {
+    render(<OverflowTooltip value="copy me" />);
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
+});

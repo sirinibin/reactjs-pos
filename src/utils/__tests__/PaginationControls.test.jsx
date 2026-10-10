@@ -89,3 +89,8 @@ describe("PaginationControls component", () => {
         expect(screen.queryByText("< prev")).not.toBeInTheDocument();
     });
 });
+
+test("the page-size select has an accessible name", () => {
+    render(<PaginationControls {...defaultProps} />);
+    expect(screen.getByRole("combobox", { name: "Size" })).toBeInTheDocument();
+});

@@ -1322,7 +1322,7 @@ const handlePrint = useCallback(async () => {
                             <select
                                 value={fontSizes[modelName + "_balanceSheetpPageSize"]}
                                 onChange={(e) => { changePageSize(e.target.value); }}
-                                className="form-control pull-right"
+                                className="form-control pull-right" aria-label="Page size"
                                 style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
                             >
                                 {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40].map(n => <option key={n} value={n.toString()}>{n}</option>)}
@@ -1334,7 +1334,7 @@ const handlePrint = useCallback(async () => {
                             <select
                                 value={fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]}
                                 onChange={(e) => { changeMaxFirstPageSize(e.target.value); }}
-                                className="form-control pull-right"
+                                className="form-control pull-right" aria-label="Max. 1st page size"
                                 style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
                             >
                                 {[10,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35].map(n => <option key={n} value={n.toString()}>{n}</option>)}

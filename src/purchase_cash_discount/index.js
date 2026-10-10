@@ -354,7 +354,7 @@ function PurchaseCashDiscountIndex(props) {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bpurchasecashdiscount: "solid 1px",
                                                         bpurchasecashdiscountColor: "silver",

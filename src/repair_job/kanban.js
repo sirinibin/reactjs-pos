@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from 'react-bootstrap-typeahead';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { statusToDefaultListId as statusToListId, statusForListDrop } from './kanban_utils.js';
 
 const PAGE_SIZE = 5;
 
@@ -30,11 +31,6 @@ function loadCardOrder() {
 }
 function saveCardOrder(order) { localStorage.setItem('repair_job_kanban_card_order', JSON.stringify(order)); }
 
-function statusToListId(status) {
-    if (status === 'in_progress') return 'in_progress';
-    if (status === 'completed' || status === 'delivered') return 'done';
-    return 'todo';
-}
 
 
 const STATUS_ACCENT = {
@@ -363,13 +359,10 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
                 if (currentLists.length > 0) {
                     const isLastList = listId === currentLists[currentLists.length - 1].id;
                     const job = currentJobs.find(j => j.id === jobId);
-                    if (isLastList && job && job.status !== 'closed') {
-                        patchJob(jobId, { status: 'closed' }).then(updated => {
-                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
-                        });
-                    } else if (!isLastList && job && job.status === 'closed') {
-                        patchJob(jobId, { status: 'open' }).then(updated => {
-                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'open' } : j));
+                    const newStatus = job ? statusForListDrop(listId, isLastList, job.status) : null;
+                    if (newStatus) {
+                        patchJob(jobId, { status: newStatus }).then(updated => {
+                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
                         });
                     }
                 }
@@ -794,18 +787,11 @@ const RepairJobKanban = forwardRef(({ onOpenCard, onCreate, onClose, onSwitchToT
             if (lists.length > 0) {
                 const isLastList = listId === lists[lists.length - 1].id;
                 const job = jobs.find(j => j.id === jobId);
-                if (isLastList) {
-                    if (job && job.status !== 'closed') {
-                        patchJob(jobId, { status: 'closed' }).then(updated => {
-                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'closed' } : j));
-                        });
-                    }
-                } else {
-                    if (job && job.status === 'closed') {
-                        patchJob(jobId, { status: 'open' }).then(updated => {
-                            if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'open' } : j));
-                        });
-                    }
+                const newStatus = job ? statusForListDrop(listId, isLastList, job.status) : null;
+                if (newStatus) {
+                    patchJob(jobId, { status: newStatus }).then(updated => {
+                        if (updated) setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+                    });
                 }
             }
         } else if (dragListId.current && dragListId.current !== listId) {

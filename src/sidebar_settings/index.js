@@ -132,8 +132,24 @@ export default function SidebarSettings() {
         setItems(defaults);
     }
 
-    const landingId     = items.find(i => i.visible)?.id;
-    const visibleCount  = items.filter(i => i.visible).length;
+    // Whether an item is offered at all: items of modules switched off (or admin-only
+    // items for others) are not listed, so they must not count as visible either.
+    function isListed(item) {
+        const meta = DEFAULT_MENU.find(m => m.id === item.id);
+        if (!meta) return false;
+        if (meta.adminOnly && !isAdmin) return false;
+        if (meta.warehouseOnly && !warehouseEnabled) return false;
+        if (meta.requiresAutomobileModule && !automobileEnabled) return false;
+        if (meta.requiresEmployeeModule && !employeeEnabled) return false;
+        if (meta.requiresServices && !servicesEnabled) return false;
+        if (meta.requiresPurchaseOrderModule && !purchaseOrderEnabled) return false;
+        if (meta.purchaseRequestOnly && !purchaseRequestEnabled) return false;
+        if (meta.requiresAIRFQBot && !aiRFQBotEnabled) return false;
+        return true;
+    }
+
+    const landingId     = items.find(i => i.visible && isListed(i))?.id;
+    const visibleCount  = items.filter(i => i.visible && isListed(i)).length;
 
     return (
         <div className="container-fluid px-3 py-3" style={{ maxWidth: 640 }}>
@@ -161,16 +177,8 @@ export default function SidebarSettings() {
             {/* Item list */}
             <div className="card shadow-sm">
                 {items.map((item, index) => {
+                    if (!isListed(item)) return null;
                     const meta       = DEFAULT_MENU.find(m => m.id === item.id);
-                    if (!meta) return null;
-                    if (meta.adminOnly && !isAdmin) return null;
-                    if (meta.warehouseOnly && !warehouseEnabled) return null;
-                    if (meta.requiresAutomobileModule && !automobileEnabled) return null;
-                    if (meta.requiresEmployeeModule && !employeeEnabled) return null;
-                    if (meta.requiresServices && !servicesEnabled) return null;
-                    if (meta.requiresPurchaseOrderModule && !purchaseOrderEnabled) return null;
-                    if (meta.purchaseRequestOnly && !purchaseRequestEnabled) return null;
-                    if (meta.requiresAIRFQBot && !aiRFQBotEnabled) return null;
                     const isLanding  = item.id === landingId && item.visible;
                     const isDragging = draggingId === item.id;
 

@@ -973,7 +973,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                     style={{ width: '60px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                     onChange={e => {
                                         const raw = e.target.value;
-                                        setActiveInput({ key: `qty_${index}`, value: raw });
+                                        setActiveInput({ key: `qty_${index}`, value: raw, dirty: true });
                                         const num = parseFloat(raw);
                                         if (!isNaN(num)) {
                                             selectedProducts[index].quantity = num;
@@ -984,7 +984,11 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                         }
                                     }}
                                     onBlur={() => {
-                                        if (activeInput.key === `qty_${index}`) {
+                                        if (activeInput.key === `qty_${index}` && !activeInput.dirty) {
+                                            // Focused and left without typing: commit nothing, so a value shown
+                                            // before a pending recalculation cannot overwrite the line.
+                                            setActiveInput({ key: null, value: '' });
+                                        } else if (activeInput.key === `qty_${index}`) {
                                             selectedProducts[index].quantity = parseFloat(activeInput.value) || 0;
                                             setSelectedProducts([...selectedProducts]);
                                             formData.products = selectedProducts;
@@ -1007,7 +1011,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 style={{ width: '110px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
                                     const raw = e.target.value;
-                                    setActiveInput({ key: `price_${index}`, value: raw });
+                                    setActiveInput({ key: `price_${index}`, value: raw, dirty: true });
                                     const num = parseFloat(raw);
                                     if (!isNaN(num)) {
                                         selectedProducts[index].purchase_unit_price = num;
@@ -1017,7 +1021,11 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                     }
                                 }}
                                 onBlur={() => {
-                                    if (activeInput.key === `price_${index}`) {
+                                    if (activeInput.key === `price_${index}` && !activeInput.dirty) {
+                                        // Focused and left without typing: commit nothing, so a value shown
+                                        // before a pending recalculation cannot overwrite the line.
+                                        setActiveInput({ key: null, value: '' });
+                                    } else if (activeInput.key === `price_${index}`) {
                                         selectedProducts[index].purchase_unit_price = parseFloat(activeInput.value) || 0;
                                         setSelectedProducts([...selectedProducts]);
                                         setActiveInput({ key: null, value: '' });
@@ -1037,7 +1045,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 style={{ width: '110px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
                                     const raw = e.target.value;
-                                    setActiveInput({ key: `price_vat_${index}`, value: raw });
+                                    setActiveInput({ key: `price_vat_${index}`, value: raw, dirty: true });
                                     const val = parseFloat(raw);
                                     if (!isNaN(val)) {
                                         const vatPercent = formData.vat_percent || 0;
@@ -1049,7 +1057,11 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                     }
                                 }}
                                 onBlur={() => {
-                                    if (activeInput.key === `price_vat_${index}`) {
+                                    if (activeInput.key === `price_vat_${index}` && !activeInput.dirty) {
+                                        // Focused and left without typing: commit nothing, so a value shown
+                                        // before a pending recalculation cannot overwrite the line.
+                                        setActiveInput({ key: null, value: '' });
+                                    } else if (activeInput.key === `price_vat_${index}`) {
                                         const val = parseFloat(activeInput.value) || 0;
                                         const vatPercent = formData.vat_percent || 0;
                                         selectedProducts[index].purchase_unit_price_with_vat = val;
@@ -1072,7 +1084,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 style={{ width: '90px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
                                     const raw = e.target.value;
-                                    setActiveInput({ key: `disc_${index}`, value: raw });
+                                    setActiveInput({ key: `disc_${index}`, value: raw, dirty: true });
                                     const num = parseFloat(raw);
                                     if (!isNaN(num)) {
                                         selectedProducts[index].unit_discount = num;
@@ -1082,7 +1094,11 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                     }
                                 }}
                                 onBlur={() => {
-                                    if (activeInput.key === `disc_${index}`) {
+                                    if (activeInput.key === `disc_${index}` && !activeInput.dirty) {
+                                        // Focused and left without typing: commit nothing, so a value shown
+                                        // before a pending recalculation cannot overwrite the line.
+                                        setActiveInput({ key: null, value: '' });
+                                    } else if (activeInput.key === `disc_${index}`) {
                                         selectedProducts[index].unit_discount = parseFloat(activeInput.value) || 0;
                                         setSelectedProducts([...selectedProducts]);
                                         setActiveInput({ key: null, value: '' });

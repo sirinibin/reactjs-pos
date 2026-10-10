@@ -3997,8 +3997,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                             <div className="col-12">
                                 <label className="form-label">{getProductLabel(store?.settings)}*</label>
-                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: '0 0 calc(100% - 366px)', minWidth: 0 }}>
+                                <div className="pc-product-search-row" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    <div className="pc-product-search-box" style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: '0 0 calc(100% - 366px)', minWidth: 0 }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <Typeahead
                                                 id="product_id"

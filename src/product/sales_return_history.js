@@ -689,7 +689,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                     onChange={(e) => {
                                                         changePageSize(e.target.value);
                                                     }}
-                                                    className="form-control pull-right"
+                                                    className="form-control pull-right" aria-label="Page size"
                                                     style={{
                                                         bproduct: "solid 1px",
                                                         bproductColor: "silver",

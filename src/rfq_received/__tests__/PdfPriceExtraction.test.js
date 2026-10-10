@@ -23,13 +23,12 @@ const emailConv  = fs.readFileSync(
 
 // ── Backend product list format ───────────────────────────────────────────────
 
-describe('backend rfq_bot.go — 0-based product list', () => {
-    let botSrc;
-    beforeAll(() => {
-        botSrc = fs.readFileSync(
-            path.join(__dirname, '../../../../backend/controller/rfq_bot.go'), 'utf8'
-        );
-    });
+// rfq_bot.go lives in the pos-rest backend repo; skip when it is not checked out.
+const { readBackendFile, describeIfSources } = require('../../testHelpers/backendSource');
+const RFQ_BOT_GO = readBackendFile('controller/rfq_bot.go');
+
+describeIfSources(RFQ_BOT_GO)('backend rfq_bot.go — 0-based product list', () => {
+    const botSrc = RFQ_BOT_GO;
 
     test('1. product list uses "index N:" not "N." (0-based numbering)', () => {
         // Should have `index %d:` format, not `%d.` for the product context

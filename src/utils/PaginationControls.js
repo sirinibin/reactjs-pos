@@ -17,6 +17,7 @@ function PaginationControls({ totalPages, page, totalItems, offset, currentPageI
                         value={pageSize}
                         onChange={(e) => onPageSizeChange(e.target.value)}
                         className="form-control"
+                        aria-label={t('Size')}
                         style={{ width: "55px" }}
                     >
                         {sizes.map(s => <option key={s} value={String(s)}>{s}</option>)}

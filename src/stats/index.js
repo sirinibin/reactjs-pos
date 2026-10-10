@@ -817,7 +817,7 @@ const StatsIndex = forwardRef((props, ref) => {
         const token = localStorage.getItem("access_token");
         try {
             const res = await fetch(
-                `/v1/bi/report-result/download?store_id=${storeId}&report_key=${reportKey}&format=csv`,
+                `/v1/bi/report-result/download?search[store_id]=${storeId}&report_key=${reportKey}&format=csv`,
                 { headers: { "Content-Type": "application/json", Authorization: token } }
             );
             if (!res.ok) return [];

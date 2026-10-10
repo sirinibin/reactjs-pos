@@ -294,12 +294,13 @@ const UserCreate = forwardRef((props, ref) => {
         }
         const storeId = selectedStores[0].id;
         if (!storeId) { setRbacEnabled(false); return; }
-        fetch(`/v1/store/${storeId}?select=id,enable_rbac_module`, {
+        // The flag is a store setting: it comes back under result.settings.
+        fetch(`/v1/store/${storeId}?select=id,settings.enable_rbac_module`, {
             headers: { Authorization: localStorage.getItem('access_token') },
         })
             .then(r => r.json())
             .then(data => {
-                setRbacEnabled(!!data?.result?.enable_rbac_module);
+                setRbacEnabled(!!data?.result?.settings?.enable_rbac_module);
             })
             .catch(() => setRbacEnabled(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
