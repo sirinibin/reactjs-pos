@@ -16,9 +16,8 @@ const ZATCA_VAT = '399999999900003';
 const ZATCA_CRN = '4030360927';
 const ZATCA_ENV = 'NonProduction'; // developer-portal in pos-rest's ZatcaPython
 const SANDBOX = process.env.E2E_ZATCA === '1';
-// ZATCA's developer portal does not check the OTP; 123345 is the value its
-// documentation gives. pos-rest's csr_and_onboarding_cmd.py used 123456.
-const SANDBOX_OTP = process.env.E2E_ZATCA_OTP || '123345';
+// The sandbox (developer portal) OTP the store owner uses; override with E2E_ZATCA_OTP.
+const SANDBOX_OTP = process.env.E2E_ZATCA_OTP || '12345';
 // Onboarding runs the Fatoora CLI and 1 + 6 + 1 sandbox calls; reporting one
 // invoice signs it with the CLI and makes one call. Be generous.
 const ZATCA_TIMEOUT = Number(process.env.E2E_ZATCA_TIMEOUT || 180_000);
