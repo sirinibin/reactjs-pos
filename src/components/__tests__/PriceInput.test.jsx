@@ -60,6 +60,35 @@ describe('PriceInput', () => {
         expect(ex.selectionEnd).toBe('8.69565217'.length);
     });
 
+    test('selects the whole price on focus synchronously, without waiting for a timer', () => {
+        render(<PricePair />);
+        const inc = screen.getByTestId('inc');
+        act(() => { inc.focus(); });
+        expect(inc).toHaveValue('115');
+        expect(inc.selectionStart).toBe(0);
+        expect(inc.selectionEnd).toBe(3);
+    });
+
+    test('the click that focuses the box keeps the selection on mouseup', () => {
+        render(<PricePair />);
+        const inc = screen.getByTestId('inc');
+        fireEvent.mouseDown(inc);
+        act(() => { inc.focus(); });
+        inc.setSelectionRange(1, 1); // what the browser does on mouseup
+        const notCancelled = fireEvent.mouseUp(inc);
+        expect(notCancelled).toBe(false); // default caret placement prevented
+        expect(inc.selectionStart).toBe(0);
+        expect(inc.selectionEnd).toBe(3);
+    });
+
+    test('clicking inside an already focused box places the caret normally', () => {
+        render(<PricePair />);
+        const inc = screen.getByTestId('inc');
+        focus(inc);
+        fireEvent.mouseDown(inc);
+        expect(fireEvent.mouseUp(inc)).toBe(true);
+    });
+
     test('typing a with-VAT price fills the without-VAT price immediately', () => {
         render(<PricePair />);
         const inc = screen.getByTestId('inc');

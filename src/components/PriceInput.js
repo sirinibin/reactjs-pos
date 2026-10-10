@@ -62,18 +62,39 @@ const PriceInput = React.forwardRef(function PriceInput(
         });
     };
 
-    const selectAll = () => {
-        setTimeout(() => {
-            const el = inputRef.current;
-            if (el && document.activeElement === el) el.select();
-        }, 0);
+    // Puts `text` in the box and selects all of it right now, not on a timer:
+    // a timer can fire after the first digit was typed (slow devices, fast
+    // Tab + typing) and the next digit would then replace it. React sees the
+    // DOM already holds the draft and leaves the selection alone.
+    const showAndSelect = (el, text) => {
+        if (!el) return;
+        el.value = text;
+        try { el.select(); } catch (err) { /* detached element */ }
+    };
+
+    // A mouse click focuses on mousedown and then places the caret on mouseup,
+    // undoing the selection. Keep it for the click that focused the box.
+    const focusedByMouseRef = useRef(false);
+
+    const handleMouseDown = (e) => {
+        focusedByMouseRef.current = document.activeElement !== e.currentTarget;
+        if (rest.onMouseDown) rest.onMouseDown(e);
+    };
+
+    const handleMouseUp = (e) => {
+        if (focusedByMouseRef.current) {
+            focusedByMouseRef.current = false;
+            e.preventDefault();
+            showAndSelect(e.currentTarget, e.currentTarget.value);
+        }
+        if (rest.onMouseUp) rest.onMouseUp(e);
     };
 
     const handleFocus = (e) => {
         const start = formatPriceForEditing(value, maxDecimals);
         startValueRef.current = start;
+        showAndSelect(e.currentTarget, start);
         setDraft(start);
-        selectAll();
         if (onFocus) onFocus(e);
     };
 
@@ -98,9 +119,9 @@ const PriceInput = React.forwardRef(function PriceInput(
             // Undo this edit instead of closing the surrounding modal.
             e.preventDefault();
             e.stopPropagation();
+            showAndSelect(e.currentTarget, startValueRef.current);
             setDraft(startValueRef.current);
             emit(startValueRef.current, e);
-            selectAll();
             return;
         }
         const el = e.currentTarget;
@@ -127,6 +148,8 @@ const PriceInput = React.forwardRef(function PriceInput(
             className={`${className} price-input`.trim()}
             title={title !== undefined ? title : (draft === null && full && display !== formatPriceDisplay(full, maxDecimals) ? full : undefined)}
             value={draft !== null ? draft : display}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
             onFocus={handleFocus}
             onChange={handleChange}
             onBlur={handleBlur}
