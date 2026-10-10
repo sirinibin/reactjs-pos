@@ -227,7 +227,9 @@ test.describe('repair jobs', () => {
   async function openBoardFor(page, customer) {
     await page.goto('/dashboard/repair-jobs-board');
     await typeInto(page, page.getByPlaceholder('Filter by customer...'), customer.name, 10);
-    const option = page.locator('div', { hasText: new RegExp(`^${escapeRe(customer.name)}$`, 'i') }).last();
+    // A suggestion row is the div holding the person icon; the cards on the board
+    // also show the customer name, so a plain text match can hit a card instead.
+    const option = page.locator('div:has(> i.bi-person.me-2)', { hasText: new RegExp(`^${escapeRe(customer.name)}$`, 'i') }).first();
     // The suggestion list re-renders while the type-ahead search settles, so a
     // pick can land on a list that is about to be replaced: pick again until
     // the board loads this customer's jobs.
