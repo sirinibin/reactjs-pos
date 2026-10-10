@@ -50,10 +50,19 @@ async function openPoCreate(page) {
 /** Adds a product to a PO / PR form through its type-ahead; returns its table row. */
 async function addLine(page, dialog, product) {
   const search = dialog.getByPlaceholder('Part No. | Name | Name in Arabic | Brand | Country');
-  await typeInto(page, search, product.part_number, 20);
-  await page.getByRole('option', { name: new RegExp(escapeRe(product.part_number)) }).first().click();
+  const option = page.getByRole('option', { name: new RegExp(escapeRe(product.part_number)) }).first();
   const row = dialog.locator('tbody tr').filter({ hasText: product.part_number });
+  // On a busy machine the suggestions can arrive after a newer, empty search
+  // result: type the part number again until its suggestion shows up.
+  await expect(async () => {
+    if (await row.count()) return;
+    await typeInto(page, search, product.part_number, 20);
+    await option.click({ timeout: 10_000 });
+  }).toPass({ timeout: 45_000 });
   await expect(row).toHaveCount(1);
+  // Wait for the suggestion list to close, as a person would, so the next click
+  // lands on the table and not on a suggestion still covering it.
+  await expect(page.getByRole('option', { name: new RegExp(escapeRe(product.part_number)) })).toHaveCount(0);
   return row;
 }
 
