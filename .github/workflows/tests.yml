@@ -33,13 +33,21 @@ jobs:
   lint-and-unit:
     name: Lint, unit and functional tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 17.9.0
+
+      # A few suites check the frontend against the API's source code.
+      - name: Check out the API source
+        uses: actions/checkout@v4
+        with:
+          repository: sirinibin/pos-rest
+          ref: ${{ inputs.backend_ref }}
+          path: pos-rest
 
       - name: Install dependencies
         run: npm install
@@ -52,13 +60,13 @@ jobs:
             --ignore-pattern 'src/**/*.test.js' \
             --ignore-pattern 'src/**/*.test.jsx'
 
-      # Every suite except the ones that are currently broken or need files
-      # outside this repo (e.g. PdfPriceExtraction reads the backend's source).
+      # Every suite. The ones that read the API's Go source find it in pos-rest/.
       - name: Jest
+        env:
+          POS_REST_DIR: ${{ github.workspace }}/pos-rest
         run: |
           NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- \
-            --watchAll=false --runInBand \
-            --testPathIgnorePatterns="RFQReceived.smoke|ProcurementEmailsTab.extract|create.extractionTest|chartTooltipSetup|workshopI18n|PdfPriceExtraction"
+            --watchAll=false --maxWorkers=2 --testPathIgnorePatterns="/pos-rest/"
 
   # ── Production build; abort on "Compiled with warnings" ──────────────────
   build:
@@ -135,11 +143,17 @@ jobs:
           retention-days: 14
 
   # ── Full-stack e2e: this build served by the real API on MongoDB + Redis ──
+  # One runner per screen size (playwright.fullstack.config.js projects):
+  # every spec on the laptop size, specs tagged @devices on the others.
   e2e-fullstack:
-    name: UI e2e tests (real API, MongoDB, Redis)
+    name: UI e2e tests (real API, MongoDB, Redis) - ${{ matrix.project }}
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, desktop-large, tablet, tablet-landscape, phone, phone-small]
     env:
       E2E_EMAIL: e2e-admin@startpos.test
       E2E_PASSWORD: E2e-Passw0rd!
@@ -209,16 +223,121 @@ jobs:
         working-directory: e2e
         env:
           CI: "true"
-        run: npx playwright test -c playwright.fullstack.config.js
+        run: npx playwright test -c playwright.fullstack.config.js --project=${{ matrix.project }}
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-fullstack
+          name: playwright-report-fullstack-${{ matrix.project }}
           path: |
             e2e/playwright-report-fullstack
             e2e/test-results-fullstack
+          retention-days: 14
+
+      - name: API log
+        if: failure()
+        run: tail -n 300 backend/server.log
+
+  # ── Role audit: staff personas work a business day on phone, tablet and
+  # desktop in English and Arabic (e2e/audit, see e2e/audit/README.md),
+  # against this build served by a local API in one brand-new store. The gate
+  # fails on aborted runs, store-guard violations or unfinished persona runs;
+  # findings are reported in the job summary and the uploaded report.
+  role-audit:
+    name: Role audit (staff personas, every device, EN + AR)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      E2E_EMAIL: e2e-admin@startpos.test
+      E2E_PASSWORD: E2e-Passw0rd!
+      MONGO_DB: pos_e2e
+      REDIS_DSN: localhost:6379
+    services:
+      mongo:
+        image: mongo:7
+        ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the API
+        uses: actions/checkout@v4
+        with:
+          repository: sirinibin/pos-rest
+          ref: ${{ inputs.backend_ref }}
+          path: backend
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Build API and seed e2e user
+        working-directory: backend
+        run: |
+          go mod tidy
+          go build -o pos-rest .
+          go run ./e2e/seed
+
+      - name: Start API (serving this build)
+        working-directory: backend
+        run: |
+          API_PORT=2000 STATIC_DIR="$GITHUB_WORKSPACE/build" nohup ./pos-rest > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -s -o /dev/null http://localhost:2000/v1/me && exit 0
+            sleep 1
+          done
+          echo "API did not start:"; cat server.log; exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Audit unit tests (guard, gate)
+        working-directory: e2e
+        run: npm run test:audit-unit
+
+      - name: Run the role audit (this build, local API only)
+        working-directory: e2e
+        env:
+          AUDIT_MATRIX: standard
+          AUDIT_LANGS: en,ar
+          AUDIT_OUT_DIR: audit-reports/ci
+          AUDIT_BASE_URL: http://localhost:2000
+        run: node audit/run.js
+
+      - name: Audit gate
+        if: always()
+        working-directory: e2e
+        run: node audit/gate.js audit-reports/ci/report.json
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: role-audit-report
+          path: e2e/audit-reports/ci
           retention-days: 14
 
       - name: API log
