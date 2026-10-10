@@ -165,19 +165,17 @@ test.describe('purchase create', () => {
     expect(await api.purchasesOfVendor(vendor.id)).toHaveLength(0);
   });
 
-  test('a negative unit price is blocked in the form before anything is sent', async ({ page, request }) => {
+  test('a negative unit price cannot be entered: the minus sign is ignored', async ({ page, request }) => {
     const api = purchaseApi(request);
     const { vendor, products: [a] } = await api.arrange(1);
     const posts = recordPurchasePosts(page);
     const dialog = await openPurchaseCreate(page);
     await chooseVendor(page, dialog, vendor);
     const i = await addProduct(page, dialog, a);
-    await setLine(page, dialog, i, { price: -5 });
-    await expect(dialog.locator('#purchase_payment_amount0')).toHaveValue('-5.75');
-    await dialog.locator('select').first().selectOption('cash');
-
-    await dialog.getByRole('button', { name: 'Create', exact: true }).first().click();
-    await expect(dialog.getByText('Unit Price(without VAT) should be > 0').first()).toBeVisible();
+    const price = dialog.locator(`#purchase_product_unit_price_${i}`);
+    await typeInto(page, price, '-5');
+    await expect(price).toHaveValue('5');
+    await expect(dialog.locator('#purchase_payment_amount0')).toHaveValue('5.75');
     expect(posts).toHaveLength(0);
     expect(await api.purchasesOfVendor(vendor.id)).toHaveLength(0);
   });
