@@ -103,6 +103,23 @@ for (const [name, form] of Object.entries(FORMS)) {
       await expect(inc).toHaveValue("23.00");
     });
 
+    test("a slow click (mouse held down) still selects the whole price, so typing replaces it", async ({ page, context }) => {
+      const { ex, inc } = await openForm(page, context, form);
+      await inc.click({ delay: 300 });
+      await page.keyboard.type("46");
+      await expect(inc).toHaveValue("46");
+      await expect(ex).toHaveValue("40.00");
+    });
+
+    test("Tab into a price and type at once: the first digit is never lost", async ({ page, context }) => {
+      const { ex, inc } = await openForm(page, context, form);
+      await ex.click();
+      await page.keyboard.press("Tab");
+      await page.keyboard.type("57.5", { delay: 0 });
+      await expect(inc).toHaveValue("57.5");
+      await expect(ex).toHaveValue("50.00");
+    });
+
     test("typing a without-VAT price fills the with-VAT price", async ({ page, context }) => {
       const { api, ex, inc } = await openForm(page, context, form);
       await ex.click();
