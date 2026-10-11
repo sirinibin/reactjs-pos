@@ -178,4 +178,10 @@ describe('CustomerDepositIndex smoke tests', () => {
     });
     expect(document.body).toBeTruthy();
   });
+
+  // The list used to load twice on open (a mount effect and the stats-panel effect).
+  it('loads the receivables list once on open', async () => {
+    await act(async () => { render(<MemoryRouter><CustomerDepositIndex /></MemoryRouter>); });
+    expect(global.fetch.mock.calls.filter(([u]) => String(u).startsWith('/v1/customer-deposit?'))).toHaveLength(1);
+  });
 });

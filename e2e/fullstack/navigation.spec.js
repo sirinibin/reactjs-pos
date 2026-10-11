@@ -1,5 +1,6 @@
 // Every screen in the sidebar opens against the real API without crashing,
-// without a server error and without contacting the live API.
+// without a server error, without contacting the live API, and without sending
+// the same request twice (screens used to load each list two or three times).
 const { test, expect, AUTH_STATE } = require('./fixtures');
 
 test.use({ storageState: AUTH_STATE });
@@ -21,8 +22,21 @@ const SCREENS = [
   '/dashboard/repair-jobs-board', '/dashboard/repair-jobs', '/dashboard/sidebar-settings',
 ];
 
+// Requests a screen repeats on purpose while it is open.
+const EXPECTED_REPEATS = [
+  // WhatsApp threads are polled every 5 seconds.
+  (path, call) => path === '/dashboard/procurement-whatsapp' && call.startsWith('GET /v1/procurement-message-threads?'),
+  // The users list reloads once when this tab's own sign-in shows the user online.
+  (path, call, n) => path === '/dashboard/users' && call.startsWith('GET /v1/user?') && n <= 2,
+];
+
 for (const path of SCREENS) {
   test(`opens ${path}`, async ({ page }) => {
+    const calls = [];
+    page.on('request', (r) => {
+      const u = new URL(r.url());
+      if (u.pathname.startsWith('/v1/')) calls.push(`${r.method()} ${u.pathname}${decodeURIComponent(u.search)}`);
+    });
     await page.goto(path);
     // Branches can lag behind each other (test may not have every screen yet);
     // the app sends unknown screens to the landing page.
@@ -34,5 +48,12 @@ for (const path of SCREENS) {
     await expect(page.getByText('E2E Admin').first()).toBeVisible();
     // Let the screen's first API calls settle so their errors are caught.
     await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    const counts = {};
+    calls.forEach((c) => { counts[c] = (counts[c] || 0) + 1; });
+    const repeated = Object.entries(counts)
+      .filter(([c, n]) => n > 1 && !EXPECTED_REPEATS.some((ok) => ok(path, c, n)))
+      .map(([c, n]) => `${n}x ${c}`);
+    expect(repeated, `requests sent more than once on ${path}`).toEqual([]);
   });
 }

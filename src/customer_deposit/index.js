@@ -73,7 +73,7 @@ function CustomerDepositIndex(props) {
     const [reportingIds, setReportingIds] = useState(new Set());
 
     useEffect(() => {
-        list();
+        // The list loads in the [statsOpen] effect below, which also runs on mount.
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

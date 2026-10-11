@@ -15,6 +15,7 @@ import RFQCreate from './rfq_received/create.js';
 import { RFQSendModal } from './rfq_received/index.js';
 import { WhatsAppNotificationModal } from './store/ConversationModal';
 import { whatsAppUnreadEnabled, emailUnreadEnabled } from './utils/unreadFeeds';
+import { fetchDeliveryNoteReminders } from './utils/deliveryNoteReminders.js';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -354,10 +355,7 @@ function Topbar(props) {
             const token = localStorage.getItem("access_token");
             if (!storeId || !token) return;
             try {
-                const res = await fetch(`/v1/delivery-note/reminders?search[store_id]=${storeId}`, {
-                    headers: { Authorization: "Bearer " + token },
-                });
-                const data = await res.json();
+                const data = await fetchDeliveryNoteReminders(storeId, token);
                 if (data.status && Array.isArray(data.result)) {
                     const dismissed = getDismissedMap();
                     data.result.forEach(dn => {

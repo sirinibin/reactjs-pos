@@ -63,3 +63,30 @@ describe('NonVatSalesIndex smoke test', () => {
     });
   });
 });
+
+// The list used to be fetched twice on open (the page effect and the filter effect),
+// and three times in the pendings view.
+describe('NonVatSalesIndex API calls', () => {
+  // The CRA config resets mocks before each test, which leaves the fake setTimeout a no-op.
+  beforeEach(() => jest.useFakeTimers());
+  const listCalls = () => global.fetch.mock.calls.filter(([u]) => String(u).startsWith('/v1/non-vat-sales?'));
+
+  test('loads the list once on open', async () => {
+    await act(async () => { render(<MemoryRouter><NonVatSalesIndex /></MemoryRouter>); });
+    await act(async () => { jest.advanceTimersByTime(1000); });
+    expect(listCalls()).toHaveLength(1);
+  });
+
+  test('loads the list once in the pendings view, and again when the customer changes', async () => {
+    const a = [{ id: 'c1' }];
+    let view;
+    await act(async () => { view = render(<MemoryRouter><NonVatSalesIndex pendingView selectedCustomers={a} /></MemoryRouter>); });
+    await act(async () => { jest.advanceTimersByTime(1000); });
+    expect(listCalls()).toHaveLength(1);
+    expect(listCalls()[0][0]).toContain('search[customer_id]=c1');
+    await act(async () => { view.rerender(<MemoryRouter><NonVatSalesIndex pendingView selectedCustomers={[{ id: 'c2' }]} /></MemoryRouter>); });
+    await act(async () => { jest.advanceTimersByTime(1000); });
+    expect(listCalls()).toHaveLength(2);
+    expect(listCalls()[1][0]).toContain('search[customer_id]=c2');
+  });
+});

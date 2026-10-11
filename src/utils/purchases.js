@@ -6,9 +6,35 @@ import PurchaseIndex from "./../purchase/index.js";
 import { useTranslation } from 'react-i18next';
 
 
+// Defined once at module level: an inline arrow passed as dialogAs is a new
+// component type on every render, so React rebuilt the modal body (and refetched
+// any list inside it) whenever the parent re-rendered.
+const PickerDialog = ({ children, ...props }) => {
+    const dragRef = useRef(null);
+    return (
+        <Draggable handle=".modal-header" nodeRef={dragRef}>
+            <div
+                ref={dragRef}
+                className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                {...props}
+                style={{
+                    position: "absolute",
+                    top: "10%",
+                    left: "20%",
+                    transform: "translate(-50%, -50%)",
+                    margin: "0",
+                    zIndex: 1090,
+                    width: "65%",           // Full width inside container
+                }}
+            >
+                <div className="modal-content">{children}</div>
+            </div>
+        </Draggable>
+    );
+};
+
 const Purchases = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
-    const dragRef = useRef(null);
     let [selectedVendors, setSelectedVendors] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
     let [enableSelection, setEnableSelection] = useState(false);
@@ -53,26 +79,7 @@ const Purchases = forwardRef((props, ref) => {
                 centered={false}
                 enforceFocus={false}
                 style={{ zIndex: 1090 }}
-                dialogAs={({ children, ...props }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
-                            {...props}
-                            style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
-                                margin: "0",
-                                zIndex: 1090,
-                                width: "65%",           // Full width inside container
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable>
-                )}
+                dialogAs={PickerDialog}
             >
                 <Modal.Header>
                     <Modal.Title>{enableSelection ? t("Select Purchase") : t("Purchases")}</Modal.Title>

@@ -73,12 +73,18 @@ function NonVATSalesIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lastMessage]);
 
+    // The [page] effect loads the list on mount; the two effects below reload it
+    // only when their inputs change afterwards (they used to fetch it again on mount).
+    const customersSeenRef = useRef(false);
     useEffect(() => {
+        if (!customersSeenRef.current) { customersSeenRef.current = true; return; }
         if (props.pendingView) fetchList();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.selectedCustomers]);
 
+    const filtersSeenRef = useRef(false);
     useEffect(() => {
+        if (!filtersSeenRef.current) { filtersSeenRef.current = true; return; }
         if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
         searchTimerRef.current = setTimeout(() => {
             if (page !== 1) setPage(1);

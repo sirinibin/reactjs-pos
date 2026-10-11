@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom';
 import eventEmitter from '../utils/eventEmitter';
 import Topbar from '../Topbar';
+import { _resetDeliveryNoteReminders } from '../utils/deliveryNoteReminders';
+
+// Reminders are shared between callers for a few seconds; each test starts fresh.
+beforeEach(() => _resetDeliveryNoteReminders());
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 

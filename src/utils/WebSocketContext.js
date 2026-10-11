@@ -73,8 +73,18 @@ async function getDeviceFingerprint() {
 
 
 
+// "socket_connection_open" tells screens to reload what they may have missed while
+// the socket was down. Every listener also loads its data when it mounts, so the
+// first open after page load is not announced: announcing it made every screen and
+// the top bar fetch everything twice on each page load. Reconnects are announced.
+export function shouldAnnounceSocketOpen(openCount) {
+    return openCount > 1;
+}
+
 export const WebSocketProvider = ({ userId, children }) => {
     const didUnmount = useRef(false);
+    const openCountRef = useRef(0);
+    useEffect(() => { openCountRef.current = 0; }, [userId]);
 
     const device_id = getDeviceId(); // Matches Golang struct field name
 
@@ -90,7 +100,10 @@ export const WebSocketProvider = ({ userId, children }) => {
 
             onOpen: async () => {
                 console.log("WebSocket Connection Opened");
-                eventEmitter.emit("socket_connection_open"); // Emit event to other components
+                openCountRef.current += 1;
+                if (shouldAnnounceSocketOpen(openCountRef.current)) {
+                    eventEmitter.emit("socket_connection_open"); // a reconnect: reload what may have been missed
+                }
 
                 try {
                     const systemInfo = await getDeviceFingerprint();

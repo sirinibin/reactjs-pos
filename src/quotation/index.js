@@ -34,6 +34,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { takeNewMessage } from '../utils/socketMessages.js';
 
 
 
@@ -552,9 +553,10 @@ function QuotationIndex(props) {
   }, [statsOpen, list]);
 
 
+  const handledMessageRef = useRef(lastMessage);
   useEffect(() => {
     if (enableSelection) return;
-    if (lastMessage) {
+    if (takeNewMessage(lastMessage, handledMessageRef)) {
       const jsonMessage = JSON.parse(lastMessage.data);
       console.log("Received Message in User list:", jsonMessage);
       if (jsonMessage.event === "quotation_updated") {

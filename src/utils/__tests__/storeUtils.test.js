@@ -161,3 +161,59 @@ test("fetchStore returns null for falsy id without calling API", async () => {
     expect(result).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
 });
+
+// ── concurrent callers share one request ─────────────────────────────────────
+// The top bar, a list and its forms all ask for the store as a screen mounts;
+// before the in-flight sharing each sent its own GET /v1/store/{id}.
+
+test("concurrent fetchStore calls for one store send one request", async () => {
+    let resolve;
+    fetch.mockReturnValue(new Promise((r) => { resolve = r; }));
+    const calls = [fetchStore("s1"), fetchStore("s1"), fetchStore("s1")];
+    expect(fetch).toHaveBeenCalledTimes(1);
+    resolve(makeJsonResponse({ result: { id: "s1", name: "One" } }));
+    const results = await Promise.all(calls);
+    results.forEach((r) => expect(r).toEqual({ id: "s1", name: "One" }));
+    await fetchStore("s1"); // now from the cache
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test("different stores are fetched separately", async () => {
+    fetch.mockImplementation((url) => Promise.resolve(makeJsonResponse({ result: { id: url.split("/")[3].split("?")[0] } })));
+    const [a, b] = await Promise.all([fetchStore("a1"), fetchStore("b2")]);
+    expect(a.id).toBe("a1");
+    expect(b.id).toBe("b2");
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("a failed request is not shared with the next caller", async () => {
+    fetch.mockResolvedValueOnce(makeJsonResponse({ errors: { x: "down" } }, false, 500));
+    const first = fetchStore("s2");
+    const second = fetchStore("s2");
+    await expect(first).rejects.toEqual({ x: "down" });
+    await expect(second).rejects.toEqual({ x: "down" });
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "s2" } }));
+    await expect(fetchStore("s2")).resolves.toEqual({ id: "s2" });
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("a custom select is never shared or cached", async () => {
+    fetch.mockResolvedValue(makeJsonResponse({ result: { id: "s3" } }));
+    await Promise.all([fetchStore("s3", "id"), fetchStore("s3", "id")]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("invalidateStoreCache during a request makes the next call fetch again", async () => {
+    let resolve;
+    fetch.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+    const stale = fetchStore("s4");
+    invalidateStoreCache("s4");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "s4", name: "new" } }));
+    const fresh = await fetchStore("s4");
+    expect(fresh.name).toBe("new");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    resolve(makeJsonResponse({ result: { id: "s4", name: "old" } }));
+    await stale;
+});

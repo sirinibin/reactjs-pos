@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PostingIndex from '../index.js';
 
@@ -128,6 +128,7 @@ jest.mock('../../utils/WebSocketContext.js', () => {
     WebSocketContext: React.createContext({ lastMessage: null }),
   };
 });
+const { WebSocketContext } = require('../../utils/WebSocketContext.js');
 
 jest.mock('../../utils/eventEmitter', () => ({
   on: jest.fn(),
@@ -180,5 +181,40 @@ describe('PostingIndex', () => {
         <PostingIndex ref={ref} />
       </MemoryRouter>
     );
+  });
+});
+
+// The balance sheet is embedded hidden on many screens (customers, vendors,
+// accounts, ledger, dashboards); it used to fetch the store's postings on each.
+describe('PostingIndex API calls', () => {
+  const postingCalls = () => global.fetch.mock.calls.filter(([u]) => String(u).startsWith('/v1/posting'));
+  const msg = (event) => ({ data: JSON.stringify({ event }) });
+  const renderWith = (ref, lastMessage) => (
+    <WebSocketContext.Provider value={{ lastMessage }}>
+      <MemoryRouter><PostingIndex ref={ref} /></MemoryRouter>
+    </WebSocketContext.Provider>
+  );
+
+  it('loads no postings while closed, even when a document changes', async () => {
+    const ref = React.createRef();
+    const { rerender } = render(renderWith(ref, null));
+    await act(async () => { await Promise.resolve(); });
+    rerender(renderWith(ref, msg('sales_updated')));
+    await act(async () => { await Promise.resolve(); });
+    expect(postingCalls()).toHaveLength(0);
+  });
+
+  it('loads the account postings once when opened, and reloads on a document change while open', async () => {
+    const ref = React.createRef();
+    const { rerender } = render(renderWith(ref, null));
+    await act(async () => { ref.current.open({ id: 'acc1', name: 'Cash' }); await Promise.resolve(); });
+    expect(postingCalls()).toHaveLength(1);
+    rerender(renderWith(ref, msg('sales_updated')));
+    await act(async () => { await Promise.resolve(); });
+    expect(postingCalls()).toHaveLength(2);
+    // An unrelated event does not reload.
+    rerender(renderWith(ref, msg('user_updated')));
+    await act(async () => { await Promise.resolve(); });
+    expect(postingCalls()).toHaveLength(2);
   });
 });

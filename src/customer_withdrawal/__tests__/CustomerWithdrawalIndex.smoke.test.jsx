@@ -134,4 +134,12 @@ describe('CustomerWithdrawalIndex smoke tests', () => {
     );
     expect(document.body).toBeTruthy();
   });
+
+  // The list used to load twice on open (a mount effect and the stats-panel effect).
+  it('loads the payables list once on open', async () => {
+    const { act } = require('@testing-library/react');
+    await act(async () => { render(<MemoryRouter><CustomerWithdrawalIndex /></MemoryRouter>); });
+    await act(async () => { jest.advanceTimersByTime(1000); });
+    expect(global.fetch.mock.calls.filter(([u]) => String(u).startsWith('/v1/customer-withdrawal?'))).toHaveLength(1);
+  });
 });

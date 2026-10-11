@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useContext, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useContext, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,6 +13,7 @@ import { Button, Modal } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { useTranslation } from "react-i18next";
+import { takeNewMessage, messageEvent, DOCUMENT_UPDATE_EVENTS } from '../utils/socketMessages.js';
 
 const StatsIndex = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
@@ -1077,21 +1078,17 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //End Non-VAT Sales
 
-    useEffect(() => {
-        list();
-        listSalesReturn();
-        listPurchase();
-        listPurchaseReturn();
-        listExpense();
-        listQuotation();
-        listQtnSalesReturn();
-        listNonVatSales();
-        listNonVatSalesReturn();
-    }, [list, listSalesReturn, listPurchase, listPurchaseReturn, listExpense, listQuotation, listQtnSalesReturn, listNonVatSales, listNonVatSalesReturn]);
+    // Each section loads itself in its own effect above (on mount and when its
+    // summary is opened). A second "load everything" effect here fetched all nine
+    // lists twice on every visit, and again whenever any one summary was toggled.
 
 
+    const handledMessageRef = useRef(lastMessage);
     useEffect(() => {
-        if (lastMessage) {
+        const message = takeNewMessage(lastMessage, handledMessageRef);
+        // Only document changes move these figures; other pushes (heartbeat pongs,
+        // users going online, unread counts) reloaded all nine lists each time.
+        if (message && DOCUMENT_UPDATE_EVENTS.includes(messageEvent(message))) {
             list();
             listSalesReturn();
             listPurchase();

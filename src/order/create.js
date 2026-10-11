@@ -77,6 +77,7 @@ import QuotationImportPicker from '../quotation/QuotationImportPicker.js';
 import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts, fetchAllowDuplicateIds } from '../quotation/quotationImport.js';
 import ZatcaConnect from '../store/zatca_connect.js';
 import { cleanTypedCustomerName } from "../utils/customerName.js";
+import { fetchDeliveryNoteReminders } from '../utils/deliveryNoteReminders.js';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -5574,10 +5575,7 @@ const OrderCreate = forwardRef((props, ref) => {
             const token = localStorage.getItem("access_token");
             if (!storeId || !token) return;
             try {
-                const res = await fetch(`/v1/delivery-note/reminders?search[store_id]=${storeId}`, {
-                    headers: { Authorization: "Bearer " + token },
-                });
-                const data = await res.json();
+                const data = await fetchDeliveryNoteReminders(storeId, token);
                 if (data.status && Array.isArray(data.result)) {
                     const dismissed = _getDnDismissedMap();
                     data.result.forEach(dn => {

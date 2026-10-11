@@ -28,6 +28,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import { takeNewMessage } from '../utils/socketMessages.js';
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -926,8 +927,9 @@ function QuotationSalesReturnIndex(props) {
     }, [statsOpen, list]);
 
 
+    const handledMessageRef = useRef(lastMessage);
     useEffect(() => {
-        if (lastMessage) {
+        if (takeNewMessage(lastMessage, handledMessageRef)) {
             const jsonMessage = JSON.parse(lastMessage.data);
             console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "quotationsales_return_updated") {

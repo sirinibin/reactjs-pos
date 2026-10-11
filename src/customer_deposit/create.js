@@ -41,6 +41,34 @@ const columnStyle = {
     paddingRight: '8px',
 };
 
+// Defined once at module level: an inline arrow passed as dialogAs is a new
+// component type on every render, so React rebuilt the modal body (and refetched
+// any list inside it) whenever the parent re-rendered.
+const InvoiceTypeDialog = ({ children, ...props }) => {
+    const dragRef = useRef(null);
+    return (
+        <Draggable handle=".modal-header" nodeRef={dragRef}>
+            <div
+                ref={dragRef}
+                className="modal-dialog"
+                {...props}
+                style={{
+                    position: "absolute",
+                    top: "27%",
+                    left: "27%",
+                    transform: "translate(-50%, -50%)",
+                    margin: "0",
+                    zIndex: 1055,
+                    maxWidth: "600px", // or "90%" for responsive
+                    width: "100%",
+                }}
+            >
+                <div className="modal-content">{children}</div>
+            </div>
+        </Draggable>
+    );
+};
+
 const CustomerDepositCreate = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
     useImperativeHandle(ref, () => ({
@@ -1188,7 +1216,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    const dragRef = useRef(null);
 
     // ── Design tokens ──────────────────────────────────────────────────────
     const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
@@ -1339,27 +1366,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 keyboard={false}
                 centered={false}
                 enforceFocus={false}
-                dialogAs={({ children, ...props }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog"
-                            {...props}
-                            style={{
-                                position: "absolute",
-                                top: "27%",
-                                left: "27%",
-                                transform: "translate(-50%, -50%)",
-                                margin: "0",
-                                zIndex: 1055,
-                                maxWidth: "600px", // or "90%" for responsive
-                                width: "100%",
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable>
-                )}
+                dialogAs={InvoiceTypeDialog}
 
             >
                 <Modal.Header closeButton className="cursor-move">

@@ -23,6 +23,7 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { useTranslation } from "react-i18next";
+import { takeNewMessage } from '../utils/socketMessages.js';
 
 
 const StockTransferIndex = forwardRef((props, ref) => {
@@ -358,8 +359,9 @@ const StockTransferIndex = forwardRef((props, ref) => {
     }, [statsOpen, list]);
 
 
+    const handledMessageRef = useRef(lastMessage);
     useEffect(() => {
-        if (lastMessage) {
+        if (takeNewMessage(lastMessage, handledMessageRef)) {
             const jsonMessage = JSON.parse(lastMessage.data);
             // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "stocktransfer_updated") {

@@ -20,13 +20,22 @@ const STORE_SELECT = [
 // Call invalidateStoreCache(id) after saving store settings so the next
 // fetchStore call hits the API and picks up the latest data.
 const _storeCache = new Map();
+// Requests in flight: storeId → promise. Screens mounting together (top bar,
+// list, forms) ask for the same store at once; they share one request instead
+// of each sending its own before the first answer fills the cache.
+const _inFlight = new Map();
+
 
 export function invalidateStoreCache(id) {
-    if (id) _storeCache.delete(id);
+    if (id) {
+        _storeCache.delete(id);
+        _inFlight.delete(id);
+    }
 }
 
 export function _clearAllStoreCaches() {
     _storeCache.clear();
+    _inFlight.clear();
 }
 
 export async function fetchStore(id, select = STORE_SELECT) {
@@ -39,23 +48,36 @@ export async function fetchStore(id, select = STORE_SELECT) {
     if (usingFullSelect && _storeCache.has(id)) {
         return _storeCache.get(id);
     }
-
-    const requestOptions = {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('access_token'),
-        },
-    };
-    const response = await fetch(`/v1/store/${id}?select=${select}`, requestOptions);
-    const isJson = response.headers.get('content-type')?.includes('application/json');
-    const data = isJson && await response.json();
-    if (!response.ok) {
-        return Promise.reject(data && data.errors);
+    if (usingFullSelect && _inFlight.has(id)) {
+        return _inFlight.get(id);
     }
 
-    if (usingFullSelect) {
-        _storeCache.set(id, data.result);
+    const request = (async () => {
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+        const response = await fetch(`/v1/store/${id}?select=${select}`, requestOptions);
+        const isJson = response.headers.get('content-type')?.includes('application/json');
+        const data = isJson && await response.json();
+        if (!response.ok) {
+            return Promise.reject(data && data.errors);
+        }
+
+        if (usingFullSelect) {
+            _storeCache.set(id, data.result);
+        }
+        return data.result;
+    })();
+
+    if (!usingFullSelect) return request;
+    _inFlight.set(id, request);
+    try {
+        return await request;
+    } finally {
+        if (_inFlight.get(id) === request) _inFlight.delete(id);
     }
-    return data.result;
 }

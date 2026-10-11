@@ -31,6 +31,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
 import { useTranslation } from "react-i18next";
+import { takeNewMessage } from '../utils/socketMessages.js';
 
 
 
@@ -110,10 +111,9 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
 
-    useEffect(() => {
-        list();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // No list on mount: the balance sheet is a modal that every screen embeds
+    // hidden (customers, vendors, accounts, ledger, dashboards...), and open()
+    // loads it. Loading here fetched the store's postings on each of those screens.
 
     useEffect(() => {
         moveToLastPage();
@@ -424,8 +424,9 @@ const PostingIndex = forwardRef((props, ref) => {
     }
 
     const { lastMessage } = useContext(WebSocketContext);
+    const handledMessageRef = useRef(lastMessage);
     useEffect(() => {
-        if (lastMessage) {
+        if (takeNewMessage(lastMessage, handledMessageRef)) {
             const jsonMessage = JSON.parse(lastMessage.data);
             // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "sales_updated" ||
@@ -438,7 +439,8 @@ const PostingIndex = forwardRef((props, ref) => {
                 jsonMessage.event === "receivable_updated" ||
                 jsonMessage.event === "payable_updated"
             ) {
-                setLoadList(true);
+                // A closed balance sheet reloads when it is opened.
+                if (showAccountBalanceSheet) setLoadList(true);
             }
         }
 

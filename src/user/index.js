@@ -15,6 +15,11 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { shortLocale } from '../utils/dateUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import PaginationControls from '../utils/PaginationControls.js';
+import { takeNewMessage } from '../utils/socketMessages.js';
+
+// Online-status events that arrive within this window reload the list once.
+export const USER_STATUS_RELOAD_MS = 500;
+
 function UserIndex(props) {
     const { t } = useTranslation('common');
     const { lastMessage } = useContext(WebSocketContext);
@@ -240,16 +245,20 @@ function UserIndex(props) {
             });
     }, [page, pageSize, searchParams, sortField, sortUser]);
 
+    const handledMessageRef = useRef(lastMessage);
+    const statusReloadTimerRef = useRef(null);
     useEffect(() => {
-        if (lastMessage) {
+        if (takeNewMessage(lastMessage, handledMessageRef)) {
             const jsonMessage = JSON.parse(lastMessage.data);
             // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "user_status_change" || jsonMessage.event === "user_device_count_change") {
-                // console.log("Refreshing user list")
-                list();
+                // A user connecting sends both events at once; reload once for the burst.
+                clearTimeout(statusReloadTimerRef.current);
+                statusReloadTimerRef.current = setTimeout(list, USER_STATUS_RELOAD_MS);
             }
         }
     }, [lastMessage, list]);
+    useEffect(() => () => clearTimeout(statusReloadTimerRef.current), []);
 
     function sort(field) {
         sortField = field;

@@ -6,9 +6,34 @@ import QuotationSalesReturnIndex from "./../quotation_sales_return/index.js";
 import { useTranslation } from 'react-i18next';
 
 
+// Defined once at module level: an inline arrow passed as dialogAs is a new
+// component type on every render, so React rebuilt the modal body (and refetched
+// any list inside it) whenever the parent re-rendered.
+const PickerDialog = ({ children, ...props }) => {
+    const dragRef = useRef(null);
+    return (
+        <Draggable handle=".modal-header" nodeRef={dragRef}>
+            <div
+                ref={dragRef}
+                className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                {...props}
+                style={{
+                    position: "fixed",
+                    top: "5%",
+                    left: "15%",
+                    margin: "0",
+                    zIndex: 1060,
+                    width: "70%",
+                }}
+            >
+                <div className="modal-content">{children}</div>
+            </div>
+        </Draggable>
+    );
+};
+
 const QuotationSalesReturns = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
-    const dragRef = useRef(null);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
     let [enableSelection, setEnableSelection] = useState(false);
@@ -53,25 +78,7 @@ const QuotationSalesReturns = forwardRef((props, ref) => {
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
                 className="above-sales-modal"
-                dialogAs={({ children, ...props }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
-                            {...props}
-                            style={{
-                                position: "fixed",
-                                top: "5%",
-                                left: "15%",
-                                margin: "0",
-                                zIndex: 1060,
-                                width: "70%",
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable>
-                )}
+                dialogAs={PickerDialog}
             >
                 <Modal.Header>
                     <Modal.Title>{enableSelection ? t("Select Qtn. Sales Return") : t("Qtn. Sales Returns")}</Modal.Title>

@@ -88,7 +88,8 @@ afterEach(() => {
   jest.clearAllTimers();
 });
 
-import UserIndex from '../index.js';
+import UserIndex, { USER_STATUS_RELOAD_MS } from '../index.js';
+const { WebSocketContext } = require('../../utils/WebSocketContext.js');
 
 describe('UserIndex smoke test', () => {
   test('renders without crashing', async () => {
@@ -122,5 +123,45 @@ describe('UserIndex smoke test', () => {
       );
     });
     expect(global.fetch).toHaveBeenCalled();
+  });
+});
+
+// A user connecting sends user_status_change and user_device_count_change together;
+// each used to reload the list (3 requests on opening the page).
+describe('UserIndex online-status reloads', () => {
+  // The CRA config resets mocks before each test, which leaves the fake setTimeout a no-op.
+  beforeEach(() => jest.useFakeTimers());
+  const listCalls = () => global.fetch.mock.calls.filter(([u]) => String(u).startsWith('/v1/user?'));
+  const msg = (event, n) => ({ data: JSON.stringify({ event, n }) });
+  const ui = (lastMessage) => (
+    <WebSocketContext.Provider value={{ lastMessage }}>
+      <MemoryRouter><UserIndex showToastMessage={jest.fn()} /></MemoryRouter>
+    </WebSocketContext.Provider>
+  );
+
+  test('a burst of status events reloads the list once, a later event again, other events not at all', async () => {
+    let view;
+    await act(async () => { view = render(ui(null)); });
+    expect(listCalls()).toHaveLength(1);
+    await act(async () => { view.rerender(ui(msg('user_status_change', 1))); });
+    await act(async () => { view.rerender(ui(msg('user_device_count_change', 2))); });
+    expect(listCalls()).toHaveLength(1);
+    await act(async () => { jest.advanceTimersByTime(USER_STATUS_RELOAD_MS); });
+    expect(listCalls()).toHaveLength(2);
+    await act(async () => { view.rerender(ui(msg('sales_updated', 3))); });
+    await act(async () => { jest.advanceTimersByTime(USER_STATUS_RELOAD_MS * 2); });
+    expect(listCalls()).toHaveLength(2);
+    await act(async () => { view.rerender(ui(msg('user_status_change', 4))); });
+    await act(async () => { jest.advanceTimersByTime(USER_STATUS_RELOAD_MS); });
+    expect(listCalls()).toHaveLength(3);
+  });
+
+  test('a pending reload is dropped when the page closes', async () => {
+    let view;
+    await act(async () => { view = render(ui(null)); });
+    await act(async () => { view.rerender(ui(msg('user_status_change', 1))); });
+    view.unmount();
+    await act(async () => { jest.advanceTimersByTime(USER_STATUS_RELOAD_MS * 2); });
+    expect(listCalls()).toHaveLength(1);
   });
 });
