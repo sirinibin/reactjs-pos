@@ -277,6 +277,34 @@ test.describe('warehouses and stock transfers', () => {
     // Both sides moved; the store total is unchanged.
     await expect.poll(() => api.warehouseStocks(product.id)).toMatchObject({ total: 10, main_store: 6, [warehouse.code]: 4 });
   });
+
+  test('a transfer the source is short for is saved with a warning and the source goes negative @devices', async ({ page, request }) => {
+    const api = invApi(request);
+    const w = uniq('SH');
+    const product = await api.createProduct({ name: `Gasket ${w}`, partNumber: `GK-${w}` });
+    await api.stockUp([product], 3);
+    const warehouse = await api.createWarehouse(`E2E Short ${w}`);
+
+    const dialog = await openCreate(page, 'stock-transfers', 'Create New Stock Transfer');
+    await pickSuggestion(page, dialog.getByPlaceholder('Part No. | Name | Name in Arabic | Brand | Country').first(), product.part_number, product.part_number);
+    await dialog.locator('#to_warehouse_id').selectOption({ label: `${warehouse.name} (${warehouse.code})` });
+    await typeInto(page, dialog.locator('#stocktransfer_product_quantity_0'), '5', 60);
+    await expect(dialog.locator('#stocktransfer_product_quantity_0')).toHaveValue('5');
+
+    // The quantity is flagged as a warning, not an error, and Create stays usable.
+    await expect(dialog.locator('i[data-warning*="stock will go negative"]').first()).toBeAttached();
+    await expect(dialog.locator('#stocktransfer_product_quantity_0')).not.toHaveClass(/is-invalid/);
+    const createButton = dialog.getByRole('button', { name: 'Create', exact: true }).last();
+    await expect(createButton).toBeEnabled();
+
+    const saved = await submitAndCapture(page, createButton, 'POST', /\/v1\/stock-transfer\?/);
+    expect(saved.status, JSON.stringify(saved.body.errors)).toBe(200);
+    expect(saved.body.warnings.quantity_0).toContain('2 short');
+    await expect(page.getByText(`the source stock went negative for: ${product.name}`).first()).toBeVisible();
+
+    // 3 in the main store, 5 moved: the main store is at -2, the total is unchanged.
+    await expect.poll(() => api.warehouseStocks(product.id)).toMatchObject({ total: 3, main_store: -2, [warehouse.code]: 5 });
+  });
 });
 
 test.describe('delivery notes', () => {

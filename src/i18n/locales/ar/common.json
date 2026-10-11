@@ -3314,5 +3314,8 @@
   "wa_check_and_add": "تحقق وأضف",
   "wa_click_add_to_confirm": "انقر على إضافة للتأكيد.",
   "wa_number_not_found": "لا يوجد حساب واتساب لهذا الرقم.",
-  "wa_number_valid": "تم العثور على حساب واتساب"
+  "wa_number_valid": "تم العثور على حساب واتساب",
+  " (stock will go negative)": " (سيصبح المخزون بالسالب)",
+  "Saved with a stock shortage, the source stock went negative for": "تم الحفظ مع نقص في المخزون، وأصبح مخزون المصدر بالسالب لـ",
+  "line": "سطر"
 }

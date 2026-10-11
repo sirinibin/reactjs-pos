@@ -49,6 +49,7 @@ import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import { useTranslation } from "react-i18next";
+import { sourceShortageWarning, stockShortageMessage } from "./stockShortage.js";
 
 
 const columnStyle = {
@@ -1389,6 +1390,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
                     if (props.showToastMessage) props.showToastMessage("StockTransfer created successfully!", "success");
                 }
 
+                // A short source doesn't block the transfer; say whose stock went negative.
+                const shortageMessage = stockShortageMessage(data?.warnings, formData.products, t);
+                if (shortageMessage && props.showToastMessage) props.showToastMessage(shortageMessage, "warning");
+
                 setTimeout(() => {
                     setToastMessage(`Preparing Print Preview...`);
                     setShowToast(true);
@@ -1583,8 +1588,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 if (!storeData) return;
                 const warehouseStocks = storeData.warehouse_stocks ?? { "main_store": storeData.stock ?? 0 };
                 const stockInWH = warehouseStocks[fromWarehouseCode] ?? storeData.stock ?? 0;
-                if (!formData.id && stockInWH < sp.quantity) {
-                    newWarnings["quantity_" + i] = t("Warning: Available stock in ") + fromWarehouseCode + t(" is ") + stockInWH;
+                const shortage = formData.id ? "" : sourceShortageWarning(stockInWH, sp.quantity, fromWarehouseCode, t);
+                if (shortage) {
+                    newWarnings["quantity_" + i] = shortage;
                 } else {
                     delete newWarnings["quantity_" + i];
                 }
@@ -1645,8 +1651,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
         if (!selectedProducts[i].warehouse_stocks[fromWarehouseCode]) {
             selectedProducts[i].warehouse_stocks[fromWarehouseCode] = 0;
         }
-        if (!formData.id && selectedProducts[i].warehouse_stocks[fromWarehouseCode] < selectedProducts[i].quantity) {
-            warnings["quantity_" + i] = t("Warning: Available stock in ") + fromWarehouseCode + t(" is ") + (selectedProducts[i].warehouse_stocks[fromWarehouseCode]);
+        const shortage = formData.id ? "" : sourceShortageWarning(selectedProducts[i].warehouse_stocks[fromWarehouseCode], selectedProducts[i].quantity, fromWarehouseCode, t);
+        if (shortage) {
+            warnings["quantity_" + i] = shortage;
         } else {
             delete warnings["quantity_" + i];
         }

@@ -3262,5 +3262,8 @@
   "(An opening balance entry has already been posted for this employee — changing the values below will update it.)": "(اس ملازم کے لیے افتتاحی بیلنس اندراج پہلے سے درج ہے — نیچے کی اقدار تبدیل کرنے سے یہ اپ ڈیٹ ہوگا۔)",
   "contacts synced": "رابطے ہم آہنگ ہوئے",
   "RFQ Contents Received": "RFQ مواد موصول ہوا",
-  "RFQ Suppliers": "RFQ سپلائرز"
+  "RFQ Suppliers": "RFQ سپلائرز",
+  " (stock will go negative)": " (اسٹاک منفی ہو جائے گا)",
+  "Saved with a stock shortage, the source stock went negative for": "اسٹاک کی کمی کے ساتھ محفوظ ہو گیا، ماخذ کا اسٹاک منفی ہو گیا",
+  "line": "سطر"
 }

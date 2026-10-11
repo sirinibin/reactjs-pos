@@ -566,5 +566,8 @@
   "updated_at_label": "Updated At",
   "updated_by": "Updated By",
   "vat_hash": "VAT #",
-  "vendor_account": "Vendor Account"
+  "vendor_account": "Vendor Account",
+  " (stock will go negative)": " (stock will go negative)",
+  "Saved with a stock shortage, the source stock went negative for": "Saved with a stock shortage, the source stock went negative for",
+  "line": "line"
 }

@@ -3262,5 +3262,8 @@
   "(An opening balance entry has already been posted for this employee — changing the values below will update it.)": "(ഈ ജീവനക്കാരനുള്ള ഒരു തുടക്ക ബാലൻസ് എൻട്രി ഇതിനകം പോസ്റ്റ് ചെയ്തിരിക്കുന്നു — താഴെ മൂല്യങ്ങൾ മാറ്റുന്നത് അത് അപ്ഡേറ്റ് ചെയ്യും.)",
   "contacts synced": "കോൺടാക്ടുകൾ സമന്വയിപ്പിച്ചു",
   "RFQ Contents Received": "RFQ ഉള്ളടക്കം ലഭിച്ചു",
-  "RFQ Suppliers": "RFQ വിതരണക്കാർ"
+  "RFQ Suppliers": "RFQ വിതരണക്കാർ",
+  " (stock will go negative)": " (സ്റ്റോക്ക് മൈനസ് ആകും)",
+  "Saved with a stock shortage, the source stock went negative for": "സ്റ്റോക്ക് കുറവോടെ സേവ് ചെയ്തു, ഉറവിട സ്റ്റോക്ക് മൈനസ് ആയി",
+  "line": "വരി"
 }

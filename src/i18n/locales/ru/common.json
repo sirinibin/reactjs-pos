@@ -3262,5 +3262,8 @@
   "(An opening balance entry has already been posted for this employee — changing the values below will update it.)": "(Запись начального остатка для этого сотрудника уже была проведена — изменение значений ниже обновит её.)",
   "contacts synced": "контакты синхронизированы",
   "RFQ Contents Received": "Содержимое запроса на котировку получено",
-  "RFQ Suppliers": "Поставщики для запросов на котировку"
+  "RFQ Suppliers": "Поставщики для запросов на котировку",
+  " (stock will go negative)": " (остаток станет отрицательным)",
+  "Saved with a stock shortage, the source stock went negative for": "Сохранено при нехватке товара, остаток источника стал отрицательным для",
+  "line": "строка"
 }

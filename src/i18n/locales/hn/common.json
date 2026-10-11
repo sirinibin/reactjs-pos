@@ -3262,5 +3262,8 @@
   "(An opening balance entry has already been posted for this employee — changing the values below will update it.)": "(इस कर्मचारी के लिए प्रारंभिक शेष प्रविष्टि पहले ही दर्ज की जा चुकी है — नीचे मान बदलने से यह अपडेट होगी।)",
   "contacts synced": "संपर्क सिंक किए गए",
   "RFQ Contents Received": "RFQ सामग्री प्राप्त हुई",
-  "RFQ Suppliers": "RFQ आपूर्तिकर्ता"
+  "RFQ Suppliers": "RFQ आपूर्तिकर्ता",
+  " (stock will go negative)": " (स्टॉक माइनस में चला जाएगा)",
+  "Saved with a stock shortage, the source stock went negative for": "स्टॉक की कमी के साथ सहेजा गया, स्रोत का स्टॉक माइनस में गया",
+  "line": "पंक्ति"
 }
