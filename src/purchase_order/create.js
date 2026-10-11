@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useMemo, useImperativeHandle, useCallback } from "react";
+import { selectIfStillFocused, focusNewLineInput } from "../utils/focusSelect";
 import { Modal } from "react-bootstrap";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
@@ -748,7 +749,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
             const lastIdx = selectedProducts.length - 1;
             if (inputRefs.current[lastIdx]) {
                 const qtyKey = `purchase_order_product_quantity_${lastIdx}`;
-                inputRefs.current[lastIdx][qtyKey]?.select();
+                focusNewLineInput(inputRefs.current[lastIdx][qtyKey]);
             }
         }, 100);
 
@@ -968,7 +969,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                     inputMode="decimal"
                                     ref={el => { if (el) inputRefs.current[index][`purchase_order_product_quantity_${index}`] = el; }}
                                     value={activeInput.key === `qty_${index}` ? activeInput.value : String(product.quantity)}
-                                    onFocus={e => { const v = String(product.quantity); setActiveInput({ key: `qty_${index}`, value: v }); setTimeout(() => e.target.select(), 0); }}
+                                    onFocus={e => { const v = String(product.quantity); setActiveInput({ key: `qty_${index}`, value: v }); selectIfStillFocused(e.target); }}
                                     onWheel={e => e.target.blur()}
                                     style={{ width: '60px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                     onChange={e => {
@@ -1006,7 +1007,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 type="text"
                                 inputMode="decimal"
                                 value={activeInput.key === `price_${index}` ? activeInput.value : String(trimTo2Decimals(product.purchase_unit_price))}
-                                onFocus={e => { const v = String(trimTo2Decimals(product.purchase_unit_price)); setActiveInput({ key: `price_${index}`, value: v }); setTimeout(() => e.target.select(), 0); }}
+                                onFocus={e => { const v = String(trimTo2Decimals(product.purchase_unit_price)); setActiveInput({ key: `price_${index}`, value: v }); selectIfStillFocused(e.target); }}
                                 onWheel={e => e.target.blur()}
                                 style={{ width: '110px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
@@ -1040,7 +1041,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 type="text"
                                 inputMode="decimal"
                                 value={activeInput.key === `price_vat_${index}` ? activeInput.value : String(trimTo2Decimals(product.purchase_unit_price_with_vat))}
-                                onFocus={e => { const v = String(trimTo2Decimals(product.purchase_unit_price_with_vat)); setActiveInput({ key: `price_vat_${index}`, value: v }); setTimeout(() => e.target.select(), 0); }}
+                                onFocus={e => { const v = String(trimTo2Decimals(product.purchase_unit_price_with_vat)); setActiveInput({ key: `price_vat_${index}`, value: v }); selectIfStillFocused(e.target); }}
                                 onWheel={e => e.target.blur()}
                                 style={{ width: '110px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
@@ -1079,7 +1080,7 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                 type="text"
                                 inputMode="decimal"
                                 value={activeInput.key === `disc_${index}` ? activeInput.value : String(trimTo2Decimals(product.unit_discount || 0))}
-                                onFocus={e => { const v = String(trimTo2Decimals(product.unit_discount || 0)); setActiveInput({ key: `disc_${index}`, value: v }); setTimeout(() => e.target.select(), 0); }}
+                                onFocus={e => { const v = String(trimTo2Decimals(product.unit_discount || 0)); setActiveInput({ key: `disc_${index}`, value: v }); selectIfStillFocused(e.target); }}
                                 onWheel={e => e.target.blur()}
                                 style={{ width: '90px', textAlign: 'right', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                                 onChange={e => {
