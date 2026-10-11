@@ -34,10 +34,10 @@ jobs:
           echo "ERROR: You must type exactly 'yes' to confirm. Got: '${{ github.event.inputs.confirm }}'"
           exit 1
 
-      - name: Abort if not master or test
-        if: ${{ github.ref_name != 'master' && github.ref_name != 'test' }}
+      - name: Abort if not master
+        if: ${{ github.ref_name != 'master' }}
         run: |
-          echo "ERROR: Branch '${{ github.ref_name }}' is not supported. Use master (or test, its mirror)."
+          echo "ERROR: Branch '${{ github.ref_name }}' is not supported. Use master."
           exit 1
 
       - name: Show emergency warning

@@ -188,4 +188,13 @@ describe('deploy workflows', () => {
         expect(s).toMatch(/fail-fast: true/);
         expect(s.match(/npm run build/g)).toHaveLength(1);
     });
+
+    it('nothing routes by or waits on a test branch (there is none)', () => {
+        for (const name of ['deploy.yml', 'deploy_quick.yml', 'tests.yml']) {
+            const s = wf(name);
+            expect(s).not.toMatch(/origin\/test|github\.ref_name != 'test'|backend_ref: test/);
+        }
+        const quick = fs.readFileSync(path.join(__dirname, '..', '..', 'deploy_quick.sh'), 'utf8');
+        expect(quick).toMatch(/if \[ "\$BRANCH" = master \] && \$TO_TEST; then TARGET=test; fi/);
+    });
 });

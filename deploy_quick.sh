@@ -7,17 +7,22 @@
 #
 # Branch routing (auto-detected):
 #   master → production  (https://startpos.gulfunionozone.com)
-#   test   → test        (https://startpos-test.gulfunionozone.com)
+#   master + --test → test        (https://test.gulfunionozone.com)
 #   v2     → v2          (https://startpos-v2.gulfunionozone.com)
 #
 # Usage:
 #   ./deploy_quick.sh          — build + deploy current branch target
+#   ./deploy_quick.sh --test   — on master: deploy to the test server instead
 #   ./deploy_quick.sh --force  — also skip uncommitted-changes check
 
 set -eo pipefail
 
 FORCE=false
-for arg in "$@"; do [ "$arg" = "--force" ] && FORCE=true; done
+TO_TEST=false
+for arg in "$@"; do
+  [ "$arg" = "--force" ] && FORCE=true
+  [ "$arg" = "--test" ] && TO_TEST=true
+done
 
 SSH_KEY="${SSH_KEY:-$HOME/Downloads/startuptech-v2.pem}"
 SERVER_USER="ubuntu"
@@ -27,7 +32,10 @@ FRONTEND_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ─── Detect branch → set target ───────────────────────────────────────────────
 BRANCH=$(git -C "$FRONTEND_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-case "$BRANCH" in
+# There is no test branch: master's code goes to the test server with --test.
+TARGET="$BRANCH"
+if [ "$BRANCH" = master ] && $TO_TEST; then TARGET=test; fi
+case "$TARGET" in
   master)
     API_URL="https://startpos-api.gulfunionozone.com"
     DEST="/home/ubuntu/reactjs-pos/build"
@@ -45,7 +53,7 @@ case "$BRANCH" in
     ;;
   *)
     echo "==> ABORTED: deploy_quick.sh does not support branch '$BRANCH'."
-    echo "    Supported branches: master, test, v2"
+    echo "    Supported: master (add --test for the test server), v2"
     exit 1
     ;;
 esac

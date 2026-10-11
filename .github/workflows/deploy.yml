@@ -4,8 +4,8 @@ name: Test and deploy React App (test, then production)
 # to master runs every suite once and builds once; that exact build goes to the
 # test site and, only after the test site serves it, to production. The API
 # host is worked out at runtime from the page's host (src/utils/apiBaseURL.js),
-# so the same build is right for both. The test branch is a mirror of master
-# and triggers nothing.
+# so the same build is right for both. There is no test branch: master is the
+# only branch that deploys.
 on:
   push:
     branches:

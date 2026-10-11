@@ -21,8 +21,8 @@ deploy.sh enforces three gates before every deploy — all three must pass:
 ## GitHub Actions
 One pipeline for both sites: a push to `master` runs `deploy.yml`, which calls `tests.yml` once and deploys
 that one build to the test site and, only after the test site serves it, to production
-(`.github/scripts/deploy_site.sh`: atomic swap, verify, roll back). `test` is a mirror of master and
-triggers nothing; keep pushing the same commits to both. The build is site-neutral: absolute API links come
+(`.github/scripts/deploy_site.sh`: atomic swap, verify, roll back). There is no `test` branch any
+more (removed 2026-10-11): push to `master` only. The build is site-neutral: absolute API links come
 from `src/utils/apiBaseURL.js` (page host → API), never a baked `REACT_APP_API_URL`.
 `deploy_quick.yml` (manual, tests skipped) takes a target: both / test / production. `tests.yml` runs:
 ESLint + Jest, build (no warnings), Playwright with a mocked API (`e2e/tests`) and Playwright
@@ -44,10 +44,10 @@ frontend/deploy.sh production  # production only
 
 ## Branch isolation rule (NON-NEGOTIABLE)
 
-The `v2` branch is a **completely separate product line** from `master`/`test`.
+The `v2` branch is a **completely separate product line** from `master`.
 
-1. **Never merge, cherry-pick, or rebase between `v2` and `master`/`test` in either direction.**
-   Features for v2 stay on v2. Features for master/test stay there. No exceptions.
+1. **Never merge, cherry-pick, or rebase between `v2` and `master` in either direction.**
+   Features for v2 stay on v2. Features for master stay there. No exceptions.
 
 2. **The one allowed exception — GitHub Actions workflow files only:**
    GitHub only reads `.github/workflows/` from the default branch (`master`).
@@ -55,7 +55,7 @@ The `v2` branch is a **completely separate product line** from `master`/`test`.
    `git checkout v2 -- .github/workflows/<file>.yml`
    This is a file copy only — NOT a merge. No other files cross the v2 boundary.
 
-3. **`master` and `test` may share changes freely.** This rule only applies to the v2 boundary.
+3. **There is no `test` branch.** The test server gets master's tested build from the `deploy.yml` pipeline.
 
 4. **Always run `deploy_v2.sh` from the `v2` branch.** It enforces the branch check and aborts otherwise.
 
