@@ -1,27 +1,18 @@
 name: Tests
 
-# Every test suite for the frontend. deploy.yml and deploy_production.yml call
-# this workflow and only deploy when all of its jobs pass; the build the tests
-# ran against is the one that gets deployed. It can also be run by hand from
-# the Actions tab against any branch.
+# Every test suite for the frontend. deploy.yml calls this workflow once per
+# push to master and deploys to the test site, then production, only when all
+# of its jobs pass; the build the tests ran against is the one both sites get.
+# It can also be run by hand from the Actions tab against any branch.
 on:
   workflow_call:
     inputs:
-      api_url:
-        description: "REACT_APP_API_URL baked into the build"
-        required: true
-        type: string
       backend_ref:
         description: "sirinibin/pos-rest branch the full-stack e2e suite runs against"
         required: true
         type: string
   workflow_dispatch:
     inputs:
-      api_url:
-        description: "REACT_APP_API_URL baked into the build"
-        required: true
-        default: https://startpos-api-test.gulfunionozone.com
-        type: string
       backend_ref:
         description: "sirinibin/pos-rest branch the full-stack e2e suite runs against"
         required: true
@@ -83,11 +74,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # One build for every site: REACT_APP_API_URL is left empty (overriding
+      # .env's local-dev value) and src/utils/apiBaseURL.js picks the API from
+      # the page's host at runtime.
       - name: Build
         run: |
           NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
           DANGEROUSLY_DISABLE_HOST_CHECK=true \
-          REACT_APP_API_URL=${{ inputs.api_url }} \
+          REACT_APP_API_URL= \
           GENERATE_SOURCEMAP=false \
           DISABLE_ESLINT_PLUGIN=true \
           npm run build 2>&1 | tee /tmp/build.log
@@ -100,7 +94,7 @@ jobs:
         with:
           name: frontend-build
           path: build/
-          retention-days: 7
+          retention-days: 14
 
   # ── Browser e2e with a mocked API (e2e/tests) ─────────────────────────────
   e2e-mocked:

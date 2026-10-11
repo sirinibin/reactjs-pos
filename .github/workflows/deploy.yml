@@ -1,31 +1,42 @@
-name: Deploy React App to AWS test
+name: Test and deploy React App (test, then production)
 
+# One pipeline for both sites. master and test carry the same code, so a push
+# to master runs every suite once and builds once; that exact build goes to the
+# test site and, only after the test site serves it, to production. The API
+# host is worked out at runtime from the page's host (src/utils/apiBaseURL.js),
+# so the same build is right for both. The test branch is a mirror of master
+# and triggers nothing.
 on:
   push:
     branches:
-      - test
+      - master
   workflow_dispatch:
 
-# One deploy at a time per environment; a newer push waits instead of racing.
+# One deploy at a time; a newer push waits instead of racing.
 concurrency:
-  group: deploy-frontend-test
+  group: deploy-frontend
   cancel-in-progress: false
 
 jobs:
   # ESLint, Jest, build (no warnings), mocked-API browser e2e and full-stack
-  # browser e2e against the test API branch. Nothing is deployed unless
-  # every one of them passes.
+  # browser e2e against the API's master. Nothing is deployed unless every
+  # one of them passes.
   tests:
     uses: ./.github/workflows/tests.yml
     with:
-      api_url: https://startpos-api-test.gulfunionozone.com
-      backend_ref: test
+      backend_ref: master
 
-  deploy:
+  # ── Test site first ─────────────────────────────────────────────────────────
+  deploy-test:
     needs: tests
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
+      - name: Checkout (deploy script)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
       # The exact build the tests ran against.
       - name: Download tested build
         uses: actions/download-artifact@v4
@@ -33,35 +44,44 @@ jobs:
           name: frontend-build
           path: build/
 
-      # ── Deploy: rsync to staging dir, then atomic swap (near-zero downtime) ───
-      - name: Deploy to AWS (atomic swap)
+      # rsync to a staging dir, atomic swap (two renames, ~1 ms), then check
+      # the site serves this build's index.html; if not, swap the previous
+      # build back and fail, which keeps production on its current build.
+      - name: Deploy to the test site (atomic swap, verified)
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           AWS_HOST: ${{ secrets.AWS_HOST }}
           AWS_USER: ${{ secrets.AWS_USER }}
           AWS_PORT: ${{ secrets.AWS_PORT }}
           AWS_DEST_PATH: ${{ secrets.AWS_DEST_PATH }}
-        run: |
-          set -e
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
+          SITE_URL: https://test.gulfunionozone.com/
+        run: bash .github/scripts/deploy_site.sh
 
-          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -i private_key.pem -p $AWS_PORT"
-          DEST="${AWS_DEST_PATH%/}"   # strip trailing slash
-          TMP="${DEST}_new"
-          OLD="${DEST}_old"
+  # ── Production: the same build, only after the test site serves it ────────
+  # If this job fails the previous production build is swapped back;
+  # "Re-run failed jobs" redeploys this same build without re-running tests.
+  deploy-production:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (deploy script)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
 
-          # Ensure both directories exist on the server
-          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" "mkdir -p $TMP $DEST"
+      - name: Download tested build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
 
-          # Step 1: rsync into staging dir — live site untouched during transfer
-          rsync -az --partial --timeout=60 \
-            -e "ssh $SSH_OPTS" \
-            build/ "$AWS_USER@$AWS_HOST:$TMP/"
-
-          # Step 2: atomic swap — two renames on same filesystem (~1 ms total)
-          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" \
-            "mv $DEST $OLD && mv $TMP $DEST && rm -rf $OLD"
-
-          rm -f private_key.pem
-          echo "Test deploy complete."
+      - name: Deploy to the production site (atomic swap, verified)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USER: ${{ secrets.AWS_USER }}
+          AWS_PORT: ${{ secrets.AWS_PORT }}
+          AWS_DEST_PATH: ${{ secrets.AWS_DEST_PATH_PROD }}
+          SITE_URL: https://startpos.gulfunionozone.com/
+        run: bash .github/scripts/deploy_site.sh

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Spinner, Badge, Alert } from 'react-bootstrap';
+import { apiBaseURL } from '../utils/apiBaseURL';
 
 const POLL_MS = 3000;
 
@@ -230,8 +231,7 @@ function blankCreds() {
 const PROVIDER_META = Object.fromEntries(PROVIDERS.map(p => [p.value, p]));
 
 function webhookURLForAccount(storeId, accountId) {
-    const base = process.env.REACT_APP_API_URL || '';
-    return `${base}/v1/rfq-email/webhook?store_id=${storeId}&account_id=${accountId}`;
+    return `${apiBaseURL()}/v1/rfq-email/webhook?store_id=${storeId}&account_id=${accountId}`;
 }
 
 // ── Single account add form ───────────────────────────────────────────────────
@@ -245,8 +245,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
     const [showInstructions, setShowInstructions] = useState(false);
     const pollRef = useRef(null);
 
-    const apiBase = process.env.REACT_APP_API_URL || '';
-    const callbackURL = apiBase + '/v1/rfq-email/oauth-callback';
+    const callbackURL = apiBaseURL() + '/v1/rfq-email/oauth-callback';
 
     const stopPolling = useCallback(() => {
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }

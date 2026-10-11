@@ -19,7 +19,12 @@ deploy.sh enforces three gates before every deploy — all three must pass:
    Fix all ESLint / webpack warnings before deploying.
 
 ## GitHub Actions
-`deploy.yml` (test) / `deploy_production.yml` call `tests.yml` and deploy only if all of it passes:
+One pipeline for both sites: a push to `master` runs `deploy.yml`, which calls `tests.yml` once and deploys
+that one build to the test site and, only after the test site serves it, to production
+(`.github/scripts/deploy_site.sh`: atomic swap, verify, roll back). `test` is a mirror of master and
+triggers nothing; keep pushing the same commits to both. The build is site-neutral: absolute API links come
+from `src/utils/apiBaseURL.js` (page host → API), never a baked `REACT_APP_API_URL`.
+`deploy_quick.yml` (manual, tests skipped) takes a target: both / test / production. `tests.yml` runs:
 ESLint + Jest, build (no warnings), Playwright with a mocked API (`e2e/tests`) and Playwright
 full-stack against the real pos-rest API on MongoDB + Redis (`e2e/fullstack`, see `e2e/README.md`).
 The build the tests ran against is the one deployed.

@@ -2,7 +2,9 @@ name: "⚡ Quick Deploy (Emergency — Tests Skipped)"
 
 # MANUAL TRIGGER ONLY — never runs on push.
 # Use only when a critical fix must ship immediately.
-# Go to Actions → "⚡ Quick Deploy (Emergency — Tests Skipped)" → Run workflow → pick branch.
+# Go to Actions → "⚡ Quick Deploy (Emergency — Tests Skipped)" → Run workflow →
+# branch master, pick the target. One build goes to every chosen site, test
+# first. (v2 has its own copy of this workflow on the v2 branch.)
 on:
   workflow_dispatch:
     inputs:
@@ -10,10 +12,20 @@ on:
         description: 'Type "yes" to confirm emergency deploy (tests will be skipped)'
         required: true
         default: ""
+      target:
+        description: "Where to deploy"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - test
+          - production
 
 jobs:
-  quick-deploy:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Abort if not confirmed
@@ -22,10 +34,16 @@ jobs:
           echo "ERROR: You must type exactly 'yes' to confirm. Got: '${{ github.event.inputs.confirm }}'"
           exit 1
 
+      - name: Abort if not master or test
+        if: ${{ github.ref_name != 'master' && github.ref_name != 'test' }}
+        run: |
+          echo "ERROR: Branch '${{ github.ref_name }}' is not supported. Use master (or test, its mirror)."
+          exit 1
+
       - name: Show emergency warning
         run: |
           echo "╔══════════════════════════════════════════════════════════════════════╗"
-          echo "║  ⚠  EMERGENCY QUICK DEPLOY — TESTS SKIPPED — branch: ${{ github.ref_name }}"
+          echo "║  ⚠  EMERGENCY QUICK DEPLOY — TESTS SKIPPED — ${{ github.ref_name }} → ${{ github.event.inputs.target }}"
           echo "╚══════════════════════════════════════════════════════════════════════╝"
 
       - name: Checkout code
@@ -39,39 +57,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ── Route: branch → API URL + deploy destination ──────────────────────────
-      - name: Set branch-specific variables
-        id: vars
-        run: |
-          BRANCH="${{ github.ref_name }}"
-          case "$BRANCH" in
-            master)
-              echo "api_url=https://startpos-api.gulfunionozone.com" >> "$GITHUB_OUTPUT"
-              echo "dest_secret=AWS_DEST_PATH_PROD" >> "$GITHUB_OUTPUT"
-              echo "label=PRODUCTION" >> "$GITHUB_OUTPUT"
-              ;;
-            test)
-              echo "api_url=https://startpos-api-test.gulfunionozone.com" >> "$GITHUB_OUTPUT"
-              echo "dest_secret=AWS_DEST_PATH" >> "$GITHUB_OUTPUT"
-              echo "label=TEST" >> "$GITHUB_OUTPUT"
-              ;;
-            v2)
-              echo "api_url=https://startpos-api-v2.gulfunionozone.com" >> "$GITHUB_OUTPUT"
-              echo "dest_secret=AWS_DEST_PATH_V2" >> "$GITHUB_OUTPUT"
-              echo "label=V2" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "ERROR: Branch '$BRANCH' is not supported. Use master, test, or v2."
-              exit 1
-              ;;
-          esac
-
-      # ── Build (ESLint + tests SKIPPED) ─────────────────────────────────────────
+      # ── Build (ESLint + tests SKIPPED); API host is chosen at runtime ─────────
       - name: Build (no tests)
         run: |
           NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
           DANGEROUSLY_DISABLE_HOST_CHECK=true \
-          REACT_APP_API_URL=${{ steps.vars.outputs.api_url }} \
+          REACT_APP_API_URL= \
           GENERATE_SOURCEMAP=false \
           DISABLE_ESLINT_PLUGIN=true \
           npm run build 2>&1 | tee /tmp/build.log
@@ -80,32 +71,64 @@ jobs:
             exit 1
           fi
 
-      # ── Deploy (atomic swap, near-zero downtime) ───────────────────────────────
-      - name: Deploy to AWS (atomic swap)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-quick-build
+          path: build/
+          retention-days: 7
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      # Test before production; a failed test deploy stops production.
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        include:
+          - target: test
+            dest_secret: AWS_DEST_PATH
+            site_url: https://test.gulfunionozone.com/
+          - target: production
+            dest_secret: AWS_DEST_PATH_PROD
+            site_url: https://startpos.gulfunionozone.com/
+
+    steps:
+      - name: Skip targets that were not chosen
+        id: chosen
+        run: |
+          WANT="${{ github.event.inputs.target }}"
+          if [ "$WANT" = both ] || [ "$WANT" = "${{ matrix.target }}" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "${{ matrix.target }} not chosen — skipping."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout (deploy script)
+        if: steps.chosen.outputs.go == 'true'
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Download the build
+        if: steps.chosen.outputs.go == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-quick-build
+          path: build/
+
+      - name: Deploy (atomic swap, verified)
+        if: steps.chosen.outputs.go == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           AWS_HOST: ${{ secrets.AWS_HOST }}
           AWS_USER: ${{ secrets.AWS_USER }}
           AWS_PORT: ${{ secrets.AWS_PORT }}
-          AWS_DEST_PATH: ${{ secrets[steps.vars.outputs.dest_secret] }}
+          AWS_DEST_PATH: ${{ secrets[matrix.dest_secret] }}
+          SITE_URL: ${{ matrix.site_url }}
         run: |
-          set -e
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-
-          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -i private_key.pem -p $AWS_PORT"
-          DEST="${AWS_DEST_PATH%/}"
-          TMP="${DEST}_new"
-          OLD="${DEST}_old"
-
-          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" "mkdir -p $TMP $DEST"
-
-          rsync -az --partial --timeout=60 \
-            -e "ssh $SSH_OPTS" \
-            build/ "$AWS_USER@$AWS_HOST:$TMP/"
-
-          ssh $SSH_OPTS "$AWS_USER@$AWS_HOST" \
-            "mv $DEST $OLD && mv $TMP $DEST && rm -rf $OLD"
-
-          rm -f private_key.pem
-          echo "[${{ steps.vars.outputs.label }}] Quick deploy complete. Run full deploy when stable."
+          bash .github/scripts/deploy_site.sh
+          echo "[${{ matrix.target }}] Quick deploy complete. Run full deploy when stable."
