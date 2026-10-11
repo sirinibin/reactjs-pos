@@ -444,7 +444,7 @@ const PostingIndex = forwardRef((props, ref) => {
             }
         }
 
-    }, [lastMessage]);
+    }, [lastMessage, showAccountBalanceSheet]);
 
 
     useEffect(() => {
