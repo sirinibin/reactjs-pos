@@ -7,30 +7,26 @@
 
 ## Deploy rules (frontend/deploy.sh)
 deploy.sh is the deploy gate. It refuses uncommitted changes (`git status --porcelain` must be
-empty), then runs `ci/run_all_tests.sh`, the unit, functional and e2e suites of the GitHub Actions
-`tests.yml`, locally, stopping at the first failure:
+empty), then runs `ci/run_all_tests.sh`, every test suite, locally, stopping at the first failure:
 ESLint (errors only), Jest (every suite, with the pos-rest source for the suites that read it),
 one site-neutral build with no "Compiled with warnings", Playwright with a mocked API, and
-Playwright full-stack against the real pos-rest API on fresh MongoDB + Redis on a laptop screen.
-`FULL=1` adds what GitHub Actions always runs on top: the other five screen sizes and the role audit.
+Playwright full-stack against the real pos-rest API on fresh MongoDB + Redis on all six screen sizes,
+and the role audit. Deploy only after all of it passes (user rule 2026-10-11): `QUICK=1 ci/run_all_tests.sh`
+(laptop screen only, no role audit) is for local iteration, and deploy.sh refuses to run with `QUICK` set.
 It deploys exactly the build it tested (`build/`) to the test site, then (unless `--test-only`) to production, through
-`.github/scripts/deploy_site.sh` like the pipeline (atomic swap, verify the site serves it, roll back).
+`.github/scripts/deploy_site.sh` (atomic swap, verify the site serves it, roll back).
 Needs Docker running (throwaway MongoDB/Redis on ports 37017/36379, API on 32000, so a dev stack
 on 27017/6379/2000 is untouched), go, node 18+. pos-rest comes from GitHub at master
 (`BACKEND_REF` to change) or `BACKEND_DIR=<checkout>`.
 Settings are documented in `ci/lib.sh` (keep it identical to pos-rest's `ci/lib.sh`).
 
-## GitHub Actions
-One pipeline for both sites: a push to `master` runs `deploy.yml`, which calls `tests.yml` once and deploys
-that one build to the test site and, only after the test site serves it, to production
-(`.github/scripts/deploy_site.sh`: atomic swap, verify, roll back). There is no `test` branch any
-more (removed 2026-10-11): push to `master` only. The build is site-neutral: absolute API links come
-from `src/utils/apiBaseURL.js` (page host → API), never a baked `REACT_APP_API_URL`.
-`deploy_quick.yml` (manual, tests skipped) takes a target: both / test / production. `tests.yml` runs:
-ESLint + Jest, build (no warnings), Playwright with a mocked API (`e2e/tests`) and Playwright
-full-stack against the real pos-rest API on MongoDB + Redis (`e2e/fullstack`, see `e2e/README.md`).
-The build the tests ran against is the one deployed. `ci/run_all_tests.sh` mirrors `tests.yml`:
-change both together.
+## No GitHub Actions
+GitHub Actions is not used (user decision 2026-10-11, cost): `.github/workflows/` is gone and must not be
+added back (a Jest test fails if it exists). `deploy.sh` is the only deploy path, run from the user's Mac
+(it needs Docker and the server SSH key); a push to `master` deploys nothing. There is no `test` branch
+(removed 2026-10-11): push to `master` only. The build is site-neutral: absolute API links come from
+`src/utils/apiBaseURL.js` (page host → API), never a baked `REACT_APP_API_URL`. `deploy_quick.sh` is the
+emergency path with tests skipped.
 
 ## Usage
 ```
@@ -51,13 +47,10 @@ The `v2` branch is a **completely separate product line** from `master`.
 1. **Never merge, cherry-pick, or rebase between `v2` and `master` in either direction.**
    Features for v2 stay on v2. Features for master stay there. No exceptions.
 
-2. **The one allowed exception — GitHub Actions workflow files only:**
-   GitHub only reads `.github/workflows/` from the default branch (`master`).
-   When adding a new workflow file to `v2`, copy that file to `master` using:
-   `git checkout v2 -- .github/workflows/<file>.yml`
-   This is a file copy only — NOT a merge. No other files cross the v2 boundary.
+2. **No exceptions for workflow files either:** GitHub Actions is not used, so nothing under
+   `.github/workflows/` is copied between `v2` and `master`.
 
-3. **There is no `test` branch.** The test server gets master's tested build from the `deploy.yml` pipeline.
+3. **There is no `test` branch.** The test server gets master's tested build from `deploy.sh`.
 
 4. **Always run `deploy_v2.sh` from the `v2` branch.** It enforces the branch check and aborts otherwise.
 

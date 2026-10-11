@@ -148,53 +148,42 @@ describe('deploy_site.sh', () => {
     });
 });
 
-describe('deploy workflows', () => {
-    const wf = (name) => fs.readFileSync(path.join(__dirname, '..', '..', '.github', 'workflows', name), 'utf8');
+describe('deploying without GitHub Actions', () => {
+    const root = path.join(__dirname, '..', '..');
 
-    it('one pipeline: master only, tests once, test site before production', () => {
-        const s = wf('deploy.yml');
-        expect(s).toMatch(/push:\n\s+branches:\n\s+- master\n/);
-        expect(s).not.toMatch(/- test\n/);
-        expect(s.match(/uses: \.\/\.github\/workflows\/tests\.yml/g)).toHaveLength(1);
-        expect(s).toMatch(/deploy-test:\n\s+needs: tests\n/);
-        expect(s).toMatch(/deploy-production:\n\s+needs: deploy-test\n/);
-        expect(s).toMatch(/backend_ref: master/);
-        // Each site gets its own folder and URL.
-        const [testJob, prodJob] = s.split('deploy-production:');
-        expect(testJob).toMatch(/secrets\.AWS_DEST_PATH }}/);
-        expect(testJob).toMatch(/https:\/\/test\.gulfunionozone\.com\//);
-        expect(prodJob).toMatch(/secrets\.AWS_DEST_PATH_PROD }}/);
-        expect(prodJob).toMatch(/https:\/\/startpos\.gulfunionozone\.com\//);
-        // Both deploy the tested artifact; nothing is rebuilt.
-        expect(s.match(/name: frontend-build/g)).toHaveLength(2);
-        expect(s).not.toMatch(/npm run build/);
+    it('no GitHub Actions workflow is left to run (deploy.sh is the only deploy path)', () => {
+        expect(fs.existsSync(path.join(root, '.github', 'workflows'))).toBe(false);
     });
 
-    it('the per-branch production workflow is gone', () => {
-        expect(fs.existsSync(path.join(__dirname, '..', '..', '.github', 'workflows', 'deploy_production.yml'))).toBe(false);
+    it('deploy.sh tests, then deploys the one build to the test site before production', () => {
+        const s = fs.readFileSync(path.join(root, 'deploy.sh'), 'utf8');
+        expect(s).toMatch(/ci\/run_all_tests\.sh/);
+        expect(s).toMatch(/\.github\/scripts\/deploy_site\.sh/);
+        expect(s).not.toMatch(/\.github\/workflows/);
     });
 
-    it('the tested build is site-neutral', () => {
-        const s = wf('tests.yml');
-        expect(s).not.toMatch(/api_url/);
-        expect(s).toMatch(/REACT_APP_API_URL= \\\n/);
-    });
-
-    it('quick deploy builds once and goes to test before production', () => {
-        const s = wf('deploy_quick.yml');
-        expect(s).toMatch(/options:\n\s+- both\n\s+- test\n\s+- production/);
-        expect(s.indexOf('target: test')).toBeLessThan(s.indexOf('target: production'));
-        expect(s).toMatch(/max-parallel: 1/);
-        expect(s).toMatch(/fail-fast: true/);
-        expect(s.match(/npm run build/g)).toHaveLength(1);
-    });
-
-    it('nothing routes by or waits on a test branch (there is none)', () => {
-        for (const name of ['deploy.yml', 'deploy_quick.yml', 'tests.yml']) {
-            const s = wf(name);
-            expect(s).not.toMatch(/origin\/test|github\.ref_name != 'test'|backend_ref: test/);
-        }
-        const quick = fs.readFileSync(path.join(__dirname, '..', '..', 'deploy_quick.sh'), 'utf8');
+    it('quick deploy reaches the test site from master with --test (there is no test branch)', () => {
+        const quick = fs.readFileSync(path.join(root, 'deploy_quick.sh'), 'utf8');
+        expect(quick).not.toMatch(/origin\/test/);
         expect(quick).toMatch(/if \[ "\$BRANCH" = master \] && \$TO_TEST; then TARGET=test; fi/);
+    });
+
+    // Deploys happen only after every suite passes (user rule 2026-10-11).
+    it('ci/run_all_tests.sh runs every suite unless QUICK=1', () => {
+        const s = fs.readFileSync(path.join(root, 'ci', 'run_all_tests.sh'), 'utf8');
+        expect(s).toContain('if [ "${QUICK:-}" = 1 ]; then FULL=0; else FULL=1; fi');
+        expect(s).not.toContain('"${FULL:-}"');
+        expect(s).toMatch(/PROJECTS="desktop desktop-large tablet tablet-landscape phone phone-small"/);
+        expect(s).toMatch(/Role audit/);
+    });
+
+    it('deploy.sh refuses QUICK=1 before doing anything else', () => {
+        const r = spawnSync('bash', [path.join(root, 'deploy.sh')], {
+            encoding: 'utf8',
+            env: { ...process.env, QUICK: '1', HOME: fs.mkdtempSync(path.join(require('os').tmpdir(), 'deploy-')) },
+        });
+        expect(r.status).not.toBe(0);
+        expect(r.stdout + r.stderr).toMatch(/always runs every test suite/);
+        expect(r.stdout + r.stderr).not.toMatch(/Running the test suites|Checking for uncommitted/);
     });
 });

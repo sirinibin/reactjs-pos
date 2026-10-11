@@ -1,3 +1,15 @@
+# StartPOS frontend
+
+## Deployment
+
+Deploy only with `./deploy.sh` from a clean, committed `master` checkout (it needs Docker running and the
+server SSH key). It runs every test suite (`ci/run_all_tests.sh`: ESLint, Jest, a warning-free
+build, mocked-API browser tests, real-API browser tests on all six screen sizes and the role audit), builds once, deploys that build to the test
+site, verifies it, then deploys the same build to production. `./deploy.sh --test-only` stops after the test
+site. Nothing deploys unless every suite passes; `QUICK=1 ci/run_all_tests.sh` is a shorter run for local
+iteration only, and `deploy.sh` refuses to run with `QUICK` set. GitHub Actions is not used: pushing to
+GitHub deploys nothing.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

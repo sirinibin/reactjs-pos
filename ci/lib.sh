@@ -2,11 +2,12 @@
 # Shared helpers for ci/run_all_tests.sh. The same file lives in
 # sirinibin/pos-rest and sirinibin/reactjs-pos; keep the two copies identical.
 #
-# Everything the GitHub Actions test jobs need, run on this machine instead:
+# Everything the test suites need, run on this machine (deploy.sh runs them;
+# there is no GitHub Actions pipeline):
 # throwaway MongoDB 7, Redis 7 and S3 (versitygw) containers on their own
 # ports, so a MongoDB, Redis or API you already run on 27017, 6379 or 2000
-# is never touched. Every stage gets fresh, empty databases, as every CI job
-# did. Written for the bash 3.2 that ships with macOS.
+# is never touched. Every stage gets fresh, empty databases. Written for the
+# bash 3.2 that ships with macOS.
 #
 # Settings (environment):
 #   CI_CACHE        cache for the other repo, the ZATCA SDK and Python venvs

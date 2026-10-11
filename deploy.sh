@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Direct deployment script for startpos frontend: one script for both sites,
-# doing what .github/workflows/deploy.yml does, from this machine. The unit,
-# functional and e2e suites (ci/run_all_tests.sh), one build, then
+# Deployment script for startpos frontend, the only deploy path (there is no
+# GitHub Actions pipeline): one script for both sites, run from this machine.
+# Every test suite (ci/run_all_tests.sh), one build, then
 # that exact build to the test site and, only after the test site serves it,
 # to production (.github/scripts/deploy_site.sh: atomic swap, verify, roll
 # back). The build is site-neutral (src/utils/apiBaseURL.js picks the API from
@@ -12,10 +12,15 @@
 #   ./deploy.sh              — run the tests, build once, deploy to the test
 #                              site, verify it, then production
 #   ./deploy.sh --test-only  — same, but stop after the test site
-#   FULL=1 ./deploy.sh       — with the full GitHub Actions test set (every
-#                              screen size, role audit)
 
 set -eo pipefail
+
+# Deploy only after every suite passes: QUICK=1 (fewer suites) is for local
+# iteration with ci/run_all_tests.sh, never for a deploy.
+if [ -n "${QUICK:-}" ]; then
+    echo "==> ABORTED: deploy.sh always runs every test suite; unset QUICK and run it again."
+    exit 1
+fi
 
 SSH_KEY="${SSH_KEY:-$HOME/Downloads/startuptech-v2.pem}"
 SERVER_USER="ubuntu"
@@ -44,8 +49,9 @@ check_uncommitted() {
 }
 
 # ─── tests + build ────────────────────────────────────────────────────────────
-# ci/run_all_tests.sh runs ESLint, Jest, the build with no warnings, and the
-# mocked-API and full-stack browser e2e, and leaves the tested build in build/.
+# ci/run_all_tests.sh runs ESLint, Jest, the build with no warnings, the
+# mocked-API browser e2e, the full-stack browser e2e on every screen size and
+# the role audit, and leaves the tested build in build/.
 # Nothing deploys unless all of it passes.
 
 run_all_tests() {
@@ -55,7 +61,7 @@ run_all_tests() {
     echo "==> All tests passed."
 }
 
-# deploy_to <dest> <site url> <label>: the deploy step deploy.yml runs.
+# deploy_to <dest> <site url> <label>: deploy build/ to one site.
 deploy_to() {
     echo ""
     echo "==> Deploying to $3 ($SERVER_HOST:$1) ..."

@@ -1,8 +1,8 @@
 # Browser end-to-end tests
 
 Two Playwright suites drive the production build of the app in Chromium.
-Both run in GitHub Actions (`.github/workflows/tests.yml`) before every test
-and production deploy.
+Both run in `ci/run_all_tests.sh`, which `deploy.sh` runs before every test
+and production deploy (there is no GitHub Actions pipeline).
 
 ## Mocked API (`tests/`, `playwright.config.js`)
 

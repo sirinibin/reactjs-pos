@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# The unit, functional and end-to-end suites of .github/workflows/tests.yml,
-# on this machine, plus the build deploy.sh ships. deploy.sh runs this and
-# deploys only if it exits 0. It stops at the first failing stage.
+# Every test suite, on this machine, plus the build deploy.sh ships.
+# deploy.sh runs this and deploys only if it exits 0. It stops at the first
+# failing stage.
 #
-#   ci/run_all_tests.sh          unit, functional and e2e (the default)
-#   FULL=1 ci/run_all_tests.sh   also every screen size and the role audit,
-#                                as GitHub Actions runs on every push
+#   ci/run_all_tests.sh          every suite (what deploy.sh runs)
+#   QUICK=1 ci/run_all_tests.sh  laptop screen only, no role audit; for local
+#                                iteration, never enough to deploy
 #
 # Builds build/ once, site-neutral (no REACT_APP_API_URL baked in;
-# src/utils/apiBaseURL.js picks the API from the page's host), as tests.yml
-# does; that exact build is what gets tested and deployed to both sites.
+# src/utils/apiBaseURL.js picks the API from the page's host); that exact
+# build is what gets tested and deployed to both sites.
 #
 # Stages (each stage that needs an API gets fresh, empty MongoDB and Redis):
 #   1. ESLint (errors only)
@@ -18,10 +18,10 @@
 #   3. Production build, failing on "Compiled with warnings"
 #   4. Browser e2e with a mocked API (e2e/tests)
 #   5. Full-stack browser e2e against the real API on MongoDB + Redis on a
-#      laptop screen (FULL=1: also desktop-large, tablet, tablet-landscape,
-#      phone, phone-small)
-#   FULL=1 only:
+#      desktop, desktop-large, tablet, tablet-landscape, phone and
+#      phone-small (QUICK=1: desktop only)
 #   6. Role audit: staff personas on every device, English and Arabic
+#      (skipped with QUICK=1)
 #
 # Needs: git, go, node 18+, npm, curl, Docker. The API comes from
 # sirinibin/pos-rest at BACKEND_REF (default master); BACKEND_DIR=<path> uses
@@ -33,6 +33,10 @@ FE="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=ci/lib.sh
 . "$FE/ci/lib.sh"
 trap ci_cleanup EXIT
+
+# Every suite runs by default. QUICK=1 skips the slow ones for local
+# iteration only; deploy.sh refuses to run with it.
+if [ "${QUICK:-}" = 1 ]; then FULL=0; else FULL=1; fi
 
 BUILD="$FE/build"
 
@@ -85,7 +89,7 @@ stage "Build the API ($BACKEND_REF)"
 export MONGO_DB=pos_e2e
 
 PROJECTS="desktop"
-[ "${FULL:-}" = 1 ] && PROJECTS="desktop desktop-large tablet tablet-landscape phone phone-small"
+[ "$FULL" = 1 ] && PROJECTS="desktop desktop-large tablet tablet-landscape phone phone-small"
 for project in $PROJECTS; do
     stage "UI e2e tests, real API + MongoDB + Redis ($project)"
     services_up
@@ -96,8 +100,8 @@ for project in $PROJECTS; do
     stop_api
 done
 
-# ── 6. Role audit: staff personas, every device, EN + AR (FULL=1) ──────────
-if [ "${FULL:-}" = 1 ]; then
+# ── 6. Role audit: staff personas, every device, EN + AR ───────────────────
+if [ "$FULL" = 1 ]; then
     stage "Role audit (staff personas, every device, EN + AR)"
     (cd e2e && npm run test:audit-unit)
     services_up
@@ -110,7 +114,7 @@ if [ "${FULL:-}" = 1 ]; then
     stop_api
 else
     stage_end
-    note "other screen sizes and the role audit not run (FULL=1 runs them; GitHub Actions runs them on every push)"
+    note "QUICK=1: other screen sizes and the role audit not run; not enough to deploy"
 fi
 
 ci_summary
