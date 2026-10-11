@@ -3,6 +3,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AutoRefresh from '../AutoRefresh';
 import { fetchStore } from '../storeUtils.js';
+import { dispatchSocketMessage } from '../WebSocketContext';
+import eventEmitter from '../eventEmitter';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -19,9 +21,6 @@ Object.defineProperty(window, 'location', {
     writable: true,
     value: { ...window.location, reload: mockReload },
 });
-
-// ── Constants (must match the component) ─────────────────────────────────────
-const POLL_INTERVAL = 10 * 60 * 1000; // 10 minutes in ms
 
 // ── HTML fixtures that produce distinct version fingerprints ──────────────────
 // The component's getVersionFingerprint() scans for /static/(js|css)/... paths.
@@ -122,31 +121,17 @@ describe('AutoRefresh — renders null without a valid, enabled store', () => {
 // ── Tests: polling logic and update banner ────────────────────────────────────
 
 /**
- * Trigger the second poll by advancing the fake clock by POLL_INTERVAL.
- *
- * WHY two separate act() calls instead of one:
- *   - The synchronous act() fires the setInterval callback which starts the
- *     async check() chain (microtasks queued but not yet drained).
- *   - The subsequent async act() flushes those microtasks and lets React
- *     commit the resulting state update.
- *
- * WHY NOT window.dispatchEvent('focus') for tests 6-9:
- *   The component registers its focus listener inside a .then() callback and
- *   the cleanup it returns never reaches useEffect's cleanup (it is returned
- *   from .then, not from the effect itself). After a test unmounts the
- *   component its focus listener stays on window, and it would consume the
- *   next test's mockResolvedValueOnce responses, breaking isolation.
- *   Fake-timer intervals are cleared every beforeEach so they have no
- *   cross-test leakage.
+ * The second check comes from the server: the deploy announces the new build
+ * and the API pushes "frontend_deployed" over the WebSocket.
  */
 async function triggerSecondCheck() {
-    // Fire the setInterval callback synchronously.
-    act(() => { jest.advanceTimersByTime(POLL_INTERVAL); });
-    // Drain the resulting async chain (fetchVersion → fetch → res.text → setState).
-    await act(async () => { await flushAll(); });
+    await act(async () => {
+        dispatchSocketMessage({ event: 'frontend_deployed' });
+        await flushAll();
+    });
 }
 
-describe('AutoRefresh — polling and update banner', () => {
+describe('AutoRefresh — update banner', () => {
     // Test 5
     it('renders null on the first check — stores baseline, shows no banner', async () => {
         setupEnabledStore();
@@ -162,7 +147,7 @@ describe('AutoRefresh — polling and update banner', () => {
     });
 
     // Test 6
-    it('shows "New version available" banner after two polls with different versions', async () => {
+    it('shows "New version available" banner when a pushed deploy brings a different version', async () => {
         setupEnabledStore();
         global.fetch
             .mockResolvedValueOnce(makeFetchResponse(HTML_V1)) // 1st check: stores baseline
@@ -173,7 +158,7 @@ describe('AutoRefresh — polling and update banner', () => {
         // Mount + first check (baseline stored, no banner yet)
         await act(async () => { await flushAll(); });
 
-        // Second check via interval — detects version change → shows banner
+        // Second check on the pushed deploy — detects version change → shows banner
         await triggerSecondCheck();
 
         expect(screen.getByText('New version available')).toBeInTheDocument();
@@ -272,5 +257,43 @@ describe('AutoRefresh — polling and update banner', () => {
         // fetch was called only twice: baseline + version-change.
         // The snoozed check never reached fetchVersion().
         expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    // Test 11
+    it('never checks on a timer', async () => {
+        setupEnabledStore();
+        global.fetch.mockResolvedValue(makeFetchResponse(HTML_V1));
+        render(<AutoRefresh />);
+        await act(async () => { await flushAll(); });
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+
+        act(() => { jest.advanceTimersByTime(24 * 60 * 60 * 1000); });
+        await act(async () => { await flushAll(); });
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    // Test 12
+    it('checks after the WebSocket reconnects (an announcement may have been missed)', async () => {
+        setupEnabledStore();
+        global.fetch
+            .mockResolvedValueOnce(makeFetchResponse(HTML_V1))
+            .mockResolvedValueOnce(makeFetchResponse(HTML_V2));
+        render(<AutoRefresh />);
+        await act(async () => { await flushAll(); });
+        await act(async () => { eventEmitter.emit('socket_connection_open'); await flushAll(); });
+        expect(screen.getByText('New version available')).toBeInTheDocument();
+    });
+
+    // Test 13
+    it('stops listening when unmounted', async () => {
+        setupEnabledStore();
+        global.fetch.mockResolvedValue(makeFetchResponse(HTML_V1));
+        const { unmount } = render(<AutoRefresh />);
+        await act(async () => { await flushAll(); });
+        unmount();
+        dispatchSocketMessage({ event: 'frontend_deployed' });
+        window.dispatchEvent(new Event('focus'));
+        await flushAll();
+        expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 });

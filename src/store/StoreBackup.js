@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { watchJobProgress } from '../utils/jobProgress';
 import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, ProgressBar, Table } from "react-bootstrap";
 
@@ -100,12 +101,12 @@ const StoreBackup = forwardRef((props, ref) => {
         stepTimingsRef.current = {};
         startTimeRef.current = null;
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current = null; }
+        stopProgressWatch();
     }
 
     function handleClose() {
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current = null; }
+        stopProgressWatch();
         setShow(false);
     }
 
@@ -169,12 +170,48 @@ const StoreBackup = forwardRef((props, ref) => {
             });
     }
 
+    function stopProgressWatch() {
+        if (pollRef.current) { pollRef.current.stop(); pollRef.current = null; }
+    }
+
     function stopTimer() {
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     }
 
-    // ── Polling progress (500 ms) ─────────────────────────────────────────────
+    // ── Progress by server push (job_progress) ────────────────────────────────
     function subscribeProgress(storeId, jobId) {
+        // One progress update, pushed by the server or read after a reconnect.
+        // Ignored once the job finished or the window was closed.
+        function applyProgress(data) {
+            if (!pollRef.current) return;
+
+            if (!data.status) {
+                stopProgressWatch();
+                stopTimer();
+                setBackupError(
+                    data.errors ? Object.values(data.errors).join(", ") : "Failed to get progress"
+                );
+                setDownloading(false);
+                return;
+            }
+
+            const progress = data.result;
+            setSteps(progress.steps || []);
+            setOverallProgress(progress.overall_progress || 0);
+
+            if (progress.done) {
+                stopProgressWatch();
+                stopTimer();
+                setDownloading(false);
+                setBackupDone(true);
+                if (progress.error) {
+                    setBackupError(progress.error);
+                } else if (progress.file_token) {
+                    triggerFileDownload(storeId, progress.file_token);
+                }
+            }
+        }
+
         async function poll() {
             try {
                 const res = await fetch(
@@ -182,42 +219,17 @@ const StoreBackup = forwardRef((props, ref) => {
                     { headers: { Authorization: localStorage.getItem("access_token") } }
                 );
                 const data = await res.json();
-
-                if (!data.status) {
-                    clearInterval(pollRef.current); pollRef.current = null;
-                    stopTimer();
-                    setBackupError(
-                        data.errors ? Object.values(data.errors).join(", ") : "Failed to get progress"
-                    );
-                    setDownloading(false);
-                    return;
-                }
-
-                const progress = data.result;
-                setSteps(progress.steps || []);
-                setOverallProgress(progress.overall_progress || 0);
-
-                if (progress.done) {
-                    clearInterval(pollRef.current); pollRef.current = null;
-                    stopTimer();
-                    setDownloading(false);
-                    setBackupDone(true);
-                    if (progress.error) {
-                        setBackupError(progress.error);
-                    } else if (progress.file_token) {
-                        triggerFileDownload(storeId, progress.file_token);
-                    }
-                }
+                applyProgress(data);
             } catch (err) {
-                clearInterval(pollRef.current); pollRef.current = null;
+                stopProgressWatch();
                 stopTimer();
                 setBackupError("Failed to get progress: " + err.message);
                 setDownloading(false);
             }
         }
 
-        poll(); // immediate first hit
-        pollRef.current = setInterval(poll, 500);
+        pollRef.current = watchJobProgress(jobId, applyProgress, poll);
+        poll(); // catch up on progress made before the watch started
     }
 
     // ── File download trigger ─────────────────────────────────────────────────

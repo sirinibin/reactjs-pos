@@ -90,11 +90,12 @@ describe('quotation/create.js — parallel prefill product fetches', () => {
     });
 });
 
-// ── WhatsAppAPIModal.js — QR poller parallel fetch ───────────────────────────
+// ── WhatsAppAPIModal.js — connect follows server push ───────────────────────
 
-describe('WhatsAppAPIModal.js — QR poller parallel fetch', () => {
-    test('uses Promise.all([status, qr]) in connect poller', () => {
-        expect(whatsapp).toMatch(/Promise\.all\(\[[\s\S]{0,200}whatsapp\/status[\s\S]{0,200}whatsapp\/qr/);
+describe('WhatsAppAPIModal.js — connect follows server push', () => {
+    test('the QR and the linked phone come from watchWhatsAppConnect, not a timer', () => {
+        expect(whatsapp).toMatch(/watchWhatsAppConnect\(/);
+        expect(whatsapp).not.toMatch(/setInterval\(/);
     });
 
     test('sequential status then QR pattern removed', () => {

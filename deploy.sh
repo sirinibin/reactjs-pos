@@ -30,6 +30,8 @@ TEST_DEST="/home/ubuntu/reactjs-pos-test/build/"
 PROD_DEST="/home/ubuntu/reactjs-pos/build/"
 TEST_SITE="https://test.gulfunionozone.com/"
 PROD_SITE="https://startpos.gulfunionozone.com/"
+TEST_API="https://startpos-api-test.gulfunionozone.com"
+PROD_API="https://startpos-api.gulfunionozone.com"
 
 FRONTEND_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -61,13 +63,14 @@ run_all_tests() {
     echo "==> All tests passed."
 }
 
-# deploy_to <dest> <site url> <label>: deploy build/ to one site.
+# deploy_to <dest> <site url> <label> <api url>: deploy build/ to one site; its
+# API then tells the open pages about the new build.
 deploy_to() {
     echo ""
     echo "==> Deploying to $3 ($SERVER_HOST:$1) ..."
     cd "$FRONTEND_DIR"
     SSH_PRIVATE_KEY="$(cat "$SSH_KEY")" AWS_HOST="$SERVER_HOST" AWS_USER="$SERVER_USER" AWS_PORT=22 \
-    AWS_DEST_PATH="$1" SITE_URL="$2" \
+    AWS_DEST_PATH="$1" SITE_URL="$2" APP_API_URL="$4" \
         bash .github/scripts/deploy_site.sh || { echo "==> $3 deploy FAILED"; exit 1; }
 }
 
@@ -87,13 +90,13 @@ run_all_tests
 
 # Production only after the test site serves this build; if the test deploy
 # fails it is rolled back and production is left alone.
-deploy_to "$TEST_DEST" "$TEST_SITE" "test"
+deploy_to "$TEST_DEST" "$TEST_SITE" "test" "$TEST_API"
 if [ "$TEST_ONLY" = true ]; then
     echo ""
     echo "Done (test site only)."
     exit 0
 fi
-deploy_to "$PROD_DEST" "$PROD_SITE" "production"
+deploy_to "$PROD_DEST" "$PROD_SITE" "production" "$PROD_API"
 
 echo ""
 echo "Done: the same tested build is live on the test site and production."

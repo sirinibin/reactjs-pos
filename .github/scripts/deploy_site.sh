@@ -5,7 +5,10 @@
 # fails, so a pipeline stops before the next site.
 #
 # Env: SSH_PRIVATE_KEY AWS_HOST AWS_USER AWS_PORT AWS_DEST_PATH SITE_URL
-# Optional: VERIFY_ATTEMPTS (default 10), VERIFY_DELAY seconds (default 3)
+# Optional: VERIFY_ATTEMPTS (default 10), VERIFY_DELAY seconds (default 3),
+# APP_API_URL: the site's API; once the build is live it is told
+# (POST /v1/app/frontend-deployed) and pushes the news to every open page, which
+# then offers the reload. A failed announcement doesn't fail the deploy.
 set -euo pipefail
 
 : "${SSH_PRIVATE_KEY:?}" "${AWS_HOST:?}" "${AWS_USER:?}" "${AWS_PORT:?}" "${AWS_DEST_PATH:?}" "${SITE_URL:?}"
@@ -32,6 +35,15 @@ OLD="${DEST}_old"
 # shellcheck disable=SC2086
 remote() { ssh $SSH_OPTS "$REMOTE" "$1"; }
 
+announce() {
+  [ -n "${APP_API_URL:-}" ] || return 0
+  if curl -fsS -m 15 -X POST "${APP_API_URL%/}/v1/app/frontend-deployed" >/dev/null; then
+    echo "Open pages were told about the new build."
+  else
+    echo "Warning: could not tell open pages about the new build; they see it when next focused."
+  fi
+}
+
 # Step 1: rsync into a fresh staging dir — the live site is untouched meanwhile.
 remote "rm -rf '$TMP' && mkdir -p '$TMP' '$DEST'"
 rsync -az --partial --timeout=60 -e "ssh $SSH_OPTS" build/ "$REMOTE:$TMP/"
@@ -45,6 +57,7 @@ for i in $(seq 1 "$ATTEMPTS"); do
   if [ "$GOT" = "$WANT" ]; then
     remote "rm -rf '$OLD'"
     echo "Deployed and verified: $SITE_URL serves index.html $WANT"
+    announce
     exit 0
   fi
   echo "Check $i/$ATTEMPTS: $SITE_URL does not serve the new build yet."

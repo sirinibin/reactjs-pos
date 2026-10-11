@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { watchServerStatus } from './utils/serverStatusStream';
 import Modal from 'react-bootstrap/Modal';
 import { Typeahead } from 'react-bootstrap-typeahead';
 
@@ -76,28 +77,13 @@ export default function AdminSettingsModal({ show, onHide }) {
             .catch(() => {});
     }, [show]);
 
-    const fetchServerStatus = async () => {
-        try {
-            const token = localStorage.getItem('access_token');
-            const resp = await fetch('/health-monitor/status', { headers: { Authorization: `Bearer ${token}` } });
-            if (resp.status === 401 || resp.status === 403) {
-                setServerStatusError('Session expired or access denied — please log out and back in.');
-                return;
-            }
-            if (!resp.ok) {
-                setServerStatusError(`Health monitor returned HTTP ${resp.status}. Is it running?`);
-                return;
-            }
-            setServerStatusError(null);
-            const data = await resp.json();
-            setServerStatus(data);
-            setRestartingEnv(prev => {
-                if (prev && data[prev]?.overall === 'running') return null;
-                return prev;
-            });
-        } catch (_) {
-            setServerStatusError('Cannot reach the health monitor. Check nginx and the service.');
-        }
+    const applyServerStatus = (data) => {
+        setServerStatusError(null);
+        setServerStatus(data);
+        setRestartingEnv(prev => {
+            if (prev && data[prev]?.overall === 'running') return null;
+            return prev;
+        });
     };
 
     const fetchAutoRestartConfig = async () => {
@@ -181,11 +167,15 @@ export default function AdminSettingsModal({ show, onHide }) {
     useEffect(() => {
         if (!show) return;
         setActiveTab('settings');
-        fetchServerStatus();
         fetchAutoRestartConfig();
         fetchRestartLog();
-        const id = setInterval(fetchServerStatus, 5000);
-        return () => clearInterval(id);
+        // The health monitor pushes the status when it changes (a restart included).
+        const watch = watchServerStatus({
+            onStatus: applyServerStatus,
+            onDenied: () => setServerStatusError('Session expired or access denied — please log out and back in.'),
+            onError: setServerStatusError,
+        });
+        return () => watch.stop();
     }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleRestart = async (env) => {
@@ -194,7 +184,7 @@ export default function AdminSettingsModal({ show, onHide }) {
             `It will be briefly unavailable while restarting.`
         )) return;
         setRestartingEnv(env);
-        // Safety: clear restarting indicator after 60s if polling never sees it come back
+        // Safety: clear restarting indicator after 60s if the status never shows it back up
         setTimeout(() => setRestartingEnv(prev => prev === env ? null : prev), 60000);
         try {
             const token = localStorage.getItem('access_token');

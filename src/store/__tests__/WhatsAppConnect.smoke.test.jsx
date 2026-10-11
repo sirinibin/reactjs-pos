@@ -2,6 +2,7 @@ import React, { createRef } from 'react';
 import { render, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import WhatsAppConnect from '../WhatsAppConnect';
+import eventEmitter from '../../utils/eventEmitter';
 
 // ── react-bootstrap ──────────────────────────────────────────────────────────
 jest.mock('react-bootstrap', () => {
@@ -74,50 +75,18 @@ function renderComponent(props = {}) {
   return { ref, ...utils };
 }
 
-// Drive the component to the 'connected' phase by:
-//   1. Clicking the connect button (POST /connect → waitingQR)
-//   2. Capturing and firing the 4 000 ms setTimeout that starts polling
-//   3. Capturing and directly awaiting the async interval callback
-//
-// Returns the captured interval callback so callers can invoke it again.
-async function driveToConnected({ getAllByRole, connectFetchBody = {}, statusFetchBody = { connected: true } } = {}) {
-  // Track setTimeout/setInterval calls regardless of microtask context.
-  // The fake clock does not capture timers set from inside Promise callbacks
-  // in this environment, so we intercept them ourselves.
-  const setTimeoutCbs = [];
-  const setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation((cb, ms) => {
-    setTimeoutCbs.push({ cb, ms });
-    return setTimeoutCbs.length;
-  });
-
-  let pollCb = null;
-  const setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation((cb) => {
-    pollCb = cb;
-    return 1;
-  });
-  const clearIntervalSpy = jest.spyOn(global, 'clearInterval').mockImplementation(() => {});
-
+// Drive the component to the 'connected' phase: click connect (POST /connect
+// → waitingQR), then the server pushes "whatsapp_connect" { connected }.
+async function driveToConnected({ getAllByRole } = {}) {
   const connectBtn = getAllByRole('button').find(b => /connect whatsapp/i.test(b.textContent));
-
-  // Click connect → POST /connect resolves → handleConnect schedules startPolling
   await act(async () => {
     connectBtn.click();
     await Promise.resolve();
     await Promise.resolve();
   });
-
-  // Find the 4 000 ms timeout and fire startPolling synchronously.
-  const pollingTimer = setTimeoutCbs.find(t => t.ms === 4000);
-  if (pollingTimer) {
-    act(() => { pollingTimer.cb(); }); // startPolling → setInterval captured in pollCb
-  }
-
-  // Directly await the interval callback to let fetch(/status) resolve.
-  if (pollCb) {
-    await act(async () => { await pollCb(); });
-  }
-
-  return { setTimeoutSpy, setIntervalSpy, clearIntervalSpy, pollCb };
+  await act(async () => {
+    eventEmitter.emit('whatsapp_connect', { store_id: sampleStore.id, connected: true, phone: '1234567890' });
+  });
 }
 
 // ── tests ─────────────────────────────────────────────────────────────────────
@@ -243,17 +212,10 @@ describe('WhatsAppConnect smoke tests', () => {
     expect(getAllByRole('button').find(b => /^close$/i.test(b.textContent.trim()))).toBeTruthy();
   });
 
-  // ── Polling-flow tests ──────────────────────────────────────────────────────
-  // These tests use a manual spy-based approach because setTimeout/setInterval
-  // called from Promise microtasks bypass the fake timer clock in Jest 26.
+  // ── Server-push tests ───────────────────────────────────────────────────────
 
-  it('shows connected phase and calls onConnected when poll returns connected: true', async () => {
-    let fetchCount = 0;
-    global.fetch = jest.fn().mockImplementation(() => {
-      fetchCount++;
-      const body = fetchCount === 1 ? {} : { connected: true };
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
-    });
+  it('shows connected phase and calls onConnected when the server pushes connected', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 
     const onConnected = jest.fn();
     const showToastMessage = jest.fn();
@@ -261,8 +223,6 @@ describe('WhatsAppConnect smoke tests', () => {
     act(() => { ref.current.open(sampleStore); });
 
     await driveToConnected({ getAllByRole });
-
-    jest.restoreAllMocks();
 
     expect(onConnected).toHaveBeenCalledWith('store-1');
     expect(showToastMessage).toHaveBeenCalledWith('WhatsApp connected successfully!', 'success');
@@ -275,7 +235,6 @@ describe('WhatsAppConnect smoke tests', () => {
       callIndex++;
       let body;
       if (callIndex === 1) body = {};                        // POST /connect
-      else if (callIndex === 2) body = { connected: true };  // GET /status
       else body = { success: true };                         // DELETE /disconnect
       return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
     });
@@ -288,8 +247,6 @@ describe('WhatsAppConnect smoke tests', () => {
     act(() => { ref.current.open(sampleStore); });
 
     await driveToConnected({ getAllByRole });
-
-    jest.restoreAllMocks();
 
     // Now in connected phase — Disconnect button should be visible
     const disconnectBtn = getAllByRole('button').find(b => /disconnect/i.test(b.textContent));
@@ -320,15 +277,53 @@ describe('WhatsAppConnect smoke tests', () => {
     expect(getByTestId('rb-modal')).toBeTruthy();
   });
 
-  it('clears polling timer on unmount', () => {
-    const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-    const { ref, unmount } = renderComponent();
-
+  it('shows each pushed QR, ignores other stores, and never polls', async () => {
+    const setIntervalSpy = jest.spyOn(global, 'setInterval');
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    const { ref, getAllByRole, container } = renderComponent();
     act(() => { ref.current.open(sampleStore); });
-    unmount();
+    const connectBtn = getAllByRole('button').find(b => /connect whatsapp/i.test(b.textContent));
+    await act(async () => { connectBtn.click(); await Promise.resolve(); await Promise.resolve(); });
 
-    // stopPolling is called via useEffect cleanup
-    expect(clearIntervalSpy).toBeDefined();
-    clearIntervalSpy.mockRestore();
+    await act(async () => {
+      eventEmitter.emit('whatsapp_connect', { store_id: 'other-store', qr_base64: 'data:image/png;base64,OTHER', qr_count: 1 });
+    });
+    expect(container.querySelector('img')).toBeNull();
+
+    await act(async () => {
+      eventEmitter.emit('whatsapp_connect', { store_id: 'store-1', qr_base64: 'data:image/png;base64,QR1', qr_count: 1 });
+    });
+    expect(container.querySelector('img').getAttribute('src')).toContain('QR1');
+
+    await act(async () => {
+      eventEmitter.emit('whatsapp_connect', { store_id: 'store-1', qr_base64: 'data:image/png;base64,QR2', qr_count: 2 });
+    });
+    expect(container.querySelector('img').getAttribute('src')).toContain('QR2');
+
+    expect(setIntervalSpy).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledTimes(1); // only POST /connect
+    setIntervalSpy.mockRestore();
+  });
+
+  it('shows an error when the server stops waiting for the scan', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    const { ref, getAllByRole, getByText } = renderComponent();
+    act(() => { ref.current.open(sampleStore); });
+    const connectBtn = getAllByRole('button').find(b => /connect whatsapp/i.test(b.textContent));
+    await act(async () => { connectBtn.click(); await Promise.resolve(); await Promise.resolve(); });
+    await act(async () => { eventEmitter.emit('whatsapp_connect', { store_id: 'store-1', expired: true }); });
+    expect(getByText(/qr code expired/i)).toBeTruthy();
+  });
+
+  it('stops listening on unmount', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    const onConnected = jest.fn();
+    const { ref, getAllByRole, unmount } = renderComponent({ onConnected });
+    act(() => { ref.current.open(sampleStore); });
+    const connectBtn = getAllByRole('button').find(b => /connect whatsapp/i.test(b.textContent));
+    await act(async () => { connectBtn.click(); await Promise.resolve(); await Promise.resolve(); });
+    unmount();
+    eventEmitter.emit('whatsapp_connect', { store_id: 'store-1', connected: true });
+    expect(onConnected).not.toHaveBeenCalled();
   });
 });

@@ -44,3 +44,35 @@ test("existing events still reach the app", () => {
     dispatchSocketMessage({ event: "unknown_event" });
     expect(seen).toEqual(["wa", { id: 7 }]);
 });
+
+test("procurement_messages_changed and user status events reach their listeners", () => {
+    const seen = [];
+    const onMsgs = (d) => seen.push(["msgs", d]);
+    const onUsers = () => seen.push(["users"]);
+    eventEmitter.on("procurement_messages_changed", onMsgs);
+    eventEmitter.on("user_status_change", onUsers);
+    dispatchSocketMessage({ event: "procurement_messages_changed", data: { store_id: "s1", type: "whatsapp" } });
+    dispatchSocketMessage({ event: "user_status_change" });
+    dispatchSocketMessage({ event: "user_device_count_change" });
+    eventEmitter.off("procurement_messages_changed", onMsgs);
+    eventEmitter.off("user_status_change", onUsers);
+    expect(seen).toEqual([["msgs", { store_id: "s1", type: "whatsapp" }], ["users"], ["users"]]);
+});
+
+test("job, WhatsApp connect, dashboard and deploy events reach their listeners", () => {
+    const seen = [];
+    const names = ["job_progress", "whatsapp_connect", "dashboard_recomputed", "frontend_deployed"];
+    const handlers = names.map((n) => [n, (d) => seen.push([n, d])]);
+    handlers.forEach(([n, h]) => eventEmitter.on(n, h));
+    dispatchSocketMessage({ event: "job_progress", data: { job_id: "j" } });
+    dispatchSocketMessage({ event: "whatsapp_connect", data: { store_id: "s1", connected: true } });
+    dispatchSocketMessage({ event: "dashboard_recomputed", data: { store_id: "s1" } });
+    dispatchSocketMessage({ event: "frontend_deployed" });
+    handlers.forEach(([n, h]) => eventEmitter.off(n, h));
+    expect(seen).toEqual([
+        ["job_progress", { job_id: "j" }],
+        ["whatsapp_connect", { store_id: "s1", connected: true }],
+        ["dashboard_recomputed", { store_id: "s1" }],
+        ["frontend_deployed", undefined],
+    ]);
+});

@@ -3582,8 +3582,8 @@ export default function RFQReceivedIndex({ showToastMessage }) {
             });
             const data = await res.json();
             if (data.success) {
+                // The list reloads on the server's rfq_updated event.
                 if (showToastMessage) showToastMessage(t('rfq_processing_started'), "success");
-                setTimeout(fetchList, 2000);
             }
         } catch (e) {
             if (showToastMessage) showToastMessage(t('error_prefix') + e.message, "danger");

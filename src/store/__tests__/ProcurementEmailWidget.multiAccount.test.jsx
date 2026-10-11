@@ -373,6 +373,62 @@ describe('ProcurementEmailWidget multi-account', () => {
         );
     });
 
+    it('18b. OAuth wait asks for the status only when the server pushes a store change or the popup reports back', async () => {
+        const { handleStoreUpdatedPush } = require('../../utils/storeUtils');
+        let linked = false;
+        global.fetch = jest.fn().mockImplementation((url, opts) => {
+            if (url.includes('/accounts')) {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ accounts: [] }) });
+            }
+            if (opts?.method === 'POST') {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ account_id: 'g-acc-1', oauth_url: 'https://accounts.google.com/oauth' }) });
+            }
+            if (url === '/v1/store/store-abc') {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: { id: 'store-abc', settings: {} } }) });
+            }
+            if (url.includes('/status')) {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve(linked ? { connected: true, provider: 'gmail', email: 'me@gmail.com' } : { connected: false }) });
+            }
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        });
+        const statusCalls = () => global.fetch.mock.calls.filter(([u]) => u.includes('/status')).length;
+
+        await act(async () => { renderWidget(); });
+        await waitFor(() => screen.getByRole('button', { name: /Add Account/i }));
+        await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Add Account/i })); });
+        await act(async () => { fireEvent.change(screen.getByRole('combobox'), { target: { value: 'gmail' } }); });
+        await act(async () => {
+            fireEvent.change(screen.getByPlaceholderText(/apps\.googleusercontent\.com/i), { target: { value: 'id' } });
+            fireEvent.change(screen.getByPlaceholderText(/GOCSPX/i), { target: { value: 'secret' } });
+        });
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: /Save & Authorize/i }));
+            await Promise.resolve(); await Promise.resolve();
+        });
+
+        // Waiting: no timer asks for the status.
+        await act(async () => { jest.advanceTimersByTime(60000); });
+        expect(statusCalls()).toBe(0);
+
+        // The popup reports back before the tokens are saved: one read, still waiting.
+        await act(async () => {
+            window.dispatchEvent(new MessageEvent('message', { data: { rfqEmailOAuth: 'done' } }));
+            await Promise.resolve(); await Promise.resolve();
+        });
+        await waitFor(() => expect(statusCalls()).toBe(1));
+        expect(screen.queryByText('me@gmail.com')).toBeNull();
+
+        // The server saved the tokens and pushed store_updated: one more read, connected.
+        linked = true;
+        await act(async () => { await handleStoreUpdatedPush({ store_id: 'store-abc' }); });
+        await waitFor(() => expect(statusCalls()).toBe(2));
+        await waitFor(() => expect(screen.getByText('me@gmail.com')).toBeTruthy());
+
+        // Done: later pushes ask nothing.
+        await act(async () => { await handleStoreUpdatedPush({ store_id: 'store-abc' }); });
+        expect(statusCalls()).toBe(2);
+    });
+
     it('19. shows error alert when connect request fails', async () => {
         global.fetch = jest.fn().mockImplementation((url, opts) => {
             if (url.includes('/accounts')) {

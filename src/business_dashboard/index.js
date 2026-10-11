@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchStore } from '../utils/storeUtils.js';
+import eventEmitter from '../utils/eventEmitter';
 import { useTranslation } from 'react-i18next';
 
 import KPICards from "./charts/KPICards";
@@ -285,7 +286,8 @@ export default function BusinessDashboard() {
     const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
     const [recomputing, setRecomputing] = useState(false);
-    const [recomputeCountdown, setRecomputeCountdown] = useState(0);
+    const recomputingRef = useRef(false);
+    recomputingRef.current = recomputing;
 
     // ── Precomputed dashboard state ────────────────────────────────────────────
     const [store, setStore]                         = useState({});
@@ -323,6 +325,28 @@ export default function BusinessDashboard() {
     const TABS = getTabs(t);
 
     const storeId = localStorage.getItem("store_id") || "";
+
+    // A recompute (from this page or another user's) finished: reload once.
+    // After a WebSocket reconnect the news may have been missed, so a running
+    // recompute is taken as finished and the data reloaded.
+    useEffect(() => {
+        const onRecomputed = (data) => {
+            if (data?.store_id !== storeId) return;
+            setRecomputing(false);
+            setRefreshKey(k => k + 1);
+        };
+        const onReconnect = () => {
+            if (!recomputingRef.current) return;
+            setRecomputing(false);
+            setRefreshKey(k => k + 1);
+        };
+        eventEmitter.on("dashboard_recomputed", onRecomputed);
+        eventEmitter.on("socket_connection_open", onReconnect);
+        return () => {
+            eventEmitter.off("dashboard_recomputed", onRecomputed);
+            eventEmitter.off("socket_connection_open", onReconnect);
+        };
+    }, [storeId]);
 
     function authHeaders() {
         return { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
@@ -533,32 +557,21 @@ export default function BusinessDashboard() {
                         title="Recompute all monthly data from scratch (fixes stale cash discount totals)"
                         onClick={async () => {
                             if (!storeId) return;
+                            // Done when the server pushes "dashboard_recomputed" (see below).
                             setRecomputing(true);
-                            let secs = 30;
-                            setRecomputeCountdown(secs);
                             try {
-                                await fetch(`/v1/dashboard/backfill?store_id=${storeId}&months=0`, {
+                                const res = await fetch(`/v1/dashboard/backfill?store_id=${storeId}&months=0`, {
                                     method: "POST",
                                     headers: authHeaders(),
                                 });
-                                const interval = setInterval(() => {
-                                    secs -= 1;
-                                    setRecomputeCountdown(secs);
-                                    if (secs <= 0) {
-                                        clearInterval(interval);
-                                        setRecomputing(false);
-                                        setRecomputeCountdown(0);
-                                        setRefreshKey(k => k + 1);
-                                    }
-                                }, 1000);
+                                if (!res.ok) setRecomputing(false);
                             } catch {
                                 setRecomputing(false);
-                                setRecomputeCountdown(0);
                             }
                         }}
                     >
                         <i className={`bi bi-database-gear${recomputing ? " spin" : ""}`} />
-                        {recomputing ? ` ${t("Recomputing…")} ${recomputeCountdown}s` : ` ${t("Recompute")}`}
+                        {recomputing ? ` ${t("Recomputing…")}` : ` ${t("Recompute")}`}
                     </button>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchStore } from './storeUtils.js';
+import eventEmitter from './eventEmitter';
 
-const POLL_INTERVAL = 10 * 60 * 1000; // check every 10 minutes
 const RELOAD_COUNTDOWN = 60;          // seconds before auto-reload
 
 function getVersionFingerprint(html) {
@@ -74,18 +74,23 @@ export default function AutoRefresh() {
             if (!store?.settings?.enable_auto_refresh) return;
             enabledRef.current = true;
 
+            // No timer: the deploy announces a new build ("frontend_deployed"
+            // over the WebSocket); a page also checks when it comes back into
+            // view or reconnects, in case it missed the announcement.
             check();
-            const interval = setInterval(check, POLL_INTERVAL);
             const onFocus = () => check();
             const onVisibility = () => { if (!document.hidden) check(); };
             window.addEventListener('focus', onFocus);
             document.addEventListener('visibilitychange', onVisibility);
+            eventEmitter.on('frontend_deployed', onFocus);
+            eventEmitter.on('socket_connection_open', onFocus);
 
             cleanup = () => {
-                clearInterval(interval);
                 clearInterval(countdownRef.current);
                 window.removeEventListener('focus', onFocus);
                 document.removeEventListener('visibilitychange', onVisibility);
+                eventEmitter.off('frontend_deployed', onFocus);
+                eventEmitter.off('socket_connection_open', onFocus);
             };
         });
 

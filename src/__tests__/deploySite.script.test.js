@@ -29,6 +29,7 @@ mkdir -p "$dst" && cp -a "$src". "$dst"
 `;
 // curl: the "site" serves DEST/index.html, or a fixed page in broken mode.
 const FAKE_CURL = `#!/usr/bin/env bash
+case "$*" in *frontend-deployed*) echo "$*" >> "$FAKE_ANNOUNCE"; exit \${FAKE_ANNOUNCE_FAIL:-0} ;; esac
 if [ -n "$FAKE_BROKEN" ]; then echo "<html>502 Bad Gateway</html>"; exit 0; fi
 cat "$FAKE_DEST/index.html"
 `;
@@ -71,6 +72,7 @@ function run(t, extraEnv = {}) {
             VERIFY_DELAY: '0',
             FAKE_DEST: t.dest,
             FAKE_LOG: t.log,
+            FAKE_ANNOUNCE: path.join(t.root, 'announce.log'),
             ...extraEnv,
         },
     });
@@ -103,6 +105,26 @@ describe('deploy_site.sh', () => {
         expect(fs.existsSync(path.join(t.dest, 'old.js'))).toBe(true);
         // The rejected build is kept aside for inspection.
         expect(read(path.join(`${t.dest}_failed`, 'index.html'))).toBe('<html>new build</html>');
+    });
+
+    it('tells the API about the new build once it is live', () => {
+        const r = run(t, { APP_API_URL: 'https://api.invalid/' });
+        expect(r.status).toBe(0);
+        expect(read(path.join(t.root, 'announce.log'))).toMatch(/-X POST https:\/\/api\.invalid\/v1\/app\/frontend-deployed/);
+        expect(r.stdout).toMatch(/Open pages were told/);
+    });
+
+    it('a failed announcement does not fail the deploy', () => {
+        const r = run(t, { APP_API_URL: 'https://api.invalid', FAKE_ANNOUNCE_FAIL: '7' });
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/could not tell open pages/);
+        expect(read(path.join(t.dest, 'index.html'))).toBe('<html>new build</html>');
+    });
+
+    it('announces nothing without APP_API_URL or when the deploy is rolled back', () => {
+        expect(run(t).status).toBe(0);
+        expect(run(t, { APP_API_URL: 'https://api.invalid', FAKE_BROKEN: '1' }).status).not.toBe(0);
+        expect(fs.existsSync(path.join(t.root, 'announce.log'))).toBe(false);
     });
 
     it('a second deploy after a failed one still works', () => {

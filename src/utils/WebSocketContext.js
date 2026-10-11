@@ -105,6 +105,18 @@ export function dispatchSocketMessage(jsonMessage) {
         eventEmitter.emit("wa_unread_changed");
     } else if (jsonMessage.event === "email_unread_changed") {
         eventEmitter.emit("email_unread_changed");
+    } else if (jsonMessage.event === "procurement_messages_changed") {
+        eventEmitter.emit("procurement_messages_changed", jsonMessage.data); // { store_id, type }
+    } else if (jsonMessage.event === "user_status_change" || jsonMessage.event === "user_device_count_change") {
+        eventEmitter.emit("user_status_change");
+    } else if (jsonMessage.event === "job_progress") {
+        eventEmitter.emit("job_progress", jsonMessage.data); // { job_id, kind, progress }
+    } else if (jsonMessage.event === "dashboard_recomputed") {
+        eventEmitter.emit("dashboard_recomputed", jsonMessage.data); // { store_id }
+    } else if (jsonMessage.event === "frontend_deployed") {
+        eventEmitter.emit("frontend_deployed");
+    } else if (jsonMessage.event === "whatsapp_connect") {
+        eventEmitter.emit("whatsapp_connect", jsonMessage.data); // { store_id, qr_base64 | connected | expired }
     } else if (jsonMessage.event === "store_updated") {
         handleStoreUpdatedPush(jsonMessage.data); // re-read the shared store copy once
     }

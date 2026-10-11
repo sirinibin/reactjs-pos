@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import eventEmitter from '../utils/eventEmitter';
 import { Modal, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import UserCreate from './create.js';
@@ -118,13 +119,19 @@ const ManageUsersModal = forwardRef((props, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roleFilter, showInactive]);
 
-    // Poll online status silently every 15 s while the modal is open.
+    // Online status and device counts arrive by server push (user_status_change)
+    // while the window is open; a reconnect reloads them once too.
     useEffect(() => {
         if (!show) return;
-        const interval = setInterval(() => silentRefresh(), 15000);
-        return () => clearInterval(interval);
+        const refresh = () => silentRefresh();
+        eventEmitter.on('user_status_change', refresh);
+        eventEmitter.on('socket_connection_open', refresh);
+        return () => {
+            eventEmitter.off('user_status_change', refresh);
+            eventEmitter.off('socket_connection_open', refresh);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [show, roleFilter, showInactive, searchName]);
+    }, [show, roleFilter, showInactive, searchName, page, pageSize]);
 
     useEffect(() => {
         if (!show) return;

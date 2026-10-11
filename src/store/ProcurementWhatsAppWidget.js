@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from "react-i18next";
 import { Spinner, Badge, Alert } from 'react-bootstrap';
+import { watchWhatsAppConnect } from '../utils/whatsAppConnectPush';
 
-const POLL_MS = 3000;
 
 /**
  * Inline WhatsApp connect widget for the Procurement tab.
@@ -20,18 +20,17 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
     const { t } = useTranslation('common');
     const [phase, setPhase] = useState('idle'); // idle | creating | waitingQR | connected | error | checking
     const [qrBase64, setQrBase64] = useState(null);
-    const [qrCount, setQrCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState('');
     const [connectedPhone, setConnectedPhone] = useState('');
     const [phoneNumberId, setPhoneNumberId] = useState('');
     const [accessToken, setAccessToken] = useState('');
-    const pollRef = useRef(null);
+    const watchRef = useRef(null);
 
-    const stopPolling = useCallback(() => {
-        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    const stopWatch = useCallback(() => {
+        if (watchRef.current) { watchRef.current.stop(); watchRef.current = null; }
     }, []);
 
-    useEffect(() => () => stopPolling(), [stopPolling]);
+    useEffect(() => () => stopWatch(), [stopWatch]);
 
     // Check existing connection on mount / storeId change
     useEffect(() => {
@@ -55,36 +54,24 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [storeId, endpointBase]);
 
-    const startPolling = useCallback(() => {
-        stopPolling();
-        pollRef.current = setInterval(async () => {
-            try {
-                const statusRes = await fetch(`${endpointBase}/status?store_id=${storeId}`, {
-                    headers: { Authorization: localStorage.getItem('access_token') }
-                });
-                const statusData = await statusRes.json();
-                if (statusData.connected) {
-                    stopPolling();
-                    setPhase('connected');
-                    setConnectedPhone(statusData.phone || '');
-                    if (onStatusChange) onStatusChange(true);
-                    return;
-                }
-                if (!useWABA) {
-                    const qrRes = await fetch(`${endpointBase}/qr?store_id=${storeId}`, {
-                        headers: { Authorization: localStorage.getItem('access_token') }
-                    });
-                    const qrData = await qrRes.json();
-                    if (qrData.base64 && qrData.count !== qrCount) {
-                        setQrBase64(qrData.base64);
-                        setQrCount(qrData.count);
-                    }
-                }
-            } catch (e) {
-                console.error('WhatsApp poll error:', e);
-            }
-        }, POLL_MS);
-    }, [endpointBase, storeId, qrCount, stopPolling, onStatusChange, useWABA]);
+    // QR connect: the server pushes each new QR and the moment the phone is linked.
+    const startWatch = useCallback(() => {
+        stopWatch();
+        watchRef.current = watchWhatsAppConnect(storeId, {
+            onQR: (base64) => setQrBase64(base64),
+            onConnected: (connectedTo) => {
+                stopWatch();
+                setPhase('connected');
+                setConnectedPhone(connectedTo);
+                if (onStatusChange) onStatusChange(true);
+            },
+            onExpired: () => {
+                stopWatch();
+                setPhase('error');
+                setErrorMsg(t('The QR code expired. Please try again.'));
+            },
+        });
+    }, [storeId, stopWatch, onStatusChange, t]);
 
     // WABA (Official Meta Cloud API) connect — no QR
     const handleConnectWABA = useCallback(async () => {
@@ -106,14 +93,15 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                 setErrorMsg(data.error || 'Failed to connect');
                 return;
             }
-            // Poll status until Meta confirms the connection
-            setPhase('waitingQR');
-            setTimeout(startPolling, 3000);
+            // The server checked the credentials with Meta before saving them.
+            setPhase('connected');
+            setConnectedPhone(data.phone || '');
+            if (onStatusChange) onStatusChange(true);
         } catch (e) {
             setPhase('error');
             setErrorMsg('Cannot reach server: ' + e.message);
         }
-    }, [storeId, phoneNumberId, accessToken, endpointBase, startPolling]);
+    }, [storeId, phoneNumberId, accessToken, endpointBase, onStatusChange]);
 
     // QR / Baileys connect
     const handleConnect = useCallback(async () => {
@@ -121,6 +109,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
         setPhase('creating');
         setErrorMsg('');
         setQrBase64(null);
+        startWatch(); // listen before asking, so no push is missed
         try {
             const res = await fetch(`${endpointBase}/connect`, {
                 method: 'POST',
@@ -132,17 +121,18 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
             });
             const data = await res.json();
             if (!res.ok || data.error) {
+                stopWatch();
                 setPhase('error');
                 setErrorMsg(data.error || 'Failed to create instance');
                 return;
             }
             setPhase('waitingQR');
-            setTimeout(startPolling, 4000);
         } catch (e) {
+            stopWatch();
             setPhase('error');
             setErrorMsg('Cannot reach server: ' + e.message);
         }
-    }, [storeId, phone, endpointBase, startPolling]);
+    }, [storeId, phone, endpointBase, startWatch, stopWatch]);
 
     const handleDisconnect = useCallback(async () => {
         try {
@@ -236,7 +226,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                                 <Spinner animation="border" size="sm" className="me-1" />
                                 {phase === 'creating' ? t('Connecting to WhatsApp Business API…') : t('Verifying with Meta…')}
                             </div>
-                            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
+                            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopWatch(); setPhase('idle'); }}>
                                 {t('Cancel')}
                             </button>
                         </div>
@@ -267,7 +257,7 @@ function ProcurementWhatsAppWidget({ storeId, endpointBase, label, phone, onPhon
                         </button>
                     )}
                     {isConnecting && (
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopPolling(); setPhase('idle'); }}>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { stopWatch(); setPhase('idle'); }}>
                             {t('Cancel')}
                         </button>
                     )}

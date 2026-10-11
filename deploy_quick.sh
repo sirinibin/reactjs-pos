@@ -120,6 +120,9 @@ while [ "$attempt" -le "$max" ]; do
         echo "==> Transfer complete. Swapping live directory..."
         ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" \
             "mv $dest $old_dir && mv $tmp_dir $dest && rm -rf $old_dir"
+        # Open pages are told about the new build over the WebSocket.
+        curl -fsS -m 15 -X POST "$API_URL/v1/app/frontend-deployed" >/dev/null \
+            || echo "==> Warning: could not tell open pages about the new build."
         echo "==> [$LABEL] Quick deploy complete. Remember to run full deploy.sh when stable."
         exit 0
     fi

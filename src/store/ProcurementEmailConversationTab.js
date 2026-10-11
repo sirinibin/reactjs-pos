@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
+import eventEmitter from '../utils/eventEmitter';
 import EmailDetailModal, { fixEmailHtml } from './EmailDetailModal.js';
 import RFQCreate from '../rfq_received/create.js';
 import { ExtractModal } from './ProcurementEmailsTab.js';
@@ -300,83 +301,90 @@ export default function ProcurementEmailConversationTab({ storeId, initialEmail:
 
     useEffect(() => { loadThreads(); }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Auto-refresh (polling) ────────────────────────────────────────────────
+    // ── Live updates (server push) ───────────────────────────────────────────
+    // The server announces new or removed email messages with
+    // procurement_messages_changed; the list and the open conversation reload
+    // then (and after a WebSocket reconnect) instead of polling.
     const lastThreadDatesRef   = useRef({}); // contactPhone → last_message_date string
-    const lastMsgCountRef      = useRef(0);  // message count in open thread
+    const threadMessagesRef    = useRef([]);
+    const selectedThreadRef    = useRef(selectedThread);
+    const threadSearchRef      = useRef(threadSearch);
+    const openedAtRef          = useRef(Date.now());
+    useEffect(() => { threadSearchRef.current = threadSearch; }, [threadSearch]);
+    useEffect(() => { threadMessagesRef.current = threadMessages; }, [threadMessages]);
+    useEffect(() => { selectedThreadRef.current = selectedThread; }, [selectedThread]);
+    // Threads loaded on screen are known: only later ones count as new mail.
+    useEffect(() => {
+        threads.forEach(th => {
+            if (!(th.contact_phone in lastThreadDatesRef.current)) {
+                lastThreadDatesRef.current[th.contact_phone] = th.last_message_date;
+            }
+        });
+    }, [threads]);
 
     useEffect(() => {
         if (!storeId) return;
-        const POLL_MS = 15000;
 
-        const pollThreads = async () => {
+        const refreshThreads = async () => {
             try {
                 const params = new URLSearchParams({ store_id: storeId, type: 'email', limit: 80 });
+                if (threadSearchRef.current) params.set('search', threadSearchRef.current);
                 const res = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
                 const data = await res.json();
                 const incoming = data.threads || [];
 
-                // Detect if any thread has a newer last_message_date than what we know
+                // New mail: a known thread got a newer message, or a thread not on
+                // screen yet has a message from after this screen opened.
                 let anyNew = false;
                 incoming.forEach(th => {
                     const prev = lastThreadDatesRef.current[th.contact_phone];
-                    if (prev && th.last_message_date && th.last_message_date > prev) anyNew = true;
+                    const last = th.last_message_date;
+                    if (prev === undefined) {
+                        if (last && new Date(last).getTime() > openedAtRef.current) anyNew = true;
+                    } else if (prev && last && last > prev) {
+                        anyNew = true;
+                    }
                     lastThreadDatesRef.current[th.contact_phone] = th.last_message_date;
                 });
-                // Also detect brand-new threads
-                if (incoming.length > Object.keys(lastThreadDatesRef.current).length) anyNew = true;
 
                 setThreads(incoming);
                 if (anyNew) showToast('New email received', 'info');
             } catch (_) {}
         };
 
-        // Initialise ref on first load
-        const initRef = async () => {
-            try {
-                const params = new URLSearchParams({ store_id: storeId, type: 'email', limit: 80 });
-                const res = await fetch(`/v1/procurement-message-threads?${params}`, { headers: { Authorization: token } });
-                const data = await res.json();
-                (data.threads || []).forEach(th => {
-                    lastThreadDatesRef.current[th.contact_phone] = th.last_message_date;
-                });
-            } catch (_) {}
-        };
-        initRef();
-
-        const id = setInterval(pollThreads, POLL_MS);
-        return () => clearInterval(id);
-    }, [storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Poll the open conversation for new messages
-    useEffect(() => {
-        if (!storeId || !selectedThread) return;
-        const POLL_MS = 15000;
-
-        const pollConversation = async () => {
+        const refreshConversation = async () => {
+            const thread = selectedThreadRef.current;
+            if (!thread) return;
             try {
                 const params = new URLSearchParams({ store_id: storeId, type: 'email', limit: 100 });
                 const res = await fetch(
-                    `/v1/procurement-message-threads/${encodeURIComponent(selectedThread.contact_phone)}?${params}`,
+                    `/v1/procurement-message-threads/${encodeURIComponent(thread.contact_phone)}?${params}`,
                     { headers: { Authorization: token } }
                 );
                 const data = await res.json();
                 const msgs = data.messages || [];
-                if (msgs.length > lastMsgCountRef.current && lastMsgCountRef.current > 0) {
+                if (selectedThreadRef.current?.contact_phone !== thread.contact_phone) return; // switched meanwhile
+                if (msgs.length !== threadMessagesRef.current.length) {
                     setThreadMessages(msgs);
                     setThreads(prev => prev.map(t =>
-                        t.contact_phone === selectedThread.contact_phone ? { ...t, unread_count: 0 } : t
+                        t.contact_phone === thread.contact_phone ? { ...t, unread_count: 0 } : t
                     ));
-                } else if (lastMsgCountRef.current === 0) {
-                    // first load — just sync the count
                 }
-                lastMsgCountRef.current = msgs.length;
             } catch (_) {}
         };
 
-        lastMsgCountRef.current = 0; // reset on thread change
-        const id = setInterval(pollConversation, POLL_MS);
-        return () => clearInterval(id);
-    }, [storeId, token, selectedThread]); // eslint-disable-line react-hooks/exhaustive-deps
+        const refresh = () => { refreshThreads(); refreshConversation(); };
+        const onMessages = (data) => {
+            if (data?.type !== 'email' || (data?.store_id && data.store_id !== storeId)) return;
+            refresh();
+        };
+        eventEmitter.on('procurement_messages_changed', onMessages);
+        eventEmitter.on('socket_connection_open', refresh);
+        return () => {
+            eventEmitter.off('procurement_messages_changed', onMessages);
+            eventEmitter.off('socket_connection_open', refresh);
+        };
+    }, [storeId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Pin / unpin ──────────────────────────────────────────────────────────
     const togglePin = useCallback(async (th) => {

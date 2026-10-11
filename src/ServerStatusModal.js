@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-bootstrap/Modal';
+import { watchServerStatus } from './utils/serverStatusStream';
 
 // Read-only server status view for non-admin users who have been granted access.
 // All requests go to /health-monitor/ directly — no main API dependency.
@@ -7,21 +8,6 @@ export default function ServerStatusModal({ show, onHide }) {
     const [serverStatus, setServerStatus] = useState(null);
     const [accessDenied, setAccessDenied] = useState(false);
     const [restartLog, setRestartLog] = useState([]);
-
-    const fetchStatus = async () => {
-        try {
-            const token = localStorage.getItem('access_token');
-            const resp = await fetch('/health-monitor/status', { headers: { Authorization: `Bearer ${token}` } });
-            if (resp.status === 403 || resp.status === 401) {
-                setAccessDenied(true);
-                return;
-            }
-            if (!resp.ok) return;
-            const data = await resp.json();
-            setServerStatus(data);
-            setAccessDenied(false);
-        } catch (_) {}
-    };
 
     const fetchLog = async () => {
         try {
@@ -36,10 +22,13 @@ export default function ServerStatusModal({ show, onHide }) {
     useEffect(() => {
         if (!show) return;
         setAccessDenied(false);
-        fetchStatus();
         fetchLog();
-        const id = setInterval(fetchStatus, 5000);
-        return () => clearInterval(id);
+        // The health monitor pushes the status when it changes.
+        const watch = watchServerStatus({
+            onStatus: (data) => { setServerStatus(data); setAccessDenied(false); },
+            onDenied: () => setAccessDenied(true),
+        });
+        return () => watch.stop();
     }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const palette = {

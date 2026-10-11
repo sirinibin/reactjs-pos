@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, Button, Spinner, Alert, Form, Badge } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
+import { watchWhatsAppConnect } from './whatsAppConnectPush';
 
 // Mounts once, calls onSync immediately, then unmounts. Used to trigger auto-sync
 // after a fresh WhatsApp connection without fighting stale closure issues.
@@ -63,48 +64,43 @@ export default function WhatsAppAPIModal({
     const [connectPhase, setConnectPhase] = useState('idle'); // 'idle' | 'creating' | 'waitingQR' | 'connected' | 'error'
     const [qrBase64, setQrBase64] = useState(null);
     const [connectError, setConnectError] = useState('');
-    const connectPollRef = useRef(null);
-    const qrCountRef = useRef(0);
+    const connectWatchRef = useRef(null);
     const syncContactsRef = useRef(null);
     const wasDisconnectedRef = useRef(false);
     const [triggerAutoSync, setTriggerAutoSync] = useState(false);
 
-    const stopConnectPoll = useCallback(() => {
-        if (connectPollRef.current) { clearInterval(connectPollRef.current); connectPollRef.current = null; }
+    const stopConnectWatch = useCallback(() => {
+        if (connectWatchRef.current) { connectWatchRef.current.stop(); connectWatchRef.current = null; }
     }, []);
 
-    const startConnectPoll = useCallback((sid) => {
-        stopConnectPoll();
-        connectPollRef.current = setInterval(async () => {
-            try {
-                const h = { Authorization: localStorage.getItem('access_token') };
-                const [statusData, qrData] = await Promise.all([
-                    fetch(`/v1/whatsapp/status?store_id=${sid}`, { headers: h }).then(r => r.json()),
-                    fetch(`/v1/whatsapp/qr?store_id=${sid}`, { headers: h }).then(r => r.json()),
-                ]);
-                if (statusData.connected) {
-                    stopConnectPoll();
-                    setConnectPhase('connected');
-                    setTimeout(() => {
-                        setConnStatus('connected');
-                        setConnectPhase('idle');
-                        setTriggerAutoSync(true);
-                    }, 1500);
-                    return;
-                }
-                if (qrData.base64 && qrData.count !== qrCountRef.current) {
-                    qrCountRef.current = qrData.count;
-                    setQrBase64(qrData.base64);
-                }
-            } catch (e) { console.error('connect poll error:', e); }
-        }, 3000);
-    }, [stopConnectPoll]);
+    // The server pushes each new QR and the moment the phone is linked.
+    const startConnectWatch = useCallback((sid) => {
+        stopConnectWatch();
+        connectWatchRef.current = watchWhatsAppConnect(sid, {
+            onQR: (base64) => setQrBase64(base64),
+            onConnected: () => {
+                stopConnectWatch();
+                setConnectPhase('connected');
+                setTimeout(() => {
+                    setConnStatus('connected');
+                    setConnectPhase('idle');
+                    setTriggerAutoSync(true);
+                }, 1500);
+            },
+            onExpired: () => {
+                stopConnectWatch();
+                setConnectPhase('error');
+                setConnectError('The QR code expired. Please try again.');
+            },
+        });
+    }, [stopConnectWatch]);
 
     const handleWhatsAppConnect = useCallback(async () => {
         if (!storeId) return;
         setConnectPhase('creating');
         setConnectError('');
         setQrBase64(null);
+        startConnectWatch(storeId); // listen before asking, so no push is missed
         try {
             const res = await fetch('/v1/whatsapp/connect', {
                 method: 'POST',
@@ -112,11 +108,10 @@ export default function WhatsAppAPIModal({
                 body: JSON.stringify({ store_id: storeId }),
             });
             const data = await res.json();
-            if (!res.ok || data.error) { setConnectPhase('error'); setConnectError(data.error || 'Failed'); return; }
+            if (!res.ok || data.error) { stopConnectWatch(); setConnectPhase('error'); setConnectError(data.error || 'Failed'); return; }
             setConnectPhase('waitingQR');
-            setTimeout(() => startConnectPoll(storeId), 4000);
-        } catch (e) { setConnectPhase('error'); setConnectError(e.message); }
-    }, [storeId, startConnectPoll]);
+        } catch (e) { stopConnectWatch(); setConnectPhase('error'); setConnectError(e.message); }
+    }, [storeId, startConnectWatch, stopConnectWatch]);
 
     // ── Option 1: Customer numbers ──────────────────────────────────────────
     const [numbers, setNumbers] = useState([]);      // [{raw, formatted, status, jid}]
@@ -181,7 +176,7 @@ export default function WhatsAppAPIModal({
 
     // Reset when modal opens — immediately trigger background check
     useEffect(() => {
-        if (!show) { stopConnectPoll(); return; }
+        if (!show) { stopConnectWatch(); return; }
 
         // Reset all state
         setCaption('');
@@ -196,7 +191,6 @@ export default function WhatsAppAPIModal({
         setConnectPhase('idle');
         setQrBase64(null);
         setConnectError('');
-        qrCountRef.current = 0;
 
         // Check connection status first
         if (storeId) {
@@ -291,7 +285,7 @@ export default function WhatsAppAPIModal({
     }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Cleanup connect poll on unmount
-    useEffect(() => () => stopConnectPoll(), [stopConnectPoll]);
+    useEffect(() => () => stopConnectWatch(), [stopConnectWatch]);
 
     const syncContacts = useCallback(async () => {
         if (!storeId || syncing) return;
@@ -321,7 +315,7 @@ export default function WhatsAppAPIModal({
         }
     }, [storeId, syncing, contactSearch, loadContacts]);
 
-    // Keep ref current so startConnectPoll can call syncContacts without stale closures
+    // Keep ref current so startConnectWatch can call syncContacts without stale closures
     syncContactsRef.current = syncContacts;
 
 

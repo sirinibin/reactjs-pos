@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Spinner, Badge, Alert } from 'react-bootstrap';
 import { apiBaseURL } from '../utils/apiBaseURL';
+import { fetchStore, subscribeStoreUpdates } from '../utils/storeUtils';
 
-const POLL_MS = 3000;
 
 const PROVIDERS = [
     {
@@ -248,7 +248,7 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
     const callbackURL = apiBaseURL() + '/v1/rfq-email/oauth-callback';
 
     const stopPolling = useCallback(() => {
-        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        if (pollRef.current) { pollRef.current.stop(); pollRef.current = null; }
     }, []);
     useEffect(() => () => stopPolling(), [stopPolling]);
 
@@ -270,21 +270,32 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
         return true;
     };
 
+    // Waits for the OAuth sign-in to finish without asking on a timer: the
+    // server saves the account's tokens and pushes store_updated, and the popup
+    // posts a message; either one triggers a single status read.
     const pollAccountStatus = useCallback((accountId) => {
         stopPolling();
-        pollRef.current = setInterval(async () => {
+        let done = false;
+        const checkStatus = async () => {
+            if (done) return;
             try {
                 const res = await fetch(
                     `/v1/rfq-email/account/${accountId}/status?store_id=${storeId}`,
                     { headers: { Authorization: localStorage.getItem('access_token') } }
                 );
                 const data = await res.json();
-                if (data.connected) {
+                if (data.connected && !done) {
                     stopPolling();
                     onAdded({ id: accountId, provider: data.provider, email: data.email });
                 }
             } catch (_) {}
-        }, POLL_MS);
+        };
+        const unsubscribe = subscribeStoreUpdates((store) => {
+            if (store?.id === storeId) checkStatus();
+        });
+        // Pushes are followed only for stores this page has loaded.
+        fetchStore(storeId).catch(() => { });
+        pollRef.current = { stop: () => { done = true; unsubscribe(); }, check: checkStatus };
     }, [storeId, stopPolling, onAdded]);
 
     // Listen for OAuth popup postMessage
@@ -293,8 +304,8 @@ function AddAccountForm({ storeId, onAdded, onCancel }) {
             if (!e.data || e.data.rfqEmailOAuth !== 'done') return;
             // pendingAccountId is captured via closure via ref
             if (pendingAccountRef.current) {
-                stopPolling();
-                pollAccountStatus(pendingAccountRef.current);
+                if (!pollRef.current) pollAccountStatus(pendingAccountRef.current);
+                pollRef.current?.check();
             }
         }
         window.addEventListener('message', onMessage);

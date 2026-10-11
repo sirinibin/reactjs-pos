@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
-
-const POLL_INTERVAL_MS = 3000;
+import { watchWhatsAppConnect } from '../utils/whatsAppConnectPush';
 
 const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMessage }, ref) => {
     const { t } = useTranslation('common');
@@ -10,76 +9,60 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
     const [store, setStore] = useState(null);
     const [phase, setPhase] = useState('idle'); // idle | creating | waitingQR | connected | error
     const [qrBase64, setQrBase64] = useState(null);
-    const [qrCount, setQrCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState('');
-    const pollRef = useRef(null);
+    const watchRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         open(storeData) {
             setStore(storeData);
             setPhase('idle');
             setQrBase64(null);
-            setQrCount(0);
             setErrorMsg('');
             setShow(true);
         }
     }));
 
-    const stopPolling = useCallback(() => {
-        if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
+    const stopWatch = useCallback(() => {
+        if (watchRef.current) {
+            watchRef.current.stop();
+            watchRef.current = null;
         }
     }, []);
 
     const handleClose = useCallback(() => {
-        stopPolling();
+        stopWatch();
         setShow(false);
-    }, [stopPolling]);
+    }, [stopWatch]);
 
-    // Poll QR + status after instance is created
-    const startPolling = useCallback((storeId) => {
-        stopPolling();
-        pollRef.current = setInterval(async () => {
-            try {
-                // Check connection status first
-                const statusRes = await fetch(`/v1/whatsapp/status?store_id=${storeId}`, {
-                    headers: { Authorization: localStorage.getItem('access_token') }
-                });
-                const statusData = await statusRes.json();
-
-                if (statusData.connected) {
-                    stopPolling();
-                    setPhase('connected');
-                    if (showToastMessage) showToastMessage(t('WhatsApp connected successfully!'), 'success');
-                    if (onConnected) onConnected(storeId);
-                    setTimeout(() => setShow(false), 2000);
-                    return;
-                }
-
-                // Fetch fresh QR
-                const qrRes = await fetch(`/v1/whatsapp/qr?store_id=${storeId}`, {
-                    headers: { Authorization: localStorage.getItem('access_token') }
-                });
-                const qrData = await qrRes.json();
-                if (qrData.base64 && qrData.count !== qrCount) {
-                    setQrBase64(qrData.base64);
-                    setQrCount(qrData.count);
-                }
-            } catch (e) {
-                console.error('WhatsApp poll error:', e);
-            }
-        }, POLL_INTERVAL_MS);
-    }, [stopPolling, qrCount, onConnected, showToastMessage, t]);
+    // The server pushes each new QR and the moment the phone is linked.
+    const startWatch = useCallback((storeId) => {
+        stopWatch();
+        watchRef.current = watchWhatsAppConnect(storeId, {
+            onQR: (base64) => setQrBase64(base64),
+            onConnected: () => {
+                stopWatch();
+                setPhase('connected');
+                if (showToastMessage) showToastMessage(t('WhatsApp connected successfully!'), 'success');
+                if (onConnected) onConnected(storeId);
+                setTimeout(() => setShow(false), 2000);
+            },
+            onExpired: () => {
+                stopWatch();
+                setPhase('error');
+                setErrorMsg(t('The QR code expired. Please try again.'));
+            },
+        });
+    }, [stopWatch, onConnected, showToastMessage, t]);
 
     // Cleanup on unmount
-    useEffect(() => () => stopPolling(), [stopPolling]);
+    useEffect(() => () => stopWatch(), [stopWatch]);
 
     const handleConnect = useCallback(async () => {
         if (!store) return;
         setPhase('creating');
         setErrorMsg('');
         setQrBase64(null);
+        startWatch(store.id); // listen before asking, so no push is missed
 
         try {
             const res = await fetch('/v1/whatsapp/connect', {
@@ -92,19 +75,19 @@ const WhatsAppConnect = forwardRef(({ onConnected, onDisconnected, showToastMess
             });
             const data = await res.json();
             if (!res.ok || data.error) {
+                stopWatch();
                 setPhase('error');
                 setErrorMsg(data.error || 'Failed to create WhatsApp instance');
                 return;
             }
 
             setPhase('waitingQR');
-            // Small delay so Baileys generates the first QR
-            setTimeout(() => startPolling(store.id), 4000);
         } catch (e) {
+            stopWatch();
             setPhase('error');
             setErrorMsg('Could not reach server: ' + e.message);
         }
-    }, [store, startPolling]);
+    }, [store, startWatch, stopWatch]);
 
     const handleDisconnect = useCallback(async () => {
         if (!store) return;

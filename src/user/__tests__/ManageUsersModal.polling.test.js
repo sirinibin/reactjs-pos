@@ -9,8 +9,8 @@
  * Fix:
  *  - list() now delegates to fetchUsers(true)  — shows loading spinner
  *  - silentRefresh() delegates to fetchUsers(false) — no spinner, no flicker
- *  - A useEffect polls silentRefresh() every 15 s while the modal is open
- *  - The interval is cleared when show goes false or filter deps change
+ *  - While the modal is open, silentRefresh() runs on the server's
+ *    user_status_change push (no timer polling)
  */
 
 const fs   = require('fs');
@@ -71,32 +71,35 @@ describe('ManageUsersModal — list() and silentRefresh() wrappers', () => {
 });
 
 
-// ── 3. Polling useEffect ──────────────────────────────────────────────────────
+// ── 3. Server push instead of polling (user rule 2026-10-11) ────────────────
+// Online status changes arrive as the server's user_status_change event; the
+// window refreshes silently then, never on a timer.
 
-describe('ManageUsersModal — polling useEffect', () => {
-    test('setInterval is used for polling', () => {
-        expect(SRC).toMatch(/setInterval/);
+describe('ManageUsersModal — online status by server push', () => {
+    test('no timer polling', () => {
+        expect(SRC).not.toMatch(/setInterval/);
     });
 
-    test('polling calls silentRefresh', () => {
-        expect(SRC).toMatch(/setInterval\s*\(\s*\(\s*\)\s*=>\s*silentRefresh\s*\(\s*\)/);
+    test('refreshes silently on user_status_change', () => {
+        expect(SRC).toMatch(/const refresh = \(\) => silentRefresh\(\)/);
+        expect(SRC).toMatch(/eventEmitter\.on\('user_status_change', refresh\)/);
     });
 
-    test('polling interval is 15000 ms', () => {
-        expect(SRC).toMatch(/setInterval\s*\(\s*\(\s*\)\s*=>\s*silentRefresh\s*\(\s*\)\s*,\s*15000\s*\)/);
+    test('refreshes after a WebSocket reconnect', () => {
+        expect(SRC).toMatch(/eventEmitter\.on\('socket_connection_open', refresh\)/);
     });
 
-    test('interval is cleared in useEffect cleanup (clearInterval)', () => {
-        expect(SRC).toMatch(/clearInterval\s*\(\s*interval\s*\)/);
+    test('removes both listeners on cleanup', () => {
+        expect(SRC).toMatch(/eventEmitter\.off\('user_status_change', refresh\)/);
+        expect(SRC).toMatch(/eventEmitter\.off\('socket_connection_open', refresh\)/);
     });
 
-    test('polling only starts when show is true (guard at top of useEffect)', () => {
+    test('listens only while the window is open', () => {
         expect(SRC).toMatch(/if\s*\(\s*!show\s*\)\s*return/);
     });
 
-    test('polling effect depends on show so it restarts when modal opens/closes', () => {
-        // The dependency array must include show
-        expect(SRC).toMatch(/\[\s*show\s*,/);
+    test('re-subscribes when the open page changes so refresh reloads that page', () => {
+        expect(SRC).toMatch(/\[\s*show\s*,\s*roleFilter\s*,\s*showInactive\s*,\s*searchName\s*,\s*page\s*,\s*pageSize\s*\]/);
     });
 });
 

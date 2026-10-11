@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { watchJobProgress } from '../utils/jobProgress';
 import { useTranslation } from "react-i18next";
 import { Modal, Button, Spinner, ProgressBar, Table, Form, Alert } from "react-bootstrap";
 
@@ -106,12 +107,12 @@ const StoreDuplicateWithoutData = forwardRef((props, ref) => {
         setNewStoreName("");
         startTimeRef.current = null;
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current = null; }
+        stopProgressWatch();
     }
 
     function handleClose() {
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        if (pollRef.current)  { clearInterval(pollRef.current);  pollRef.current = null; }
+        stopProgressWatch();
         setShow(false);
     }
 
@@ -177,12 +178,50 @@ const StoreDuplicateWithoutData = forwardRef((props, ref) => {
             });
     }
 
+    function stopProgressWatch() {
+        if (pollRef.current) { pollRef.current.stop(); pollRef.current = null; }
+    }
+
     function stopTimer() {
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     }
 
-    // ── Polling progress (500 ms) ─────────────────────────────────────────────
+    // ── Progress by server push (job_progress) ────────────────────────────────
     function subscribeProgress(storeId, jobId) {
+        // One progress update, pushed by the server or read after a reconnect.
+        // Ignored once the job finished or the window was closed.
+        function applyProgress(data) {
+            if (!pollRef.current) return;
+
+            if (!data.status) {
+                stopProgressWatch();
+                stopTimer();
+                setDuplicateError(
+                    data.errors ? Object.values(data.errors).join(", ") : "Failed to get progress"
+                );
+                setDuplicating(false);
+                return;
+            }
+
+            const progress = data.result;
+            setSteps(progress.steps || []);
+            setOverallProgress(progress.overall_progress || 0);
+
+            if (progress.done) {
+                stopProgressWatch();
+                stopTimer();
+                setDuplicating(false);
+                setDuplicateDone(true);
+                if (progress.error) {
+                    setDuplicateError(progress.error);
+                } else {
+                    setNewStoreID(progress.new_store_id || "");
+                    setNewStoreName(progress.new_store_name || "");
+                    if (props.onDuplicated) props.onDuplicated();
+                }
+            }
+        }
+
         async function poll() {
             try {
                 const res = await fetch(
@@ -190,44 +229,17 @@ const StoreDuplicateWithoutData = forwardRef((props, ref) => {
                     { headers: { Authorization: localStorage.getItem("access_token") } }
                 );
                 const data = await res.json();
-
-                if (!data.status) {
-                    clearInterval(pollRef.current); pollRef.current = null;
-                    stopTimer();
-                    setDuplicateError(
-                        data.errors ? Object.values(data.errors).join(", ") : "Failed to get progress"
-                    );
-                    setDuplicating(false);
-                    return;
-                }
-
-                const progress = data.result;
-                setSteps(progress.steps || []);
-                setOverallProgress(progress.overall_progress || 0);
-
-                if (progress.done) {
-                    clearInterval(pollRef.current); pollRef.current = null;
-                    stopTimer();
-                    setDuplicating(false);
-                    setDuplicateDone(true);
-                    if (progress.error) {
-                        setDuplicateError(progress.error);
-                    } else {
-                        setNewStoreID(progress.new_store_id || "");
-                        setNewStoreName(progress.new_store_name || "");
-                        if (props.onDuplicated) props.onDuplicated();
-                    }
-                }
+                applyProgress(data);
             } catch (err) {
-                clearInterval(pollRef.current); pollRef.current = null;
+                stopProgressWatch();
                 stopTimer();
                 setDuplicateError("Failed to get progress: " + err.message);
                 setDuplicating(false);
             }
         }
 
-        poll();
-        pollRef.current = setInterval(poll, 500);
+        pollRef.current = watchJobProgress(jobId, applyProgress, poll);
+        poll(); // catch up on progress made before the watch started
     }
 
     // ── Derived timing values ─────────────────────────────────────────────────

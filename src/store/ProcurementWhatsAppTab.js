@@ -1355,21 +1355,34 @@ export default function ProcurementWhatsAppTab({ storeId, initialPhone: initialP
         }
     }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Fast poll: refresh active thread every 3 seconds for near-realtime incoming messages.
+    // New or removed messages arrive by server push (procurement_messages_changed),
+    // not by polling: reload the thread list and the open conversation then, and
+    // after a reconnect (a message may have arrived while the socket was down).
     const selectedThreadRef = useRef(selectedThread);
     useEffect(() => { selectedThreadRef.current = selectedThread; }, [selectedThread]);
+    const loadThreadsRef = useRef(loadThreads);
+    useEffect(() => { loadThreadsRef.current = loadThreads; }, [loadThreads]);
+    const loadThreadRef = useRef(loadThread);
+    useEffect(() => { loadThreadRef.current = loadThread; }, [loadThread]);
 
     useEffect(() => {
-        const fastId = setInterval(() => {
+        const refresh = () => {
+            loadThreadsRef.current(undefined, true); // silent: only updates if data changed
             if (selectedThreadRef.current) {
-                loadThread(selectedThreadRef.current.contact_phone, true);
+                loadThreadRef.current(selectedThreadRef.current.contact_phone, true);
             }
-        }, 3000);
-        const slowId = setInterval(() => {
-            loadThreads(undefined, true); // silent — no spinner, only updates if data changed
-        }, 5000);
-        return () => { clearInterval(fastId); clearInterval(slowId); };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        };
+        const onMessages = (data) => {
+            if (data?.type !== 'whatsapp' || (data?.store_id && data.store_id !== storeId)) return;
+            refresh();
+        };
+        eventEmitter.on('procurement_messages_changed', onMessages);
+        eventEmitter.on('socket_connection_open', refresh);
+        return () => {
+            eventEmitter.off('procurement_messages_changed', onMessages);
+            eventEmitter.off('socket_connection_open', refresh);
+        };
+    }, [storeId]);
 
     const handleSearch = e => {
         const q = e.target.value;
