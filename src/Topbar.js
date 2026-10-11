@@ -16,6 +16,7 @@ import { RFQSendModal } from './rfq_received/index.js';
 import { WhatsAppNotificationModal } from './store/ConversationModal';
 import { whatsAppUnreadEnabled, emailUnreadEnabled } from './utils/unreadFeeds';
 import { fetchDeliveryNoteReminders } from './utils/deliveryNoteReminders.js';
+import { fetchStore, subscribeStoreUpdates } from './utils/storeUtils.js';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -158,28 +159,29 @@ function Topbar(props) {
         window.location.reload();
     }
 
-    // Fetch store settings once on mount (for feature flags like enable_notification)
+    // The current store's flags (enable_notification, unread feeds, ZATCA state)
+    // come from the page's shared store copy: loaded once, then updated live
+    // whenever the server pushes store_updated.
     useEffect(() => {
         const storeId = localStorage.getItem("store_id");
-        const token = localStorage.getItem("access_token");
-        if (!storeId || !token) return;
-        fetch(`/v1/store/${storeId}?select=id,code,name_in_arabic,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
-            .then(async res => {
-                const data = res.ok && await res.json();
-                if (data && data.result) {
-                    if (data.result.settings) {
-                        setStoreSettings(data.result.settings);
-                        setLiveStoreSettings(data.result.settings);
-                        localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
-                    }
-                    if (data.result.code) setStoreCode(data.result.code);
-                    if (data.result.zatca) setStoreZatca(data.result.zatca);
-                    if (data.result.name_in_arabic !== undefined) {
-                        localStorage.setItem("store_name_in_arabic", data.result.name_in_arabic || "");
-                    }
-                }
-            })
-            .catch(() => { });
+        if (!storeId || !localStorage.getItem("access_token")) return undefined;
+        let alive = true;
+        const apply = (store) => {
+            if (!alive || !store) return;
+            if (store.settings) {
+                setStoreSettings(store.settings);
+                setLiveStoreSettings(store.settings);
+                localStorage.setItem('_store_settings_cache', JSON.stringify(store.settings));
+            }
+            if (store.code) setStoreCode(store.code);
+            if (store.zatca) setStoreZatca(store.zatca);
+            if (store.name_in_arabic !== undefined) {
+                localStorage.setItem("store_name_in_arabic", store.name_in_arabic || "");
+            }
+        };
+        fetchStore(storeId).then(apply).catch(() => { });
+        const unsubscribe = subscribeStoreUpdates((store) => { if (store?.id === storeId) apply(store); });
+        return () => { alive = false; unsubscribe(); };
     }, []);
 
     // Fetch WhatsApp unread summary (event-driven via WebSocket pushes, no polling)

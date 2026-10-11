@@ -62,6 +62,10 @@ for (const path of SCREENS) {
       .filter(([c, n]) => n > 1 && !EXPECTED_REPEATS.some((ok) => ok(path, c, n)))
       .map(([c, n]) => `${n}x ${c}`);
     expect(repeated, `requests sent more than once on ${path}`).toEqual([]);
+    // The store is one shared copy per page (src/utils/storeUtils.js), whatever
+    // fields each part of the screen reads: at most one store GET per screen.
+    const storeGets = calls.filter((c) => /^GET \/v1\/store\/[0-9a-f]{24}(\?|$)/.test(c));
+    expect(storeGets.length, `store loaded ${storeGets.length} times on ${path}: ${storeGets.join(', ')}`).toBeLessThanOrEqual(1);
     // Opening a screen changes nothing (no print-settings save or any other write),
     // waiting out the 1.5 s print-settings save delay.
     await page.waitForTimeout(1000);

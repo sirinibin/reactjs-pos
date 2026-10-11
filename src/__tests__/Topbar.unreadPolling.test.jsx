@@ -46,7 +46,7 @@ function ok(body) {
 // storeSettings: what GET /v1/store/{id} returns; null = the request fails.
 function mockFetch(storeSettings) {
     global.fetch = jest.fn((url) => {
-        if (url.startsWith(`/v1/store/${STORE_ID}?`)) {
+        if (url === `/v1/store/${STORE_ID}` || url.startsWith(`/v1/store/${STORE_ID}?`)) {
             if (storeSettings === null) return Promise.reject(new Error('network'));
             return ok({ result: { id: STORE_ID, settings: storeSettings } });
         }

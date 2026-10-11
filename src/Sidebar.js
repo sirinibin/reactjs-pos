@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { loadSidebarConfig } from './sidebar_menu_config';
 import { applyDocumentDirection } from './i18n/config';
+import { fetchStore, subscribeStoreUpdates } from './utils/storeUtils.js';
 
 function Sidebar(props) {
     const { t } = useTranslation('common');
@@ -41,27 +42,30 @@ function Sidebar(props) {
 
     useEffect(() => { fetchRbacPermissions(); }, [fetchRbacPermissions, rbacVersion]);
 
+    const applyStore = useCallback((result) => {
+        if (!result) return;
+        setStore(result);
+        // Sync RTL flag to localStorage so i18n/config can read it on language change
+        const useRTL = !!result?.settings?.use_rtl_for_arabic;
+        localStorage.setItem('use_rtl_for_arabic', useRTL ? 'true' : 'false');
+        applyDocumentDirection();
+    }, []);
+
+    // The page's shared store copy (another tab's save reaches it by server push).
     const getStore = useCallback(async (id) => {
         if (!id) return;
-        const res = await fetch('/v1/store/' + id, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        }).then(r => r.json()).catch(() => ({}));
-        if (res?.result) {
-            setStore(res.result);
-            // Sync RTL flag to localStorage so i18n/config can read it on language change
-            const useRTL = !!res.result?.settings?.use_rtl_for_arabic;
-            localStorage.setItem('use_rtl_for_arabic', useRTL ? 'true' : 'false');
-            applyDocumentDirection();
-        }
-    }, []);
+        const result = await fetchStore(id).catch(() => null);
+        applyStore(result);
+    }, [applyStore]);
 
     useEffect(() => {
         getStore(storeId);
     }, [getStore, storeId]);
+
+    // Server push: the store changed (menu, packages, RTL, ...). Re-render live.
+    useEffect(() => subscribeStoreUpdates((s) => {
+        if (s?.id === storeId) applyStore(s);
+    }), [applyStore, storeId]);
 
     // Reload menu whenever sidebar settings change (storage event fires across tabs,
     // but we also reload on mount so a same-tab save+reload picks up the new config).

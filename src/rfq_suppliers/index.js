@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { Badge, Spinner, Button, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { useTranslation } from "react-i18next";
@@ -28,11 +29,10 @@ export function SupplierForm({ supplier, onSave, onClose, zIndex }) {
 
     useEffect(() => {
         if (!storeId) return;
-        fetch(`/v1/store/${storeId}`, { headers: { Authorization: token } })
-            .then(r => r.json())
-            .then(d => setMarkets(d.result?.settings?.purchase_markets || []))
+        fetchStore(storeId)
+            .then(s => setMarkets(s?.settings?.purchase_markets || []))
             .catch(() => {});
-    }, [storeId, token]);
+    }, [storeId]);
 
     const addCategory = () => {
         const c = catInput.trim();

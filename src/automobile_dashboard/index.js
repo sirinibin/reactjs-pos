@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useState, useRef, useCallback } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { Spinner } from "react-bootstrap";
 import { useTranslation } from 'react-i18next';
 import { Chart } from "react-google-charts";
@@ -1506,8 +1507,8 @@ function AutoMobileDashboard() {
 
     useEffect(() => {
         if (!storeId) return;
-        fetch(`/v1/store/${storeId}?select=id,name,vat_percent,settings`, { headers: authHeaders() })
-            .then(r => r.json()).then(d => { if (d.status) setStore(d.result || {}); })
+        fetchStore(storeId)
+            .then(s => { if (s) setStore(s); })
             .catch(() => {});
     }, [storeId]); // eslint-disable-line react-hooks/exhaustive-deps
 

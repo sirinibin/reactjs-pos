@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { buildSwitchPayload, saveSwitchPayload, takeSwitchPayload, switchFields, SALES_TO_QUOTATION_KEY, QUOTATION_TO_SALES_KEY } from "../utils/salesQuotationSwitch.js";
 import { createPortal } from "react-dom";
 import { Modal, Button, Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
@@ -290,8 +291,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
                 }
             }
             setShow(true);
-            fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
-                .then(r => r.json()).then(d => { if (d.result) setStore(d.result); }).catch(() => { });
+            fetchStore(storeId).then(s => { if (s) setStore(s); }).catch(() => { });
         },
         openDraft(id) {
             setIsResumingDraft(true);
@@ -314,8 +314,7 @@ const QuotationType3Form = forwardRef((props, ref) => {
             setIsUpdateForm(true);
             loadRecord(id);
             setShow(true);
-            fetch(`/v1/store/${storeId}`, { headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } })
-                .then(r => r.json()).then(d => { if (d.result) setStore(d.result); }).catch(() => {});
+            fetchStore(storeId).then(s => { if (s) setStore(s); }).catch(() => { });
         },
     }));
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { useTranslation } from "react-i18next";
 import { DEFAULT_MENU, loadSidebarConfig, saveSidebarConfig } from "../sidebar_menu_config";
 
@@ -33,10 +34,9 @@ export default function SidebarSettings() {
             const token = localStorage.getItem('access_token');
             if (storeId && token) {
                 setServerLoading(true);
-                fetch('/v1/store/' + storeId, { headers: { 'Authorization': token } })
-                    .then(r => r.json())
-                    .then(data => {
-                        const serverConfig = data?.result?.settings?.sidebar_config;
+                fetchStore(storeId)
+                    .then(store => {
+                        const serverConfig = store?.settings?.sidebar_config;
                         if (serverConfig && serverConfig.length > 0) {
                             // Merge server config with DEFAULT_MENU metadata
                             const mapped = serverConfig

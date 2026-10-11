@@ -88,7 +88,8 @@ test("shows the RBAC Roles picker when the store setting enable_rbac_module is o
   mockApi(true);
   await openUser();
   const storeCall = global.fetch.mock.calls.map(([u]) => String(u)).find((u) => u.startsWith("/v1/store/s1"));
-  expect(storeCall).toContain("settings.enable_rbac_module");
+  // The page's shared store copy: the whole store, read once (src/utils/storeUtils.js).
+  expect(storeCall).toBe("/v1/store/s1");
   expect(screen.getByText("RBAC Roles")).toBeTruthy();
 });
 

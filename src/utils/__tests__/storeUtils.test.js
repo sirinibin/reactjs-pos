@@ -1,4 +1,7 @@
-import { fetchStore, invalidateStoreCache, _clearAllStoreCaches } from "../storeUtils";
+import {
+    fetchStore, invalidateStoreCache, _clearAllStoreCaches, getCachedStore, primeStoreCache,
+    refreshStore, refreshCurrentStore, handleStoreUpdatedPush, subscribeStoreUpdates,
+} from "../storeUtils";
 
 beforeEach(() => {
     localStorage.clear();
@@ -43,13 +46,11 @@ test("fetchStore calls correct URL with store id", async () => {
     expect(url).toMatch(/\/v1\/store\/store-42/);
 });
 
-test("fetchStore includes select param in URL", async () => {
+test("fetchStore loads the whole store (no select), so any field is in the shared copy", async () => {
     fetch.mockResolvedValue(makeJsonResponse({ result: {} }));
 
     await fetchStore("s1");
-    const url = fetch.mock.calls[0][0];
-    expect(url).toContain("select=");
-    expect(url).toContain("name");
+    expect(fetch.mock.calls[0][0]).toBe("/v1/store/s1");
 });
 
 test("fetchStore sends Authorization header from localStorage", async () => {
@@ -69,13 +70,13 @@ test("fetchStore uses GET method", async () => {
     expect(opts.method).toBe("GET");
 });
 
-test("fetchStore accepts custom select fields", async () => {
-    fetch.mockResolvedValue(makeJsonResponse({ result: { id: "s1", name: "X" } }));
+test("a custom select is answered from the shared copy", async () => {
+    fetch.mockResolvedValue(makeJsonResponse({ result: { id: "s1", name: "X", vat_no: "3" } }));
 
-    await fetchStore("s1", "id,name");
-    const url = fetch.mock.calls[0][0];
-    // The function does not URL-encode the select param; commas are passed as-is
-    expect(url).toContain("select=id,name");
+    await fetchStore("s1");
+    const narrow = await fetchStore("s1", "id,name");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(narrow).toEqual({ id: "s1", name: "X", vat_no: "3" });
 });
 
 // ── error paths ───────────────────────────────────────────────────────────────
@@ -97,22 +98,6 @@ test("fetchStore rejects on network failure", async () => {
     fetch.mockRejectedValue(new TypeError("Failed to fetch"));
 
     await expect(fetchStore("s1")).rejects.toThrow("Failed to fetch");
-});
-
-// ── default select contains key fields ───────────────────────────────────────
-
-test("default select string includes vat_no", async () => {
-    fetch.mockResolvedValue(makeJsonResponse({ result: {} }));
-    await fetchStore("s1");
-    const url = fetch.mock.calls[0][0];
-    expect(url).toContain("vat_no");
-});
-
-test("default select string includes settings", async () => {
-    fetch.mockResolvedValue(makeJsonResponse({ result: {} }));
-    await fetchStore("s1");
-    const url = fetch.mock.calls[0][0];
-    expect(url).toContain("settings");
 });
 
 // ── cache behaviour ───────────────────────────────────────────────────────────
@@ -146,14 +131,14 @@ test("invalidateStoreCache causes next fetchStore to re-fetch from API", async (
     expect(result).toEqual(v2);
 });
 
-test("custom select bypasses cache — always hits API", async () => {
+test("custom selects share the cache too — one request", async () => {
     invalidateStoreCache("custom-test");
     fetch.mockResolvedValue(makeJsonResponse({ result: { id: "custom-test" } }));
 
     await fetchStore("custom-test", "id,name");
-    await fetchStore("custom-test", "id,name");
+    await fetchStore("custom-test", "id,settings");
 
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(1);
 });
 
 test("fetchStore returns null for falsy id without calling API", async () => {
@@ -199,10 +184,10 @@ test("a failed request is not shared with the next caller", async () => {
     expect(fetch).toHaveBeenCalledTimes(2);
 });
 
-test("a custom select is never shared or cached", async () => {
+test("concurrent custom selects share one request", async () => {
     fetch.mockResolvedValue(makeJsonResponse({ result: { id: "s3" } }));
-    await Promise.all([fetchStore("s3", "id"), fetchStore("s3", "id")]);
-    expect(fetch).toHaveBeenCalledTimes(2);
+    await Promise.all([fetchStore("s3", "id"), fetchStore("s3", "name"), fetchStore("s3")]);
+    expect(fetch).toHaveBeenCalledTimes(1);
 });
 
 test("invalidateStoreCache during a request makes the next call fetch again", async () => {
@@ -216,4 +201,114 @@ test("invalidateStoreCache during a request makes the next call fetch again", as
     expect(fetch).toHaveBeenCalledTimes(2);
     resolve(makeJsonResponse({ result: { id: "s4", name: "old" } }));
     await stale;
+    // the late, older answer must not replace the newer copy
+    expect(getCachedStore("s4").name).toBe("new");
+    expect((await fetchStore("s4")).name).toBe("new");
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+test("a response without result is not cached", async () => {
+    fetch.mockResolvedValueOnce(makeJsonResponse({}));
+    await expect(fetchStore("s5")).resolves.toBeUndefined();
+    expect(getCachedStore("s5")).toBeNull();
+});
+
+// ── server push keeps the copy current ───────────────────────────────────────
+
+test("refreshStore re-reads the store and hands the new copy to subscribers", async () => {
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "p1", name: "v1" } }));
+    await fetchStore("p1");
+    const seen = [];
+    const unsubscribe = subscribeStoreUpdates((s) => seen.push(s.name));
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "p1", name: "v2" } }));
+    await refreshStore("p1");
+    expect(seen).toEqual(["v2"]);
+    expect((await fetchStore("p1")).name).toBe("v2");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    unsubscribe();
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "p1", name: "v3" } }));
+    await refreshStore("p1");
+    expect(seen).toEqual(["v2"]);
+});
+
+test("store_updated push for the current store re-reads it once", async () => {
+    localStorage.setItem("store_id", "cur");
+    fetch.mockResolvedValue(makeJsonResponse({ result: { id: "cur", name: "N", settings: { a: 1 } } }));
+    await handleStoreUpdatedPush({ store_id: "cur" });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await fetchStore("cur");
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test("store_updated push for a store this page never loaded is ignored", async () => {
+    localStorage.setItem("store_id", "cur");
+    await handleStoreUpdatedPush({ store_id: "other" });
+    await handleStoreUpdatedPush({});
+    await handleStoreUpdatedPush(null);
+    expect(fetch).not.toHaveBeenCalled();
+});
+
+test("store_updated push for another store already loaded refreshes it", async () => {
+    localStorage.setItem("store_id", "cur");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "o2", name: "old" } }));
+    await fetchStore("o2");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "o2", name: "new" } }));
+    await handleStoreUpdatedPush({ store_id: "o2" });
+    expect(getCachedStore("o2").name).toBe("new");
+});
+
+test("a failed refresh keeps working: the push resolves and the next read retries", async () => {
+    localStorage.setItem("store_id", "cur");
+    fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await expect(handleStoreUpdatedPush({ store_id: "cur" })).resolves.toBeNull();
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "cur" } }));
+    await expect(fetchStore("cur")).resolves.toEqual({ id: "cur" });
+});
+
+test("refreshing the current store updates its settings copy in localStorage", async () => {
+    localStorage.setItem("store_id", "cur");
+    localStorage.setItem("branch_name", "Old branch");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "cur", name: "Shop", name_in_arabic: "متجر", settings: { enable_x: true } } }));
+    await refreshStore("cur");
+    expect(JSON.parse(localStorage.getItem("_store_settings_cache"))).toEqual({ enable_x: true });
+    expect(localStorage.getItem("store_name")).toBe("Shop");
+    expect(localStorage.getItem("store_name_in_arabic")).toBe("متجر");
+    expect(localStorage.getItem("branch_name")).toBeNull();
+});
+
+test("refreshing another store leaves the current store's localStorage alone", async () => {
+    localStorage.setItem("store_id", "cur");
+    localStorage.setItem("_store_settings_cache", "{\"mine\":1}");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "x9", settings: { theirs: 1 } } }));
+    await refreshStore("x9");
+    expect(localStorage.getItem("_store_settings_cache")).toBe("{\"mine\":1}");
+});
+
+test("refreshCurrentStore does nothing when signed out", async () => {
+    localStorage.setItem("store_id", "cur");
+    await refreshCurrentStore();
+    expect(fetch).not.toHaveBeenCalled();
+    localStorage.setItem("access_token", "t");
+    fetch.mockResolvedValueOnce(makeJsonResponse({ result: { id: "cur" } }));
+    await refreshCurrentStore();
+    expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test("primeStoreCache serves later reads and notifies subscribers", async () => {
+    const seen = [];
+    subscribeStoreUpdates((s) => seen.push(s.id));
+    primeStoreCache({ id: "pr", name: "P" });
+    primeStoreCache(null);
+    expect(await fetchStore("pr")).toEqual({ id: "pr", name: "P" });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(seen).toEqual(["pr"]);
+});
+
+test("a throwing subscriber does not stop the others", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => { });
+    const seen = [];
+    subscribeStoreUpdates(() => { throw new Error("boom"); });
+    subscribeStoreUpdates((s) => seen.push(s.id));
+    primeStoreCache({ id: "t1" });
+    expect(seen).toEqual(["t1"]);
 });

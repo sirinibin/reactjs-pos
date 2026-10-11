@@ -1,4 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { Modal } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -295,12 +296,9 @@ const UserCreate = forwardRef((props, ref) => {
         const storeId = selectedStores[0].id;
         if (!storeId) { setRbacEnabled(false); return; }
         // The flag is a store setting: it comes back under result.settings.
-        fetch(`/v1/store/${storeId}?select=id,settings.enable_rbac_module`, {
-            headers: { Authorization: localStorage.getItem('access_token') },
-        })
-            .then(r => r.json())
-            .then(data => {
-                setRbacEnabled(!!data?.result?.settings?.enable_rbac_module);
+        fetchStore(storeId)
+            .then(store => {
+                setRbacEnabled(!!store?.settings?.enable_rbac_module);
             })
             .catch(() => setRbacEnabled(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

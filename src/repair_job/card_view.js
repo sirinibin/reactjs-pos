@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { createPortal } from "react-dom";
 import { useTranslation } from 'react-i18next';
 import { Spinner, OverlayTrigger, Tooltip, Dropdown } from "react-bootstrap";
@@ -151,11 +152,9 @@ const RepairJobCardView = forwardRef(({ onFullEdit, onKanbanListChange, onJobUpd
     const [vatPercent, setVatPercent] = useState(0);
     useEffect(() => {
         const storeId = localStorage.getItem('store_id');
-        const token = localStorage.getItem('access_token');
         if (!storeId) return;
-        fetch(`/v1/store/${storeId}?select=vat_percent`, { headers: { Authorization: token } })
-            .then(r => r.json())
-            .then(d => { if (d.result?.vat_percent != null) { const vp = parseFloat(d.result.vat_percent) || 0; setVatPercent(vp); jobRef.current = { ...jobRef.current, vat_percent: vp }; } })
+        fetchStore(storeId)
+            .then(s => { if (s?.vat_percent != null) { const vp = parseFloat(s.vat_percent) || 0; setVatPercent(vp); jobRef.current = { ...jobRef.current, vat_percent: vp }; } })
             .catch(() => {});
     }, []);
 

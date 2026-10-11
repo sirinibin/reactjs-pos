@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { useTranslation } from 'react-i18next';
 
 import KPICards from "./charts/KPICards";
@@ -334,12 +335,6 @@ export default function BusinessDashboard() {
         return res.result;
     }
 
-    async function fetchOne(path) {
-        const res = await fetch(path, { method: "GET", headers: authHeaders() })
-            .then(r => r.json()).catch(() => ({ status: false }));
-        return res?.status ? (res.result || {}) : {};
-    }
-
     useEffect(() => {
         if (!storeId) return;
 
@@ -365,7 +360,7 @@ export default function BusinessDashboard() {
                 stock,
                 employee,
             ] = await Promise.all([
-                fetchOne(`/v1/store/${storeId}?select=id,name,branch_name,vat_no,registration_number,address,settings,vat_percent`),
+                fetchStore(storeId).then(s => s || {}).catch(() => ({})),
                 fetchDashboard(`/v1/dashboard/monthly?${base}`),
                 fetchDashboard(`/v1/dashboard/products?${base}&limit=10`),
                 fetchDashboard(`/v1/dashboard/customers?${base}&limit=10`),

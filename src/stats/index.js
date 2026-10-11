@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, forwardRef, useContext, useCallback, useMemo } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -90,30 +91,11 @@ const StatsIndex = forwardRef((props, ref) => {
 
 
     function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id + "?select=id,name,code,branch_name,vat_no,registration_number,address,zatca.phase,zatca.connected,settings,vat_percent", requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
+        // The page's shared store copy (kept current by the server's store_updated push).
+        fetchStore(id)
+            .then(result => {
+                if (!result) return;
+                store = result;
                 setStore({ ...store });
             })
             .catch(error => {

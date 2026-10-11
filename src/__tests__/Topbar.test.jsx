@@ -525,7 +525,7 @@ describe('Topbar ZATCA env — RTL render shows Arabic label', () => {
         localStorage.setItem('access_token', 'tok');
 
         global.fetch = jest.fn().mockImplementation((url) => {
-            if (url.includes('/v1/store/store1?select=id')) {
+            if (url === '/v1/store/store1') {
                 return Promise.resolve({
                     ok: true,
                     headers: { get: () => 'application/json' },
@@ -553,7 +553,7 @@ describe('Topbar ZATCA env — RTL render shows Arabic label', () => {
         localStorage.setItem('access_token', 'tok');
 
         global.fetch = jest.fn().mockImplementation((url) => {
-            if (url.includes('/v1/store/store1?select=id')) {
+            if (url === '/v1/store/store1') {
                 return Promise.resolve({
                     ok: true,
                     headers: { get: () => 'application/json' },

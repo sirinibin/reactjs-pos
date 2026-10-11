@@ -8,7 +8,8 @@ const { apiClient } = require('./api');
 test.use({ storageState: AUTH_STATE });
 
 const UNREAD = /\/v1\/(rfq-whatsapp-unread|email-unread)\b/;
-const TOPBAR_STORE_GET = /\/v1\/store\/[0-9a-f]{24}\?select=id,code,name_in_arabic,settings,zatca/;
+// The page's one shared store load (src/utils/storeUtils.js), which the header reads.
+const TOPBAR_STORE_GET = /\/v1\/store\/[0-9a-f]{24}$/;
 
 function recordUnreadCalls(page) {
   const seen = [];

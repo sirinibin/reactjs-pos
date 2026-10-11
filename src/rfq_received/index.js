@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { fetchStore } from '../utils/storeUtils.js';
 import eventEmitter from '../utils/eventEmitter';
 import QuotationCreate from "../quotation/create";
 import RFQCreate from "./create";
@@ -1704,9 +1705,9 @@ export function RFQSendModal({ rfq, storeId, show, onHide, onSent, onViewDetails
     // Fetch full store object (needed for RFQPreviewContent logo/header)
     useEffect(() => {
         if (!show || !storeId) return;
-        fetch(`/v1/store/${storeId}`, { headers: { Authorization: token } })
-            .then(r => r.json()).then(d => {
-                const sd = d.result || d;
+        fetchStore(storeId)
+            .then(sd => {
+                if (!sd) return;
                 storeDataRef.current = sd;
                 setStoreData(sd);
             }).catch(() => {});

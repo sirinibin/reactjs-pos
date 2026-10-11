@@ -2,6 +2,7 @@ import { createContext, useEffect, useRef } from "react";
 import useWebSocket from "react-use-websocket";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import eventEmitter from "./eventEmitter"; // Import event emitter
+import { handleStoreUpdatedPush, refreshCurrentStore } from "./storeUtils";
 
 export const WebSocketContext = createContext();
 
@@ -81,6 +82,34 @@ export function shouldAnnounceSocketOpen(openCount) {
     return openCount > 1;
 }
 
+// Routes one server event to the app. Exported for tests.
+export function dispatchSocketMessage(jsonMessage) {
+    //console.log("Received Message:", jsonMessage);
+    if (jsonMessage.event === "role_updated") {
+        //console.log("Role Updated:", jsonMessage.data.role);
+    } else if (jsonMessage.event === "pong") {
+        //console.log("Pong received:", jsonMessage.data);
+    } else if (jsonMessage.event === "delivery_note_reminder") {
+        eventEmitter.emit("delivery_note_reminder", jsonMessage.data);
+    } else if (jsonMessage.event === "delivery_note_order_linked") {
+        eventEmitter.emit("delivery_note_order_linked", jsonMessage.data);
+    } else if (jsonMessage.event === "purchase_request_received") {
+        eventEmitter.emit("purchase_request_received", jsonMessage.data);
+    } else if (jsonMessage.event === "purchase_request_status_changed") {
+        eventEmitter.emit("purchase_request_status_changed", jsonMessage.data);
+    } else if (jsonMessage.event === "purchase_request_po_created") {
+        eventEmitter.emit("purchase_request_po_created", jsonMessage.data);
+    } else if (jsonMessage.event === "purchase_request_updated") {
+        eventEmitter.emit("purchase_request_updated", jsonMessage.data);
+    } else if (jsonMessage.event === "wa_unread_changed") {
+        eventEmitter.emit("wa_unread_changed");
+    } else if (jsonMessage.event === "email_unread_changed") {
+        eventEmitter.emit("email_unread_changed");
+    } else if (jsonMessage.event === "store_updated") {
+        handleStoreUpdatedPush(jsonMessage.data); // re-read the shared store copy once
+    }
+}
+
 export const WebSocketProvider = ({ userId, children }) => {
     const didUnmount = useRef(false);
     const openCountRef = useRef(0);
@@ -103,6 +132,7 @@ export const WebSocketProvider = ({ userId, children }) => {
                 openCountRef.current += 1;
                 if (shouldAnnounceSocketOpen(openCountRef.current)) {
                     eventEmitter.emit("socket_connection_open"); // a reconnect: reload what may have been missed
+                    refreshCurrentStore(); // the store may have changed while the socket was down
                 }
 
                 try {
@@ -128,30 +158,7 @@ export const WebSocketProvider = ({ userId, children }) => {
                 console.log("WebSocket Connection Closed");
             },
             onMessage: (messageEvent) => {
-                const jsonMessage = JSON.parse(messageEvent.data);
-                //console.log("Received Message:", jsonMessage);
-
-                if (jsonMessage.event === "role_updated") {
-                    //console.log("Role Updated:", jsonMessage.data.role);
-                } else if (jsonMessage.event === "pong") {
-                    //console.log("Pong received:", jsonMessage.data);
-                } else if (jsonMessage.event === "delivery_note_reminder") {
-                    eventEmitter.emit("delivery_note_reminder", jsonMessage.data);
-                } else if (jsonMessage.event === "delivery_note_order_linked") {
-                    eventEmitter.emit("delivery_note_order_linked", jsonMessage.data);
-                } else if (jsonMessage.event === "purchase_request_received") {
-                    eventEmitter.emit("purchase_request_received", jsonMessage.data);
-                } else if (jsonMessage.event === "purchase_request_status_changed") {
-                    eventEmitter.emit("purchase_request_status_changed", jsonMessage.data);
-                } else if (jsonMessage.event === "purchase_request_po_created") {
-                    eventEmitter.emit("purchase_request_po_created", jsonMessage.data);
-                } else if (jsonMessage.event === "purchase_request_updated") {
-                    eventEmitter.emit("purchase_request_updated", jsonMessage.data);
-                } else if (jsonMessage.event === "wa_unread_changed") {
-                    eventEmitter.emit("wa_unread_changed");
-                } else if (jsonMessage.event === "email_unread_changed") {
-                    eventEmitter.emit("email_unread_changed");
-                }
+                dispatchSocketMessage(JSON.parse(messageEvent.data));
             },
             onError: (errorEvent) => {
                 console.log("WebSocket Error:", errorEvent);

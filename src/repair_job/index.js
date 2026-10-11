@@ -334,9 +334,8 @@ function RepairJobIndex(props) {
 
         let vatPercent = 15;
         try {
-            const sr = await fetch(`/v1/store/${storeId}?select=vat_percent`, { headers });
-            const sd = await sr.json();
-            if (sd.result?.vat_percent != null) vatPercent = parseFloat(sd.result.vat_percent) || 0;
+            const sd = await fetchStore(storeId);
+            if (sd?.vat_percent != null) vatPercent = parseFloat(sd.vat_percent) || 0;
         } catch (e) {}
         const vatMultiplier = 1 + (vatPercent / 100);
 
@@ -436,9 +435,8 @@ function RepairJobIndex(props) {
 
         let vatPercent = 15;
         try {
-            const sr = await fetch(`/v1/store/${storeId}?select=vat_percent`, { headers });
-            const sd = await sr.json();
-            if (sd.result?.vat_percent != null) vatPercent = parseFloat(sd.result.vat_percent) || 0;
+            const sd = await fetchStore(storeId);
+            if (sd?.vat_percent != null) vatPercent = parseFloat(sd.vat_percent) || 0;
         } catch (e) {}
         const vatMultiplier = 1 + (vatPercent / 100);
 
