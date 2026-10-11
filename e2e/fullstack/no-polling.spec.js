@@ -24,7 +24,8 @@ for (const path of ['/dashboard/procurement-whatsapp', '/dashboard/procurement-e
     await page.clock.install();
     const calls = recordApiCalls(page);
     await page.goto(path);
-    await expect(page.getByText('E2E Admin').first()).toBeVisible();
+    // Signed in (on phones the name sits in the collapsed menu, so it is in the page but hidden).
+    await expect(page.getByText('E2E Admin').first()).toBeAttached();
     await settle(page);
     const before = calls.length;
     await page.clock.runFor(5 * 60 * 1000);
@@ -42,7 +43,8 @@ for (const path of SCREENS.filter((p) => !DEVICE_SCREENS.includes(p))) {
     await page.clock.install();
     const calls = recordApiCalls(page);
     await page.goto(path);
-    await expect(page.getByText('E2E Admin').first()).toBeVisible();
+    // Signed in (on phones the name sits in the collapsed menu, so it is in the page but hidden).
+    await expect(page.getByText('E2E Admin').first()).toBeAttached();
     await settle(page);
     const before = calls.length;
     await page.clock.runFor(5 * 60 * 1000);

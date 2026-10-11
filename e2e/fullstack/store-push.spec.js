@@ -22,7 +22,8 @@ const settingsCache = (page) => page.evaluate(() => JSON.parse(localStorage.getI
 
 async function openSettled(page, path) {
   await page.goto(path);
-  await expect(page.getByText('E2E Admin').first()).toBeVisible();
+  // Signed in (on phones the name sits in the collapsed menu, so it is in the page but hidden).
+  await expect(page.getByText('E2E Admin').first()).toBeAttached();
   await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
   await page.waitForTimeout(1000);
 }

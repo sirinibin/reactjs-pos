@@ -49,6 +49,19 @@ export function watchServerStatus({ onStatus, onDenied, onError } = {}) {
         retryMs = Math.min(retryMs * 2, RETRY_MAX_MS);
     };
 
+    async function readOnce() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const r = await fetch('/health-monitor/status', { headers: { Authorization: `Bearer ${token}` } });
+            if (stopped) return;
+            if (r.status === 401 || r.status === 403) { onDenied?.(r.status); return; }
+            if (!r.ok) { onError?.(`Health monitor returned HTTP ${r.status}. Is it running?`); return; }
+            onStatus?.(await r.json());
+        } catch (_) {
+            if (!stopped) onError?.('Cannot reach the health monitor. Check nginx and the service.');
+        }
+    }
+
     async function open() {
         retryTimer = null;
         if (stopped) return;
@@ -69,6 +82,12 @@ export function watchServerStatus({ onStatus, onDenied, onError } = {}) {
         if (stopped) return;
         if (resp.status === 401 || resp.status === 403) {
             onDenied?.(resp.status);
+            return;
+        }
+        if (resp.status === 404) {
+            // A health monitor deployed before the stream existed: show its
+            // status once (not live) rather than nothing.
+            readOnce();
             return;
         }
         if (!resp.ok || !resp.body?.getReader) {

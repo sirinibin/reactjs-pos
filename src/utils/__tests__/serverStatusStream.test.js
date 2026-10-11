@@ -137,4 +137,20 @@ describe('watchServerStatus', () => {
         w.stop();
         expect(signal.aborted).toBe(true);
     });
+
+    it('falls back to one status read when the health monitor has no stream yet', async () => {
+        jest.useFakeTimers();
+        global.fetch = jest.fn()
+            .mockResolvedValueOnce({ ok: false, status: 404 })
+            .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ production: { overall: 'running' } }) });
+        const onStatus = jest.fn();
+        const w = watchServerStatus({ onStatus });
+        for (let i = 0; i < 10; i++) await Promise.resolve();
+        expect(global.fetch.mock.calls.map(c => c[0])).toEqual(['/health-monitor/status/stream', '/health-monitor/status']);
+        expect(onStatus).toHaveBeenCalledWith({ production: { overall: 'running' } });
+        jest.advanceTimersByTime(120000);
+        for (let i = 0; i < 10; i++) await Promise.resolve();
+        expect(global.fetch).toHaveBeenCalledTimes(2); // no polling
+        w.stop();
+    });
 });

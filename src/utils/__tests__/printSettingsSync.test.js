@@ -1,10 +1,11 @@
 import {
     savePrintSettingsToServer, loadServerPrintSettings, printSettingsSyncEnabled,
-    PRINT_SETTINGS_SAVE_MS, PRINT_SETTINGS_SHARE_MS, _resetPrintSettingsSync,
+    PRINT_SETTINGS_SAVE_MS, _resetPrintSettingsSync,
 } from '../printSettingsSync.js';
+import { getCachedStore, handleStoreUpdatedPush, _clearAllStoreCaches } from '../storeUtils';
 
 const enable = (on) => localStorage.setItem('_store_settings_cache', JSON.stringify({ save_print_settings_to_server: on }));
-const okJson = (body) => Promise.resolve({ json: () => Promise.resolve(body) });
+const okJson = (body) => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
 
 beforeEach(() => {
     jest.useFakeTimers();
@@ -12,12 +13,13 @@ beforeEach(() => {
     localStorage.setItem('store_id', 's1');
     localStorage.setItem('access_token', 'tok');
     _resetPrintSettingsSync();
-    global.fetch = jest.fn(() => okJson({ result: { settings: { print_settings: { sales_pageSize: 3 } } } }));
+    _clearAllStoreCaches();
+    global.fetch = jest.fn((url) => okJson({ result: { id: url.split('/')[3], settings: { save_print_settings_to_server: true, print_settings: { sales_pageSize: 3 } } } }));
 });
 afterEach(() => { _resetPrintSettingsSync(); jest.useRealTimers(); });
 
 const puts = () => global.fetch.mock.calls.filter(([, o]) => o?.method === 'PUT');
-const gets = () => global.fetch.mock.calls.filter(([, o]) => !o?.method);
+const gets = () => global.fetch.mock.calls.filter(([, o]) => !o?.method || o.method === 'GET');
 
 describe('printSettingsSync', () => {
     test('does nothing when the store does not keep print settings on the server', async () => {
@@ -39,42 +41,45 @@ describe('printSettingsSync', () => {
         expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    test('previews mounting together read the store once, with a narrow select', async () => {
+    test('previews read the page one copy of the store: one store GET, however many previews', async () => {
         enable(true);
-        const [a, b, c] = await Promise.all([loadServerPrintSettings(1000), loadServerPrintSettings(1100), loadServerPrintSettings(1200)]);
+        const [a, b, c] = await Promise.all([loadServerPrintSettings(), loadServerPrintSettings(), loadServerPrintSettings()]);
         expect(a).toEqual({ sales_pageSize: 3 });
-        expect(b).toBe(a);
-        expect(c).toBe(a);
+        expect(b).toEqual(a);
+        expect(c).toEqual(a);
+        await loadServerPrintSettings(); // a preview opened later
         expect(gets()).toHaveLength(1);
-        expect(gets()[0][0]).toBe('/v1/store/s1?select=id,settings');
+        expect(gets()[0][0]).toBe('/v1/store/s1');
         expect(gets()[0][1].headers.Authorization).toBe('tok');
     });
 
-    test('a preview opened later reads the store again', async () => {
+    test('a layout saved on another device arrives by the store_updated push', async () => {
         enable(true);
-        await loadServerPrintSettings(1000);
-        await loadServerPrintSettings(1000 + PRINT_SETTINGS_SHARE_MS);
-        expect(gets()).toHaveLength(2);
+        await loadServerPrintSettings();
+        global.fetch = jest.fn(() => okJson({ result: { id: 's1', settings: { save_print_settings_to_server: true, print_settings: { sales_pageSize: 9 } } } }));
+        await handleStoreUpdatedPush({ store_id: 's1' });
+        expect(await loadServerPrintSettings()).toEqual({ sales_pageSize: 9 });
+        expect(gets()).toHaveLength(1); // the push's one re-read
     });
 
     test('a different store is read separately', async () => {
         enable(true);
-        await loadServerPrintSettings(1000);
+        await loadServerPrintSettings();
         localStorage.setItem('store_id', 's2');
-        await loadServerPrintSettings(1001);
-        expect(gets().map(([u]) => u)).toEqual(['/v1/store/s1?select=id,settings', '/v1/store/s2?select=id,settings']);
+        await loadServerPrintSettings();
+        expect(gets().map(([u]) => u)).toEqual(['/v1/store/s1', '/v1/store/s2']);
     });
 
     test('no saved layout, an empty one or a failed request gives null', async () => {
         enable(true);
-        global.fetch = jest.fn(() => okJson({ result: { settings: {} } }));
-        expect(await loadServerPrintSettings(1)).toBeNull();
-        _resetPrintSettingsSync();
-        global.fetch = jest.fn(() => okJson({ result: { settings: { print_settings: {} } } }));
-        expect(await loadServerPrintSettings(2)).toBeNull();
-        _resetPrintSettingsSync();
+        global.fetch = jest.fn(() => okJson({ result: { id: 's1', settings: {} } }));
+        expect(await loadServerPrintSettings()).toBeNull();
+        _clearAllStoreCaches();
+        global.fetch = jest.fn(() => okJson({ result: { id: 's1', settings: { print_settings: {} } } }));
+        expect(await loadServerPrintSettings()).toBeNull();
+        _clearAllStoreCaches();
         global.fetch = jest.fn(() => Promise.reject(new Error('offline')));
-        expect(await loadServerPrintSettings(3)).toBeNull();
+        expect(await loadServerPrintSettings()).toBeNull();
     });
 
     test('changes from several previews are saved once, with the latest layout', () => {
@@ -90,13 +95,15 @@ describe('printSettingsSync', () => {
         expect(JSON.parse(puts()[0][1].body)).toEqual({ print_settings: { v: 3 } });
     });
 
-    test('after a save, the next preview reads the store again', async () => {
+    test('after a save, previews get the saved layout without another store GET', async () => {
         enable(true);
-        await loadServerPrintSettings(1000);
+        await loadServerPrintSettings();
         savePrintSettingsToServer({ v: 1 });
         jest.advanceTimersByTime(PRINT_SETTINGS_SAVE_MS);
-        await loadServerPrintSettings(1001);
-        expect(gets()).toHaveLength(2);
+        await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+        expect(getCachedStore('s1').settings.print_settings).toEqual({ v: 1 });
+        expect(await loadServerPrintSettings()).toEqual({ v: 1 });
+        expect(gets()).toHaveLength(1);
     });
 
     test('a failed save is ignored', () => {
