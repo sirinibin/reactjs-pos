@@ -31,6 +31,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import ZatcaConnect from '../store/zatca_connect.js';
 import { useTranslation } from "react-i18next";
+import { useLazyOpen } from '../utils/useLazyOpen.js';
 
 const columnStyle = {
     width: '20%',
@@ -1034,20 +1035,26 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(formData, undefined, "customer_withdrawal");
     }
 
-    const PurchaseUpdateFormRef = useRef();
+    // Mounted on first open: rendered up front it loaded its store, print settings
+    // and reminders every time this screen opened.
+    const purchaseUpdateForm = useLazyOpen();
     function openPurchaseUpdateForm(id) {
-        PurchaseUpdateFormRef.current.open(id);
+        purchaseUpdateForm.open(id);
     }
 
-    const SalesReturnUpdateFormRef = useRef();
+    // Mounted on first open: rendered up front it loaded its store, print settings
+    // and reminders every time this screen opened.
+    const salesReturnUpdateForm = useLazyOpen();
     function openSalesReturnUpdateForm(id) {
-        SalesReturnUpdateFormRef.current.open(id);
+        salesReturnUpdateForm.open(id);
     }
 
 
-    const QuotationSalesReturnUpdateFormRef = useRef();
+    // Mounted on first open: rendered up front it loaded its store, print settings
+    // and reminders every time this screen opened.
+    const quotationSalesReturnUpdateForm = useLazyOpen();
     function openQuotationSalesReturnUpdateForm(id) {
-        QuotationSalesReturnUpdateFormRef.current.open(id);
+        quotationSalesReturnUpdateForm.open(id);
     }
 
     const inputRefs = useRef({});
@@ -1394,9 +1401,9 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 message={infoMessage}
                 onClose={() => setShowInfo(false)}
             />
-            <PurchaseCreate ref={PurchaseUpdateFormRef} />
-            <SalesReturnCreate ref={SalesReturnUpdateFormRef} />
-            <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} />
+            {purchaseUpdateForm.mounted && <PurchaseCreate ref={purchaseUpdateForm.ref} />}
+            {salesReturnUpdateForm.mounted && <SalesReturnCreate ref={salesReturnUpdateForm.ref} />}
+            {quotationSalesReturnUpdateForm.mounted && <QuotationSalesReturnCreate ref={quotationSalesReturnUpdateForm.ref} />}
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />

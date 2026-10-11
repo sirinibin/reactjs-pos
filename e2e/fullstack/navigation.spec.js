@@ -37,6 +37,13 @@ for (const path of SCREENS) {
       const u = new URL(r.url());
       if (u.pathname.startsWith('/v1/')) calls.push(`${r.method()} ${u.pathname}${decodeURIComponent(u.search)}`);
     });
+    // Stores that keep print settings on the server: opening a screen used to read the
+    // store and PUT the print settings once per print preview it mounted.
+    await page.addInitScript(() => {
+      let s = {};
+      try { s = JSON.parse(localStorage.getItem('_store_settings_cache') || '{}') || {}; } catch (_) { s = {}; }
+      localStorage.setItem('_store_settings_cache', JSON.stringify({ ...s, save_print_settings_to_server: true }));
+    });
     await page.goto(path);
     // Branches can lag behind each other (test may not have every screen yet);
     // the app sends unknown screens to the landing page.
@@ -55,5 +62,9 @@ for (const path of SCREENS) {
       .filter(([c, n]) => n > 1 && !EXPECTED_REPEATS.some((ok) => ok(path, c, n)))
       .map(([c, n]) => `${n}x ${c}`);
     expect(repeated, `requests sent more than once on ${path}`).toEqual([]);
+    // Opening a screen changes nothing (no print-settings save or any other write),
+    // waiting out the 1.5 s print-settings save delay.
+    await page.waitForTimeout(1000);
+    expect(calls.filter((c) => !c.startsWith('GET ')), `writes on opening ${path}`).toEqual([]);
   });
 }

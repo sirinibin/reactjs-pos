@@ -56,9 +56,9 @@ creates a store through the API if the user has none.
 | Spec | Covers |
 |---|---|
 | `fullstack/auth.spec.js` | Login form, blank and wrong credentials, no account enumeration, client-side lockout, successful sign-in, signed-in redirect, corrupted token, logout |
-| `fullstack/navigation.spec.js` | Every sidebar screen opens without uncaught errors, API 5xx or live-API calls, and sends no request twice (except the WhatsApp threads poll and the users list's online-status reload) |
+| `fullstack/navigation.spec.js` | Every sidebar screen opens without uncaught errors, API 5xx or live-API calls, sends no request twice (except the WhatsApp threads poll and the users list's online-status reload), and writes nothing on open (print settings kept on the server included) |
 | `fullstack/data.spec.js` | Customer created in the form is stored and listed; nameless customer refused; product created through the API is found by the products filter |
-| `fullstack/customer-pending.spec.js` | Customer pendings modal from the Customers list (every screen size): unpaid and partly paid sales listed, paid ones not, badges, the vendor with the same name and VAT no. found even with "&" or "#" in the name, each list loaded once and only when its tab opens, nothing fetched on close; a customer with no VAT no. gets no purchase tabs; the vendor pendings modal from the Purchase form the same way (customer found, each list once); no request repeated on open |
+| `fullstack/customer-pending.spec.js` | Customer pendings modal from the Customers list (every screen size): unpaid and partly paid sales listed, paid ones not, badges, the vendor with the same name and VAT no. found even with "&" or "#" in the name, each list loaded once and only when its tab opens, nothing fetched on close; a customer with no VAT no. gets no purchase tabs; the vendor pendings modal from the Purchase form the same way (customer found, each list once); from the Sales update form's Cr.Balance only the customer and its pending sales are loaded (no store read, print-settings save, reminders or draft count) and the sale's form still opens from the modal; no request repeated on open |
 
 ## Role audit (`audit/`)
 
