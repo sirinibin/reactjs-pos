@@ -14,6 +14,7 @@ import { ExtractModal } from './store/ProcurementEmailsTab';
 import RFQCreate from './rfq_received/create.js';
 import { RFQSendModal } from './rfq_received/index.js';
 import { WhatsAppNotificationModal } from './store/ConversationModal';
+import { whatsAppUnreadEnabled, emailUnreadEnabled, UNREAD_POLL_MS } from './utils/unreadFeeds';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -100,6 +101,11 @@ function Topbar(props) {
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
+    // Settings fetched for the current store in this page load. Unread polling
+    // waits for these: the cached copy above may belong to the previous store.
+    const [liveStoreSettings, setLiveStoreSettings] = useState(null);
+    const pollWaUnread = whatsAppUnreadEnabled(liveStoreSettings);
+    const pollEmailUnread = emailUnreadEnabled(liveStoreSettings);
     const storeName = localStorage.getItem("store_name") || "";
     const storeNameArabic = localStorage.getItem("store_name_in_arabic") || "";
     const branchName = localStorage.getItem("branch_name") || "";
@@ -162,6 +168,7 @@ function Topbar(props) {
                 if (data && data.result) {
                     if (data.result.settings) {
                         setStoreSettings(data.result.settings);
+                        setLiveStoreSettings(data.result.settings);
                         localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
                     }
                     if (data.result.code) setStoreCode(data.result.code);
@@ -207,10 +214,12 @@ function Topbar(props) {
     }, []);
 
     useEffect(() => {
+        // Nothing to poll unless the store has the RFQ module on and WhatsApp connected
+        if (!pollWaUnread) return undefined;
         // Initial fetch
         fetchWaUnread();
-        // Fallback poll every 30 s in case WebSocket event is missed
-        const id = setInterval(fetchWaUnread, 30 * 1000);
+        // Fallback poll in case a WebSocket event is missed
+        const id = setInterval(fetchWaUnread, UNREAD_POLL_MS);
         // Real-time: re-fetch when backend pushes wa_unread_changed
         eventEmitter.on('wa_unread_changed', fetchWaUnread);
         // Re-fetch on WebSocket reconnect
@@ -220,7 +229,7 @@ function Topbar(props) {
             eventEmitter.off('wa_unread_changed', fetchWaUnread);
             eventEmitter.off('socket_connection_open', fetchWaUnread);
         };
-    }, [fetchWaUnread]);
+    }, [fetchWaUnread, pollWaUnread]);
 
     const playNewEmailSound = useCallback(() => {
         try {
@@ -276,8 +285,10 @@ function Topbar(props) {
     }, [playNewEmailSound]);
 
     useEffect(() => {
+        // Nothing to poll unless the store has the RFQ module on and email connected
+        if (!pollEmailUnread) return undefined;
         fetchEmailUnread();
-        const id = setInterval(fetchEmailUnread, 30 * 1000);
+        const id = setInterval(fetchEmailUnread, UNREAD_POLL_MS);
         eventEmitter.on('email_unread_changed', fetchEmailUnread);
         eventEmitter.on('socket_connection_open', fetchEmailUnread);
         return () => {
@@ -285,7 +296,7 @@ function Topbar(props) {
             eventEmitter.off('email_unread_changed', fetchEmailUnread);
             eventEmitter.off('socket_connection_open', fetchEmailUnread);
         };
-    }, [fetchEmailUnread]);
+    }, [fetchEmailUnread, pollEmailUnread]);
 
     useEffect(() => {
         const observer = new MutationObserver(() => setDirTick(n => n + 1));
@@ -684,7 +695,7 @@ function Topbar(props) {
                             </li>
                         )}
 
-                        {storeSettings?.enable_rfq_module && (
+                        {whatsAppUnreadEnabled(storeSettings) && (
                             <li className="nav-item dropdown me-1">
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
@@ -782,7 +793,7 @@ function Topbar(props) {
                             </li>
                         )}
 
-                        {(storeSettings?.rfq_email_connected || (storeSettings?.rfq_email_accounts && storeSettings.rfq_email_accounts.length > 0)) && (
+                        {emailUnreadEnabled(storeSettings) && (
                             <li className="nav-item dropdown me-1">
                                 <Dropdown align="end">
                                     <Dropdown.Toggle
