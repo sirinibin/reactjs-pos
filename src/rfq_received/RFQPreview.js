@@ -6,6 +6,7 @@ import { resolveImageUrl } from '../utils/imageUtils';
 import { fetchStore } from '../utils/storeUtils';
 import RFQPreviewContent from './RFQPreviewContent';
 import "../order/print.css";
+import { savePrintSettingsToServer, loadServerPrintSettings } from '../utils/printSettingsSync.js';
 
 const MODEL = 'rfq_received';
 
@@ -57,23 +58,8 @@ const RFQPreview = forwardRef(({ zIndex } = {}, ref) => {
         } catch (_) { return {}; }
     });
 
-    const printSettingsSaveTimer = useRef(null);
-
-    const savePrintSettingsToServerDebounced = useCallback((fsData) => {
-        const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
-        if (!storeSettings?.save_print_settings_to_server) return;
-        const storeId = localStorage.getItem('store_id');
-        const token   = localStorage.getItem('access_token');
-        if (!storeId || !token) return;
-        if (printSettingsSaveTimer.current) clearTimeout(printSettingsSaveTimer.current);
-        printSettingsSaveTimer.current = setTimeout(() => {
-            fetch('/v1/store/' + storeId + '/print-settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify({ print_settings: fsData }),
-            }).catch(() => {});
-        }, 1500);
-    }, []);
+    // Shared by every preview, so a burst of changes is saved once.
+    const savePrintSettingsToServerDebounced = useCallback((data) => savePrintSettingsToServer(data), []);
 
     const saveFS = useCallback((fs) => {
         setFontSizes({ ...fs });
@@ -92,24 +78,14 @@ const RFQPreview = forwardRef(({ zIndex } = {}, ref) => {
             }
             try { localStorage.setItem('fontSizes', JSON.stringify(next)); } catch (_) {}
 
-            // Load from server if flag enabled — server wins
-            const _ss = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
-            if (_ss?.save_print_settings_to_server) {
-                const _storeId = localStorage.getItem('store_id');
-                const _token   = localStorage.getItem('access_token');
-                if (_storeId && _token) {
-                    fetch('/v1/store/' + _storeId, { headers: { 'Authorization': _token } })
-                        .then(r => r.json())
-                        .then(data => {
-                            const serverPS = data?.result?.settings?.print_settings;
-                            if (serverPS && Object.keys(serverPS).length > 0) {
-                                const merged = { ...next, ...serverPS };
-                                setFontSizes({ ...merged });
-                                try { localStorage.setItem('fontSizes', JSON.stringify(merged)); } catch (_) {}
-                            }
-                        }).catch(() => {});
+            // The store's saved layout wins over this browser's (one request for all previews).
+            loadServerPrintSettings().then((serverPS) => {
+                if (serverPS) {
+                    const merged = { ...next, ...serverPS };
+                    setFontSizes({ ...merged });
+                    try { localStorage.setItem('fontSizes', JSON.stringify(merged)); } catch (_) {}
                 }
-            }
+            });
 
             return next;
         });

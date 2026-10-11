@@ -1563,10 +1563,10 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             </Modal>
             {showOrderPrint && <OrderPrint ref={PrintRef} />}
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
-            {(pendingView || showOrderPreview) && <OrderPreview ref={srPreviewCallbackRef} />}
+            {showOrderPreview && <OrderPreview ref={srPreviewCallbackRef} />}
             {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
-            {(pendingView || showSalesReturnCreateForm) && <SalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
-            {(pendingView || showSalesReturnDetailsView) && <SalesReturnView ref={detailsViewCallbackRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showSalesReturnCreateForm && <SalesReturnCreate handleUpdated={handleUpdated} ref={srCreateFormCallbackRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showSalesReturnDetailsView && <SalesReturnView ref={detailsViewCallbackRef} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnPaymentCreate && <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />}
             {showSalesReturnPaymentDetailsView && <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 

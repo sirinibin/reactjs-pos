@@ -38,6 +38,7 @@ import { useTableSettings } from '../utils/useTableSettings.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import ZatcaConnect from '../store/zatca_connect.js';
 import { takeNewMessage } from '../utils/socketMessages.js';
+import { fetchStore, invalidateStoreCache } from '../utils/storeUtils.js';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
@@ -770,8 +771,11 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showDrafts, setShowDrafts] = useState(false);
     const [draftCount, setDraftCount] = useState(0);
 
+    // The draft count is for the Drafts button, shown only on the sales screen of a
+    // store with drafts on (not in a customer's pendings).
+    const draftsEnabled = !props.pendingView && !!store.settings?.enable_drafts;
     useEffect(() => {
-        if (showDrafts) return;
+        if (showDrafts || !draftsEnabled) return;
         const storeId = localStorage.getItem('store_id');
         if (!storeId) return;
         fetch('/v1/order?search[store_id]=' + encodeURIComponent(storeId) + '&search[status]=draft&limit=1', {
@@ -780,38 +784,20 @@ const OrderIndex = forwardRef((props, ref) => {
             .then(r => r.json())
             .then(data => { if (data.total_count != null) setDraftCount(data.total_count); })
             .catch(() => {});
-    }, [showDrafts]);
+    }, [showDrafts, draftsEnabled]);
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id + "?select=id,name,code,zatca.phase,zatca.connected,zatca.zatca_reconnect_required,settings", requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
+    // The store (settings, ZATCA state) comes from the shared cache: the sales form
+    // and top bar have usually loaded it already. fresh re-reads it after a ZATCA change.
+    function getStore(id, { fresh = false } = {}) {
+        if (!id) return;
+        if (fresh) invalidateStoreCache(id);
+        fetchStore(id)
+            .then((result) => {
+                if (!result) return;
+                store = result;
                 setStore({ ...store });
             })
-            .catch(error => {
-
-            });
+            .catch(() => { });
     }
 
 
@@ -1516,7 +1502,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setOrderList([...orderList]);
                 setErrors({ ...error });
                 if (error?.zatca_reconnect) {
-                    getStore(store.id);
+                    getStore(store.id, { fresh: true });
                     zatcaConnectRef.current?.open(store.id, true);
                 } else {
                     setShowErrors(true);
@@ -1705,7 +1691,7 @@ const OrderIndex = forwardRef((props, ref) => {
             />
 
             {showPrint && <OrderPrint ref={PrintRef} />}
-            {(pendingView || showOrderPreview) && <OrderPreview ref={previewCallbackRef} />}
+            {showOrderPreview && <OrderPreview ref={previewCallbackRef} />}
             <Modal show={showPrintTypeSelection} className={pendingView ? "above-pending-modal-dialog" : ""} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
@@ -1748,9 +1734,9 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
-            {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => openJobCard(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToQuotation={handleSwitchToQuotation} />}
+            {showOrderCreateForm && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => openJobCard(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToQuotation={handleSwitchToQuotation} />}
             {showJobCardView && <RepairJobCardView ref={jobCardViewCallbackRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />}
-            {(pendingView || showOrderView) && <OrderView ref={detailsViewCallbackRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
+            {showOrderView && <OrderView ref={detailsViewCallbackRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
             {/* Error Modal */}
@@ -1790,7 +1776,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 <div className="row">
                     <div className="col">
                         <span className="text-end d-flex justify-content-end align-items-start gap-2">
-                            {store.settings?.enable_drafts && (
+                            {draftsEnabled && (
                                 <Button
                                     variant={showDrafts ? "warning" : "outline-secondary"}
                                     className="btn"
@@ -2658,7 +2644,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
-            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(store.id)} />
+            <ZatcaConnect ref={zatcaConnectRef} refreshList={() => getStore(store.id, { fresh: true })} />
         </>
     );
 });

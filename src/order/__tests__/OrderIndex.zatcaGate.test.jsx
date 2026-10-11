@@ -182,6 +182,8 @@ describe('OrderIndex ZATCA gate (zatca_reconnect_required)', () => {
   });
 
   it('store fetch URL includes zatca_reconnect_required in the select param', () => {
+    // The store comes from the shared cache; start empty so it is fetched here.
+    require('../../utils/storeUtils.js')._clearAllStoreCaches();
     render(
       <MemoryRouter>
         <OrderIndex />
@@ -194,7 +196,9 @@ describe('OrderIndex ZATCA gate (zatca_reconnect_required)', () => {
       .find(url => typeof url === 'string' && url.includes('/v1/store/') && url.includes('select='));
 
     expect(storeFetchUrl).toBeDefined();
-    expect(storeFetchUrl).toContain('zatca_reconnect_required');
+    // The whole zatca object (zatca_reconnect_required included) or that field alone.
+    const select = decodeURIComponent(storeFetchUrl.split('select=')[1] || '').split(',');
+    expect(select.includes('zatca') || select.includes('zatca.zatca_reconnect_required')).toBe(true);
   });
 
   it('renders with enableSelection prop without crashing', () => {

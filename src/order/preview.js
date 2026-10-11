@@ -21,6 +21,7 @@ import { PDFDocument } from 'pdf-lib';
 import { useTranslation } from 'react-i18next';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
+import { savePrintSettingsToServer, loadServerPrintSettings } from '../utils/printSettingsSync.js';
 
 
 const Preview = forwardRef((props, ref) => {
@@ -1886,22 +1887,8 @@ const Preview = forwardRef((props, ref) => {
         return stored ? JSON.parse(stored) : null;
     }, []);
 
-    const printSettingsSaveTimer = useRef(null);
-    const savePrintSettingsToServerDebounced = useCallback((fontSizesData) => {
-        const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
-        if (!storeSettings?.save_print_settings_to_server) return;
-        const storeId = localStorage.getItem('store_id');
-        const token = localStorage.getItem('access_token');
-        if (!storeId || !token) return;
-        if (printSettingsSaveTimer.current) clearTimeout(printSettingsSaveTimer.current);
-        printSettingsSaveTimer.current = setTimeout(() => {
-            fetch('/v1/store/' + storeId + '/print-settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify({ print_settings: fontSizesData }),
-            }).catch(() => {});
-        }, 1500);
-    }, []);
+    // Shared by every preview, so a burst of changes is saved once.
+    const savePrintSettingsToServerDebounced = useCallback((data) => savePrintSettingsToServer(data), []);
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
@@ -1952,26 +1939,17 @@ const Preview = forwardRef((props, ref) => {
             }
         }
         setFontSizes({ ...storedFontSizes });
-        saveToLocalStorage("fontSizes", storedFontSizes);
+        // Local only: opening a preview is not a change worth saving to the store.
+        localStorage.setItem("fontSizes", JSON.stringify(storedFontSizes));
 
-        // Load from server if flag is enabled (server wins, falls back to local)
-        const _storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
-        if (_storeSettings?.save_print_settings_to_server) {
-            const _storeId = localStorage.getItem('store_id');
-            const _token = localStorage.getItem('access_token');
-            if (_storeId && _token) {
-                fetch('/v1/store/' + _storeId, { headers: { 'Authorization': _token } })
-                    .then(r => r.json())
-                    .then(data => {
-                        const serverPS = data?.result?.settings?.print_settings;
-                        if (serverPS && Object.keys(serverPS).length > 0) {
-                            const merged = { ...storedFontSizes, ...serverPS };
-                            setFontSizes({ ...merged });
-                            localStorage.setItem('fontSizes', JSON.stringify(merged));
-                        }
-                    }).catch(() => {});
+        // The store's saved layout wins over this browser's (one request for all previews).
+        loadServerPrintSettings().then((serverPS) => {
+            if (serverPS) {
+                const merged = { ...storedFontSizes, ...serverPS };
+                setFontSizes({ ...merged });
+                localStorage.setItem('fontSizes', JSON.stringify(merged));
             }
-        }
+        });
     }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
 

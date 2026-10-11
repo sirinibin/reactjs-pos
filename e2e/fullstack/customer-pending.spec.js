@@ -212,4 +212,56 @@ test.describe('Customer pendings modal', () => {
     await page.waitForTimeout(500);
     expect(calls.slice(before).map((c) => c.raw)).toEqual([]);
   });
+
+  test('from the Sales update form (Cr.Balance in the customer box) it loads each list once and never saves print settings @devices', async ({ page, request }) => {
+    const api = salesApi(request);
+    const word = uniq('PNU');
+    const customer = await api.createCustomer({ name: `E2E Upd ${word}` });
+    const product = await api.createProduct({ name: `E2E Item ${word}`, partNumber: `IU-${word}` });
+    const sale = await api.createSale({ customer, lines: [{ product, qty: 2, price: 100 }] });
+    // The store keeps print settings on the server (the case where opening this
+    // modal used to read the store three times and PUT the print settings three times).
+    await page.addInitScript(() => {
+      let s = {};
+      try { s = JSON.parse(localStorage.getItem('_store_settings_cache') || '{}') || {}; } catch (_) { s = {}; }
+      localStorage.setItem('_store_settings_cache', JSON.stringify({ ...s, save_print_settings_to_server: true }));
+    });
+
+    await page.goto('/dashboard/sales');
+    const row = page.locator('tr', { hasText: sale.code }).first();
+    await row.locator('button:has(i.bi-pencil)').first().click();
+    const form = page.locator('#sales_create_form');
+    await expect(form.getByText('Update Sales').first()).toBeVisible();
+    const opener = form.getByTitle('Click to view pendings').first();
+    await expect(opener).toBeVisible();
+    // Let the form finish its own loading (including its delayed stock check).
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3500);
+
+    const calls = recordCalls(page);
+    const salesListed = waitForList(page, '/v1/order');
+    await opener.click();
+    const modal = page.locator('.customer-pending-modal');
+    await salesListed;
+    await expect(modal.locator('.tab-pane.active tbody tr').filter({ hasText: sale.code })).toHaveCount(1);
+    // Print-settings saves wait 1.5 s; give them time to show up if they were sent.
+    await page.waitForTimeout(2500);
+
+    const raws = calls.map((c) => c.raw).join('\n');
+    // The customer and its pending sales: the store is already loaded by the form,
+    // and the print preview and sales form inside the modal load only when opened.
+    expectNoRepeats(calls, 2);
+    expect(calls.filter((c) => c.path === `/v1/customer/${customer.id}`), raws).toHaveLength(1);
+    expect(calls.filter((c) => isList(c, '/v1/order')), raws).toHaveLength(1);
+    expect(calls.filter((c) => c.method !== 'GET'), raws).toHaveLength(0);
+    expect(calls.filter((c) => c.path.endsWith('/print-settings')), raws).toHaveLength(0);
+    expect(calls.filter((c) => c.path.startsWith('/v1/store/')), raws).toHaveLength(0);
+    expect(calls.filter((c) => c.path.startsWith('/v1/delivery-note/reminders')), raws).toHaveLength(0);
+    // No store-wide draft count inside a customer's pendings.
+    expect(calls.filter((c) => c.path === '/v1/order' && c.params.get('search[status]') === 'draft'), raws).toHaveLength(0);
+
+    // The sale's own form still opens from the modal (it now loads on demand).
+    await modal.locator('.tab-pane.active tbody tr').filter({ hasText: sale.code }).locator('button:has(i.bi-pencil)').first().click();
+    await expect(page.locator('#sales_create_form').getByText('Update Sales')).toHaveCount(2);
+  });
 });

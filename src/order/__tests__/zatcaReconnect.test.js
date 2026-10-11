@@ -55,7 +55,8 @@ describe('order/index.js — reconnect dialog on zatca_reconnect error', () => {
 
     test('2.3  getStore is called to refresh store state before opening the dialog', () => {
         const catchBlock = getCatchBlock();
-        const getStoreIdx = catchBlock.indexOf('getStore(store.id)');
+        // getStore(store.id, { fresh: true }) re-reads the store past the shared cache.
+        const getStoreIdx = catchBlock.indexOf('getStore(store.id, { fresh: true })');
         const openIdx     = catchBlock.indexOf('zatcaConnectRef.current?.open');
         expect(getStoreIdx).toBeGreaterThan(-1);
         expect(openIdx).toBeGreaterThan(getStoreIdx);
