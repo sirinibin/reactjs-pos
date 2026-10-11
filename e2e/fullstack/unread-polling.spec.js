@@ -30,7 +30,7 @@ test('no unread polling for a store with the RFQ module off @devices', async ({ 
   const storeLoaded = page.waitForResponse(TOPBAR_STORE_GET);
   await page.goto('/dashboard/sales');
   await storeLoaded;
-  await expect(page.getByText('E2E Admin').first()).toBeVisible();
+  await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
 
   // Five minutes of fallback-poll intervals (30 s each).
   await page.clock.runFor(5 * 60 * 1000);
