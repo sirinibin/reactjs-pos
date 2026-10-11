@@ -82,10 +82,11 @@ const ProductHistory = forwardRef((props, ref) => {
         setProduct(props.model);
         if (props.selectedCustomers?.length > 0) {
             setSelectedCustomers(props.selectedCustomers)
-            searchByMultipleValuesField("customer_id", props.selectedCustomers);
+            // Filter only: the [pid] effect below loads the list (with this filter).
+            searchByMultipleValuesField("customer_id", props.selectedCustomers, { load: false });
         } else if (props.selectedVendors?.length > 0) {
             setSelectedVendors(props.selectedVendors)
-            searchByMultipleValuesField("vendor_id", props.selectedVendors);
+            searchByMultipleValuesField("vendor_id", props.selectedVendors, { load: false });
         } else {
             // setShow(true);
         }
@@ -461,7 +462,10 @@ const ProductHistory = forwardRef((props, ref) => {
     }, [pid]);
 
     // Re-fetch when pagination / sort / stats change (list identity changes for these).
+    // Not on mount: the [pid] effect above loads it (both used to, fetching it twice).
+    const listSeenRef = useRef(false);
     useEffect(() => {
+        if (!listSeenRef.current) { listSeenRef.current = true; return; }
         list();
     }, [list]);
 
@@ -626,7 +630,7 @@ const ProductHistory = forwardRef((props, ref) => {
         VendorUpdateFormRef.current.open(id);
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, { load = true } = {}) {
         if (field === "customer_id") {
             setSelectedCustomers(values);
         } else if (field === "vendor_id") {
@@ -641,6 +645,7 @@ const ProductHistory = forwardRef((props, ref) => {
 
         page = 1;
         setPage(page);
+        if (!load) return;
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
