@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# Direct deployment script for startpos frontend.
-# Mirrors what .github/workflows/deploy.yml (test) and deploy_production.yml (production) do.
+# Direct deployment script for startpos frontend: one script for both sites,
+# doing what .github/workflows/deploy.yml does, from this machine. The unit,
+# functional and e2e suites (ci/run_all_tests.sh), one build, then
+# that exact build to the test site and, only after the test site serves it,
+# to production (.github/scripts/deploy_site.sh: atomic swap, verify, roll
+# back). The build is site-neutral (src/utils/apiBaseURL.js picks the API from
+# the page's host). Needs Docker running (throwaway MongoDB and Redis for the
+# browser tests); see ci/run_all_tests.sh for the other tools and settings.
 #
 # Usage:
-#   ./deploy.sh              — run tests, then deploy to both test and production (default)
-#   ./deploy.sh both         — same as above
-#   ./deploy.sh test         — run tests, then deploy to test only
-#   ./deploy.sh production   — run tests, then deploy to production only
+#   ./deploy.sh              — run the tests, build once, deploy to the test
+#                              site, verify it, then production
+#   ./deploy.sh --test-only  — same, but stop after the test site
+#   FULL=1 ./deploy.sh       — with the full GitHub Actions test set (every
+#                              screen size, role audit)
 
 set -eo pipefail
 
@@ -14,11 +21,10 @@ SSH_KEY="${SSH_KEY:-$HOME/Downloads/startuptech-v2.pem}"
 SERVER_USER="ubuntu"
 SERVER_HOST="ec2-13-42-39-69.eu-west-2.compute.amazonaws.com"
 
-TEST_API_URL="https://startpos-api-test.gulfunionozone.com"
-PROD_API_URL="https://startpos-api.gulfunionozone.com"
-
 TEST_DEST="/home/ubuntu/reactjs-pos-test/build/"
 PROD_DEST="/home/ubuntu/reactjs-pos/build/"
+TEST_SITE="https://test.gulfunionozone.com/"
+PROD_SITE="https://startpos.gulfunionozone.com/"
 
 FRONTEND_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -37,153 +43,51 @@ check_uncommitted() {
     echo "==> Working tree is clean."
 }
 
-# ─── eslint error check ───────────────────────────────────────────────────────
+# ─── tests + build ────────────────────────────────────────────────────────────
+# ci/run_all_tests.sh runs ESLint, Jest, the build with no warnings, and the
+# mocked-API and full-stack browser e2e, and leaves the tested build in build/.
+# Nothing deploys unless all of it passes.
 
-check_eslint() {
+run_all_tests() {
     echo ""
-    echo "==> Checking for ESLint errors (src, excluding __tests__)..."
-    cd "$FRONTEND_DIR"
-    # --quiet: report errors only (not warnings). Exit code 1 if any errors found.
-    # Exclude test files — they have pre-existing import/first issues that don't affect production.
-    if ! npx eslint src --ext .js,.jsx --quiet --ignore-pattern 'src/**/__tests__/**' --ignore-pattern 'src/**/*.test.js' --ignore-pattern 'src/**/*.test.jsx' 2>&1; then
-        echo ""
-        echo "==> ABORTED: ESLint errors found. Fix all errors before deploying."
-        exit 1
-    fi
-    echo "==> No ESLint errors."
-}
-
-# ─── tests ────────────────────────────────────────────────────────────────────
-
-run_tests() {
-    echo ""
-    echo "==> Running tests..."
-    cd "$FRONTEND_DIR"
-    NODE_OPTIONS="--max-old-space-size=6144" CI=true npm test -- --watchAll=false --runInBand --testPathIgnorePatterns="RFQReceived.smoke|importHandlers|QuotationCreate.productEditFocus"
+    echo "==> Running the test suites (ci/run_all_tests.sh)..."
+    bash "$FRONTEND_DIR/ci/run_all_tests.sh"
     echo "==> All tests passed."
 }
 
-# ─── helpers ──────────────────────────────────────────────────────────────────
-
-build() {
-    local api_url="$1"
-    local out_dir="${2:-$FRONTEND_DIR/build}"
-    echo ""
-    echo "==> Building (API: $api_url) ..."
-    cd "$FRONTEND_DIR"
-
-    local tmp_log
-    tmp_log=$(mktemp)
-    trap 'rm -f "$tmp_log"' RETURN
-
-    NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096" \
-    DANGEROUSLY_DISABLE_HOST_CHECK=true \
-    REACT_APP_API_URL="$api_url" \
-    GENERATE_SOURCEMAP=false \
-    DISABLE_ESLINT_PLUGIN=true \
-    BUILD_PATH="$out_dir" \
-    npm run build 2>&1 | tee "$tmp_log"
-    # npm's exit code is in PIPESTATUS[0]; set -eo pipefail already aborts on failure.
-
-    if grep -qi "compiled with warnings" "$tmp_log"; then
-        echo ""
-        echo "==> ABORTED: build produced warnings. Fix all warnings before deploying."
-        exit 1
-    fi
-    echo "==> Build complete ($out_dir)."
-}
-
-SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -i $SSH_KEY"
-
+# deploy_to <dest> <site url> <label>: the deploy step deploy.yml runs.
 deploy_to() {
-    local src="$1"
-    local dest="${2%/}"   # strip trailing slash: /home/ubuntu/reactjs-pos/build
-    local label="$3"
-    local tmp="${dest}_new"   # rsync target: build_new/
-    local old="${dest}_old"   # temporary backup during swap
-    local attempt=1 max=3 delay=15
-
     echo ""
-    echo "==> Deploying to $label ($SERVER_HOST:$dest) ..."
-
-    # Ensure both the temp dir and the live dir exist so the atomic swap never fails
-    # on a fresh server where the live dir hasn't been created yet.
-    ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" "mkdir -p $tmp $dest" 2>/dev/null || true
-
-    while [ "$attempt" -le "$max" ]; do
-        [ "$attempt" -gt 1 ] && { echo "==> [$label] Retry $attempt/$max in ${delay}s..."; sleep "$delay"; delay=$((delay * 2)); }
-
-        # rsync into the temp dir — no --delete yet, so the live dir is untouched.
-        # --partial keeps incomplete files so retries resume from the last byte, not scratch.
-        # --timeout aborts after 60s of silence (catches hung connections).
-        if rsync -az --partial --timeout=60 \
-            -e "ssh $SSH_OPTS" \
-            "$src/" "$SERVER_USER@$SERVER_HOST:$tmp/"; then
-
-            # Full transfer succeeded → atomic swap.
-            # Two renames on the same filesystem — each is a single syscall (~1ms total).
-            # Users see either the old or the new build; never a half-deployed mix.
-            echo "==> [$label] Transfer complete. Swapping live directory..."
-            ssh $SSH_OPTS "$SERVER_USER@$SERVER_HOST" \
-                "mv $dest $old && mv $tmp $dest && rm -rf $old"
-            echo "==> [$label] Deploy complete."
-            return 0
-        fi
-
-        attempt=$((attempt + 1))
-    done
-    echo "==> [$label] Deploy FAILED after $max attempts. Live site untouched."
-    return 1
+    echo "==> Deploying to $3 ($SERVER_HOST:$1) ..."
+    cd "$FRONTEND_DIR"
+    SSH_PRIVATE_KEY="$(cat "$SSH_KEY")" AWS_HOST="$SERVER_HOST" AWS_USER="$SERVER_USER" AWS_PORT=22 \
+    AWS_DEST_PATH="$1" SITE_URL="$2" \
+        bash .github/scripts/deploy_site.sh || { echo "==> $3 deploy FAILED"; exit 1; }
 }
 
 # ─── main ─────────────────────────────────────────────────────────────────────
-#
-# Usage:
-#   ./deploy.sh [test|production|both]
 
-TARGET="${1:-both}"
+TEST_ONLY=false
+for arg in "$@"; do
+    case "$arg" in
+        --test-only) TEST_ONLY=true ;;
+        *) echo "Unknown option: $arg"; echo "Usage: $0 [--test-only]"; exit 1 ;;
+    esac
+done
 
+[ -r "$SSH_KEY" ] || { echo "==> ABORTED: SSH key $SSH_KEY not found (set SSH_KEY)."; exit 1; }
 check_uncommitted
+run_all_tests
 
-case "$TARGET" in
-    test)
-        check_eslint
-        run_tests
-        build "$TEST_API_URL"
-        deploy_to "$FRONTEND_DIR/build" "$TEST_DEST" "test (https://startpos-test.gulfunionozone.com)"
-        ;;
-    production|prod)
-        check_eslint
-        run_tests
-        build "$PROD_API_URL"
-        deploy_to "$FRONTEND_DIR/build" "$PROD_DEST" "production (https://startpos.gulfunionozone.com)"
-        ;;
-    both)
-        check_eslint
-        run_tests
-        echo ""
-        echo "==> Building test and production in parallel..."
-        build "$TEST_API_URL" "$FRONTEND_DIR/build_test" > /tmp/build_test.log 2>&1 &
-        PID_TEST=$!
-        build "$PROD_API_URL" "$FRONTEND_DIR/build_prod" > /tmp/build_prod.log 2>&1 &
-        PID_PROD=$!
-        wait $PID_TEST || { echo "==> Test build FAILED:"; cat /tmp/build_test.log; exit 1; }
-        echo "==> Test build done."
-        wait $PID_PROD || { echo "==> Production build FAILED:"; cat /tmp/build_prod.log; exit 1; }
-        echo "==> Production build done."
-        deploy_to "$FRONTEND_DIR/build_test" "$TEST_DEST" "test (https://startpos-test.gulfunionozone.com)" &
-        PID_RSYNC_TEST=$!
-        deploy_to "$FRONTEND_DIR/build_prod" "$PROD_DEST" "production (https://startpos.gulfunionozone.com)" &
-        PID_RSYNC_PROD=$!
-        wait $PID_RSYNC_TEST || { echo "==> Test deploy FAILED"; exit 1; }
-        wait $PID_RSYNC_PROD || { echo "==> Production deploy FAILED"; exit 1; }
-        ;;
-    *)
-        echo "Unknown target: $TARGET"
-        echo "Usage: $0 <test|production|both>"
-        exit 1
-        ;;
-esac
+# Production only after the test site serves this build; if the test deploy
+# fails it is rolled back and production is left alone.
+deploy_to "$TEST_DEST" "$TEST_SITE" "test"
+if [ "$TEST_ONLY" = true ]; then
+    echo ""
+    echo "Done (test site only)."
+    exit 0
+fi
+deploy_to "$PROD_DEST" "$PROD_SITE" "production"
 
 echo ""
-echo "Done."
+echo "Done: the same tested build is live on the test site and production."

@@ -6,17 +6,19 @@
 - Test credentials: sirinibin2006@gmail.com / 123456
 
 ## Deploy rules (frontend/deploy.sh)
-deploy.sh enforces three gates before every deploy — all three must pass:
-
-1. **No uncommitted changes** — `git status --porcelain` must be empty.
-   Commit or stash everything before running deploy.sh.
-
-2. **All tests pass** — `npm test` with CI=true must exit 0.
-   Fix failing tests before deploying. Skipped tests:
-   RFQReceived.smoke | importHandlers | QuotationCreate.productEditFocus
-
-3. **No build warnings** — CRA must output "Compiled successfully." not "Compiled with warnings."
-   Fix all ESLint / webpack warnings before deploying.
+deploy.sh is the deploy gate. It refuses uncommitted changes (`git status --porcelain` must be
+empty), then runs `ci/run_all_tests.sh`, the unit, functional and e2e suites of the GitHub Actions
+`tests.yml`, locally, stopping at the first failure:
+ESLint (errors only), Jest (every suite, with the pos-rest source for the suites that read it),
+one site-neutral build with no "Compiled with warnings", Playwright with a mocked API, and
+Playwright full-stack against the real pos-rest API on fresh MongoDB + Redis on a laptop screen.
+`FULL=1` adds what GitHub Actions always runs on top: the other five screen sizes and the role audit.
+It deploys exactly the build it tested (`build/`) to the test site, then (unless `--test-only`) to production, through
+`.github/scripts/deploy_site.sh` like the pipeline (atomic swap, verify the site serves it, roll back).
+Needs Docker running (throwaway MongoDB/Redis on ports 37017/36379, API on 32000, so a dev stack
+on 27017/6379/2000 is untouched), go, node 18+. pos-rest comes from GitHub at master
+(`BACKEND_REF` to change) or `BACKEND_DIR=<checkout>`.
+Settings are documented in `ci/lib.sh` (keep it identical to pos-rest's `ci/lib.sh`).
 
 ## GitHub Actions
 One pipeline for both sites: a push to `master` runs `deploy.yml`, which calls `tests.yml` once and deploys
@@ -27,20 +29,20 @@ from `src/utils/apiBaseURL.js` (page host → API), never a baked `REACT_APP_API
 `deploy_quick.yml` (manual, tests skipped) takes a target: both / test / production. `tests.yml` runs:
 ESLint + Jest, build (no warnings), Playwright with a mocked API (`e2e/tests`) and Playwright
 full-stack against the real pos-rest API on MongoDB + Redis (`e2e/fullstack`, see `e2e/README.md`).
-The build the tests ran against is the one deployed.
+The build the tests ran against is the one deployed. `ci/run_all_tests.sh` mirrors `tests.yml`:
+change both together.
 
 ## Usage
 ```
-frontend/deploy.sh both        # test + production (default)
-frontend/deploy.sh test        # test only
-frontend/deploy.sh production  # production only
+frontend/deploy.sh              # every suite, one build, test site (verified), then production
+frontend/deploy.sh --test-only  # same, stop after the test site
 ```
 
 ## After every frontend change
 1. Write unit tests for changed logic.
 2. `npm test -- --watchAll=false --runInBand --testPathPattern=<changed-module>` to verify.
 3. Commit all changed files (including App.css, translations, etc. — tests depend on them).
-4. Run `frontend/deploy.sh both`.
+4. Run `frontend/deploy.sh`.
 
 ## Branch isolation rule (NON-NEGOTIABLE)
 
