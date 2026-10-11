@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
-import Draggable from "react-draggable";
+import DraggableFullscreenDialog from "./DraggableFullscreenDialog.js";
 import OrderIndex from "../order/index.js";
 import SalesReturnIndex from "../sales_return/index.js";
 import QuotationIndex from "../quotation/index.js";
@@ -18,10 +18,19 @@ import PostingIndex from "./../posting/index.js";
 import { ObjectToSearchQueryParams } from './queryUtils.js';
 //import { set } from "date-fns";
 
-const storeSettings = (() => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } })();
+// Read on every render, not once when the bundle loads (see customer_pending.js).
+const readStoreSettings = () => { try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; } };
+
+// GET /v1/customer/vat_no/name for the customer with this vendor's name and VAT no,
+// both encoded so a name with "&", "#" or "+" is sent whole.
+export const customerLookupURL = (name, vatNo, storeId) =>
+    '/v1/customer/vat_no/name?vat_no=' + encodeURIComponent(vatNo) + '&name=' + encodeURIComponent(name) +
+    (storeId ? '&' + ObjectToSearchQueryParams({ store_id: storeId }) : '');
 
 const VendorPending = forwardRef((props, ref) => {
-    const dragRef = useRef(null);
+    const storeSettings = readStoreSettings();
+    // Bumped on every open; answers for an earlier open are dropped.
+    const openSeqRef = useRef(0);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     let [selectedVendors, setSelectedVendors] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
@@ -32,6 +41,7 @@ const VendorPending = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(enableSelectionValue, vendorValue) {
+            openSeqRef.current += 1;
             vendor = {}
             setVendor(vendor);
             customer = {};
@@ -122,7 +132,7 @@ const VendorPending = forwardRef((props, ref) => {
         if (!vat_no || !name) {
             return;
         }
-        console.log("inside get Customer");
+        const seq = openSeqRef.current;
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -131,25 +141,18 @@ const VendorPending = forwardRef((props, ref) => {
             },
         };
 
-        let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-
-        await fetch('/v1/customer/vat_no/name?vat_no=' + vat_no + '&name=' + name + "&" + queryParams, requestOptions)
+        await fetch(customerLookupURL(name, vat_no, localStorage.getItem("store_id")), requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
-                // check for error response
-                if (!response.ok) {
+                // check for error response (a missing customer answers 200 with no result)
+                if (!response.ok || !data?.result?.id) {
                     const error = (data && data.errors);
                     return Promise.reject(error);
                 }
+                if (seq !== openSeqRef.current) return;
 
-                console.log("Customer Response:");
-                console.log(data);
                 let customerValue = data.result;
                 customer = customerValue;
                 setCustomer(customer);
@@ -172,7 +175,7 @@ const VendorPending = forwardRef((props, ref) => {
 
 
     async function getVendor(id) {
-        console.log("inside get Vendor");
+        const seq = openSeqRef.current;
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -198,8 +201,7 @@ const VendorPending = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Vendor Response:");
-                console.log(data);
+                if (seq !== openSeqRef.current) return;
                 let vendorData = data.result;
                 vendor = vendorData
                 setVendor(vendor);
@@ -236,31 +238,12 @@ const VendorPending = forwardRef((props, ref) => {
         <>
             {showBalanceSheet && <PostingIndex ref={AccountBalanceSheetRef} />}
             <Modal show={show} {...(props.size ? { size: props.size } : { fullscreen: true })} onHide={handleClose} animation={false} scrollable={true}
-                className="above-sales-modal"
+                className="above-sales-modal vendor-pending-modal"
                 backdrop={false}
                 keyboard={false}
                 centered={false}
                 enforceFocus={false}
-                dialogAs={props.size ? undefined : ({ children, ...dlgProps }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-fullscreen modal-dialog-scrollable"
-                            {...dlgProps}
-                            style={{
-                                position: "fixed",
-                                top: "0",
-                                left: "0",
-                                margin: "0",
-                                zIndex: 1082,
-                                width: "100%",
-                                height: "100%",
-                            }}
-                        >
-                            <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>{children}</div>
-                        </div>
-                    </Draggable>
-                )}
+                dialogAs={props.size ? undefined : DraggableFullscreenDialog}
             >
                 <Modal.Header>
                     <Modal.Title>{enableSelection ? "Select Sale" : vendor.code + "/" + vendor?.name + "'s Pendings "}
@@ -292,6 +275,7 @@ const VendorPending = forwardRef((props, ref) => {
 
                         <Tabs
                             defaultActiveKey="purchase"
+                            mountOnEnter
                             id="uncontrolled-tab-example"
                             className="mb-3"
                         >

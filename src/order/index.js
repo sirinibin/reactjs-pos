@@ -78,6 +78,28 @@ const OrderIndex = forwardRef((props, ref) => {
         </Draggable2>
     ), []);
     const jobCardViewRef = useRef(null);
+    // The job card view (and the customer history and sales form inside it) is
+    // mounted on first use, not with every sales list: mounted eagerly it fetched
+    // the store and delivery-note reminders each time a list mounted, e.g. on
+    // every open of the customer pendings modal.
+    const [showJobCardView, setShowJobCardView] = useState(false);
+    const pendingJobCardRef = useRef(null);
+    const jobCardViewCallbackRef = useCallback((instance) => {
+        jobCardViewRef.current = instance;
+        if (instance && pendingJobCardRef.current) {
+            const [jobId, zIdx] = pendingJobCardRef.current;
+            pendingJobCardRef.current = null;
+            instance.open(jobId, zIdx);
+        }
+    }, []);
+    function openJobCard(jobId, zIdx) {
+        if (jobCardViewRef.current) {
+            jobCardViewRef.current.open(jobId, zIdx);
+        } else {
+            pendingJobCardRef.current = [jobId, zIdx];
+            setShowJobCardView(true);
+        }
+    }
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
     let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
@@ -1724,8 +1746,8 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
-            {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => jobCardViewRef.current?.open(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToQuotation={handleSwitchToQuotation} />}
-            <RepairJobCardView ref={jobCardViewRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />
+            {(pendingView || showOrderCreateForm) && <OrderCreate ref={createFormCallbackRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} openJobCard={(jobId) => openJobCard(jobId, 1200)} modalClass={pendingView ? "above-pending-modal" : ""} onDraftSaved={onDraftSaved} onDraftCreated={onDraftCreated} onSwitchToQuotation={handleSwitchToQuotation} />}
+            {showJobCardView && <RepairJobCardView ref={jobCardViewCallbackRef} showToastMessage={props.showToastMessage} onCreateSalesInvoice={() => {}} onOpenSalesInvoice={(orderId) => openUpdateForm(orderId)} onCreateQuotation={() => {}} />}
             {(pendingView || showOrderView) && <OrderView ref={detailsViewCallbackRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} modalClass={pendingView ? "above-pending-modal" : ""} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} modalClass={pendingView ? "above-pending-modal" : ""} />}
 
