@@ -320,7 +320,9 @@ describeIfSources(MAIN_SRC)('18. Backend route registered', () => {
         expect(MAIN_SRC).toContain('/v1/procurement-messages/{id}/extract');
     });
     it('18.2 route uses POST method', () => {
-        const routeLine = MAIN_SRC.slice(MAIN_SRC.indexOf('/v1/procurement-messages/{id}/extract'), MAIN_SRC.indexOf('/v1/procurement-messages/{id}/extract') + 100);
+        // The whole registration line (the handler may be wrapped, e.g. in RequireProcurementAccess).
+        const start = MAIN_SRC.indexOf('/v1/procurement-messages/{id}/extract');
+        const routeLine = MAIN_SRC.slice(start, MAIN_SRC.indexOf('\n', start));
         expect(routeLine).toContain('Methods("POST")');
     });
     it('18.3 handler name is ExtractProcurementMessageHandler', () => {
