@@ -38,6 +38,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+import { cleanTypedCustomerName } from "../utils/customerName.js";
 
 const DEFAULT_DN_CUSTOMER_COLS = [
     { key: 'code',           label: 'Code',          width: 15, visible: true },
@@ -1270,6 +1271,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       method = "PUT";
     }
 
+
+    // A customer name of only spaces must not create a nameless customer.
+    cleanTypedCustomerName(formData);
 
     const requestOptions = {
       method: method,

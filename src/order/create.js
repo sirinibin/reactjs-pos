@@ -76,6 +76,7 @@ import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from '../quotation/QuotationImportPicker.js';
 import { fetchRetailPrices, purchaseLinesToQuotationLines, mergeImportedQuotationProducts, fetchAllowDuplicateIds } from '../quotation/quotationImport.js';
 import ZatcaConnect from '../store/zatca_connect.js';
+import { cleanTypedCustomerName } from "../utils/customerName.js";
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -2309,6 +2310,9 @@ const OrderCreate = forwardRef((props, ref) => {
             method = "PUT";
             clearOrderDraft();
         }
+
+        // A customer name of only spaces must not create a nameless customer.
+        cleanTypedCustomerName(formData);
 
         const requestOptions = {
             method: method,

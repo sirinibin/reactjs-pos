@@ -69,6 +69,7 @@ import TableSettingsModal from '../utils/TableSettingsModal.js';
 import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 import QuotationImportPicker from './QuotationImportPicker.js';
 import { mergeImportedQuotationProducts, fetchRetailPrices, purchaseLinesToQuotationLines, fetchAllowDuplicateIds, productIdsToCheckForDuplicates } from './quotationImport.js';
+import { cleanTypedCustomerName } from "../utils/customerName.js";
 
 function getProductLabel(settings) {
     if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
@@ -1504,6 +1505,9 @@ const QuotationCreate = forwardRef((props, ref) => {
       method = "PUT";
       clearQuotationDraft();
     }
+
+    // A customer name of only spaces must not create a nameless customer.
+    cleanTypedCustomerName(formData);
 
     const requestOptions = {
       method: method,

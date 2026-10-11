@@ -17,6 +17,7 @@ import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import { useTranslation } from "react-i18next";
+import { trimName } from "../utils/customerName.js";
 
 const CustomerCreate = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
@@ -270,6 +271,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
         let haveErrors = false;
         setErrors({ ...errors });
+        formData.name = trimName(formData.name);
+        formData.name_in_arabic = trimName(formData.name_in_arabic);
         if (!formData.name) {
             errors["name"] = t("Name is required");
             haveErrors = true;
