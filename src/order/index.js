@@ -2474,7 +2474,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {!order.zatca?.reporting_passed && !order.zatca?.compliance_passed && !order.zatca?.reporting_failed_count && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
                                                                         {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
-                                                                    {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                    {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" aria-label={t("Report to Zatca")} title={t("Report to Zatca")} onClick={() => {
                                                                         if (store.zatca?.zatca_reconnect_required) { zatcaConnectRef.current?.open(store.id, true); return; }
                                                                         ReportInvoiceToZatca(order.id, index);
                                                                     }}>

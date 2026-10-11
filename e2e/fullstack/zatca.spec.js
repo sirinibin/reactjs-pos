@@ -320,7 +320,7 @@ test.describe.serial('ZATCA phase 2: with the ZATCA sandbox (E2E_ZATCA=1)', () =
     await page.goto('/dashboard/sales');
     const row = await findRow(page, 'sales_code', order.code);
     await expect(row.locator('.badge.bg-success').filter({ hasText: 'Reported' })).toBeVisible();
-    await expect(row.getByRole('button', { name: /^\s*Report\s*$/ })).toHaveCount(0);
+    await expect(row.getByRole('button', { name: 'Report to Zatca', exact: true })).toHaveCount(0);
   });
 
   test('a standard (B2B) sale to a VAT-registered customer is cleared by ZATCA', async ({ page }) => {
@@ -364,7 +364,7 @@ test.describe.serial('ZATCA phase 2: with the ZATCA sandbox (E2E_ZATCA=1)', () =
       (r) => r.request().method() === 'POST' && r.url().includes(`/v1/order/zatca/report/${sale.id}`),
       { timeout: ZATCA_TIMEOUT },
     );
-    await row.getByRole('button', { name: /^\s*Report\s*$/ }).click();
+    await row.getByRole('button', { name: 'Report to Zatca', exact: true }).click();
     const res = await reported;
     const body = await res.json();
     expect(res.status(), `report -> ${JSON.stringify(body.errors)}; sale: ${zatcaState(await api.getSale(sale.id))}`).toBe(200);
