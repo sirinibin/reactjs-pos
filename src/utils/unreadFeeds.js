@@ -1,7 +1,8 @@
 // Which header unread feeds a store can have anything in. Both feeds belong to
 // the RFQ module; WhatsApp also needs a Meta Cloud API number, email a connected
-// account. The Topbar polls /v1/rfq-whatsapp-unread and /v1/email-unread only
-// when these return true (pos-rest models.UnreadFeedsEnabled applies the same rule).
+// account. The Topbar loads /v1/rfq-whatsapp-unread and /v1/email-unread (once,
+// then on each server push) only when these return true (pos-rest
+// models.UnreadFeedsEnabled applies the same rule).
 
 function hasText(v) {
     return typeof v === 'string' && v.trim() !== '';
@@ -17,6 +18,3 @@ export function emailUnreadEnabled(settings) {
     return settings.rfq_email_connected === true
         || (Array.isArray(settings.rfq_email_accounts) && settings.rfq_email_accounts.length > 0);
 }
-
-// The fallback poll interval for both feeds (WebSocket events drive the rest).
-export const UNREAD_POLL_MS = 30 * 1000;

@@ -1,4 +1,4 @@
-import { whatsAppUnreadEnabled, emailUnreadEnabled, UNREAD_POLL_MS } from '../unreadFeeds';
+import { whatsAppUnreadEnabled, emailUnreadEnabled } from '../unreadFeeds';
 
 describe('whatsAppUnreadEnabled', () => {
     test.each([
@@ -36,8 +36,4 @@ describe('emailUnreadEnabled', () => {
     ])('%s', (_, settings, want) => {
         expect(emailUnreadEnabled(settings)).toBe(want);
     });
-});
-
-test('fallback poll interval is 30 seconds', () => {
-    expect(UNREAD_POLL_MS).toBe(30000);
 });

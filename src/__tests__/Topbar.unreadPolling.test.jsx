@@ -1,6 +1,8 @@
-// The header polls /v1/rfq-whatsapp-unread and /v1/email-unread only for a store
-// whose freshly fetched settings have the RFQ module on and that channel connected,
-// and stops (interval and socket listeners) on unmount or when that changes.
+// The header loads /v1/rfq-whatsapp-unread and /v1/email-unread only for a store
+// whose freshly fetched settings have the RFQ module on and that channel connected:
+// once on load, then only when the server pushes a change over the WebSocket (or
+// the socket reconnects). It never polls on a timer, and drops its socket
+// listeners on unmount.
 import React from 'react';
 import { render, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -55,6 +57,11 @@ function mockFetch(storeSettings) {
 
 const calls = (prefix) => global.fetch.mock.calls.filter(([u]) => u.startsWith(prefix)).length;
 const listened = (event) => eventEmitter.on.mock.calls.filter(([e]) => e === event).length;
+// Calls every handler the Topbar registered for a socket event, like a server push.
+async function push(event) {
+    const handlers = eventEmitter.on.mock.calls.filter(([e]) => e === event).map(([, h]) => h);
+    await act(async () => { handlers.forEach((h) => h()); });
+}
 
 async function renderTopbar() {
     let utils;
@@ -126,13 +133,17 @@ describe('no unread polling when there is nothing to poll', () => {
     });
 });
 
-describe('polling a connected channel', () => {
-    test('WhatsApp connected only: polls WhatsApp every 30 s, never email', async () => {
+describe('a connected channel: one load, then server pushes only', () => {
+    test('WhatsApp connected only: loads once, no timer polling, refreshes on push', async () => {
         mockFetch(WA_ONLY);
         await renderTopbar();
         expect(calls(WA)).toBe(1);
-        await advance(90 * 1000);
-        expect(calls(WA)).toBe(4);
+        await advance(10 * 60 * 1000);
+        expect(calls(WA)).toBe(1);
+        await push('wa_unread_changed');
+        expect(calls(WA)).toBe(2);
+        await push('socket_connection_open');
+        expect(calls(WA)).toBe(3);
         expect(calls(EMAIL)).toBe(0);
         expect(listened('wa_unread_changed')).toBe(1);
         expect(listened('email_unread_changed')).toBe(0);
@@ -147,12 +158,15 @@ describe('polling a connected channel', () => {
         expect(calls(EMAIL)).toBe(0);
     });
 
-    test('email connected only: polls email every 30 s, never WhatsApp', async () => {
+    test('email connected only: loads once, no timer polling, refreshes on push', async () => {
         mockFetch(EMAIL_ONLY);
         await renderTopbar();
         expect(calls(EMAIL)).toBe(1);
-        await advance(60 * 1000);
-        expect(calls(EMAIL)).toBe(3);
+        await advance(10 * 60 * 1000);
+        expect(calls(EMAIL)).toBe(1);
+        await push('email_unread_changed');
+        expect(calls(EMAIL)).toBe(2);
+        await push('wa_unread_changed');
         expect(calls(WA)).toBe(0);
         expect(document.getElementById('email-unread-toggle')).not.toBeNull();
         expect(document.getElementById('wa-unread-toggle')).toBeNull();
@@ -164,7 +178,7 @@ describe('polling a connected channel', () => {
         expect(calls(EMAIL)).toBe(1);
     });
 
-    test('unmount stops both polls and removes the socket listeners', async () => {
+    test('unmount removes the push listeners', async () => {
         mockFetch(BOTH);
         const { unmount } = await renderTopbar();
         expect(calls(WA)).toBe(1);
@@ -178,11 +192,12 @@ describe('polling a connected channel', () => {
         expect(offFor('email_unread_changed')).toBe(1);
     });
 
-    test('signed out mid-session (token removed): polls stop sending requests', async () => {
+    test('signed out (token removed): a push sends no request', async () => {
         mockFetch(BOTH);
         await renderTopbar();
         localStorage.removeItem('access_token');
-        await advance(2 * 60 * 1000);
+        await push('wa_unread_changed');
+        await push('email_unread_changed');
         expect(calls(WA)).toBe(1);
         expect(calls(EMAIL)).toBe(1);
     });

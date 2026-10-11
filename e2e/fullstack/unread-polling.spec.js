@@ -1,6 +1,7 @@
-// The header's WhatsApp and email unread badges poll /v1/rfq-whatsapp-unread and
-// /v1/email-unread. A store with the RFQ module off (or the channel not connected)
-// must never send those requests, and the API answers them cheaply for such a store.
+// The header's WhatsApp and email unread badges load /v1/rfq-whatsapp-unread and
+// /v1/email-unread once, then only when the server pushes a change. A store with the
+// RFQ module off (or the channel not connected) must never send those requests, and
+// the API answers them cheaply for such a store.
 const { test, expect, AUTH_STATE } = require('./fixtures');
 const { apiClient } = require('./api');
 
@@ -52,10 +53,10 @@ test('the unread endpoints answer an empty, disabled feed for that store', async
   expect(bad.status()).toBe(400);
 });
 
-// Positive control: the same page polls once the store's settings say WhatsApp is
-// connected. The store itself is left alone; only the settings the header reads
+// Positive control: the same page loads the WhatsApp feed once the store's settings
+// say WhatsApp is connected, and does not poll it on a timer. The store itself is left alone; only the settings the header reads
 // are changed on their way to the browser.
-test('polls only the connected channel once the RFQ module is on', async ({ page }) => {
+test('loads only the connected channel, once, when the RFQ module is on', async ({ page }) => {
   await page.route(TOPBAR_STORE_GET, async (route) => {
     const res = await route.fetch();
     const body = await res.json();
@@ -69,10 +70,13 @@ test('polls only the connected channel once the RFQ module is on', async ({ page
   await storeLoaded;
   await expect(page.locator('#wa-unread-toggle')).toBeVisible();
 
-  await expect.poll(() => seen.filter((p) => p === '/v1/rfq-whatsapp-unread').length).toBeGreaterThanOrEqual(1);
-  const before = seen.filter((p) => p === '/v1/rfq-whatsapp-unread').length;
-  await page.clock.runFor(60 * 1000);
-  await expect.poll(() => seen.filter((p) => p === '/v1/rfq-whatsapp-unread').length).toBeGreaterThanOrEqual(before + 2);
+  const waCalls = () => seen.filter((p) => p === '/v1/rfq-whatsapp-unread').length;
+  await expect.poll(waCalls).toBeGreaterThanOrEqual(1);
+  await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+  const before = waCalls();
+  await page.clock.runFor(5 * 60 * 1000);
+  await page.waitForTimeout(500);
+  expect(waCalls(), 'no timer polling').toBe(before);
   expect(seen.filter((p) => p === '/v1/email-unread')).toEqual([]);
   await expect(page.locator('#email-unread-toggle')).toHaveCount(0);
 });

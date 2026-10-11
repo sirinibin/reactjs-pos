@@ -14,7 +14,7 @@ import { ExtractModal } from './store/ProcurementEmailsTab';
 import RFQCreate from './rfq_received/create.js';
 import { RFQSendModal } from './rfq_received/index.js';
 import { WhatsAppNotificationModal } from './store/ConversationModal';
-import { whatsAppUnreadEnabled, emailUnreadEnabled, UNREAD_POLL_MS } from './utils/unreadFeeds';
+import { whatsAppUnreadEnabled, emailUnreadEnabled } from './utils/unreadFeeds';
 
 function formatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -181,7 +181,7 @@ function Topbar(props) {
             .catch(() => { });
     }, []);
 
-    // Fetch WhatsApp unread summary (event-driven via WebSocket + 30s fallback poll)
+    // Fetch WhatsApp unread summary (event-driven via WebSocket pushes, no polling)
     const fetchWaUnread = useCallback(() => {
         const storeId = localStorage.getItem('store_id');
         const token = localStorage.getItem('access_token');
@@ -216,16 +216,13 @@ function Topbar(props) {
     useEffect(() => {
         // Nothing to poll unless the store has the RFQ module on and WhatsApp connected
         if (!pollWaUnread) return undefined;
-        // Initial fetch
+        // One fetch now; after that the server pushes changes over the WebSocket
         fetchWaUnread();
-        // Fallback poll in case a WebSocket event is missed
-        const id = setInterval(fetchWaUnread, UNREAD_POLL_MS);
         // Real-time: re-fetch when backend pushes wa_unread_changed
         eventEmitter.on('wa_unread_changed', fetchWaUnread);
         // Re-fetch on WebSocket reconnect
         eventEmitter.on('socket_connection_open', fetchWaUnread);
         return () => {
-            clearInterval(id);
             eventEmitter.off('wa_unread_changed', fetchWaUnread);
             eventEmitter.off('socket_connection_open', fetchWaUnread);
         };
@@ -287,12 +284,11 @@ function Topbar(props) {
     useEffect(() => {
         // Nothing to poll unless the store has the RFQ module on and email connected
         if (!pollEmailUnread) return undefined;
+        // One fetch now; then only on a server push or a WebSocket reconnect
         fetchEmailUnread();
-        const id = setInterval(fetchEmailUnread, UNREAD_POLL_MS);
         eventEmitter.on('email_unread_changed', fetchEmailUnread);
         eventEmitter.on('socket_connection_open', fetchEmailUnread);
         return () => {
-            clearInterval(id);
             eventEmitter.off('email_unread_changed', fetchEmailUnread);
             eventEmitter.off('socket_connection_open', fetchEmailUnread);
         };
