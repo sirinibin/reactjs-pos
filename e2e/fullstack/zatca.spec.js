@@ -262,21 +262,23 @@ test.describe.serial('ZATCA phase 2: with the ZATCA sandbox (E2E_ZATCA=1)', () =
     await expect(row).toContainText('Connected to Phase2');
     await expect(row.getByRole('button', { name: /Connect to Zatca/i })).toHaveCount(0);
 
-    // The API stored the compliance and production CSIDs, and all six sample
-    // documents passed ZATCA's compliance checks.
+    // The API holds the compliance and production CSIDs (their request ids show),
+    // and all six sample documents passed ZATCA's compliance checks. The signing
+    // key and the CSID tokens/secrets never leave the API: GET /v1/store blanks
+    // them, so the store form cannot leak them. The reporting tests below prove
+    // they were stored.
     const z = after.zatca;
     const state = connectionState(after);
     expect(z.connected, state).toBe(true);
     expect(z.env).toBe(ZATCA_ENV);
     expect(z.otp).toBe(SANDBOX_OTP);
-    expect(z.private_key, state).toBeTruthy();
     expect(z.csr, state).toBeTruthy();
     expect(z.compliance_request_id, state).toBeGreaterThan(0);
-    expect(z.binary_security_token, state).toBeTruthy();
-    expect(z.secret, state).toBeTruthy();
     expect(z.production_request_id, state).toBeGreaterThan(0);
-    expect(z.production_binary_security_token, state).toBeTruthy();
-    expect(z.production_secret, state).toBeTruthy();
+    for (const secret of ['private_key', 'binary_security_token', 'secret',
+      'production_binary_security_token', 'production_secret']) {
+      expect(z[secret] || '', `${secret} must not be sent to the browser`).toBe('');
+    }
     expect(z.compliance_check, state).toEqual({
       standard_invoice: true, standard_credit_note: true, standard_debit_note: true,
       simplified_invoice: true, simplified_credit_note: true, simplified_debit_note: true,
@@ -368,7 +370,7 @@ test.describe.serial('ZATCA phase 2: with the ZATCA sandbox (E2E_ZATCA=1)', () =
     expect(res.status(), `report -> ${JSON.stringify(body.errors)}; sale: ${zatcaState(await api.getSale(sale.id))}`).toBe(200);
     expect(body.status, JSON.stringify(body.errors)).toBe(true);
 
-    await expect(page.getByText('Invoice reported successfully to Zatca!').first()).toBeVisible();
+    // No success toast to wait for (Dashboard suppresses them); the row's badge shows the result.
     await expect(row.locator('.badge.bg-success').filter({ hasText: 'Reported' })).toBeVisible();
     const stored = await api.getSale(sale.id);
     expect(stored.zatca?.reporting_passed, zatcaState(stored)).toBe(true);
